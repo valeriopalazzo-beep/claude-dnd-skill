@@ -1,7 +1,10 @@
 {
   "_meta": {
     "description": "Supplemental entries for non-SRD content used in active campaigns",
-    "sources": ["Xanathar's Guide to Everything", "Player's Handbook (Thief Archetype)"]
+    "sources": [
+      "Xanathar's Guide to Everything",
+      "Player's Handbook (Thief Archetype)"
+    ]
   },
   "spells": [
     {
@@ -11,14 +14,102 @@
       "school": "Necromancy",
       "casting_time": "1 action",
       "range": "60 feet",
-      "components": ["V", "S"],
+      "components": [
+        "V",
+        "S"
+      ],
       "duration": "Instantaneous",
       "concentration": false,
       "ritual": false,
-      "classes": ["Cleric", "Warlock", "Wizard"],
+      "classes": [
+        "Cleric",
+        "Warlock",
+        "Wizard"
+      ],
       "description": "You point at one creature you can see within range, and the sound of a dolorous bell fills the air around it for a moment. The target must succeed on a Wisdom saving throw or take 1d8 necrotic damage. If the target is missing any of its hit points, it instead takes 1d12 necrotic damage.\n\nThe spell's damage increases by one die when you reach 5th level (2d8 or 2d12), 11th level (3d8 or 3d12), and 17th level (4d8 or 4d12).",
       "source": "Xanathar's Guide to Everything, p. 169",
       "wikidot_url": "https://dnd5e.wikidot.com/spell:toll-the-dead"
+    },
+    {
+      "name": "Caratteristica da incantatore:",
+      "index": "caratteristica-da-incantatore",
+      "description": "See full description at https://dnd5e.wikidot.com/spell:caratteristica-da-incantatore",
+      "source": "dnd5e.wikidot.com (auto-fetched)",
+      "wikidot_url": "https://dnd5e.wikidot.com/spell:caratteristica-da-incantatore",
+      "level": 0,
+      "school": ""
+    },
+    {
+      "name": "CD TS incantesimi:",
+      "index": "cd-ts-incantesimi",
+      "description": "See full description at https://dnd5e.wikidot.com/spell:cd-ts-incantesimi",
+      "source": "dnd5e.wikidot.com (auto-fetched)",
+      "wikidot_url": "https://dnd5e.wikidot.com/spell:cd-ts-incantesimi",
+      "level": 0,
+      "school": ""
+    },
+    {
+      "name": "Attacco con incantesimi:",
+      "index": "attacco-con-incantesimi",
+      "description": "See full description at https://dnd5e.wikidot.com/spell:attacco-con-incantesimi",
+      "source": "dnd5e.wikidot.com (auto-fetched)",
+      "wikidot_url": "https://dnd5e.wikidot.com/spell:attacco-con-incantesimi",
+      "level": 0,
+      "school": ""
+    },
+    {
+      "name": "Damage",
+      "index": "damage",
+      "description": "See full description at https://dnd5e.wikidot.com/spell:damage",
+      "source": "dnd5e.wikidot.com (auto-fetched)",
+      "wikidot_url": "https://dnd5e.wikidot.com/spell:damage",
+      "level": 0,
+      "school": ""
+    },
+    {
+      "name": "Notes",
+      "index": "notes",
+      "description": "See full description at https://dnd5e.wikidot.com/spell:notes",
+      "source": "dnd5e.wikidot.com (auto-fetched)",
+      "wikidot_url": "https://dnd5e.wikidot.com/spell:notes",
+      "level": 0,
+      "school": ""
+    },
+    {
+      "name": "Balestra leggera",
+      "index": "balestra-leggera",
+      "description": "See full description at https://dnd5e.wikidot.com/spell:balestra-leggera",
+      "source": "dnd5e.wikidot.com (auto-fetched)",
+      "wikidot_url": "https://dnd5e.wikidot.com/spell:balestra-leggera",
+      "level": 0,
+      "school": ""
+    },
+    {
+      "name": "Pugnale",
+      "index": "pugnale",
+      "description": "See full description at https://dnd5e.wikidot.com/spell:pugnale",
+      "source": "dnd5e.wikidot.com (auto-fetched)",
+      "wikidot_url": "https://dnd5e.wikidot.com/spell:pugnale",
+      "level": 0,
+      "school": ""
+    },
+    {
+      "name": "Spada lunga",
+      "index": "spada-lunga",
+      "description": "See full description at https://dnd5e.wikidot.com/spell:spada-lunga",
+      "source": "dnd5e.wikidot.com (auto-fetched)",
+      "wikidot_url": "https://dnd5e.wikidot.com/spell:spada-lunga",
+      "level": 0,
+      "school": ""
+    },
+    {
+      "name": "Soffio acido",
+      "index": "soffio-acido",
+      "description": "See full description at https://dnd5e.wikidot.com/spell:soffio-acido",
+      "source": "dnd5e.wikidot.com (auto-fetched)",
+      "wikidot_url": "https://dnd5e.wikidot.com/spell:soffio-acido",
+      "level": 0,
+      "school": ""
     }
   ],
   "features": [
@@ -27,7 +118,7 @@
       "index": "circle-of-spores",
       "class": "Druid",
       "level_req": 2,
-      "description": "The Circle of Spores druid views living and dead matter as interconnected parts of the same cycle of life. Death is not an end but a transition — the spores of decay become the seeds of new growth. Druids of this circle harness that connection, animating the recently dead and infecting living creatures with transformative fungal growth.\n\nSpells always prepared (Circle Spells): Blindness/Deafness (2nd), Gentle Repose (2nd).",
+      "description": "The Circle of Spores druid views living and dead matter as interconnected parts of the same cycle of life. Death is not an end but a transition \u2014 the spores of decay become the seeds of new growth. Druids of this circle harness that connection, animating the recently dead and infecting living creatures with transformative fungal growth.\n\nSpells always prepared (Circle Spells): Blindness/Deafness (2nd), Gentle Repose (2nd).",
       "source": "Xanathar's Guide to Everything, p. 23",
       "wikidot_url": "https://dnd5e.wikidot.com/druid:circle-of-spores"
     },
@@ -75,6 +166,54 @@
       "description": "When you choose this archetype at 3rd level, you gain the ability to climb faster than normal; climbing no longer costs you extra movement.\n\nIn addition, when you make a running jump, the distance you cover increases by a number of feet equal to your Dexterity modifier.",
       "source": "Player's Handbook, p. 97 (Thief Archetype)",
       "wikidot_url": "https://dnd5e.wikidot.com/rogue:second-story-work"
+    },
+    {
+      "name": "Bardo",
+      "index": "bardo",
+      "description": "See full description at https://dnd5e.wikidot.com/bardo",
+      "source": "dnd5e.wikidot.com (auto-fetched)",
+      "wikidot_url": "https://dnd5e.wikidot.com/bardo",
+      "class": ""
+    },
+    {
+      "name": "Gnomo delle rocce Racial",
+      "index": "gnomo-delle-rocce-racial",
+      "description": "See full description at https://dnd5e.wikidot.com/gnomo-delle-rocce-racial",
+      "source": "dnd5e.wikidot.com (auto-fetched)",
+      "wikidot_url": "https://dnd5e.wikidot.com/gnomo-delle-rocce-racial",
+      "class": ""
+    },
+    {
+      "name": "Forestiero Background",
+      "index": "forestiero-background",
+      "description": "See full description at https://dnd5e.wikidot.com/forestiero-background",
+      "source": "dnd5e.wikidot.com (auto-fetched)",
+      "wikidot_url": "https://dnd5e.wikidot.com/forestiero-background",
+      "class": ""
+    },
+    {
+      "name": "Paladino",
+      "index": "paladino",
+      "description": "See full description at https://dnd5e.wikidot.com/paladino",
+      "source": "dnd5e.wikidot.com (auto-fetched)",
+      "wikidot_url": "https://dnd5e.wikidot.com/paladino",
+      "class": ""
+    },
+    {
+      "name": "Dragonide Racial",
+      "index": "dragonide-racial",
+      "description": "See full description at https://dnd5e.wikidot.com/dragonide-racial",
+      "source": "dnd5e.wikidot.com (auto-fetched)",
+      "wikidot_url": "https://dnd5e.wikidot.com/dragonide-racial",
+      "class": ""
+    },
+    {
+      "name": "Eremita Background",
+      "index": "eremita-background",
+      "description": "See full description at https://dnd5e.wikidot.com/eremita-background",
+      "source": "dnd5e.wikidot.com (auto-fetched)",
+      "wikidot_url": "https://dnd5e.wikidot.com/eremita-background",
+      "class": ""
     }
   ]
 }
