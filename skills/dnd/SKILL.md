@@ -162,7 +162,7 @@ ${CLAUDE_SKILL_DIR}/                 ← the skill dir (plugin: <plugin>/skills/
   scripts/           ← dice.py, combat.py, character.py, tracker.py, calendar.py, lookup.py
   data/              ← bundled 5e SRD dataset (dnd5e_srd.json — no download needed; sync via /dm:dnd data sync)
   templates/         ← blank character-sheet.md, state.md, world.md, npcs.md, session-log.md
-  display/           ← Flask SSE display companion (dnd-display-app.py, send.py, push_stats.py, wrapper.py, tts.py, map_render.py, image_gen.py)
+  display/           ← Flask SSE display companion (dnd-display-app.py, send.py, push_stats.py, wrapper.py, tts.py, map_render.py, map_art.py, image_gen.py)
 (plugin root, one level up: docs/ setup walkthroughs · dice-server/ optional physical-dice service)
 ```
 
@@ -493,7 +493,9 @@ This fires a green-bordered block in the companion feed showing each character's
 
 Only when the display is running. Syntax: `SKILL-scripts.md` → *Battle Maps* / *Generated Images*.
 
-**Battle maps (`map_render.py` — free, instant).** Draw one when combat starts, and when the party enters a space where position matters (ambush, trap room, chase, siege). Re-send it with the same title when positions have changed meaningfully — once per round at most, never every turn. Keep it ≤ 20×15, faithful to what the narration established (exits, cover, light sources), and never reveal hidden things (unspotted traps, invisible or hidden creatures, secret doors) — the map shows what the characters perceive.
+**Battle maps (`map_render.py`).** Draw one when combat starts, and when the party enters a space where position matters (ambush, trap room, chase, siege). Re-send it with the same title when positions have changed meaningfully — once per round at most, never every turn. Keep it ≤ 20×15, faithful to what the narration established (exits, cover, light sources), and never reveal hidden things (unspotted traps, invisible or hidden creatures, secret doors) — the map shows what the characters perceive.
+
+You write the layout and the tokens; the image backend paints the terrain's look, and the script puts grid, coordinates and tokens on top in the exact squares. Add an `art:` header line — **English**, what the place looks like (materials, mood, light), no names or game terms — and keep it identical on every re-send of that place. The art is cached per terrain: a re-send where only tokens moved is instant and goes in the normal send batch. A new place, or changed walls/water/terrain, takes 5–90 s: run that call as its **own Bash call with `run_in_background: true`** — a plain map appears at once and the painted one replaces it. If the art fails, the plain map stays; carry on and never mention it in the fiction.
 
 **Pictures (`image_gen.py`).** Generate when:
 - a named NPC who will recur first appears → `portrait`
@@ -504,7 +506,7 @@ Only when the display is running. Syntax: `SKILL-scripts.md` → *Battle Maps* /
 
 At most one new image per scene; none for one-off extras. Prompts in **English**, physical description only (species, age, build, clothing, distinguishing marks, mood, setting) — no names, no game terms, no text in the image — and consistent with `npcs.md`. `--subject` = the canonical name, so the next call re-shows the same face instead of generating a new one. Caption in the campaign language.
 
-Generation takes 5–60 s: run `image_gen.py` as its **own Bash call with `run_in_background: true`**, then carry on narrating — the image lands in the feed when ready. Maps are instant and go in the normal send batch, right after the narration that sets the scene. If `image_gen.py` fails or reports images are off, stop calling it for the rest of the session and never mention it in the fiction.
+Generation takes 5–60 s: run `image_gen.py` as its **own Bash call with `run_in_background: true`**, then carry on narrating — the image lands in the feed when ready. A map re-send with cached art goes in the normal send batch, right after the narration that sets the scene. If `image_gen.py` fails or reports images are off, stop calling it for the rest of the session and never mention it in the fiction.
 
 ---
 

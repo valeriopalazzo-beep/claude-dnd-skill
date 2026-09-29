@@ -65,6 +65,9 @@ DEFAULTS = {
     "local_max_side": 768,     # SD 1.5 on a 6 GB card; raise for SDXL
     "gemini_model": "gemini-2.5-flash-image",
     "timeout": 180,
+    # Battle-map art (map_render.py → map_art.py): auto | paint | tiles | off
+    "map_art": "auto",
+    "map_denoise": 0.6,        # paint: how far the backend may stray from the layout
 }
 
 # kind → (prompt template, width, height, gemini aspect ratio)
@@ -73,7 +76,9 @@ KIND_PRESETS = {
     "monster":  ("fantasy creature, full body, menacing, {p}", 1024, 1024, "1:1"),
     "scene":    ("fantasy environment, wide establishing shot, {p}", 1344, 768, "16:9"),
     "item":     ("fantasy item, single object centred on a plain background, {p}", 768, 768, "1:1"),
+    "texture":  ("{p}", 512, 512, "1:1"),     # battle-map terrain, used by map_art.py
 }
+CLI_KINDS = ("item", "monster", "portrait", "scene")
 NEGATIVE = "text, letters, watermark, signature, logo, frame, blurry, lowres, deformed, extra limbs"
 
 
@@ -186,15 +191,19 @@ def gen_pollinations(prompt: str, kind: str, seed: int, cfg: dict) -> bytes:
             if not busy or attempt == 2:
                 break
             time.sleep(6 * (attempt + 1))
-    hint = "" if key else " (anonymous endpoint — a free key from enter.pollinations.ai is more reliable)"
+    if key:
+        hint = ""
+    elif "402" in str(last):
+        hint = (" (the anonymous endpoint now asks for payment — set a key from "
+                "enter.pollinations.ai, or use the local backend)")
+    else:
+        hint = " (anonymous endpoint — a free key from enter.pollinations.ai is more reliable)"
     raise ImageError(f"pollinations: {last}{hint}")
 
 
-def gen_local(prompt: str, kind: str, seed: int, cfg: dict) -> bytes:
-    w, h = _size_for(kind, int(cfg["local_max_side"]))
-    body = {"prompt": prompt, "negative_prompt": NEGATIVE, "width": w, "height": h,
-            "steps": int(cfg["local_steps"]), "seed": seed}
-    url = cfg["local_url"].rstrip("/") + "/sdapi/v1/txt2img"
+def a1111(endpoint: str, body: dict, cfg: dict) -> bytes:
+    """POST to a Forge / A1111 /sdapi/v1/<endpoint> (txt2img, img2img); first image."""
+    url = cfg["local_url"].rstrip("/") + "/sdapi/v1/" + endpoint
     req = urllib.request.Request(url, data=json.dumps(body).encode(), method="POST",
                                  headers={"Content-Type": "application/json"})
     try:
@@ -207,15 +216,22 @@ def gen_local(prompt: str, kind: str, seed: int, cfg: dict) -> bytes:
         raise ImageError(f"local: unexpected response shape: {e}") from e
 
 
-def gen_gemini(prompt: str, kind: str, seed: int, cfg: dict) -> bytes:
+def gen_local(prompt: str, kind: str, seed: int, cfg: dict) -> bytes:
+    w, h = _size_for(kind, int(cfg["local_max_side"]))
+    return a1111("txt2img", {"prompt": prompt, "negative_prompt": NEGATIVE, "width": w,
+                             "height": h, "steps": int(cfg["local_steps"]), "seed": seed}, cfg)
+
+
+def gemini(parts: list, aspect: str, cfg: dict) -> bytes:
+    """One Gemini image from `parts` (text, and optionally an inline image)."""
     key = _gemini_key()
     if not key:
         raise ImageError("gemini: no API key (DND_IMAGE_KEY / GEMINI_API_KEY / tts.key)")
     model = cfg["gemini_model"]
     body = {
-        "contents": [{"parts": [{"text": prompt}]}],
+        "contents": [{"parts": parts}],
         "generationConfig": {"responseModalities": ["IMAGE"],
-                             "imageConfig": {"aspectRatio": KIND_PRESETS[kind][3]}},
+                             "imageConfig": {"aspectRatio": aspect}},
     }
     req = urllib.request.Request(
         f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
@@ -229,6 +245,10 @@ def gen_gemini(prompt: str, kind: str, seed: int, cfg: dict) -> bytes:
     except (KeyError, IndexError, ValueError) as e:
         raise ImageError(f"gemini: unexpected response shape: {e}") from e
     raise ImageError("gemini: no image in the response (prompt refused?)")
+
+
+def gen_gemini(prompt: str, kind: str, seed: int, cfg: dict) -> bytes:
+    return gemini([{"text": prompt}], KIND_PRESETS[kind][3], cfg)
 
 
 BACKENDS = {"pollinations": gen_pollinations, "local": gen_local, "gemini": gen_gemini}
@@ -261,7 +281,7 @@ def _mask(v: Optional[str]) -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Generate a fantasy image and show it on the DnD display.")
-    ap.add_argument("--kind", choices=sorted(KIND_PRESETS), default="portrait")
+    ap.add_argument("--kind", choices=CLI_KINDS, default="portrait")
     ap.add_argument("--subject", help="who/what this is — the cache key (e.g. the NPC's name)")
     ap.add_argument("--prompt", help="visual description, in English for best results")
     ap.add_argument("--caption", help="caption on the display (default: the subject)")
@@ -290,6 +310,9 @@ def main() -> int:
         except Exception:
             gk = None
         print(f"gemini:        key {_mask(gk)}, model {cfg['gemini_model']}")
+        import map_art
+        print(f"map art:       {cfg['map_art']} → {map_art.resolve_mode(cfg['map_art'], cfg['backend'])}"
+              f" (paint denoise {cfg['map_denoise']})")
         return 0
 
     import media

@@ -82,6 +82,136 @@ class MapRenderTests(unittest.TestCase):
             self.mr.parse("\n".join(["." * 61] * 3))
 
 
+ART_MAP = """\
+    title: Cripta
+    art: damp crypt, cracked flagstones
+    ---
+    ######
+    #A.~.+
+    #..g^#
+    ######
+"""
+
+
+class MapArtTests(unittest.TestCase):
+    """Art comes from the image backend, positions never do."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.mr = _load(DISPLAY / "map_render.py", "map_render_art_under_test")
+        cls.ma = _load(DISPLAY / "map_art.py", "map_art")
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.d = pathlib.Path(self.tmp.name)
+        self.cfg = dict(self.ma.image_gen.DEFAULTS, backend="pollinations")
+        self.calls = []
+        self._saved = (self.ma.texture, self.ma.paint)
+        png = self.ma.layout_png([["floor"]], cell=2)
+
+        def fake(kind_or_kinds, desc, seed, cfg):
+            self.calls.append(kind_or_kinds if isinstance(kind_or_kinds, str) else "paint")
+            return png
+        self.ma.texture = self.ma.paint = fake
+
+    def tearDown(self):
+        self.ma.texture, self.ma.paint = self._saved
+        self.tmp.cleanup()
+
+    def test_art_header_is_parsed(self):
+        spec = self.mr.parse(ART_MAP)
+        self.assertEqual(spec.art, "damp crypt, cracked flagstones")
+        self.assertEqual(spec.rows[0], "######")
+
+    def test_mode_follows_the_backend(self):
+        rm = self.ma.resolve_mode
+        self.assertEqual(rm(None, "pollinations"), "tiles")
+        self.assertEqual(rm("auto", "local"), "paint")
+        self.assertEqual(rm("auto", "gemini"), "paint")
+        self.assertEqual(rm("paint", "pollinations"), "tiles", "pollinations cannot repaint a layout")
+        self.assertEqual(rm("tiles", "local"), "tiles")
+        self.assertEqual(rm("auto", "off"), "off")
+        self.assertEqual(rm("off", "local"), "off")
+
+    def test_tokens_do_not_change_the_terrain(self):
+        a = self.mr.kind_grid(self.mr.parse("#A.g#"))
+        b = self.mr.kind_grid(self.mr.parse("#.gA#"))
+        self.assertEqual(a, b)
+        self.assertEqual(a[0][1], "floor")
+
+    def test_layout_png_is_a_valid_png_of_the_right_size(self):
+        import struct
+        import zlib
+        data = self.ma.layout_png([["wall", "floor", "water"], ["floor", "door", "void"]], cell=4)
+        self.assertTrue(data.startswith(b"\x89PNG\r\n\x1a\n"))
+        w, h = struct.unpack(">II", data[16:24])
+        self.assertEqual((w, h), (12, 8))
+        idat = data[data.index(b"IDAT") + 4:data.index(b"IEND") - 8]
+        self.assertEqual(len(zlib.decompress(idat)), h * (1 + w * 3))
+
+    def test_tiles_are_generated_once_per_terrain_and_reused(self):
+        kinds = self.mr.kind_grid(self.mr.parse(ART_MAP))
+        self.assertIsNone(self.ma.get_art(kinds, "crypt", self.d, self.cfg, "tiles", generate=False))
+        art = self.ma.get_art(kinds, "crypt", self.d, self.cfg, "tiles")
+        self.assertEqual(sorted(self.calls), ["floor", "wall", "water"])
+        self.assertEqual(sorted(art.textures), ["floor", "wall", "water"])
+        moved = self.mr.kind_grid(self.mr.parse(ART_MAP.replace("#A.~", "#.A~")))
+        again = self.ma.get_art(moved, "crypt", self.d, self.cfg, "tiles", generate=False)
+        self.assertIsNotNone(again, "moving a token must hit the cache")
+        self.assertEqual(len(self.calls), 3)
+        index = json.loads((self.d / "index.json").read_text(encoding="utf-8"))
+        self.assertEqual({e["kind"] for e in index}, {"map-texture"})
+
+    def test_paint_is_cached_per_terrain(self):
+        kinds = self.mr.kind_grid(self.mr.parse(ART_MAP))
+        cfg = dict(self.cfg, backend="local")
+        self.ma.get_art(kinds, "", self.d, cfg, "paint")
+        self.assertIsNotNone(self.ma.get_art(kinds, "", self.d, cfg, "paint", generate=False))
+        kinds[1][2] = "wall"
+        self.assertIsNone(self.ma.get_art(kinds, "", self.d, cfg, "paint", generate=False),
+                          "changed terrain needs new art")
+        self.assertEqual(self.calls, ["paint"])
+
+    def test_a_failed_texture_leaves_that_terrain_vector(self):
+        def flaky(kind, desc, seed, cfg):
+            if kind == "water":
+                raise self.ma.ImageError("queue full")
+            return self.ma.layout_png([["floor"]], cell=2)
+        self.ma.texture = flaky
+        kinds = self.mr.kind_grid(self.mr.parse(ART_MAP))
+        art = self.ma.get_art(kinds, "", self.d, self.cfg, "tiles")
+        self.assertEqual(sorted(art.textures), ["floor", "wall"])
+        self.assertEqual(art.missing, ["water"])
+        cached = self.ma.get_art(kinds, "", self.d, self.cfg, "tiles", generate=False)
+        self.assertEqual((sorted(cached.textures), cached.missing), (["floor", "wall"], ["water"]),
+                         "a partial cache is still usable, and says what to retry")
+        self.ma.texture = lambda *_a: self.fail("a texture that just failed must not be retried yet")
+        again = self.ma.get_art(kinds, "", self.d, self.cfg, "tiles")
+        self.assertEqual(again.missing, ["water"])
+        svg = self.mr.render_svg(self.mr.parse(ART_MAP), art)
+        self.assertIn('fill="url(#tex-floor)"', svg)
+        self.assertIn(self.mr.C["water"], svg, "water falls back to the vector colour")
+
+    def test_nothing_generated_raises(self):
+        def broken(*_a):
+            raise self.ma.ImageError("offline")
+        self.ma.texture = broken
+        kinds = self.mr.kind_grid(self.mr.parse(ART_MAP))
+        with self.assertRaises(self.ma.ImageError):
+            self.ma.get_art(kinds, "", self.d, self.cfg, "tiles")
+
+    def test_painted_svg_keeps_tokens_and_markers_over_the_art(self):
+        spec = self.mr.parse(ART_MAP)
+        art = self.ma.Art("paint", image=("image/png", self.ma.layout_png([["floor"]], cell=2)))
+        svg = self.mr.render_svg(spec, art)
+        self.assertIn('<image href="data:image/png;base64,', svg)
+        self.assertNotIn(self.mr.C["water"], svg, "terrain comes from the painting")
+        self.assertIn(self.mr.C["door"], svg, "doors stay marked")
+        self.assertIn(self.mr.C["trap"], svg, "known traps stay marked")
+        self.assertIn(self.mr.SIDES["pc"], svg)
+        self.assertIn(self.mr.SIDES["foe"], svg)
+
+
 class ImageGenTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

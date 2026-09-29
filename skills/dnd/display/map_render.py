@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """map_render.py — turn an ASCII battle map into an SVG and show it on the display.
 
-The DM (Claude) draws the map as text; this script owns every pixel, so the
-output is deterministic, free, instant, and safe to serve (all text escaped).
+The DM (Claude) writes the layout as text; this script owns every position, so
+grid, coordinates and tokens are exact and all text is escaped. The terrain's
+LOOK comes from the image backend configured for image_gen.py (see map_art.py):
+painted over the layout, or tiled from generated textures. The art is cached
+per terrain, so re-sending a map with moved tokens is instant. Without a
+backend, or if it fails, the map is drawn as plain vector shapes.
 
 Input (stdin or --file). Header and legend are optional; `---` separates them:
 
     title: Cripta di Vessar
     scale: 1 quadretto = 1,5 m
+    art: damp crypt, cracked flagstones, scattered bones, candlelight
     ---
     ###########
     #..A...g..#
@@ -34,6 +39,7 @@ lowercase = foe, labelled with the letter itself.
 Usage:
     python3 map_render.py << 'DNDEND'  ...map...  DNDEND      # render + show
     python3 map_render.py --file map.txt --no-send             # render only
+    python3 map_render.py --art off < map.txt                  # plain vector map
     python3 map_render.py --symbols                            # print the key
 """
 from __future__ import annotations
@@ -70,6 +76,11 @@ SIDES = {
 SIDE_ALIASES = {"enemy": "foe", "monster": "foe", "hostile": "foe",
                 "player": "pc", "friend": "ally", "friendly": "ally"}
 
+HEADER_KEYS = ("title", "scale", "titolo", "scala", "art")
+TEXTURED = ("floor", "wall", "water", "grass", "rough")   # map_art.TEXTURED
+PAINT_MARKERS = ("door", "trap", "stairs_up", "stairs_down")  # kept visible over painted art
+TEX_TILE = 4 * CELL   # one texture spans 4x4 squares; its seams fall on grid lines
+
 C = {  # palette — parchment, so the map reads the same in light and dark UI
     "bg": "#efe4c8", "floor": "#e4d4ac", "grid": "#b7a176",
     "wall": "#4b4036", "wall_edge": "#2f2821", "water": "#7fa9bf",
@@ -84,6 +95,7 @@ C = {  # palette — parchment, so the map reads the same in light and dark UI
 class MapSpec:
     title: str = ""
     scale: str = ""
+    art: str = ""        # English visual description for the generated terrain
     rows: list = field(default_factory=list)
     legend: dict = field(default_factory=dict)   # letter → (name, side)
     warnings: list = field(default_factory=list)
@@ -104,7 +116,7 @@ def parse(text: str) -> MapSpec:
     def is_header(sec):
         body = [l for l in sec if l.strip()]
         return bool(body) and all(":" in l and l.split(":", 1)[0].strip().lower()
-                                  in ("title", "scale", "titolo", "scala") for l in body)
+                                  in HEADER_KEYS for l in body)
 
     if len(sections) >= 2 and is_header(sections[0]):
         for l in sections[0]:
@@ -115,6 +127,8 @@ def parse(text: str) -> MapSpec:
                     spec.title = v.strip()
                 elif k in ("scale", "scala"):
                     spec.scale = v.strip()
+                elif k == "art":
+                    spec.art = v.strip()
         sections = sections[1:]
 
     grid = sections[0]
@@ -167,15 +181,28 @@ def _cell_kind(spec: MapSpec, x: int, y: int) -> str:
     return TERRAIN.get(ch, "floor")
 
 
-def _draw_cell(kind: str, spec: MapSpec, x: int, y: int) -> list:
+def _draw_cell(kind: str, spec: MapSpec, x: int, y: int, art=None) -> list:
     px, py, s = PAD + x * CELL, PAD + y * CELL, CELL
     cx, cy = px + s / 2, py + s / 2
     out = []
     if kind == "void":
-        return out      # off-map: leave the parchment showing
-    base = {"wall": C["wall"], "water": C["water"],
-            "grass": C["grass"]}.get(kind, C["floor"])
-    out.append(f'<rect x="{px}" y="{py}" width="{s}" height="{s}" fill="{base}"/>')
+        return out      # off-map: leave the parchment (or the painted art) showing
+    tex = art.textures if art is not None else {}
+    surface = kind if kind in TEXTURED else "floor"
+    if art is not None and art.mode == "paint":
+        if kind not in PAINT_MARKERS:
+            return out  # the painting already shows it
+    elif surface in tex:
+        out.append(f'<rect x="{px}" y="{py}" width="{s}" height="{s}" fill="url(#tex-{surface})"/>')
+        if kind == "wall":  # walls must read as solid at a glance
+            out.append(f'<rect x="{px}" y="{py}" width="{s}" height="{s}" '
+                       f'fill="{C["wall_edge"]}" opacity="0.45"/>')
+        if kind in TEXTURED:
+            return out  # the texture is the detail
+    else:
+        base = {"wall": C["wall"], "water": C["water"],
+                "grass": C["grass"]}.get(kind, C["floor"])
+        out.append(f'<rect x="{px}" y="{py}" width="{s}" height="{s}" fill="{base}"/>')
 
     if kind == "wall":
         # Hatching so walls read as solid even in greyscale.
@@ -248,7 +275,30 @@ def _draw_token(ch: str, spec: MapSpec, x: int, y: int) -> list:
     ]
 
 
-def render_svg(spec: MapSpec) -> str:
+def kind_grid(spec: MapSpec) -> list:
+    """Terrain kind of every square (tokens stand on floor) — what map_art paints."""
+    return [[_cell_kind(spec, x, y) for x in range(len(spec.rows[0]))]
+            for y in range(len(spec.rows))]
+
+
+def _art_defs(art) -> list:
+    if art is None or not art.textures:
+        return []
+    import map_art
+    out = ["<defs>"]
+    for kind, (mime, data) in art.textures.items():
+        # Only the middle half of the texture is used: models often add
+        # perspective or walls near the edges, and Pollinations a corner logo.
+        out.append(f'<pattern id="tex-{kind}" patternUnits="userSpaceOnUse" x="{PAD}" y="{PAD}" '
+                   f'width="{TEX_TILE}" height="{TEX_TILE}"><image href="{map_art.data_uri(mime, data)}" '
+                   f'x="{-TEX_TILE / 2}" y="{-TEX_TILE / 2}" width="{TEX_TILE * 2}" height="{TEX_TILE * 2}" '
+                   f'preserveAspectRatio="none"/></pattern>')
+    out.append("</defs>")
+    return out
+
+
+def render_svg(spec: MapSpec, art=None) -> str:
+    """SVG of the map; `art` (a map_art.Art) replaces the vector terrain."""
     w, h = len(spec.rows[0]), len(spec.rows)
     grid_w, grid_h = w * CELL, h * CELL
     title_h = 34 if spec.title else 0
@@ -278,15 +328,23 @@ def render_svg(spec: MapSpec) -> str:
                    f'fill="{C["ink"]}" letter-spacing="1">{escape(spec.title)}</text>')
 
     out.append(f'<g transform="translate(0,{title_h})">')
+    out.extend(_art_defs(art))
+    painted = art is not None and art.image is not None
+    if painted:
+        import map_art
+        out.append(f'<image href="{map_art.data_uri(*art.image)}" x="{PAD}" y="{PAD}" '
+                   f'width="{grid_w}" height="{grid_h}" preserveAspectRatio="none"/>')
     for y, row in enumerate(spec.rows):
         for x, ch in enumerate(row):
-            out.extend(_draw_cell(_cell_kind(spec, x, y), spec, x, y))
-    # Grid lines over playable squares only (not over void).
+            out.extend(_draw_cell(_cell_kind(spec, x, y), spec, x, y, art))
+    # Grid lines over playable squares only (not over void); darker over art.
+    grid = (f'stroke="{C["grid"]}" stroke-width="0.8"' if art is None
+            else 'stroke="#000" stroke-opacity="0.35" stroke-width="1"')
     for y, row in enumerate(spec.rows):
         for x, ch in enumerate(row):
-            if _cell_kind(spec, x, y) != "void":
+            if painted or _cell_kind(spec, x, y) != "void":
                 out.append(f'<rect x="{PAD + x * CELL}" y="{PAD + y * CELL}" width="{CELL}" '
-                           f'height="{CELL}" fill="none" stroke="{C["grid"]}" stroke-width="0.8"/>')
+                           f'height="{CELL}" fill="none" {grid}/>')
     for y, row in enumerate(spec.rows):
         for x, ch in enumerate(row):
             if ch.isalpha():
@@ -327,6 +385,8 @@ def main() -> int:
                                   "(default: derived from the title)")
     p.add_argument("--caption", help="caption under the map (default: the title)")
     p.add_argument("--no-send", action="store_true", help="render only; do not push to the display")
+    p.add_argument("--art", choices=("auto", "paint", "tiles", "off"),
+                   help="terrain art from the image backend (default: map_art in images.json, else auto)")
     p.add_argument("--symbols", action="store_true", help="print the terrain/token key and exit")
     args = p.parse_args()
 
@@ -351,6 +411,8 @@ def main() -> int:
         print(args.out)
         return 0
 
+    import image_gen
+    import map_art
     import media
     try:
         d = media.media_dir(args.campaign)
@@ -358,15 +420,44 @@ def main() -> int:
         print(f"map_render: {e}", file=sys.stderr)
         return 2
     map_id = media.slug(args.name or spec.title or "map")
-    digest = hashlib.sha1(svg.encode("utf-8")).hexdigest()[:8]
-    fname = f"map-{map_id}-{digest}.svg"
-    (d / fname).write_text(svg, encoding="utf-8")
-    print(str(d / fname))
+    caption = args.caption if args.caption is not None else spec.title
 
-    if not args.no_send:
-        caption = args.caption if args.caption is not None else spec.title
-        if not media.post_image(fname, caption=caption, kind="map", subject=map_id):
+    def save_and_show(svg_text: str) -> None:
+        digest = hashlib.sha1(svg_text.encode("utf-8")).hexdigest()[:8]
+        fname = f"map-{map_id}-{digest}.svg"
+        (d / fname).write_text(svg_text, encoding="utf-8")
+        print(str(d / fname))
+        if not args.no_send and not media.post_image(fname, caption=caption, kind="map", subject=map_id):
             print("map_render: display offline — map saved but not shown", file=sys.stderr)
+
+    def log(msg: str) -> None:
+        print(f"map_render: {msg}", file=sys.stderr)
+
+    cfg = image_gen.load_config()
+    mode = map_art.resolve_mode(args.art or cfg.get("map_art"), cfg["backend"])
+    if mode == "off":
+        save_and_show(svg)
+        return 0
+    kinds = kind_grid(spec)
+    art = map_art.get_art(kinds, spec.art, d, cfg, mode, generate=False)
+    if art is None:
+        # New terrain: show the plain map now; the painted one supersedes it.
+        if not args.no_send:
+            save_and_show(svg)
+        try:
+            art = map_art.get_art(kinds, spec.art, d, cfg, mode, log=log)
+        except map_art.ImageError as e:
+            log(f"map art unavailable ({e}) — keeping the plain map")
+            if args.no_send:
+                save_and_show(svg)
+            return 0
+    elif art.missing:
+        # Some textures failed last time: retry them; what exists is kept.
+        try:
+            art = map_art.get_art(kinds, spec.art, d, cfg, mode, log=log)
+        except map_art.ImageError:
+            pass
+    save_and_show(render_svg(spec, art))
     return 0
 
 

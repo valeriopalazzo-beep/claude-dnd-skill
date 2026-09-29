@@ -508,12 +508,13 @@ Open the browser tab and Chromecast it *before* running `/dm:dnd load` so the br
 
 ## Battle Maps — `display/map_render.py`
 
-Draw the map as text; the script renders an SVG into `<campaign>/media/` and shows it on the display. Free and instant.
+Write the layout as text; the image backend paints the terrain, the script draws grid, coordinates and tokens on top (exact squares), saves an SVG into `<campaign>/media/` and shows it on the display.
 
 ```bash
 python3 ${CLAUDE_SKILL_DIR}/display/map_render.py << 'DNDEND'
 title: Cripta di Vessar
 scale: 1 quadretto = 1,5 m
+art: damp underground crypt, cracked grey flagstones, scattered bones, candlelight
 ---
 ############
 #..A....g..#
@@ -541,7 +542,18 @@ python3 ${CLAUDE_SKILL_DIR}/display/map_render.py --symbols   # print the full k
 
 Tokens are letters. Legend line `X: Name | side`, side ∈ `pc`, `ally`, `npc`, `foe`, `neutral`. Unlisted letters: UPPERCASE = pc, lowercase = foe. Header and legend are optional; `---` separates the three parts. Max 60×60 — keep maps ≤ 20×15 so they read on a phone.
 
-Re-sending a map with the same title (or `--name <id>`) marks the older copy in the feed as superseded. `--caption TEXT` overrides the caption, `--no-send` only saves, `--out file.svg` writes elsewhere.
+Re-sending a map with the same title (or `--name <id>`) marks the older copy in the feed as superseded. `--caption TEXT` overrides the caption, `--no-send` only saves, `--out file.svg` writes a plain map elsewhere.
+
+**Terrain art.** `art:` (English, optional) describes the look; without it the look is guessed from the symbols. How it is made depends on the backend (`map_art` in `images.json`, or `--art`):
+
+| Mode | Backend | Result |
+|---|---|---|
+| `paint` | local, gemini | the layout is repainted (img2img) — walls and doors stay where you drew them |
+| `tiles` | any (pollinations) | one generated texture per terrain type (floor, wall, water, grass, rough), tiled per square |
+| `auto` | — | paint on local/gemini, tiles otherwise (default) |
+| `off` | — | plain vector map |
+
+Doors, known traps and stairs stay marked on top of painted art; tokens always do. Art is cached per terrain + `art:` line, so re-sends with moved tokens are instant — keep `art:` identical for the same place. New terrain: the plain map is shown immediately, the art version supersedes it when ready (run it with `run_in_background: true`). Any art failure leaves the plain map (stderr line, exit 0).
 
 ## Generated Images — `display/image_gen.py`
 
