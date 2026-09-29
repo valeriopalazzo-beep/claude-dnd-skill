@@ -50,6 +50,9 @@ Usage:
     #   --stat-inventory-add    "NAME:ITEM"
     #   --stat-inventory-remove "NAME:ITEM"
     #
+    # Re-show a campaign image (tail replay):
+    #   --image FILE [--image-kind K] [--image-caption TEXT] [--image-subject TEXT]
+    #
     # Timed effect flags:
     #   --effect-start "NAME:SPELL:DURATION"   DURATION: 10r/60m/8h/indef  optional :conc
     #   --effect-end   "NAME:SPELL"            narrative end (broken/dispelled)
@@ -464,12 +467,33 @@ def main() -> None:
     parser.add_argument("--effect-end", action="append", metavar="NAME:SPELL",
         help="End a timed effect: NAME:SPELL (narrative end — broken, dispelled, player drops)")
 
+    # ── Image re-show (tail replay) — new images come from image_gen.py / map_render.py
+    parser.add_argument("--image", metavar="FILE",
+        help="Show an existing file from the campaign's media/ folder "
+             "(used to replay `image` entries from session_tail.json).")
+    parser.add_argument("--image-kind", default="scene",
+        choices=["portrait", "monster", "scene", "item", "map"],
+        help="Kind for --image (default scene)")
+    parser.add_argument("--image-caption", default="", metavar="TEXT", help="Caption for --image")
+    parser.add_argument("--image-subject", default="", metavar="TEXT", help="Subject for --image")
+
     # ── Diagnostics ───────────────────────────────────────────────────────────
     parser.add_argument("--verify", action="store_true",
         help="After sending, GET /health and confirm the broadcast was received. "
              "Surfaces a clear stderr line on mismatch — use during dev/debug.")
 
     args = parser.parse_args()
+
+    if args.image:
+        body = {"file": os.path.basename(args.image), "caption": args.image_caption,
+                "kind": args.image_kind, "subject": args.image_subject}
+        if not _post(f"{BASE_URL}/image", json.dumps(body).encode("utf-8"), _read_token()):
+            failed = _SEND_LOG[-1] if _SEND_LOG else {}
+            if failed.get("reason") == "display offline":
+                print("send.py: display offline — send dropped silently", file=sys.stderr)
+            else:
+                sys.exit(3)
+        return
 
     # Two categories of flags drive whether to read stdin:
     #   1. Content flags (--player/--npc/--dice/--tutor/--action): body REQUIRED.

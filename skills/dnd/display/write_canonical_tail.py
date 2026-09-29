@@ -75,7 +75,7 @@ def main() -> int:
         if not isinstance(e, dict):
             print(f"write_canonical_tail: entry #{i} is not an object", file=sys.stderr)
             return 2
-        if not any(k in e for k in ("text", "player", "npc", "dice", "tutor", "action")):
+        if not any(k in e for k in ("text", "player", "npc", "dice", "tutor", "action", "image")):
             print(f"write_canonical_tail: entry #{i} has no recognizable content key", file=sys.stderr)
             return 2
         e = dict(e)  # copy

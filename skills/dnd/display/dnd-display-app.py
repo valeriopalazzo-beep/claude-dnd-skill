@@ -1393,6 +1393,69 @@ def chunk():
     return "", 204
 
 
+# ─── Campaign images (image_gen.py / map_render.py) ──────────────────────────
+# Files live in <campaign>/media/. Only the ACTIVE campaign's folder is served,
+# and names must match the same allowlist media.py writes with.
+_MEDIA_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,120}\.(?:png|jpe?g|webp|svg)$")
+_IMAGE_KINDS = {"portrait", "monster", "scene", "item", "map"}
+
+
+def _active_campaign() -> str:
+    try:
+        with open(CAMP_FILE, encoding="utf-8") as f:
+            return f.read().strip()
+    except Exception:
+        return ""
+
+
+def _media_dir() -> "str | None":
+    camp = _active_campaign()
+    camp = re.sub(r"[^A-Za-z0-9_-]", "", camp)[:50]
+    return str(_find_campaign(camp) / "media") if camp else None
+
+
+@app.route("/media/<name>")
+def media_file(name):
+    # <img> tags cannot send headers, so LAN mode also accepts ?t=<token>.
+    if _lan_token is not None:
+        provided = request.headers.get("X-DND-Token", "") or request.args.get("t", "")
+        if not hmac.compare_digest(provided, _lan_token):
+            return "Forbidden", 403
+    d = _media_dir()
+    if not d or not _MEDIA_NAME_RE.match(name):
+        return "Not found", 404
+    return send_from_directory(d, name, max_age=86400)
+
+
+@app.route("/image", methods=["POST"])
+def image():
+    if not _token_ok():
+        return "Forbidden", 403
+    data = request.get_json(silent=True) or {}
+    name = str(data.get("file", "")).strip()
+    d = _media_dir()
+    if not d or not _MEDIA_NAME_RE.match(name) or not os.path.isfile(os.path.join(d, name)):
+        return "Unknown media file", 400
+    kind = str(data.get("kind", "")).strip().lower()
+    img = {
+        "file": name,
+        "kind": kind if kind in _IMAGE_KINDS else "scene",
+        "caption": str(data.get("caption", "")).strip()[:240],
+        "subject": str(data.get("subject", "")).strip()[:80],
+    }
+    log_entry: dict = {"image": img}
+    if _active_campaign():
+        log_entry["_camp"] = _active_campaign()
+    with _text_log_lock:
+        _text_log.append(log_entry)
+    with _tail_lock:
+        _tail_buffer.append(log_entry)
+    _persist_log()
+    _persist_tail()
+    _broadcast({"image": img})
+    return "", 204
+
+
 @app.route("/stats", methods=["POST"])
 def stats():
     """Receive character/combat stat updates. Merges players by name, replaces turn_order.

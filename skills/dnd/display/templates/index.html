@@ -1147,6 +1147,35 @@
     font-style: italic; margin-top: 2px;
   }
 
+  /* ── Image feed block (image_gen.py portraits/monsters/scenes, map_render.py maps) ── */
+  .image-block {
+    margin: 0 0 1.6em; text-align: center;
+    opacity: 0; animation: fadeIn 0.6s ease 0.1s forwards;
+  }
+  .image-block img {
+    display: block; margin: 0 auto;
+    max-width: 100%; max-height: 62vh; height: auto;
+    border-radius: 4px; cursor: zoom-in;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.45);
+  }
+  .image-block.kind-portrait img { max-height: 48vh; }
+  .image-block.kind-map img { max-height: 75vh; border-radius: 2px; }
+  .image-caption {
+    margin-top: 8px; font-size: 12px; font-style: italic;
+    letter-spacing: 0.5px; opacity: 0.7;
+  }
+  .image-missing { font-size: 12px; font-style: italic; opacity: 0.5; }
+  /* An older copy of a map that has since been re-sent: shrink it out of the way. */
+  .image-block.superseded img { max-height: 90px; opacity: 0.45; filter: grayscale(0.6); }
+  .image-block.superseded .image-caption::after { content: ' · superseded'; }
+  #image-lightbox {
+    position: fixed; inset: 0; z-index: 9999; display: none;
+    align-items: center; justify-content: center;
+    background: rgba(8,6,4,0.92); cursor: zoom-out; padding: 16px;
+  }
+  #image-lightbox.open { display: flex; }
+  #image-lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
   /* ── Milestones (sidebar — Bardic Inspiration / Hero Coin / Fate Token / etc.) ── */
   .sb-milestones { margin-top: 6px; }
   .sb-milestone-row {
@@ -5241,11 +5270,87 @@ function renderXpBlock(xpData) {
   scrollToBottom();
 }
 
+// ── Image block (portraits, monsters, scenes, maps) ───────────────────
+function _mediaUrl(file) {
+  // <img> can't send the X-DND-Token header, so LAN mode passes it as ?t=.
+  const t = _dndToken ? '?t=' + encodeURIComponent(_dndToken) : '';
+  return '/media/' + encodeURIComponent(file) + t;
+}
+
+function _openLightbox(src, alt) {
+  let box = document.getElementById('image-lightbox');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'image-lightbox';
+    box.appendChild(document.createElement('img'));
+    box.addEventListener('click', () => box.classList.remove('open'));
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') box.classList.remove('open');
+    });
+    document.body.appendChild(box);
+  }
+  const img = box.querySelector('img');
+  img.src = src;
+  img.alt = alt || '';
+  box.classList.add('open');
+}
+
+function renderImageBlock(image, isReplay) {
+  _deferBlock(() => _renderImageBlockNow(image, isReplay), isReplay);
+}
+
+function _renderImageBlockNow(image, isReplay) {
+  if (!image || !image.file) return;
+  _flushForBlock();
+  const kind = String(image.kind || 'scene').replace(/[^a-z]/g, '');
+
+  // A re-sent map (same subject) supersedes the earlier copies in the feed.
+  if (kind === 'map' && image.subject) {
+    textContent.querySelectorAll('.image-block.kind-map').forEach(el => {
+      if (el.dataset.subject === image.subject) el.classList.add('superseded');
+    });
+  }
+
+  const block = document.createElement('figure');
+  block.className = 'image-block kind-' + kind;
+  block.dataset.subject = image.subject || '';
+
+  const img = document.createElement('img');
+  img.src = _mediaUrl(image.file);
+  img.alt = image.caption || image.subject || '';
+  img.loading = 'lazy';
+  img.addEventListener('load', () => scrollToBottom());
+  img.addEventListener('error', () => {
+    const miss = document.createElement('div');
+    miss.className = 'image-missing';
+    miss.textContent = '[image unavailable: ' + image.file + ']';
+    img.replaceWith(miss);
+  });
+  img.addEventListener('click', () => {
+    if (block.classList.contains('superseded')) { block.classList.remove('superseded'); return; }
+    _openLightbox(img.src, img.alt);
+  });
+  block.appendChild(img);
+
+  if (image.caption) {
+    const cap = document.createElement('figcaption');
+    cap.className = 'image-caption';
+    cap.textContent = image.caption;
+    block.appendChild(cap);
+  }
+  textContent.appendChild(block);
+  _reanchorCursor();
+}
+
 // ── Replay batch (reconnect / session resume) ─────────────────────────
 function renderReplayBatch(items) {
   flushNewBlock();
   items.forEach(item => {
     if (!item) return;
+    if (item.image) {
+      renderImageBlock(item.image, true);
+      return;
+    }
     if (item.inspiration_award) {
       renderInspirationBlock(item.inspiration_award, item.reason || '');
       return;
@@ -7706,7 +7811,10 @@ function connect() {
     if (payload.xp_award) {
       renderXpBlock(payload.xp_award);
     }
-    if (payload.text && !payload.inspiration_award && !payload.milestone_award && !payload.milestone_spend && !payload.xp_award) {
+    if (payload.image) {
+      renderImageBlock(payload.image);
+    }
+    if (payload.text &&!payload.inspiration_award && !payload.milestone_award && !payload.milestone_spend && !payload.xp_award) {
       if (payload.action) {
         renderActionBlock(payload.action, payload.text);
       } else if (payload.player) {

@@ -506,6 +506,68 @@ Open the browser tab and Chromecast it *before* running `/dm:dnd load` so the br
 
 ---
 
+## Battle Maps — `display/map_render.py`
+
+Draw the map as text; the script renders an SVG into `<campaign>/media/` and shows it on the display. Free and instant.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/display/map_render.py << 'DNDEND'
+title: Cripta di Vessar
+scale: 1 quadretto = 1,5 m
+---
+############
+#..A....g..#
+#..B..%%...+
+#~~~..&..<.#
+####+#######
+---
+A: Aldric | pc
+B: Mira | ally
+g: Goblin arciere | foe
+DNDEND
+
+python3 ${CLAUDE_SKILL_DIR}/display/map_render.py --symbols   # print the full key
+```
+
+| Symbol | Meaning | Symbol | Meaning |
+|---|---|---|---|
+| `#` | wall | `.` | floor |
+| space / `_` | off-map | `+` | door (orients itself to the wall) |
+| `~` | water | `^` | trap / hazard |
+| `*` | tree / bush | `%` | difficult terrain |
+| `,` | grass / open ground | `=` | furniture (table, altar, crate) |
+| `&` | pillar / statue | `<` `>` | stairs up / down |
+| `!` | fire / brazier | letter | token |
+
+Tokens are letters. Legend line `X: Name | side`, side ∈ `pc`, `ally`, `npc`, `foe`, `neutral`. Unlisted letters: UPPERCASE = pc, lowercase = foe. Header and legend are optional; `---` separates the three parts. Max 60×60 — keep maps ≤ 20×15 so they read on a phone.
+
+Re-sending a map with the same title (or `--name <id>`) marks the older copy in the feed as superseded. `--caption TEXT` overrides the caption, `--no-send` only saves, `--out file.svg` writes elsewhere.
+
+## Generated Images — `display/image_gen.py`
+
+Portraits, monsters, scenes and items. Backend (Pollinations / local Forge / Gemini / off) is set in `~/.config/claude-dnd/images.json` — setup: `docs/SKILL-images.md` at the plugin root.
+
+```bash
+# New NPC portrait (prompt: English, physical description only)
+python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --kind portrait --subject "Vesna" \
+  --prompt "half-elf innkeeper woman, 50s, grey braid, burn scar on left hand, wary eyes, leather apron" \
+  --caption "Vesna, l'ostessa"
+
+# Same subject again → re-shows the cached file, no generation, no --prompt needed
+python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --kind portrait --subject "Vesna"
+
+python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --kind monster --subject "Ghoul" --prompt "..."
+python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --kind scene   --subject "Porto di Karsa" --prompt "..."
+python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --kind item    --subject "Lama di Vessar" --prompt "..."
+
+python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --list      # this campaign's images + the prompts used
+python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --status    # backend + keys (masked)
+```
+
+`--subject` is the cache key — always use the canonical name from `npcs.md`. `--regenerate` makes a new version (`--v2`, …) when the old one is wrong. `--seed N` fixes the seed; the one used is stored in `media/index.json`. Exit code 1 + a stderr line on a backend failure; exit 0 with "images are off" when disabled.
+
+---
+
 ## Continuity Autosave — `scripts/autosave_checkpoint.py`, `scripts/install_autosave_hook.py`
 
 Behind-the-scenes continuity checkpoint for long sessions, so a context compaction never loses the player's place. Two layers; see the *Continuity micro-save* rule in SKILL.md and the `/dm:dnd autosave` command.

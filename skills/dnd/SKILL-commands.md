@@ -87,6 +87,7 @@ Full step-by-step procedures for all `/dm:dnd` slash commands. Load this file at
      - `dice` key present → `send.py --dice` with text via stdin
      - `xp_award` key present → `send.py --xp-award '<json of the xp_award sub-dict>'`
      - `inspiration_award` key present → `send.py --inspiration-award '<name>'`
+     - `image` key present → `send.py --image '<file>' --image-kind <kind> --image-caption '<caption>' --image-subject '<subject>'` (the file already exists in `media/` — nothing is regenerated). Must run **after** `push_stats.py --set-campaign`, since the display serves media from the active campaign only.
      - none of the above (plain DM narration) → `send.py` with text via stdin
      This restores the last scene to the display before the recap. The tail is written continuously by `dnd-display-app.py` — it always contains the last session's final exchanges regardless of how the session ended.
    - Clear previous transcript: `python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --clear`

@@ -162,7 +162,7 @@ ${CLAUDE_SKILL_DIR}/                 ← the skill dir (plugin: <plugin>/skills/
   scripts/           ← dice.py, combat.py, character.py, tracker.py, calendar.py, lookup.py
   data/              ← bundled 5e SRD dataset (dnd5e_srd.json — no download needed; sync via /dm:dnd data sync)
   templates/         ← blank character-sheet.md, state.md, world.md, npcs.md, session-log.md
-  display/           ← Flask SSE display companion (dnd-display-app.py, send.py, push_stats.py, wrapper.py, tts.py)
+  display/           ← Flask SSE display companion (dnd-display-app.py, send.py, push_stats.py, wrapper.py, tts.py, map_render.py, image_gen.py)
 (plugin root, one level up: docs/ setup walkthroughs · dice-server/ optional physical-dice service)
 ```
 
@@ -173,6 +173,7 @@ inside the plugin (so it survives updates/uninstalls):
 ```
 <DATA root>/campaigns/<name>/
   state.md / world.md / npcs.md / session-log.md / characters/<name>.md
+  media/             ← generated portraits/scenes + rendered maps (index.json records prompts)
 <DATA root>/characters/
   <name>.md          ← global roster: latest known state of every PC across all campaigns
 ```
@@ -485,6 +486,25 @@ python3 ${CLAUDE_SKILL_DIR}/display/send.py --xp-award '{"names":["Max of Thraxx
 This fires a green-bordered block in the companion feed showing each character's name, XP gained, the reason, and their new running total. Players see it in the companion immediately — no separate announcement needed in narration.
 
 **Inspiration:** award via `send.py --inspiration-award NAME`. This fires a gold glow block in the feed AND sets the sidebar badge. Spend via `send.py --inspiration-spend NAME`.
+
+---
+
+## Images & Maps
+
+Only when the display is running. Syntax: `SKILL-scripts.md` → *Battle Maps* / *Generated Images*.
+
+**Battle maps (`map_render.py` — free, instant).** Draw one when combat starts, and when the party enters a space where position matters (ambush, trap room, chase, siege). Re-send it with the same title when positions have changed meaningfully — once per round at most, never every turn. Keep it ≤ 20×15, faithful to what the narration established (exits, cover, light sources), and never reveal hidden things (unspotted traps, invisible or hidden creatures, secret doors) — the map shows what the characters perceive.
+
+**Pictures (`image_gen.py`).** Generate when:
+- a named NPC who will recur first appears → `portrait`
+- a new creature type first appears in combat → `monster`
+- the party first arrives somewhere significant (a town, a dungeon mouth, a set piece) → `scene`
+- a notable magic item or artifact is found → `item`
+- a player asks what something looks like
+
+At most one new image per scene; none for one-off extras. Prompts in **English**, physical description only (species, age, build, clothing, distinguishing marks, mood, setting) — no names, no game terms, no text in the image — and consistent with `npcs.md`. `--subject` = the canonical name, so the next call re-shows the same face instead of generating a new one. Caption in the campaign language.
+
+Generation takes 5–60 s: run `image_gen.py` as its **own Bash call with `run_in_background: true`**, then carry on narrating — the image lands in the feed when ready. Maps are instant and go in the normal send batch, right after the narration that sets the scene. If `image_gen.py` fails or reports images are off, stop calling it for the rest of the session and never mention it in the fiction.
 
 ---
 
