@@ -6664,7 +6664,9 @@ async function _ttsPlayBlock(btn, blockEl) {
     source.start(0);
   } catch (err) {
     if (_ttsActivePlayBtn === btn && _TTS_HAS_BROWSER) {
-      _ttsServerOk = false;
+      // 503 = no key configured: stop asking the server. Transient errors
+      // (429, 502, network) fall back for this block only.
+      if (err.message === 'TTS 503') _ttsServerOk = false;
       _ttsBrowserSpeak(btn, text);
       return;
     }
