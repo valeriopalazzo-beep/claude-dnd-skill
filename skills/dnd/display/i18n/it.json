@@ -200,6 +200,7 @@
   "srd.didYouMean": "Forse cercavi",
   "srd.notFound": "«{name}» non è nel database locale.",
   "srd.unavailable": "Ricerca non disponibile — il display è acceso?",
+  "srd.original": "Testo originale (inglese)",
 
   "tutor.hint": "Suggerimento",
   "tutor.warning": "Attenzione",

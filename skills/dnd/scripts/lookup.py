@@ -15,6 +15,7 @@ Flags:
     --json                  dump full raw record as JSON
     --campaign <name>       resolve ruleset from the campaign's state.md
     --ruleset 2014|2024     direct ruleset override
+    --lang it               also print the translated card (data/i18n/<lang>), when there is one
 
 Programmatic import (used by app.py):
     from lookup import lookup, lookup_record
@@ -149,27 +150,50 @@ def _load_ruleset(ruleset: str) -> None:
     _meta_by_rs[ruleset] = meta
 
 
-def _apply_i18n(data: dict) -> None:
-    """Attach translated names from data/i18n/*.json to the matching records.
+#: {lang: {field: {english value: translated value}}} — shared translations for
+#: short values that repeat across records (school, casting time, size, ...).
+_vocab_by_lang: dict = {}
 
-    Each record gets `_i18n` ({lang: overlay entry}) and `_alt_names` (the
-    normalized translated names + aliases) so searches in another language
-    resolve to the English record. Missing or broken files are skipped."""
+
+def _i18n_files() -> list:
+    """(lang, path) for every overlay: i18n/<lang>.json or i18n/<lang>/*.json.
+    A language can be split over several files (names, vocab, one per
+    category or part); they are merged in filename order."""
+    out = []
     for path in sorted(glob.glob(os.path.join(I18N_DIR, "*.json"))):
-        lang = os.path.splitext(os.path.basename(path))[0]
+        out.append((os.path.splitext(os.path.basename(path))[0], path))
+    for path in sorted(glob.glob(os.path.join(I18N_DIR, "*", "*.json"))):
+        out.append((os.path.basename(os.path.dirname(path)), path))
+    return out
+
+
+def _apply_i18n(data: dict) -> None:
+    """Attach translations from data/i18n to the matching records.
+
+    Each record gets `_i18n` ({lang: merged overlay entry}) and `_alt_names`
+    (the normalized translated names + aliases) so searches in another
+    language resolve to the English record. A `_vocab` block feeds
+    _vocab_by_lang. Missing or broken files are skipped."""
+    for lang, path in _i18n_files():
         try:
             with open(path, encoding="utf-8") as f:
                 overlay = json.load(f)
         except Exception:
             continue
         for cat, entries in overlay.items():
-            if cat == "_meta" or not isinstance(entries, dict):
+            if cat == "_vocab" and isinstance(entries, dict):
+                vocab = _vocab_by_lang.setdefault(lang, {})
+                for field, mapping in entries.items():
+                    if isinstance(mapping, dict):
+                        vocab.setdefault(field, {}).update(mapping)
+                continue
+            if cat.startswith("_") or not isinstance(entries, dict):
                 continue
             for r in data.get(cat, []):
                 entry = entries.get(r.get("index", ""))
                 if not isinstance(entry, dict):
                     continue
-                r.setdefault("_i18n", {})[lang] = entry
+                r.setdefault("_i18n", {}).setdefault(lang, {}).update(entry)
                 alts = r.setdefault("_alt_names", [])
                 for nm in [entry.get("name", "")] + list(entry.get("aliases", [])):
                     key = _norm(nm)
@@ -247,84 +271,140 @@ def _get_records(cat_key, ruleset: str = None):
 
 # ─── Formatters ───────────────────────────────────────────────────────────────
 
-def _fmt_spell(r: dict) -> str:
+# Card labels per language. A translated card (see lookup_translated) uses the
+# translated record plus these labels; English output is unchanged.
+LABELS = {
+    "en": {
+        "cantrip": "Cantrip", "level": "Level {n}",
+        "casting_time": "Casting time : ", "range": "Range        : ",
+        "components": "Components   : ", "duration": "Duration     : ",
+        "concentration": "  *(concentration)*", "ritual": "Ritual       : ",
+        "yes": "Yes", "no": "No", "classes": "Classes: ",
+        "higher_level": "**At Higher Levels:**",
+        "cost": "Cost       : ", "weight": "Weight     : ", "damage": "Damage     : ",
+        "damage_2h": "2H Damage  : ", "armour": "Armour     : ",
+        "properties": "Properties : ", "eq_range": "Range      : ",
+        "throw": "Throw      : ", "stealth": "Stealth    : disadvantage",
+        "str_min": "Str min    : ", "attunement": "Requires attunement.",
+        "cr": "CR", "xp": "XP", "ac": "AC", "hp": "HP", "speed": "Speed: ",
+        "abbr": ["STR", "DEX", "CON", "INT", "WIS", "CHA"],
+        "vulnerable": "Vulnerable", "resistant": "Resistant", "immune": "Immune",
+        "condition_immune": "Condition Immune", "languages": "Languages: ",
+        "feature_level": "  (level {n})",
+    },
+    "it": {
+        "cantrip": "Trucchetto", "level": "Livello {n}",
+        "casting_time": "Tempo di lancio : ", "range": "Gittata         : ",
+        "components": "Componenti      : ", "duration": "Durata          : ",
+        "concentration": "  *(concentrazione)*", "ritual": "Rituale         : ",
+        "yes": "Sì", "no": "No", "classes": "Classi: ",
+        "higher_level": "**Ai livelli superiori:**",
+        "cost": "Costo      : ", "weight": "Peso       : ", "damage": "Danni      : ",
+        "damage_2h": "A due mani : ", "armour": "Armatura   : ",
+        "properties": "Proprietà  : ", "eq_range": "Gittata    : ",
+        "throw": "Lancio     : ", "stealth": "Furtività  : svantaggio",
+        "str_min": "For minima : ", "attunement": "Richiede sintonia.",
+        "cr": "GS", "xp": "PE", "ac": "CA", "hp": "PF", "speed": "Velocità: ",
+        "abbr": ["FOR", "DES", "COS", "INT", "SAG", "CAR"],
+        "vulnerable": "Vulnerabilità", "resistant": "Resistenze", "immune": "Immunità",
+        "condition_immune": "Immunità alle condizioni", "languages": "Linguaggi: ",
+        "feature_level": "  (livello {n})",
+        # Italian books use metric units: 1 lb = 0.5 kg
+        "weight_unit": "kg", "weight_factor": 0.5,
+    },
+}
+_EN = LABELS["en"]
+
+
+def _title(r: dict) -> str:
+    """Card title; a translated card keeps the English name next to it, so a
+    doubtful translation can be checked against the original."""
+    name = r.get("name", "?")
+    en = r.get("_name_en")
+    return f"{name} ({en})" if en and en != name else name
+
+
+def _fmt_spell(r: dict, L: dict = _EN) -> str:
     lvl    = r.get("level", 0)
     school = r.get("school", "")
-    lvl_s  = "Cantrip" if lvl == 0 else f"Level {lvl}"
-    lines  = [f"## {r.get('name','?')}  [{lvl_s} {school}]", ""]
+    lvl_s  = L["cantrip"] if lvl == 0 else L["level"].format(n=lvl)
+    lines  = [f"## {_title(r)}  [{lvl_s} {school}]", ""]
     comp   = ", ".join(r.get("components", []))
     if "M" in r.get("components", []) and r.get("material"):
         comp += f" ({r['material']})"
     lines += [
-        f"Casting time : {r.get('casting_time','')}",
-        f"Range        : {r.get('range','')}",
-        f"Components   : {comp}",
-        f"Duration     : {r.get('duration','')}"
-        + ("  *(concentration)*" if r.get("concentration") else ""),
-        f"Ritual       : {'Yes' if r.get('ritual') else 'No'}",
+        f"{L['casting_time']}{r.get('casting_time','')}",
+        f"{L['range']}{r.get('range','')}",
+        f"{L['components']}{comp}",
+        f"{L['duration']}{r.get('duration','')}"
+        + (L["concentration"] if r.get("concentration") else ""),
+        f"{L['ritual']}{L['yes'] if r.get('ritual') else L['no']}",
     ]
     classes = r.get("classes", [])
     if classes:
-        lines += ["", f"Classes: {', '.join(classes)}"]
+        lines += ["", f"{L['classes']}{', '.join(classes)}"]
     desc = r.get("description", "")
     if desc:
         lines += ["", desc]
     hl = r.get("higher_level", "")
     if hl:
-        lines += ["", "**At Higher Levels:**", hl]
+        lines += ["", L["higher_level"], hl]
     return "\n".join(lines)
 
 
-def _fmt_equipment(r: dict) -> str:
-    lines = [f"## {r.get('name','?')}  [{r.get('category','')}]", ""]
+def _fmt_equipment(r: dict, L: dict = _EN) -> str:
+    lines = [f"## {_title(r)}  [{r.get('category','')}]", ""]
     if r.get("cost"):
-        lines.append(f"Cost       : {r['cost']}")
+        lines.append(f"{L['cost']}{r['cost']}")
     if r.get("weight") is not None:
-        lines.append(f"Weight     : {r['weight']} lb")
+        if "weight_factor" in L:
+            lines.append(f"{L['weight']}{r['weight'] * L['weight_factor']:g} {L['weight_unit']}")
+        else:
+            lines.append(f"{L['weight']}{r['weight']} lb")
     if r.get("damage"):
-        lines.append(f"Damage     : {r['damage']}")
+        lines.append(f"{L['damage']}{r['damage']}")
     if r.get("damage_2h"):
-        lines.append(f"2H Damage  : {r['damage_2h']}")
+        lines.append(f"{L['damage_2h']}{r['damage_2h']}")
     if r.get("ac"):
-        lines.append(f"Armour     : {r['ac']}")
+        lines.append(f"{L['armour']}{r['ac']}")
     if r.get("properties"):
-        lines.append(f"Properties : {', '.join(r['properties'])}")
+        lines.append(f"{L['properties']}{', '.join(r['properties'])}")
     if r.get("range"):
-        lines.append(f"Range      : {r['range']}")
+        lines.append(f"{L['eq_range']}{r['range']}")
     if r.get("throw_range"):
-        lines.append(f"Throw      : {r['throw_range']}")
+        lines.append(f"{L['throw']}{r['throw_range']}")
     if r.get("stealth_disadv"):
-        lines.append("Stealth    : disadvantage")
+        lines.append(L["stealth"])
     if r.get("str_minimum"):
-        lines.append(f"Str min    : {r['str_minimum']}")
+        lines.append(f"{L['str_min']}{r['str_minimum']}")
     desc = r.get("description", "")
     if desc:
         lines += ["", desc]
     return "\n".join(lines)
 
 
-def _fmt_magic_item(r: dict) -> str:
-    lines = [f"## {r.get('name','?')}  [{r.get('rarity','')} {r.get('category','')}]", ""]
+def _fmt_magic_item(r: dict, L: dict = _EN) -> str:
+    lines = [f"## {_title(r)}  [{r.get('rarity','')} {r.get('category','')}]", ""]
     if r.get("attunement"):
-        lines.append("Requires attunement.")
+        lines.append(L["attunement"])
         lines.append("")
     lines.append(r.get("description", ""))
     return "\n".join(lines)
 
 
-def _fmt_condition(r: dict) -> str:
-    lines = [f"## {r.get('name','?')}", ""]
+def _fmt_condition(r: dict, L: dict = _EN) -> str:
+    lines = [f"## {_title(r)}", ""]
     for bullet in r.get("description", "").splitlines():
         lines.append(f"  • {bullet}" if bullet.strip() and not bullet.startswith("•") else bullet)
     return "\n".join(lines)
 
 
-def _fmt_monster(r: dict) -> str:
-    lines = [f"## {r.get('name','?')}  [CR {r.get('cr','?')} | {r.get('xp','?')} XP]",
+def _fmt_monster(r: dict, L: dict = _EN) -> str:
+    lines = [f"## {_title(r)}  [{L['cr']} {r.get('cr','?')} | {r.get('xp','?')} {L['xp']}]",
              f"{r.get('size','')} {r.get('type','')}  ·  {r.get('alignment','')}",
-             "", f"AC {r.get('ac','?')}  ·  HP {r.get('hp','?')} ({r.get('hp_dice','')})",
-             f"Speed: {r.get('speed','')}", ""]
-    abbr = ["STR","DEX","CON","INT","WIS","CHA"]
+             "", f"{L['ac']} {r.get('ac','?')}  ·  {L['hp']} {r.get('hp','?')} ({r.get('hp_dice','')})",
+             f"{L['speed']}{r.get('speed','')}", ""]
+    abbr = L["abbr"]
     keys = ["str","dex","con","int","wis","cha"]
     def _mod(v): return (v - 10) // 2
     row1 = " | ".join(f"{a:3}" for a in abbr)
@@ -335,10 +415,10 @@ def _fmt_monster(r: dict) -> str:
     # for them, not for what the creature speaks. Omitted entirely when empty
     # rather than printed as "Resistant: —", so an absent line reads as "none"
     # and never as "unknown".
-    for label, key in (("Vulnerable", "vulnerabilities"),
-                       ("Resistant", "resistances"),
-                       ("Immune", "immunities"),
-                       ("Condition Immune", "condition_immunities")):
+    for label, key in ((L["vulnerable"], "vulnerabilities"),
+                       (L["resistant"], "resistances"),
+                       (L["immune"], "immunities"),
+                       (L["condition_immune"], "condition_immunities")):
         if r.get(key):
             lines.append(f"{label}: {r[key]}")
     if any(r.get(k) for k in ("vulnerabilities", "resistances",
@@ -346,18 +426,18 @@ def _fmt_monster(r: dict) -> str:
         lines.append("")
 
     if r.get("languages"):
-        lines.append(f"Languages: {r['languages']}")
+        lines.append(f"{L['languages']}{r['languages']}")
     desc = r.get("description", "")
     if desc:
         lines += ["", desc]
     return "\n".join(lines)
 
 
-def _fmt_feature(r: dict) -> str:
+def _fmt_feature(r: dict, L: dict = _EN) -> str:
     cls_s   = r.get("class", "")
-    lvl_s   = f"  (level {r['level_req']})" if r.get("level_req") else ""
+    lvl_s   = L["feature_level"].format(n=r["level_req"]) if r.get("level_req") else ""
     src_s   = f"{cls_s}{lvl_s}".strip() or r.get("type", "")
-    lines   = [f"## {r.get('name','?')}  [{src_s}]", "", r.get("description", "")]
+    lines   = [f"## {_title(r)}  [{src_s}]", "", r.get("description", "")]
     return "\n".join(lines)
 
 
@@ -589,6 +669,59 @@ def lookup_with_level(query: str, category=None, level=None, ruleset=None):
     return text
 
 
+def _localize(r: dict, lang: str):
+    """The record with its fields translated for `lang`, or None when there is
+    no translated description yet (a card with only the name translated
+    would be English text under an Italian title).
+
+    Per-record overlay values win; otherwise short repeated values go through
+    the language's `_vocab` (strings and list items alike); anything left
+    stays English. `_name_en` keeps the original name for the title."""
+    tr = (r.get("_i18n") or {}).get(lang)
+    if not tr or not tr.get("description"):
+        return None
+    vocab = _vocab_by_lang.get(lang, {})
+    out = dict(r)
+    for k, v in r.items():
+        if k.startswith("_") or k in tr or k not in vocab:
+            continue
+        m = vocab[k]
+        if isinstance(v, str):
+            out[k] = m.get(v, v)
+        elif isinstance(v, list):
+            out[k] = [m.get(x, x) if isinstance(x, str) else x for x in v]
+    for k, v in tr.items():
+        if k != "aliases":
+            out[k] = v
+    out["_name_en"] = r.get("name", "")
+    return out
+
+
+def lookup_translated(query: str, lang: str, category=None, level=None, ruleset=None):
+    """Formatted card in `lang` for the best match, or None when that record
+    has no translation. English ("en") always returns None: the caller
+    already has the original from lookup()."""
+    if not lang or lang == "en" or lang not in LABELS:
+        return None
+    rec = lookup_record(query, category=category, ruleset=ruleset)
+    if not rec:
+        return None
+    loc = _localize(rec, lang)
+    if loc is None:
+        return None
+    cat = rec.get("_cat") or "spells"
+    fmt = FORMATTERS.get(cat)
+    if fmt is None:
+        return None
+    text = fmt(loc, LABELS[lang])
+    if level:
+        try:
+            text = _apply_level(text, int(level))
+        except (ValueError, TypeError):
+            pass
+    return text
+
+
 # ─── Near-miss suggestions ("did you mean?") ──────────────────────────────────
 
 def _suggest_categories(category) -> list:
@@ -695,6 +828,7 @@ def main() -> None:
     # Pull out value-bearing flags first so the positional parser doesn't see them
     campaign_arg, raw = _parse_value_flag(raw, "--campaign")
     ruleset_arg, raw  = _parse_value_flag(raw, "--ruleset")
+    lang_arg, raw     = _parse_value_flag(raw, "--lang")
 
     # Remaining --bool flags
     flags = [a for a in raw if a.startswith("--")]
@@ -801,6 +935,11 @@ def main() -> None:
         else:
             rcat = _resolve_cat(r, hit_rs)
             fmt  = FORMATTERS.get(rcat, lambda x: json.dumps(x, indent=2))
+            loc  = _localize(r, lang_arg) if lang_arg in LABELS and lang_arg != "en" else None
+            if loc is not None and rcat in FORMATTERS:
+                # Translated card first, then the English original
+                print(fmt(loc, LABELS[lang_arg]))
+                print("\n---\n")
             text = fmt(r)
             if fallback_used:
                 text += "  [2014 fallback]"

@@ -200,6 +200,7 @@
   "srd.didYouMean": "Did you mean",
   "srd.notFound": "\"{name}\" is not in the local dataset.",
   "srd.unavailable": "Lookup unavailable — is the display running?",
+  "srd.original": "Original text (English)",
 
   "tutor.hint": "DM Hint",
   "tutor.warning": "Warning",

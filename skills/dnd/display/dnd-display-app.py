@@ -1191,11 +1191,14 @@ def srd_lookup():
         name      — the name to look up (required)
         category  — spell | item | equipment | magic_item | condition | monster | feature (optional)
         level     — character level (1–20); collapses scale progressions to the matching entry
+        lang      — display language (e.g. "it"); adds the translated card when one exists
 
-    Returns JSON: {"found": bool, "name": str, "category": str, "text": str}
+    Returns JSON: {"found": bool, "name": str, "category": str, "text": str,
+                   "translation": {"lang": str, "text": str}}  (translation only when available)
     """
     name     = request.args.get("name", "").strip()[:120]
     category = request.args.get("category", "").strip().lower() or None
+    lang     = request.args.get("lang", "").strip().lower()[:8]
     level_s  = request.args.get("level", "").strip()
     level    = int(level_s) if level_s.isdigit() and 1 <= int(level_s) <= 20 else None
     if not name:
@@ -1207,7 +1210,14 @@ def srd_lookup():
     if text:
         rec = _lookup.lookup_record(name, category=category)
         resolved_cat = (rec or {}).get("_cat", category or "")
-        return jsonify({"found": True, "name": name, "category": resolved_cat, "text": text})
+        out = {"found": True, "name": name, "category": resolved_cat, "text": text}
+        try:
+            tr = _lookup.lookup_translated(name, lang, category=category, level=level)
+        except Exception:
+            tr = None  # a broken translation must never hide the original
+        if tr:
+            out["translation"] = {"lang": lang, "text": tr}
+        return jsonify(out)
     # Not found — offer near-miss "did you mean?" suggestions (typo recovery)
     # plus the wikidot fallback URL so the frontend can still link out.
     # `ref` is {} when there is no VERIFIED destination for this category, and

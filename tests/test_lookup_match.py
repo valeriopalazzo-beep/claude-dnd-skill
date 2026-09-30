@@ -82,13 +82,58 @@ class ItalianNameTests(unittest.TestCase):
 
     def test_every_overlay_key_is_a_real_record(self):
         import json
-        it = json.loads((SKILL / "data" / "i18n" / "it.json").read_text(encoding="utf-8"))
         srd = json.loads((SKILL / "data" / "dnd5e_srd.json").read_text(encoding="utf-8"))
-        for cat, entries in it.items():
-            if cat == "_meta":
-                continue
-            real = {r["index"] for r in srd.get(cat, [])}
-            self.assertFalse(set(entries) - real, f"unknown {cat} keys")
+        files = sorted((SKILL / "data" / "i18n" / "it").glob("*.json"))
+        self.assertTrue(files)
+        for path in files:
+            overlay = json.loads(path.read_text(encoding="utf-8"))
+            for cat, entries in overlay.items():
+                if cat.startswith("_"):
+                    continue
+                real = {r["index"] for r in srd.get(cat, [])}
+                self.assertFalse(set(entries) - real, f"{path.name}: unknown {cat} keys")
+
+
+class TranslatedCardTests(unittest.TestCase):
+    """lookup_translated() builds the Italian card, English name in the title."""
+
+    def test_condition_card_in_italian(self):
+        text = lookup.lookup_translated("Avvelenato", "it", ruleset="2014")
+        self.assertTrue(text.startswith("## Avvelenato (Poisoned)"))
+        self.assertIn("svantaggio", text)
+
+    def test_english_query_gets_the_same_card(self):
+        self.assertEqual(lookup.lookup_translated("poisoned", "it", ruleset="2014"),
+                         lookup.lookup_translated("avvelenato", "it", ruleset="2014"))
+
+    def test_english_lang_has_no_translation(self):
+        self.assertIsNone(lookup.lookup_translated("poisoned", "en", ruleset="2014"))
+
+    def test_unknown_lang_has_no_translation(self):
+        self.assertIsNone(lookup.lookup_translated("poisoned", "xx", ruleset="2014"))
+
+    def test_name_only_record_has_no_card(self):
+        # A record with a translated name but no translated description
+        rec = {"name": "X", "index": "x", "_i18n": {"it": {"name": "Ics"}}}
+        self.assertIsNone(lookup._localize(rec, "it"))
+
+    def test_vocab_translates_strings_and_lists(self):
+        lookup._vocab_by_lang.setdefault("zz", {})
+        lookup._vocab_by_lang["zz"].update({"school": {"Evocation": "Invocazione"},
+                                            "classes": {"Wizard": "Mago"}})
+        rec = {"name": "Fireball", "index": "fireball", "school": "Evocation",
+               "classes": ["Wizard", "Sorcerer"],
+               "_i18n": {"zz": {"name": "Palla di Fuoco", "description": "..."}}}
+        loc = lookup._localize(rec, "zz")
+        self.assertEqual(loc["school"], "Invocazione")
+        self.assertEqual(loc["classes"], ["Mago", "Sorcerer"])
+        self.assertEqual(loc["_name_en"], "Fireball")
+        del lookup._vocab_by_lang["zz"]
+
+    def test_english_card_unchanged(self):
+        text = lookup.lookup("Fireball", ruleset="2014")
+        self.assertTrue(text.startswith("## Fireball  [Level 3"))
+        self.assertIn("Casting time : ", text)
 
 
 if __name__ == "__main__":

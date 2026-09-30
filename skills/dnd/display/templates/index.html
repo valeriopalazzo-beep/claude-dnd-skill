@@ -1075,6 +1075,10 @@
     margin-bottom: 12px; font-style: italic;
   }
   #srd-body .srd-desc { white-space: pre-wrap; }
+  /* English original under a translated card — folded, inherits the skin */
+  #srd-body .srd-orig { margin-top: 18px; padding-top: 10px; border-top: 1px solid currentColor; border-top-color: rgba(128,128,128,0.3); opacity: 0.85; }
+  #srd-body .srd-orig > summary { cursor: pointer; font-size: 0.85em; opacity: 0.8; white-space: normal; }
+  #srd-body .srd-orig[open] > summary { margin-bottom: 10px; }
   /* ── SRD "did you mean?" near-miss chips ── */
   .srd-did-you-mean {
     margin-top: 14px; display: flex; flex-wrap: wrap;
@@ -6920,6 +6924,7 @@ function openSrdModal(name, category, level) {
   const params = new URLSearchParams({ name });
   if (category) params.set('category', category);
   if (level)    params.set('level', level);
+  if (window._LANG && window._LANG !== 'en') params.set('lang', window._LANG);
   fetch('/srd-lookup?' + params)
     .then(r => r.json())
     .then(data => {
@@ -6951,30 +6956,41 @@ function openSrdModal(name, category, level) {
         return;
       }
       badge.textContent = data.category || '';
-      // Render the pre-formatted text — first line is always "## Title [...]"
-      const lines = (data.text || '').split('\n');
-      let html = '';
-      let inDesc = false;
-      lines.forEach(line => {
-        if (line.startsWith('## ')) {
-          // Title line
-          html += `<div class="srd-title">${_esc(line.replace(/^## /, ''))}</div>`;
-        } else if (line === '') {
-          if (inDesc) html += '\n';
-        } else if (!inDesc && line.match(/^[A-Z][a-z].*:/)) {
-          // Key-value meta line
-          html += `<div class="srd-meta">${_esc(line)}</div>`;
-        } else {
-          if (!inDesc) { html += '<div class="srd-desc">'; inDesc = true; }
-          html += _esc(line) + '\n';
-        }
-      });
-      if (inDesc) html += '</div>';
-      body.innerHTML = html;
+      // A translated card comes first; the English original stays below,
+      // folded, so a doubtful translation can be checked.
+      if (data.translation && data.translation.text) {
+        body.innerHTML = _srdCardHtml(data.translation.text)
+          + `<details class="srd-orig"><summary>${_esc(_t('srd.original', null, 'Original text (English)'))}</summary>`
+          + _srdCardHtml(data.text || '') + '</details>';
+      } else {
+        body.innerHTML = _srdCardHtml(data.text || '');
+      }
     })
     .catch(() => {
       body.innerHTML = `<div id="srd-not-found">${_esc(_t('srd.unavailable'))}</div>`;
     });
+}
+
+// Render a pre-formatted lookup card — first line is always "## Title [...]"
+function _srdCardHtml(text) {
+  let html = '';
+  let inDesc = false;
+  text.split('\n').forEach(line => {
+    if (line.startsWith('## ')) {
+      // Title line
+      html += `<div class="srd-title">${_esc(line.replace(/^## /, ''))}</div>`;
+    } else if (line === '') {
+      if (inDesc) html += '\n';
+    } else if (!inDesc && line.match(/^[A-ZÀ-Ý][a-zà-ÿ].*:/)) {
+      // Key-value meta line
+      html += `<div class="srd-meta">${_esc(line)}</div>`;
+    } else {
+      if (!inDesc) { html += '<div class="srd-desc">'; inDesc = true; }
+      html += _esc(line) + '\n';
+    }
+  });
+  if (inDesc) html += '</div>';
+  return html;
 }
 
 function _esc(s) {
