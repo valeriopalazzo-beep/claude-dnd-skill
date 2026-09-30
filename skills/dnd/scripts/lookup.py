@@ -23,10 +23,12 @@ Programmatic import (used by app.py):
 """
 
 import difflib
+import glob
 import json
 import os
 import re
 import sys
+import unicodedata
 
 # paths.py lives alongside this script — import for ruleset resolution
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -48,6 +50,8 @@ DATA_FILE_2014    = os.path.join(_DATA_DIR, "dnd5e_srd.json")
 DATA_FILE_2024    = os.path.join(_DATA_DIR, "dnd5e_srd_2024.json")
 SUPPLEMENTAL_FILE_2014 = os.path.join(_DATA_DIR, "dnd5e_supplemental.json")
 SUPPLEMENTAL_FILE_2024 = os.path.join(_DATA_DIR, "dnd5e_supplemental_2024.json")
+# Translation overlays, one per language: i18n/<lang>.json → {category: {index: {"name", "aliases"}}}
+I18N_DIR          = os.path.join(_DATA_DIR, "i18n")
 
 # Backwards-compat alias used by older callers (e.g. app.py)
 DATA_FILE         = DATA_FILE_2014
@@ -127,6 +131,8 @@ def _load_ruleset(ruleset: str) -> None:
                 if _norm(r.get("name", "")) not in existing_names:
                     data.setdefault(k, []).append(r)
 
+    _apply_i18n(data)
+
     index: dict = {}
     for cat, records in data.items():
         idx = {}
@@ -141,6 +147,34 @@ def _load_ruleset(ruleset: str) -> None:
     _data_by_rs[ruleset] = data
     _index_by_rs[ruleset] = index
     _meta_by_rs[ruleset] = meta
+
+
+def _apply_i18n(data: dict) -> None:
+    """Attach translated names from data/i18n/*.json to the matching records.
+
+    Each record gets `_i18n` ({lang: overlay entry}) and `_alt_names` (the
+    normalized translated names + aliases) so searches in another language
+    resolve to the English record. Missing or broken files are skipped."""
+    for path in sorted(glob.glob(os.path.join(I18N_DIR, "*.json"))):
+        lang = os.path.splitext(os.path.basename(path))[0]
+        try:
+            with open(path, encoding="utf-8") as f:
+                overlay = json.load(f)
+        except Exception:
+            continue
+        for cat, entries in overlay.items():
+            if cat == "_meta" or not isinstance(entries, dict):
+                continue
+            for r in data.get(cat, []):
+                entry = entries.get(r.get("index", ""))
+                if not isinstance(entry, dict):
+                    continue
+                r.setdefault("_i18n", {})[lang] = entry
+                alts = r.setdefault("_alt_names", [])
+                for nm in [entry.get("name", "")] + list(entry.get("aliases", [])):
+                    key = _norm(nm)
+                    if key and key not in alts:
+                        alts.append(key)
 
 
 def _set_active(ruleset: str) -> None:
@@ -168,21 +202,28 @@ def _load() -> None:
 
 
 def _norm(s: str) -> str:
+    # Strip accents first so "Velocità" / "velocita" normalize the same.
+    s = unicodedata.normalize("NFKD", s)
+    s = "".join(ch for ch in s if not unicodedata.combining(ch))
     return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
 
 
 # ─── Matching ─────────────────────────────────────────────────────────────────
 
 def _score(query: str, record: dict) -> int:
-    """3=exact, 2=starts-with, 1=contains, 0=no match."""
-    q    = _norm(query)
-    name = _norm(record.get("name", ""))
-    idx  = record.get("index", "")
-    if name == q or idx == q:
+    """3=exact, 2=starts-with, 1=contains, 0=no match. Translated names
+    (`_alt_names`, from data/i18n) count the same as the English name."""
+    q     = _norm(query)
+    if not q:
+        return 0
+    names = [_norm(record.get("name", "")), record.get("index", "")]
+    names += record.get("_alt_names", [])
+    names = [n for n in names if n]
+    if q in names:
         return 3
-    if name.startswith(q) or idx.startswith(q):
+    if any(n.startswith(q) for n in names):
         return 2
-    if q in name or q in idx:
+    if any(q in n for n in names):
         return 1
     return 0
 
@@ -591,6 +632,9 @@ def suggest(query: str, category=None, ruleset=None, n: int = 3, cutoff: float =
             nm = r.get("name", "")
             if nm:
                 candidates.setdefault(_norm(nm), (nm, ck))
+                # A near-miss on a translated name suggests the English name
+                for alt in r.get("_alt_names", []):
+                    candidates.setdefault(alt, (nm, ck))
 
     keys = list(candidates.keys())
     ranked: list = []

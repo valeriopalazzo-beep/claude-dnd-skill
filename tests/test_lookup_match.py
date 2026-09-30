@@ -54,5 +54,42 @@ class UncategorizedMatchTests(unittest.TestCase):
         self.assertNotIn("Necklace", text)
 
 
+class ItalianNameTests(unittest.TestCase):
+    """Italian names from data/i18n/it.json resolve to the English record."""
+
+    def test_italian_spell(self):
+        self.assertEqual(_hit("Palla di fuoco"), ("Fireball", "spells"))
+
+    def test_italian_condition(self):
+        self.assertEqual(_hit("Avvelenato"), ("Poisoned", "conditions"))
+
+    def test_alias_with_wizard_name(self):
+        self.assertEqual(_hit("Freccia Acida di Melf"), ("Acid Arrow", "spells"))
+
+    def test_accents_are_optional(self):
+        self.assertEqual(_hit("velocita"), ("Haste", "spells"))
+        self.assertEqual(_hit("Velocità"), ("Haste", "spells"))
+
+    def test_italian_prefix(self):
+        self.assertEqual(_hit("dardo inc"), ("Magic Missile", "spells"))
+
+    def test_italian_with_category(self):
+        self.assertEqual(_hit("Scudo", "spell"), ("Shield", "spells"))
+
+    def test_italian_typo_suggests_english_name(self):
+        names = [nm for nm, _ in lookup.suggest("Palla di fucoo", ruleset="2014")]
+        self.assertIn("Fireball", names)
+
+    def test_every_overlay_key_is_a_real_record(self):
+        import json
+        it = json.loads((SKILL / "data" / "i18n" / "it.json").read_text(encoding="utf-8"))
+        srd = json.loads((SKILL / "data" / "dnd5e_srd.json").read_text(encoding="utf-8"))
+        for cat, entries in it.items():
+            if cat == "_meta":
+                continue
+            real = {r["index"] for r in srd.get(cat, [])}
+            self.assertFalse(set(entries) - real, f"unknown {cat} keys")
+
+
 if __name__ == "__main__":
     unittest.main()
