@@ -1,0 +1,12 @@
+{
+  "_vocab": {
+    "class": {
+      "barbarian": "Barbaro", "bard": "Bardo", "cleric": "Chierico", "druid": "Druido",
+      "fighter": "Guerriero", "monk": "Monaco", "paladin": "Paladino", "ranger": "Ranger",
+      "rogue": "Ladro", "sorcerer": "Stregone", "warlock": "Warlock", "wizard": "Mago"
+    },
+    "type": {
+      "class": "privilegio di classe", "race": "tratto razziale", "natural": "naturale"
+    }
+  }
+}

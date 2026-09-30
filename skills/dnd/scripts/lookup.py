@@ -167,6 +167,15 @@ def _i18n_files() -> list:
     return out
 
 
+def _i18n_key(r: dict) -> str:
+    """Overlay key for a record. Features reuse the same index across classes
+    ("spellcasting", "epic-boon"), so a class feature is keyed "<class>/<index>";
+    everything else by its index alone."""
+    if r.get("class") and isinstance(r.get("class"), str):
+        return f"{r['class']}/{r.get('index', '')}"
+    return r.get("index", "")
+
+
 def _apply_i18n(data: dict) -> None:
     """Attach translations from data/i18n to the matching records.
 
@@ -190,7 +199,7 @@ def _apply_i18n(data: dict) -> None:
             if cat.startswith("_") or not isinstance(entries, dict):
                 continue
             for r in data.get(cat, []):
-                entry = entries.get(r.get("index", ""))
+                entry = entries.get(_i18n_key(r)) or entries.get(r.get("index", ""))
                 if not isinstance(entry, dict):
                     continue
                 r.setdefault("_i18n", {}).setdefault(lang, {}).update(entry)
@@ -434,7 +443,7 @@ def _fmt_monster(r: dict, L: dict = _EN) -> str:
 
 
 def _fmt_feature(r: dict, L: dict = _EN) -> str:
-    cls_s   = r.get("class", "")
+    cls_s   = r.get("class") or ""   # race traits carry class: null
     lvl_s   = L["feature_level"].format(n=r["level_req"]) if r.get("level_req") else ""
     src_s   = f"{cls_s}{lvl_s}".strip() or r.get("type", "")
     lines   = [f"## {_title(r)}  [{src_s}]", "", r.get("description", "")]

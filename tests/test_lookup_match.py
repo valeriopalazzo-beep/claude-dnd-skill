@@ -91,6 +91,7 @@ class ItalianNameTests(unittest.TestCase):
                 if cat.startswith("_"):
                     continue
                 real = {r["index"] for r in srd.get(cat, [])}
+                real |= {lookup._i18n_key(r) for r in srd.get(cat, [])}
                 self.assertFalse(set(entries) - real, f"{path.name}: unknown {cat} keys")
 
 
