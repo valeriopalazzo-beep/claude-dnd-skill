@@ -308,6 +308,11 @@ class ImageGenTests(unittest.TestCase):
             with self.ig.local_gpu_lock(timeout=0.6, path=lock):
                 pass   # released: the next one gets it
 
+    def test_negative_adds_to_the_defaults(self):
+        self.assertEqual(self.ig.negative_for({}), self.ig.NEGATIVE)
+        self.assertIn("two heads", self.ig.NEGATIVE)
+        self.assertTrue(self.ig.negative_for({"negative_extra": "second axe, "}).endswith(", second axe"))
+
     def test_local_params_only_send_what_is_configured(self):
         base = dict(self.ig.DEFAULTS)
         body = self.ig.local_params(base)

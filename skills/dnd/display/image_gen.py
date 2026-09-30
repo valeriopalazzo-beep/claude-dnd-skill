@@ -109,7 +109,14 @@ KIND_PRESETS = {
     "texture":  ("{p}", 512, 512, "1:1"),     # battle-map terrain, used by map_art.py
 }
 CLI_KINDS = ("action", "item", "monster", "portrait", "scene")
-NEGATIVE = "text, letters, watermark, signature, logo, frame, blurry, lowres, deformed, extra limbs"
+NEGATIVE = ("text, letters, watermark, signature, logo, frame, blurry, lowres, deformed, extra limbs, "
+            "extra heads, two heads")
+
+
+def negative_for(cfg: dict) -> str:
+    """Base negative prompt plus this call's --negative, if any."""
+    extra = (cfg.get("negative_extra") or "").strip().strip(",")
+    return f"{NEGATIVE}, {extra}" if extra else NEGATIVE
 
 
 class ImageError(Exception):
@@ -368,7 +375,7 @@ def couple_args(lines: int, bands: list, cfg: dict) -> list:
 def gen_local(prompt: str, kind: str, seed: int, cfg: dict, compose_spec: str = "",
               figures: Optional[list] = None) -> bytes:
     w, h = _size_for(kind, int(cfg["local_max_side"]))
-    body = {"prompt": prompt, "negative_prompt": NEGATIVE, "width": w,
+    body = {"prompt": prompt, "negative_prompt": negative_for(cfg), "width": w,
             "height": h, "seed": seed, **local_params(cfg)}
     scripts = {}
     if figures and cfg.get("local_couple"):
@@ -475,6 +482,9 @@ def main() -> int:
                     help="one subject and its own prompt, e.g. "
                          "\"humanoid-short:left:large | stout dwarf, black beard, greataxe\"; "
                          "repeat per subject (local: Forge Couple + depth ControlNet)")
+    ap.add_argument("--negative", metavar="TEXT",
+                    help="what the picture must NOT show, added to the defaults "
+                         "(e.g. 'second axe, extra weapons'); local backend")
     ap.add_argument("--compose", metavar="SPEC",
                     help="where each subject goes, e.g. 'humanoid-short:left, quadruped:right' "
                          "(compose.py; local backend + depth ControlNet)")
@@ -491,6 +501,8 @@ def main() -> int:
     cfg = load_config()
     if args.backend:
         cfg["backend"] = args.backend
+    if args.negative:
+        cfg["negative_extra"] = args.negative
 
     if args.status:
         print(f"config file:   {CONFIG_FILE} ({'found' if CONFIG_FILE.exists() else 'not found — defaults'})")
@@ -597,6 +609,7 @@ def main() -> int:
             "prompt": args.prompt, "full_prompt": full, "seed": seed,
             **({"compose": args.compose} if args.compose and compose_usable(cfg) else {}),
             **({"figures": [f"{s} | {d}" for s, d in figures]} if figures else {}),
+            **({"negative": args.negative} if args.negative else {}),
             "backend": cfg["backend"],
             "created": _dt.datetime.now().isoformat(timespec="seconds"),
         })
