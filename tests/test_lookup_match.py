@@ -115,8 +115,13 @@ class TranslatedCardTests(unittest.TestCase):
 
     def test_name_only_record_has_no_card(self):
         # A record with a translated name but no translated description
-        rec = {"name": "X", "index": "x", "_i18n": {"it": {"name": "Ics"}}}
+        rec = {"name": "X", "index": "x", "description": "Some text",
+               "_i18n": {"it": {"name": "Ics"}}}
         self.assertIsNone(lookup._localize(rec, "it"))
+
+    def test_record_without_description_needs_only_the_name(self):
+        rec = {"name": "Club", "index": "club", "_i18n": {"it": {"name": "Randello"}}}
+        self.assertEqual(lookup._localize(rec, "it")["name"], "Randello")
 
     def test_vocab_translates_strings_and_lists(self):
         lookup._vocab_by_lang.setdefault("zz", {})

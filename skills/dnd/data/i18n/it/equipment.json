@@ -1,0 +1,843 @@
+{
+ "equipment": {
+  "club": {
+   "name": "Randello"
+  },
+  "dagger": {
+   "name": "Pugnale"
+  },
+  "greatclub": {
+   "name": "Randello Pesante"
+  },
+  "handaxe": {
+   "name": "Ascia"
+  },
+  "javelin": {
+   "name": "Giavellotto"
+  },
+  "light-hammer": {
+   "name": "Martello Leggero"
+  },
+  "mace": {
+   "name": "Mazza"
+  },
+  "quarterstaff": {
+   "name": "Bastone Ferrato",
+   "aliases": [
+    "Bastone"
+   ]
+  },
+  "sickle": {
+   "name": "Falcetto"
+  },
+  "spear": {
+   "name": "Lancia"
+  },
+  "crossbow-light": {
+   "name": "Balestra Leggera"
+  },
+  "dart": {
+   "name": "Dardo"
+  },
+  "shortbow": {
+   "name": "Arco Corto"
+  },
+  "sling": {
+   "name": "Fionda"
+  },
+  "battleaxe": {
+   "name": "Ascia da Battaglia"
+  },
+  "flail": {
+   "name": "Mazzafrusto"
+  },
+  "glaive": {
+   "name": "Falcione"
+  },
+  "greataxe": {
+   "name": "Ascia Bipenne"
+  },
+  "greatsword": {
+   "name": "Spadone"
+  },
+  "halberd": {
+   "name": "Alabarda"
+  },
+  "lance": {
+   "name": "Lancia da Cavaliere"
+  },
+  "longsword": {
+   "name": "Spada Lunga"
+  },
+  "maul": {
+   "name": "Maglio"
+  },
+  "morningstar": {
+   "name": "Morning Star",
+   "aliases": [
+    "Stella del Mattino"
+   ]
+  },
+  "pike": {
+   "name": "Picca"
+  },
+  "rapier": {
+   "name": "Stocco"
+  },
+  "scimitar": {
+   "name": "Scimitarra"
+  },
+  "shortsword": {
+   "name": "Spada Corta"
+  },
+  "trident": {
+   "name": "Tridente"
+  },
+  "war-pick": {
+   "name": "Piccone da Guerra"
+  },
+  "warhammer": {
+   "name": "Martello da Guerra"
+  },
+  "whip": {
+   "name": "Frusta"
+  },
+  "blowgun": {
+   "name": "Cerbottana"
+  },
+  "crossbow-hand": {
+   "name": "Balestra a Mano"
+  },
+  "crossbow-heavy": {
+   "name": "Balestra Pesante"
+  },
+  "longbow": {
+   "name": "Arco Lungo"
+  },
+  "net": {
+   "name": "Rete"
+  },
+  "padded-armor": {
+   "name": "Armatura Imbottita"
+  },
+  "leather-armor": {
+   "name": "Armatura di Cuoio"
+  },
+  "studded-leather-armor": {
+   "name": "Armatura di Cuoio Borchiato"
+  },
+  "hide-armor": {
+   "name": "Armatura di Pelle"
+  },
+  "chain-shirt": {
+   "name": "Giaco di Maglia"
+  },
+  "scale-mail": {
+   "name": "Corazza di Scaglie"
+  },
+  "breastplate": {
+   "name": "Corazza di Piastre"
+  },
+  "half-plate-armor": {
+   "name": "Mezza Armatura"
+  },
+  "ring-mail": {
+   "name": "Corazza ad Anelli"
+  },
+  "chain-mail": {
+   "name": "Cotta di Maglia"
+  },
+  "splint-armor": {
+   "name": "Corazza a Strisce"
+  },
+  "plate-armor": {
+   "name": "Armatura Completa"
+  },
+  "shield": {
+   "name": "Scudo"
+  },
+  "abacus": {
+   "name": "Abaco"
+  },
+  "acid-vial": {
+   "name": "Acido (fiala)",
+   "description": "Con un'azione, puoi spruzzare il contenuto di questa fiala su una creatura entro 1,5 metri da te oppure lanciare la fiala fino a 6 metri, facendola frantumare all'impatto. In entrambi i casi, effettua un attacco a distanza contro una creatura o un oggetto, considerando l'acido un'arma improvvisata.\n\nSe colpisce, il bersaglio subisce 2d6 danni da acido."
+  },
+  "alchemists-fire-flask": {
+   "name": "Fuoco dell'Alchimista (ampolla)",
+   "description": "Questo fluido appiccicoso e adesivo prende fuoco a contatto con l'aria.\n\nCon un'azione, puoi lanciare questa ampolla fino a 6 metri, facendola frantumare all'impatto. Effettua un attacco a distanza contro una creatura o un oggetto, considerando il fuoco dell'alchimista un'arma improvvisata.\n\nSe colpisce, il bersaglio subisce 1d4 danni da fuoco all'inizio di ciascuno dei suoi turni. Una creatura può porre fine a questi danni usando la sua azione per effettuare una prova di Destrezza con CD 10 per spegnere le fiamme."
+  },
+  "alms-box": {
+   "name": "Cassetta delle Elemosine",
+   "description": "Una piccola cassetta per le elemosine, che di solito si trova nella dotazione da sacerdote."
+  },
+  "arrow": {
+   "name": "Freccia"
+  },
+  "block-of-incense": {
+   "name": "Blocchetto d'Incenso",
+   "description": "Un blocchetto d'incenso, che di solito si trova nella dotazione da sacerdote."
+  },
+  "blowgun-needle": {
+   "name": "Ago da Cerbottana"
+  },
+  "censer": {
+   "name": "Turibolo",
+   "description": "Un turibolo, che di solito si trova nella dotazione da sacerdote."
+  },
+  "crossbow-bolt": {
+   "name": "Quadrello",
+   "aliases": [
+    "Dardo da Balestra"
+   ]
+  },
+  "sling-bullet": {
+   "name": "Proiettile da Fionda"
+  },
+  "amulet": {
+   "name": "Amuleto",
+   "description": "Un simbolo sacro è la rappresentazione di un dio o di un pantheon. Può essere un amuleto che raffigura il simbolo di una divinità, lo stesso simbolo accuratamente inciso o intarsiato come emblema su uno scudo, oppure una scatolina che contiene un frammento di una sacra reliquia.\n\nL'Appendice B elenca i simboli comunemente associati a molti dei del multiverso. Un chierico o un paladino può usare un simbolo sacro come focus da incantatore. Per usarlo in questo modo, l'incantatore deve tenerlo in mano, indossarlo in modo visibile o portarlo su uno scudo."
+  },
+  "antitoxin-vial": {
+   "name": "Antitossina (fiala)",
+   "description": "Una creatura che beve il liquido di questa fiala ottiene vantaggio ai tiri salvezza contro il veleno per 1 ora. Non conferisce alcun beneficio a non morti o costrutti."
+  },
+  "crystal": {
+   "name": "Cristallo",
+   "description": "Un focus arcano è un oggetto speciale (un globo, un cristallo, una verga, un bastone costruito appositamente, un pezzo di legno simile a una bacchetta o un oggetto analogo) progettato per incanalare il potere degli incantesimi arcani. Uno stregone, un warlock o un mago può usare un oggetto di questo tipo come focus da incantatore."
+  },
+  "orb": {
+   "name": "Globo",
+   "description": "Un focus arcano è un oggetto speciale (un globo, un cristallo, una verga, un bastone costruito appositamente, un pezzo di legno simile a una bacchetta o un oggetto analogo) progettato per incanalare il potere degli incantesimi arcani. Uno stregone, un warlock o un mago può usare un oggetto di questo tipo come focus da incantatore."
+  },
+  "rod": {
+   "name": "Verga",
+   "description": "Un focus arcano è un oggetto speciale (un globo, un cristallo, una verga, un bastone costruito appositamente, un pezzo di legno simile a una bacchetta o un oggetto analogo) progettato per incanalare il potere degli incantesimi arcani. Uno stregone, un warlock o un mago può usare un oggetto di questo tipo come focus da incantatore."
+  },
+  "staff": {
+   "name": "Bastone",
+   "description": "Un focus arcano è un oggetto speciale (un globo, un cristallo, una verga, un bastone costruito appositamente, un pezzo di legno simile a una bacchetta o un oggetto analogo) progettato per incanalare il potere degli incantesimi arcani. Uno stregone, un warlock o un mago può usare un oggetto di questo tipo come focus da incantatore."
+  },
+  "wand": {
+   "name": "Bacchetta",
+   "description": "Un focus arcano è un oggetto speciale (un globo, un cristallo, una verga, un bastone costruito appositamente, un pezzo di legno simile a una bacchetta o un oggetto analogo) progettato per incanalare il potere degli incantesimi arcani. Uno stregone, un warlock o un mago può usare un oggetto di questo tipo come focus da incantatore."
+  },
+  "backpack": {
+   "name": "Zaino"
+  },
+  "ball-bearings-bag-of-1000": {
+   "name": "Biglie (sacchetto da 1.000)",
+   "description": "Con un'azione, puoi spargere queste minuscole sfere di metallo dal loro sacchetto per coprire un'area quadrata e piana di 3 metri di lato.\n\nUna creatura che si muove attraverso l'area coperta deve superare un tiro salvezza su Destrezza con CD 10 o cadere prona.\n\nUna creatura che si muove attraverso l'area a velocità dimezzata non deve effettuare il tiro salvezza."
+  },
+  "barrel": {
+   "name": "Barile"
+  },
+  "basket": {
+   "name": "Cesto"
+  },
+  "bedroll": {
+   "name": "Sacco a Pelo"
+  },
+  "bell": {
+   "name": "Campanella"
+  },
+  "blanket": {
+   "name": "Coperta"
+  },
+  "block-and-tackle": {
+   "name": "Carrucola",
+   "description": "Un insieme di pulegge con un cavo che le attraversa e un gancio per agganciare gli oggetti: una carrucola ti permette di sollevare fino a quattro volte il peso che puoi sollevare normalmente."
+  },
+  "book": {
+   "name": "Libro",
+   "description": "Un libro può contenere poesie, resoconti storici, informazioni su un particolare campo del sapere, diagrammi e appunti su congegni gnomeschi, o quasi qualsiasi altra cosa si possa rappresentare con testo o immagini. Un libro di incantesimi è un libro degli incantesimi (descritto più avanti in questa sezione)."
+  },
+  "bottle-glass": {
+   "name": "Bottiglia di Vetro"
+  },
+  "bucket": {
+   "name": "Secchio"
+  },
+  "caltrops": {
+   "name": "Triboli",
+   "description": "Con un'azione, puoi spargere un sacchetto di triboli per coprire un'area quadrata di 1,5 metri di lato.\n\nQualsiasi creatura che entra nell'area deve superare un tiro salvezza su Destrezza con CD 15 o fermarsi per quel turno e subire 1 danno perforante.\n\nSubire questo danno riduce la velocità sul terreno della creatura di 3 metri finché la creatura non recupera almeno 1 punto ferita.\n\nUna creatura che si muove attraverso l'area a velocità dimezzata non deve effettuare il tiro salvezza."
+  },
+  "candle": {
+   "name": "Candela",
+   "description": "Per 1 ora, una candela emette luce intensa in un raggio di 1,5 metri e luce fioca per altri 1,5 metri."
+  },
+  "case-crossbow-bolt": {
+   "name": "Custodia per Quadrelli",
+   "description": "Questa custodia di legno può contenere fino a venti quadrelli."
+  },
+  "case-map-or-scroll": {
+   "name": "Custodia per Mappe o Pergamene",
+   "description": "Questa custodia cilindrica di cuoio può contenere fino a dieci fogli di carta arrotolati o cinque fogli di pergamena arrotolati."
+  },
+  "chain-10-feet": {
+   "name": "Catena (3 metri)",
+   "description": "Una catena ha 10 punti ferita. Può essere spezzata con una prova di Forza con CD 20 superata."
+  },
+  "chalk-1-piece": {
+   "name": "Gesso (1 pezzo)"
+  },
+  "chest": {
+   "name": "Forziere"
+  },
+  "clothes-common": {
+   "name": "Abiti Comuni"
+  },
+  "clothes-costume": {
+   "name": "Costume"
+  },
+  "clothes-fine": {
+   "name": "Abiti Pregiati"
+  },
+  "clothes-travelers": {
+   "name": "Abiti da Viaggiatore"
+  },
+  "component-pouch": {
+   "name": "Borsa per Componenti",
+   "description": "Una borsa per componenti è una piccola borsa da cintura in cuoio, impermeabile, con scomparti per contenere tutte le componenti materiali e gli altri oggetti speciali necessari per lanciare i tuoi incantesimi, tranne le componenti che hanno un costo specifico (come indicato nella descrizione dell'incantesimo)."
+  },
+  "crowbar": {
+   "name": "Piede di Porco",
+   "description": "Usare un piede di porco concede vantaggio alle prove di Forza in cui si può sfruttare la sua leva."
+  },
+  "sprig-of-mistletoe": {
+   "name": "Rametto di Vischio",
+   "description": "Un focus druidico può essere un rametto di vischio o di agrifoglio, una bacchetta o uno scettro di tasso o di un altro legno speciale, un bastone ricavato intero da un albero vivo, oppure un totem che incorpora piume, pelliccia, ossa e denti di animali sacri. Un druido può usare un oggetto di questo tipo come focus da incantatore."
+  },
+  "totem": {
+   "name": "Totem",
+   "description": "Un focus druidico può essere un rametto di vischio o di agrifoglio, una bacchetta o uno scettro di tasso o di un altro legno speciale, un bastone ricavato intero da un albero vivo, oppure un totem che incorpora piume, pelliccia, ossa e denti di animali sacri. Un druido può usare un oggetto di questo tipo come focus da incantatore."
+  },
+  "wooden-staff": {
+   "name": "Bastone di Legno",
+   "description": "Un focus druidico può essere un rametto di vischio o di agrifoglio, una bacchetta o uno scettro di tasso o di un altro legno speciale, un bastone ricavato intero da un albero vivo, oppure un totem che incorpora piume, pelliccia, ossa e denti di animali sacri. Un druido può usare un oggetto di questo tipo come focus da incantatore."
+  },
+  "yew-wand": {
+   "name": "Bacchetta di Tasso",
+   "description": "Un focus druidico può essere un rametto di vischio o di agrifoglio, una bacchetta o uno scettro di tasso o di un altro legno speciale, un bastone ricavato intero da un albero vivo, oppure un totem che incorpora piume, pelliccia, ossa e denti di animali sacri. Un druido può usare un oggetto di questo tipo come focus da incantatore."
+  },
+  "emblem": {
+   "name": "Emblema",
+   "description": "Un simbolo sacro è la rappresentazione di un dio o di un pantheon. Può essere un amuleto che raffigura il simbolo di una divinità, lo stesso simbolo accuratamente inciso o intarsiato come emblema su uno scudo, oppure una scatolina che contiene un frammento di una sacra reliquia.\n\nL'Appendice B elenca i simboli comunemente associati a molti dei del multiverso. Un chierico o un paladino può usare un simbolo sacro come focus da incantatore. Per usarlo in questo modo, l'incantatore deve tenerlo in mano, indossarlo in modo visibile o portarlo su uno scudo."
+  },
+  "fishing-tackle": {
+   "name": "Attrezzatura da Pesca",
+   "description": "Questo kit comprende una canna di legno, una lenza di seta, galleggianti di sughero, ami d'acciaio, piombini, esche di velluto e una piccola rete."
+  },
+  "flask-or-tankard": {
+   "name": "Fiasca o Boccale"
+  },
+  "grappling-hook": {
+   "name": "Rampino"
+  },
+  "hammer": {
+   "name": "Martello"
+  },
+  "hammer-sledge": {
+   "name": "Mazza da Demolizione",
+   "aliases": [
+    "Martello da Fabbro"
+   ]
+  },
+  "holy-water-flask": {
+   "name": "Acqua Santa (ampolla)",
+   "description": "Con un'azione, puoi spruzzare il contenuto di questa ampolla su una creatura entro 1,5 metri da te oppure lanciarla fino a 6 metri, facendola frantumare all'impatto. In entrambi i casi, effettua un attacco a distanza contro una creatura bersaglio, considerando l'acqua santa un'arma improvvisata.\n\nSe il bersaglio è un immondo o un non morto, subisce 2d6 danni radiosi.\n\nUn chierico o un paladino può creare acqua santa eseguendo un rituale speciale.\n\nIl rituale richiede 1 ora, consuma polvere d'argento per un valore di 25 mo e richiede all'incantatore di spendere uno slot incantesimo di 1° livello."
+  },
+  "hourglass": {
+   "name": "Clessidra"
+  },
+  "hunting-trap": {
+   "name": "Tagliola",
+   "description": "Quando usi la tua azione per armarla, questa trappola forma un anello d'acciaio dentato che si chiude di scatto quando una creatura calpesta una piastra a pressione al centro. La trappola è fissata con una pesante catena a un oggetto immobile, come un albero o un picchetto piantato nel terreno.\n\nUna creatura che calpesta la piastra deve superare un tiro salvezza su Destrezza con CD 13 o subire 1d4 danni perforanti e smettere di muoversi. Da quel momento, finché la creatura non si libera dalla trappola, il suo movimento è limitato dalla lunghezza della catena (di solito 90 cm).\n\nUna creatura può usare la sua azione per effettuare una prova di Forza con CD 13: se la supera, libera se stessa o un'altra creatura entro la sua portata. Ogni prova fallita infligge 1 danno perforante alla creatura intrappolata."
+  },
+  "ink-1-ounce-bottle": {
+   "name": "Inchiostro (bottiglia da 30 g)"
+  },
+  "ink-pen": {
+   "name": "Pennino"
+  },
+  "jug-or-pitcher": {
+   "name": "Brocca o Caraffa"
+  },
+  "climbers-kit": {
+   "name": "Kit da Scalatore",
+   "description": "Un kit da scalatore comprende chiodi speciali, puntali per stivali, guanti e un'imbracatura. Puoi usare il kit da scalatore con un'azione per ancorarti; quando lo fai, non puoi cadere per più di 7,5 metri dal punto in cui ti sei ancorato e non puoi arrampicarti a più di 7,5 metri da quel punto senza sciogliere l'ancoraggio."
+  },
+  "disguise-kit": {
+   "name": "Trucchi per il Camuffamento",
+   "description": "Questa borsa di cosmetici, tinture per capelli e piccoli accessori ti permette di creare travestimenti che cambiano il tuo aspetto fisico. La competenza in questo kit ti permette di aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui per creare un travestimento visivo."
+  },
+  "forgery-kit": {
+   "name": "Kit da Falsario",
+   "description": "Questa piccola scatola contiene vari tipi di carta e pergamene, penne e inchiostri, sigilli e ceralacca, foglie d'oro e d'argento e altro materiale necessario per creare falsi convincenti di documenti. La competenza in questo kit ti permette di aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui per falsificare fisicamente un documento."
+  },
+  "herbalism-kit": {
+   "name": "Borsa da Erborista",
+   "description": "Questo kit contiene vari strumenti come cesoie, mortaio e pestello, sacchetti e fiale usati dagli erboristi per creare rimedi e pozioni. La competenza in questo kit ti permette di aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui per identificare o applicare erbe. Inoltre, la competenza in questo kit è necessaria per creare antitossine e pozioni di guarigione."
+  },
+  "healers-kit": {
+   "name": "Kit del Guaritore",
+   "description": "Questo kit è una borsa di cuoio che contiene bende, unguenti e stecche. Il kit ha dieci utilizzi. Con un'azione, puoi spendere un utilizzo del kit per stabilizzare una creatura che ha 0 punti ferita, senza bisogno di effettuare una prova di Saggezza (Medicina)."
+  },
+  "mess-kit": {
+   "name": "Gavetta",
+   "description": "Questa scatola di latta contiene una tazza e semplici posate. La scatola si chiude a morsa e una metà può essere usata come padella, l'altra come piatto o ciotola bassa."
+  },
+  "poisoners-kit": {
+   "name": "Kit da Avvelenatore",
+   "description": "Un kit da avvelenatore comprende le fiale, le sostanze chimiche e il resto dell'attrezzatura necessaria per creare veleni. La competenza in questo kit ti permette di aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui per preparare o usare veleni."
+  },
+  "ladder-10-foot": {
+   "name": "Scala (3 metri)"
+  },
+  "lamp": {
+   "name": "Lampada",
+   "description": "Una lampada emette luce intensa in un raggio di 4,5 metri e luce fioca per altri 9 metri. Una volta accesa, brucia per 6 ore con un'ampolla (mezzo litro) d'olio."
+  },
+  "lantern-bullseye": {
+   "name": "Lanterna Direzionale",
+   "aliases": [
+    "Lanterna a Occhio di Bue"
+   ],
+   "description": "Una lanterna direzionale emette luce intensa in un cono di 18 metri e luce fioca per altri 18 metri. Una volta accesa, brucia per 6 ore con un'ampolla (mezzo litro) d'olio."
+  },
+  "lantern-hooded": {
+   "name": "Lanterna Schermabile",
+   "description": "Una lanterna schermabile emette luce intensa in un raggio di 9 metri e luce fioca per altri 9 metri. Una volta accesa, brucia per 6 ore con un'ampolla (mezzo litro) d'olio. Con un'azione, puoi abbassare lo schermo, riducendo la luce a luce fioca in un raggio di 1,5 metri."
+  },
+  "little-bag-of-sand": {
+   "name": "Sacchetto di Sabbia",
+   "description": "Un piccolo sacchetto di sabbia, che di solito si trova nella dotazione da studioso."
+  },
+  "lock": {
+   "name": "Serratura",
+   "description": "Con la serratura viene fornita una chiave. Senza la chiave, una creatura competente negli arnesi da scasso può forzare questa serratura con una prova di Destrezza con CD 15 superata. Il tuo GM può decidere che siano disponibili serrature migliori a prezzi più alti."
+  },
+  "magnifying-glass": {
+   "name": "Lente d'Ingrandimento",
+   "description": "Questa lente permette di osservare da vicino piccoli oggetti. È utile anche come sostituto di pietra focaia e acciarino per accendere un fuoco. Accendere un fuoco con una lente d'ingrandimento richiede una luce intensa come quella del sole da concentrare, esca da incendiare e circa 5 minuti perché il fuoco prenda.\n\nUna lente d'ingrandimento concede vantaggio a qualsiasi prova di caratteristica effettuata per valutare o esaminare un oggetto piccolo o molto dettagliato."
+  },
+  "manacles": {
+   "name": "Manette",
+   "description": "Queste costrizioni di metallo possono bloccare una creatura Piccola o Media. Liberarsi dalle manette richiede una prova di Destrezza con CD 20 superata. Spezzarle richiede una prova di Forza con CD 20 superata.\n\nOgni paio di manette ha una chiave. Senza la chiave, una creatura competente negli arnesi da scasso può forzare la serratura delle manette con una prova di Destrezza con CD 15 superata. Le manette hanno 15 punti ferita."
+  },
+  "mirror-steel": {
+   "name": "Specchio d'Acciaio"
+  },
+  "oil-flask": {
+   "name": "Olio (ampolla)",
+   "description": "L'olio di solito si trova in un'ampolla di terracotta che ne contiene mezzo litro.\n\nCon un'azione, puoi spruzzare l'olio di questa ampolla su una creatura entro 1,5 metri da te oppure lanciarla fino a 6 metri, facendola frantumare all'impatto. Effettua un attacco a distanza contro una creatura o un oggetto bersaglio, considerando l'olio un'arma improvvisata.\n\nSe colpisce, il bersaglio viene ricoperto d'olio. Se il bersaglio subisce danni da fuoco prima che l'olio si asciughi (dopo 1 minuto), subisce 5 danni da fuoco aggiuntivi dall'olio che brucia.\n\nPuoi anche versare un'ampolla d'olio sul terreno per coprire un'area quadrata di 1,5 metri di lato, purché la superficie sia piana.\n\nSe acceso, l'olio brucia per 2 round e infligge 5 danni da fuoco a qualsiasi creatura che entra nell'area o vi termina il suo turno. Una creatura può subire questi danni solo una volta per turno."
+  },
+  "paper-one-sheet": {
+   "name": "Carta (un foglio)"
+  },
+  "parchment-one-sheet": {
+   "name": "Pergamena (un foglio)"
+  },
+  "perfume-vial": {
+   "name": "Profumo (fiala)"
+  },
+  "pick-miners": {
+   "name": "Piccone da Minatore"
+  },
+  "piton": {
+   "name": "Chiodo da Roccia"
+  },
+  "poison-basic-vial": {
+   "name": "Veleno Base (fiala)",
+   "description": "Puoi usare il veleno di questa fiala per ricoprire un'arma tagliente o perforante o fino a tre munizioni. Applicare il veleno richiede un'azione. Una creatura colpita dall'arma o dalla munizione avvelenata deve effettuare un tiro salvezza su Costituzione con CD 10 o subire 1d4 danni da veleno. Una volta applicato, il veleno resta efficace per 1 minuto prima di seccarsi."
+  },
+  "pole-10-foot": {
+   "name": "Pertica (3 metri)"
+  },
+  "pot-iron": {
+   "name": "Pentola di Ferro"
+  },
+  "pouch": {
+   "name": "Borsa",
+   "description": "Una borsa di stoffa o di cuoio può contenere, tra le altre cose, fino a 20 proiettili da fionda o 50 aghi da cerbottana. Una borsa a scomparti per contenere le componenti degli incantesimi si chiama borsa per componenti (descritta in precedenza in questa sezione)."
+  },
+  "quiver": {
+   "name": "Faretra",
+   "description": "Una faretra può contenere fino a 20 frecce."
+  },
+  "ram-portable": {
+   "name": "Ariete Portatile",
+   "description": "Puoi usare un ariete portatile per sfondare le porte. Quando lo fai, ottieni un bonus di +4 alla prova di Forza. Un altro personaggio può aiutarti a usare l'ariete, dandoti vantaggio a questa prova."
+  },
+  "rations-1-day": {
+   "name": "Razioni (1 giorno)",
+   "description": "Le razioni consistono in cibi secchi adatti ai viaggi lunghi, tra cui carne essiccata, frutta secca, gallette e noci."
+  },
+  "reliquary": {
+   "name": "Reliquiario",
+   "description": "Un simbolo sacro è la rappresentazione di un dio o di un pantheon. Può essere un amuleto che raffigura il simbolo di una divinità, lo stesso simbolo accuratamente inciso o intarsiato come emblema su uno scudo, oppure una scatolina che contiene un frammento di una sacra reliquia.\n\nL'Appendice B elenca i simboli comunemente associati a molti dei del multiverso. Un chierico o un paladino può usare un simbolo sacro come focus da incantatore. Per usarlo in questo modo, l'incantatore deve tenerlo in mano, indossarlo in modo visibile o portarlo su uno scudo."
+  },
+  "robes": {
+   "name": "Tunica"
+  },
+  "rope-hempen-50-feet": {
+   "name": "Corda di Canapa (15 metri)",
+   "description": "Una corda, di canapa o di seta, ha 2 punti ferita e può essere spezzata con una prova di Forza con CD 17."
+  },
+  "rope-silk-50-feet": {
+   "name": "Corda di Seta (15 metri)",
+   "description": "Una corda, di canapa o di seta, ha 2 punti ferita e può essere spezzata con una prova di Forza con CD 17."
+  },
+  "sack": {
+   "name": "Sacco"
+  },
+  "scale-merchants": {
+   "name": "Bilancia da Mercante",
+   "description": "Una bilancia comprende un piccolo bilanciere, piatti e un assortimento adeguato di pesi fino a 1 kg. Con essa puoi misurare il peso esatto di piccoli oggetti, come metalli preziosi grezzi o merci, per aiutarti a determinarne il valore."
+  },
+  "sealing-wax": {
+   "name": "Ceralacca"
+  },
+  "shovel": {
+   "name": "Pala"
+  },
+  "signal-whistle": {
+   "name": "Fischietto da Segnalazione"
+  },
+  "signet-ring": {
+   "name": "Anello con Sigillo"
+  },
+  "small-knife": {
+   "name": "Coltellino",
+   "description": "Un coltellino, che di solito si trova nella dotazione da studioso."
+  },
+  "soap": {
+   "name": "Sapone"
+  },
+  "spellbook": {
+   "name": "Libro degli Incantesimi",
+   "description": "Indispensabile per i maghi, un libro degli incantesimi è un tomo rilegato in cuoio con 100 pagine bianche di pergamena adatte a trascrivere incantesimi."
+  },
+  "spike-iron": {
+   "name": "Chiodo di Ferro"
+  },
+  "spyglass": {
+   "name": "Cannocchiale",
+   "description": "Gli oggetti osservati attraverso un cannocchiale appaiono ingranditi al doppio delle loro dimensioni."
+  },
+  "string-10-feet": {
+   "name": "Spago (3 metri)",
+   "description": "Un pezzo di spago lungo 3 metri, che di solito si trova nella dotazione da scassinatore."
+  },
+  "tent-two-person": {
+   "name": "Tenda per Due Persone",
+   "description": "Un riparo di tela semplice e portatile: una tenda ospita due persone."
+  },
+  "tinderbox": {
+   "name": "Acciarino",
+   "description": "Questo piccolo contenitore contiene pietra focaia, acciarino ed esca (di solito un panno asciutto imbevuto di olio leggero) per accendere un fuoco. Usarlo per accendere una torcia, o qualsiasi altra cosa con combustibile abbondante ed esposto, richiede un'azione.\n\nAccendere qualsiasi altro fuoco richiede 1 minuto."
+  },
+  "torch": {
+   "name": "Torcia",
+   "description": "Una torcia brucia per 1 ora, emettendo luce intensa in un raggio di 6 metri e luce fioca per altri 6 metri. Se effettui un attacco in mischia con una torcia accesa e colpisci, infligge 1 danno da fuoco."
+  },
+  "vestments": {
+   "name": "Paramenti",
+   "description": "Abiti religiosi, che di solito si trovano nella dotazione da sacerdote."
+  },
+  "vial": {
+   "name": "Fiala"
+  },
+  "waterskin": {
+   "name": "Otre"
+  },
+  "whetstone": {
+   "name": "Cote"
+  },
+  "burglars-pack": {
+   "name": "Dotazione da Scassinatore"
+  },
+  "diplomats-pack": {
+   "name": "Dotazione da Diplomatico"
+  },
+  "dungeoneers-pack": {
+   "name": "Dotazione da Esploratore di Dungeon"
+  },
+  "entertainers-pack": {
+   "name": "Dotazione da Intrattenitore"
+  },
+  "explorers-pack": {
+   "name": "Dotazione da Esploratore"
+  },
+  "priests-pack": {
+   "name": "Dotazione da Sacerdote"
+  },
+  "scholars-pack": {
+   "name": "Dotazione da Studioso"
+  },
+  "alchemists-supplies": {
+   "name": "Scorte da Alchimista",
+   "description": "Questi attrezzi speciali comprendono gli oggetti necessari per praticare un mestiere o un'arte. La tabella mostra esempi dei tipi di attrezzi più comuni, ciascuno dei quali fornisce gli oggetti legati a un singolo mestiere. La competenza in un set di strumenti da artigiano ti permette di aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui usando gli attrezzi del tuo mestiere. Ogni tipo di strumenti da artigiano richiede una competenza separata."
+  },
+  "brewers-supplies": {
+   "name": "Scorte da Birraio",
+   "description": "Questi attrezzi speciali comprendono gli oggetti necessari per praticare un mestiere o un'arte. La tabella mostra esempi dei tipi di attrezzi più comuni, ciascuno dei quali fornisce gli oggetti legati a un singolo mestiere. La competenza in un set di strumenti da artigiano ti permette di aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui usando gli attrezzi del tuo mestiere. Ogni tipo di strumenti da artigiano richiede una competenza separata."
+  },
+  "calligraphers-supplies": {
+   "name": "Scorte da Calligrafo",
+   "description": "Questi attrezzi speciali comprendono gli oggetti necessari per praticare un mestiere o un'arte. La tabella mostra esempi dei tipi di attrezzi più comuni, ciascuno dei quali fornisce gli oggetti legati a un singolo mestiere. La competenza in un set di strumenti da artigiano ti permette di aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui usando gli attrezzi del tuo mestiere. Ogni tipo di strumenti da artigiano richiede una competenza separata."
+  },
+  "carpenters-tools": {
+   "name": "Attrezzi da Falegname",
+   "description": "Questi attrezzi speciali comprendono gli oggetti necessari per praticare un mestiere o un'arte. La tabella mostra esempi dei tipi di attrezzi più comuni, ciascuno dei quali fornisce gli oggetti legati a un singolo mestiere. La competenza in un set di strumenti da artigiano ti permette di aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui usando gli attrezzi del tuo mestiere. Ogni tipo di strumenti da artigiano richiede una competenza separata."
+  },
+  "cartographers-tools": {
+   "name": "Strumenti da Cartografo",
+   "description": "Questi attrezzi speciali comprendono gli oggetti necessari per praticare un mestiere o un'arte. La tabella mostra esempi dei tipi di attrezzi più comuni, ciascuno dei quali fornisce gli oggetti legati a un singolo mestiere. La competenza in un set di strumenti da artigiano ti permette di aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui usando gli attrezzi del tuo mestiere. Ogni tipo di strumenti da artigiano richiede una competenza separata."
+  },
+  "cobblers-tools": {
+   "name": "Attrezzi da Calzolaio",
+   "description": "Questi attrezzi speciali comprendono gli oggetti necessari per praticare un mestiere o un'arte. La tabella mostra esempi dei tipi di attrezzi più comuni, ciascuno dei quali fornisce gli oggetti legati a un singolo mestiere. La competenza in un set di strumenti da artigiano ti permette di aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui usando gli attrezzi del tuo mestiere. Ogni tipo di strumenti da artigiano richiede una competenza separata."
+  },
+  "cooks-utensils": {
+   "name": "Utensili da Cuoco",
+   "description": "Questi attrezzi speciali comprendono gli oggetti necessari per praticare un mestiere o un'arte. La tabella mostra esempi dei tipi di attrezzi più comuni, ciascuno dei quali fornisce gli oggetti legati a un singolo mestiere. La competenza in un set di strumenti da artigiano ti permette di aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui usando gli attrezzi del tuo mestiere. Ogni tipo di strumenti da artigiano richiede una competenza separata."
+  },
+  "glassblowers-tools": {
+   "name": "Attrezzi da Soffiatore di Vetro",
+   "description": "Questi attrezzi speciali comprendono gli oggetti necessari per praticare un mestiere o un'arte. La tabella mostra esempi dei tipi di attrezzi più comuni, ciascuno dei quali fornisce gli oggetti legati a un singolo mestiere. La competenza in un set di strumenti da artigiano ti permette di aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui usando gli attrezzi del tuo mestiere. Ogni tipo di strumenti da artigiano richiede una competenza separata."
+  },
+  "jewelers-tools": {
+   "name": "Attrezzi da Gioielliere",
+   "description": "Questi attrezzi speciali comprendono gli oggetti necessari per praticare un mestiere o un'arte. La tabella mostra esempi dei tipi di attrezzi più comuni, ciascuno dei quali fornisce gli oggetti legati a un singolo mestiere. La competenza in un set di strumenti da artigiano ti permette di aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui usando gli attrezzi del tuo mestiere. Ogni tipo di strumenti da artigiano richiede una competenza separata."
+  },
+  "leatherworkers-tools": {
+   "name": "Attrezzi da Conciatore",
+   "description": "Questi attrezzi speciali comprendono gli oggetti necessari per praticare un mestiere o un'arte. La tabella mostra esempi dei tipi di attrezzi più comuni, ciascuno dei quali fornisce gli oggetti legati a un singolo mestiere. La competenza in un set di strumenti da artigiano ti permette di aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui usando gli attrezzi del tuo mestiere. Ogni tipo di strumenti da artigiano richiede una competenza separata."
+  },
+  "masons-tools": {
+   "name": "Attrezzi da Muratore",
+   "description": "Questi attrezzi speciali comprendono gli oggetti necessari per praticare un mestiere o un'arte. La tabella mostra esempi dei tipi di attrezzi più comuni, ciascuno dei quali fornisce gli oggetti legati a un singolo mestiere. La competenza in un set di strumenti da artigiano ti permette di aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui usando gli attrezzi del tuo mestiere. Ogni tipo di strumenti da artigiano richiede una competenza separata."
+  },
+  "painters-supplies": {
+   "name": "Scorte da Pittore",
+   "description": "Questi attrezzi speciali comprendono gli oggetti necessari per praticare un mestiere o un'arte. La tabella mostra esempi dei tipi di attrezzi più comuni, ciascuno dei quali fornisce gli oggetti legati a un singolo mestiere. La competenza in un set di strumenti da artigiano ti permette di aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui usando gli attrezzi del tuo mestiere. Ogni tipo di strumenti da artigiano richiede una competenza separata."
+  },
+  "potters-tools": {
+   "name": "Attrezzi da Vasaio",
+   "description": "Questi attrezzi speciali comprendono gli oggetti necessari per praticare un mestiere o un'arte. La tabella mostra esempi dei tipi di attrezzi più comuni, ciascuno dei quali fornisce gli oggetti legati a un singolo mestiere. La competenza in un set di strumenti da artigiano ti permette di aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui usando gli attrezzi del tuo mestiere. Ogni tipo di strumenti da artigiano richiede una competenza separata."
+  },
+  "smiths-tools": {
+   "name": "Attrezzi da Fabbro",
+   "description": "Questi attrezzi speciali comprendono gli oggetti necessari per praticare un mestiere o un'arte. La tabella mostra esempi dei tipi di attrezzi più comuni, ciascuno dei quali fornisce gli oggetti legati a un singolo mestiere. La competenza in un set di strumenti da artigiano ti permette di aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui usando gli attrezzi del tuo mestiere. Ogni tipo di strumenti da artigiano richiede una competenza separata."
+  },
+  "tinkers-tools": {
+   "name": "Attrezzi da Inventore",
+   "description": "Questi attrezzi speciali comprendono gli oggetti necessari per praticare un mestiere o un'arte. La tabella mostra esempi dei tipi di attrezzi più comuni, ciascuno dei quali fornisce gli oggetti legati a un singolo mestiere. La competenza in un set di strumenti da artigiano ti permette di aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui usando gli attrezzi del tuo mestiere. Ogni tipo di strumenti da artigiano richiede una competenza separata."
+  },
+  "weavers-tools": {
+   "name": "Attrezzi da Tessitore",
+   "description": "Questi attrezzi speciali comprendono gli oggetti necessari per praticare un mestiere o un'arte. La tabella mostra esempi dei tipi di attrezzi più comuni, ciascuno dei quali fornisce gli oggetti legati a un singolo mestiere. La competenza in un set di strumenti da artigiano ti permette di aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui usando gli attrezzi del tuo mestiere. Ogni tipo di strumenti da artigiano richiede una competenza separata."
+  },
+  "woodcarvers-tools": {
+   "name": "Attrezzi da Intagliatore",
+   "description": "Questi attrezzi speciali comprendono gli oggetti necessari per praticare un mestiere o un'arte. La tabella mostra esempi dei tipi di attrezzi più comuni, ciascuno dei quali fornisce gli oggetti legati a un singolo mestiere. La competenza in un set di strumenti da artigiano ti permette di aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui usando gli attrezzi del tuo mestiere. Ogni tipo di strumenti da artigiano richiede una competenza separata."
+  },
+  "dice-set": {
+   "name": "Set di Dadi",
+   "description": "Questa voce comprende un'ampia gamma di pezzi da gioco, tra cui dadi e mazzi di carte (per giochi come l'Ante dei Tre Draghi). Alcuni esempi comuni compaiono nella tabella degli Strumenti, ma esistono altri tipi di set da gioco. Se hai competenza in un set da gioco, puoi aggiungere il tuo bonus di competenza alle prove di caratteristica che effettui per giocare con quel set. Ogni tipo di set da gioco richiede una competenza separata."
+  },
+  "playing-card-set": {
+   "name": "Mazzo di Carte",
+   "description": "Questa voce comprende un'ampia gamma di pezzi da gioco, tra cui dadi e mazzi di carte (per giochi come l'Ante dei Tre Draghi). Alcuni esempi comuni compaiono nella tabella degli Strumenti, ma esistono altri tipi di set da gioco. Se hai competenza in un set da gioco, puoi aggiungere il tuo bonus di competenza alle prove di caratteristica che effettui per giocare con quel set. Ogni tipo di set da gioco richiede una competenza separata."
+  },
+  "bagpipes": {
+   "name": "Cornamusa",
+   "description": "Nella tabella sono indicati come esempi alcuni dei tipi più comuni di strumenti musicali. Se hai competenza in un certo strumento musicale, puoi aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui per suonare musica con quello strumento. Un bardo può usare uno strumento musicale come focus da incantatore. Ogni tipo di strumento musicale richiede una competenza separata."
+  },
+  "drum": {
+   "name": "Tamburo",
+   "description": "Nella tabella sono indicati come esempi alcuni dei tipi più comuni di strumenti musicali. Se hai competenza in un certo strumento musicale, puoi aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui per suonare musica con quello strumento. Un bardo può usare uno strumento musicale come focus da incantatore. Ogni tipo di strumento musicale richiede una competenza separata."
+  },
+  "dulcimer": {
+   "name": "Dulcimer",
+   "description": "Nella tabella sono indicati come esempi alcuni dei tipi più comuni di strumenti musicali. Se hai competenza in un certo strumento musicale, puoi aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui per suonare musica con quello strumento. Un bardo può usare uno strumento musicale come focus da incantatore. Ogni tipo di strumento musicale richiede una competenza separata."
+  },
+  "flute": {
+   "name": "Flauto",
+   "description": "Nella tabella sono indicati come esempi alcuni dei tipi più comuni di strumenti musicali. Se hai competenza in un certo strumento musicale, puoi aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui per suonare musica con quello strumento. Un bardo può usare uno strumento musicale come focus da incantatore. Ogni tipo di strumento musicale richiede una competenza separata."
+  },
+  "lute": {
+   "name": "Liuto",
+   "description": "Nella tabella sono indicati come esempi alcuni dei tipi più comuni di strumenti musicali. Se hai competenza in un certo strumento musicale, puoi aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui per suonare musica con quello strumento. Un bardo può usare uno strumento musicale come focus da incantatore. Ogni tipo di strumento musicale richiede una competenza separata."
+  },
+  "lyre": {
+   "name": "Lira",
+   "description": "Nella tabella sono indicati come esempi alcuni dei tipi più comuni di strumenti musicali. Se hai competenza in un certo strumento musicale, puoi aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui per suonare musica con quello strumento. Un bardo può usare uno strumento musicale come focus da incantatore. Ogni tipo di strumento musicale richiede una competenza separata."
+  },
+  "horn": {
+   "name": "Corno",
+   "description": "Nella tabella sono indicati come esempi alcuni dei tipi più comuni di strumenti musicali. Se hai competenza in un certo strumento musicale, puoi aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui per suonare musica con quello strumento. Un bardo può usare uno strumento musicale come focus da incantatore. Ogni tipo di strumento musicale richiede una competenza separata."
+  },
+  "pan-flute": {
+   "name": "Flauto di Pan",
+   "description": "Nella tabella sono indicati come esempi alcuni dei tipi più comuni di strumenti musicali. Se hai competenza in un certo strumento musicale, puoi aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui per suonare musica con quello strumento. Un bardo può usare uno strumento musicale come focus da incantatore. Ogni tipo di strumento musicale richiede una competenza separata."
+  },
+  "shawm": {
+   "name": "Ciaramella",
+   "description": "Nella tabella sono indicati come esempi alcuni dei tipi più comuni di strumenti musicali. Se hai competenza in un certo strumento musicale, puoi aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui per suonare musica con quello strumento. Un bardo può usare uno strumento musicale come focus da incantatore. Ogni tipo di strumento musicale richiede una competenza separata."
+  },
+  "viol": {
+   "name": "Viola",
+   "description": "Nella tabella sono indicati come esempi alcuni dei tipi più comuni di strumenti musicali. Se hai competenza in un certo strumento musicale, puoi aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui per suonare musica con quello strumento. Un bardo può usare uno strumento musicale come focus da incantatore. Ogni tipo di strumento musicale richiede una competenza separata."
+  },
+  "navigators-tools": {
+   "name": "Strumenti da Navigatore",
+   "description": "Questo set di strumenti si usa per navigare in mare. La competenza negli strumenti da navigatore ti permette di tracciare la rotta di una nave e seguire le carte nautiche. Inoltre, questi strumenti ti permettono di aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui per evitare di perderti in mare."
+  },
+  "thieves-tools": {
+   "name": "Arnesi da Scasso",
+   "aliases": [
+    "Attrezzi da Scasso",
+    "Grimaldelli"
+   ],
+   "description": "Questo set di attrezzi comprende una piccola lima, un set di grimaldelli, un piccolo specchio montato su un manico di metallo, un paio di forbici a lama stretta e un paio di pinze. La competenza in questi attrezzi ti permette di aggiungere il tuo bonus di competenza a qualsiasi prova di caratteristica che effettui per disattivare trappole o aprire serrature."
+  },
+  "camel": {
+   "name": "Cammello"
+  },
+  "donkey": {
+   "name": "Asino"
+  },
+  "mule": {
+   "name": "Mulo"
+  },
+  "elephant": {
+   "name": "Elefante"
+  },
+  "horse-draft": {
+   "name": "Cavallo da Tiro"
+  },
+  "horse-riding": {
+   "name": "Cavallo da Sella"
+  },
+  "mastiff": {
+   "name": "Mastino"
+  },
+  "pony": {
+   "name": "Pony"
+  },
+  "warhorse": {
+   "name": "Cavallo da Guerra"
+  },
+  "barding-padded": {
+   "name": "Bardatura: Imbottita",
+   "description": "Una bardatura è un'armatura progettata per proteggere testa, collo, petto e corpo di un animale. Qualsiasi tipo di armatura della tabella delle Armature può essere acquistato come bardatura. Il costo è quattro volte quello dell'armatura equivalente per umanoidi e il peso è doppio."
+  },
+  "barding-leather": {
+   "name": "Bardatura: Cuoio",
+   "description": "Una bardatura è un'armatura progettata per proteggere testa, collo, petto e corpo di un animale. Qualsiasi tipo di armatura della tabella delle Armature può essere acquistato come bardatura. Il costo è quattro volte quello dell'armatura equivalente per umanoidi e il peso è doppio."
+  },
+  "barding-studded-leather": {
+   "name": "Bardatura: Cuoio Borchiato",
+   "description": "Una bardatura è un'armatura progettata per proteggere testa, collo, petto e corpo di un animale. Qualsiasi tipo di armatura della tabella delle Armature può essere acquistato come bardatura. Il costo è quattro volte quello dell'armatura equivalente per umanoidi e il peso è doppio."
+  },
+  "barding-hide": {
+   "name": "Bardatura: Pelle",
+   "description": "Una bardatura è un'armatura progettata per proteggere testa, collo, petto e corpo di un animale. Qualsiasi tipo di armatura della tabella delle Armature può essere acquistato come bardatura. Il costo è quattro volte quello dell'armatura equivalente per umanoidi e il peso è doppio."
+  },
+  "barding-chain-shirt": {
+   "name": "Bardatura: Giaco di Maglia",
+   "description": "Una bardatura è un'armatura progettata per proteggere testa, collo, petto e corpo di un animale. Qualsiasi tipo di armatura della tabella delle Armature può essere acquistato come bardatura. Il costo è quattro volte quello dell'armatura equivalente per umanoidi e il peso è doppio."
+  },
+  "barding-scale-mail": {
+   "name": "Bardatura: Corazza di Scaglie",
+   "description": "Una bardatura è un'armatura progettata per proteggere testa, collo, petto e corpo di un animale. Qualsiasi tipo di armatura della tabella delle Armature può essere acquistato come bardatura. Il costo è quattro volte quello dell'armatura equivalente per umanoidi e il peso è doppio."
+  },
+  "barding-breastplate": {
+   "name": "Bardatura: Corazza di Piastre",
+   "description": "Una bardatura è un'armatura progettata per proteggere testa, collo, petto e corpo di un animale. Qualsiasi tipo di armatura della tabella delle Armature può essere acquistato come bardatura. Il costo è quattro volte quello dell'armatura equivalente per umanoidi e il peso è doppio."
+  },
+  "barding-half-plate": {
+   "name": "Bardatura: Mezza Armatura",
+   "description": "Una bardatura è un'armatura progettata per proteggere testa, collo, petto e corpo di un animale. Qualsiasi tipo di armatura della tabella delle Armature può essere acquistato come bardatura. Il costo è quattro volte quello dell'armatura equivalente per umanoidi e il peso è doppio."
+  },
+  "barding-ring-mail": {
+   "name": "Bardatura: Corazza ad Anelli",
+   "description": "Una bardatura è un'armatura progettata per proteggere testa, collo, petto e corpo di un animale. Qualsiasi tipo di armatura della tabella delle Armature può essere acquistato come bardatura. Il costo è quattro volte quello dell'armatura equivalente per umanoidi e il peso è doppio."
+  },
+  "barding-chain-mail": {
+   "name": "Bardatura: Cotta di Maglia",
+   "description": "Una bardatura è un'armatura progettata per proteggere testa, collo, petto e corpo di un animale. Qualsiasi tipo di armatura della tabella delle Armature può essere acquistato come bardatura. Il costo è quattro volte quello dell'armatura equivalente per umanoidi e il peso è doppio."
+  },
+  "barding-splint": {
+   "name": "Bardatura: Corazza a Strisce",
+   "description": "Una bardatura è un'armatura progettata per proteggere testa, collo, petto e corpo di un animale. Qualsiasi tipo di armatura della tabella delle Armature può essere acquistato come bardatura. Il costo è quattro volte quello dell'armatura equivalente per umanoidi e il peso è doppio."
+  },
+  "barding-plate": {
+   "name": "Bardatura: Armatura Completa",
+   "description": "Una bardatura è un'armatura progettata per proteggere testa, collo, petto e corpo di un animale. Qualsiasi tipo di armatura della tabella delle Armature può essere acquistato come bardatura. Il costo è quattro volte quello dell'armatura equivalente per umanoidi e il peso è doppio."
+  },
+  "bit-and-bridle": {
+   "name": "Morso e Briglie"
+  },
+  "carriage": {
+   "name": "Carrozza"
+  },
+  "cart": {
+   "name": "Carretto"
+  },
+  "chariot": {
+   "name": "Biga"
+  },
+  "animal-feed-1-day": {
+   "name": "Foraggio (1 giorno)"
+  },
+  "saddle-exotic": {
+   "name": "Sella Esotica",
+   "description": "Una sella esotica è necessaria per cavalcare qualsiasi cavalcatura acquatica o volante."
+  },
+  "saddle-military": {
+   "name": "Sella Militare",
+   "description": "Una sella militare sostiene il cavaliere, aiutandoti a restare in sella su una cavalcatura attiva in battaglia. Ti dà vantaggio a qualsiasi prova che effettui per restare in sella."
+  },
+  "saddle-pack": {
+   "name": "Basto"
+  },
+  "saddle-riding": {
+   "name": "Sella da Cavalcatura"
+  },
+  "saddlebags": {
+   "name": "Bisacce"
+  },
+  "sled": {
+   "name": "Slitta"
+  },
+  "stabling-1-day": {
+   "name": "Stalla (1 giorno)"
+  },
+  "wagon": {
+   "name": "Carro"
+  },
+  "galley": {
+   "name": "Galea"
+  },
+  "keelboat": {
+   "name": "Chiatta",
+   "description": "Chiatte e barche a remi si usano su laghi e fiumi. Se si procede secondo corrente, aggiungi la velocità della corrente (di solito 5 km orari) alla velocità del veicolo. Questi veicoli non possono essere spinti a remi contro una corrente significativa, ma possono essere trainati controcorrente da animali da tiro sulle rive. Una barca a remi pesa 50 kg, nel caso gli avventurieri debbano trasportarla via terra."
+  },
+  "longship": {
+   "name": "Drakkar"
+  },
+  "rowboat": {
+   "name": "Barca a Remi",
+   "description": "Chiatte e barche a remi si usano su laghi e fiumi. Se si procede secondo corrente, aggiungi la velocità della corrente (di solito 5 km orari) alla velocità del veicolo. Questi veicoli non possono essere spinti a remi contro una corrente significativa, ma possono essere trainati controcorrente da animali da tiro sulle rive. Una barca a remi pesa 50 kg, nel caso gli avventurieri debbano trasportarla via terra."
+  },
+  "sailing-ship": {
+   "name": "Veliero"
+  },
+  "warship": {
+   "name": "Nave da Guerra"
+  }
+ }
+}

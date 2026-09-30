@@ -1,12 +1,142 @@
 {
-  "_vocab": {
-    "class": {
-      "barbarian": "Barbaro", "bard": "Bardo", "cleric": "Chierico", "druid": "Druido",
-      "fighter": "Guerriero", "monk": "Monaco", "paladin": "Paladino", "ranger": "Ranger",
-      "rogue": "Ladro", "sorcerer": "Stregone", "warlock": "Warlock", "wizard": "Mago"
-    },
-    "type": {
-      "class": "privilegio di classe", "race": "tratto razziale", "natural": "naturale"
-    }
+ "_vocab": {
+  "class": {
+   "barbarian": "Barbaro",
+   "bard": "Bardo",
+   "cleric": "Chierico",
+   "druid": "Druido",
+   "fighter": "Guerriero",
+   "monk": "Monaco",
+   "paladin": "Paladino",
+   "ranger": "Ranger",
+   "rogue": "Ladro",
+   "sorcerer": "Stregone",
+   "warlock": "Warlock",
+   "wizard": "Mago"
+  },
+  "type": {
+   "class": "privilegio di classe",
+   "race": "tratto razziale",
+   "natural": "naturale"
+  },
+  "category": {
+   "Adventuring Gear": "Equipaggiamento da avventura",
+   "Mounts and Vehicles": "Cavalcature e veicoli",
+   "Weapon": "Arma",
+   "Tools": "Strumenti",
+   "Armor": "Armatura"
+  },
+  "properties": {
+   "Two-Handed": "Due mani",
+   "Monk": "Monaco",
+   "Light": "Leggera",
+   "Thrown": "Da lancio",
+   "Heavy": "Pesante",
+   "Ammunition": "Munizioni",
+   "Finesse": "Accurata",
+   "Versatile": "Versatile",
+   "Reach": "Portata",
+   "Loading": "Ricarica",
+   "Special": "Speciale"
+  },
+  "cost": {
+   "1 sp": "1 ma",
+   "2 gp": "2 mo",
+   "2 sp": "2 ma",
+   "5 gp": "5 mo",
+   "5 sp": "5 ma",
+   "1 gp": "1 mo",
+   "25 gp": "25 mo",
+   "5 cp": "5 mr",
+   "10 gp": "10 mo",
+   "20 gp": "20 mo",
+   "30 gp": "30 mo",
+   "50 gp": "50 mo",
+   "15 gp": "15 mo",
+   "75 gp": "75 mo",
+   "45 gp": "45 mo",
+   "400 gp": "400 mo",
+   "750 gp": "750 mo",
+   "200 gp": "200 mo",
+   "1500 gp": "1500 mo",
+   "0 cp": "0 mr",
+   "4 cp": "4 mr",
+   "4 sp": "4 ma",
+   "1 cp": "1 mr",
+   "2 cp": "2 mr",
+   "100 gp": "100 mo",
+   "4 gp": "4 mo",
+   "1000 gp": "1000 mo",
+   "16 gp": "16 mo",
+   "39 gp": "39 mo",
+   "12 gp": "12 mo",
+   "40 gp": "40 mo",
+   "19 gp": "19 mo",
+   "8 gp": "8 mo",
+   "6 gp": "6 mo",
+   "35 gp": "35 mo",
+   "3 gp": "3 mo",
+   "180 gp": "180 mo",
+   "1600 gp": "1600 mo",
+   "3000 gp": "3000 mo",
+   "300 gp": "300 mo",
+   "800 gp": "800 mo",
+   "6000 gp": "6000 mo",
+   "250 gp": "250 mo",
+   "60 gp": "60 mo",
+   "30000 gp": "30000 mo",
+   "10000 gp": "10000 mo",
+   "25000 gp": "25000 mo"
+  },
+  "damage": {
+   "1d4 Bludgeoning": "1d4 contundenti",
+   "1d4 Piercing": "1d4 perforanti",
+   "1d8 Bludgeoning": "1d8 contundenti",
+   "1d6 Slashing": "1d6 taglienti",
+   "1d6 Piercing": "1d6 perforanti",
+   "1d6 Bludgeoning": "1d6 contundenti",
+   "1d4 Slashing": "1d4 taglienti",
+   "1d8 Piercing": "1d8 perforanti",
+   "1d8 Slashing": "1d8 taglienti",
+   "1d10 Slashing": "1d10 taglienti",
+   "1d12 Slashing": "1d12 taglienti",
+   "2d6 Slashing": "2d6 taglienti",
+   "1d12 Piercing": "1d12 perforanti",
+   "2d6 Bludgeoning": "2d6 contundenti",
+   "1d10 Piercing": "1d10 perforanti",
+   "1 Piercing": "1 perforante"
+  },
+  "damage_2h": {
+   "1d8 Bludgeoning": "1d8 contundenti",
+   "1d8 Piercing": "1d8 perforanti",
+   "1d10 Slashing": "1d10 taglienti",
+   "1d10 Bludgeoning": "1d10 contundenti"
+  },
+  "range": {
+   "5/? ft": "1,5/? m",
+   "80/320 ft": "24/96 m",
+   "20/60 ft": "6/18 m",
+   "30/120 ft": "9/36 m",
+   "25/100 ft": "7,5/30 m",
+   "100/400 ft": "30/120 m",
+   "150/600 ft": "45/180 m",
+   "5/15 ft": "1,5/4,5 m"
+  },
+  "throw_range": {
+   "20/60 ft": "6/18 m",
+   "30/120 ft": "9/36 m",
+   "5/15 ft": "1,5/4,5 m"
+  },
+  "ac": {
+   "AC 11 + DEX": "CA 11 + DES",
+   "AC 12 + DEX": "CA 12 + DES",
+   "AC 13 + DEX": "CA 13 + DES",
+   "AC 14 + DEX": "CA 14 + DES",
+   "AC 15 + DEX": "CA 15 + DES",
+   "AC 16 + DEX": "CA 16 + DES",
+   "AC 17 + DEX": "CA 17 + DES",
+   "AC 18 + DEX": "CA 18 + DES",
+   "AC 2 + DEX": "CA 2 + DES"
   }
+ }
 }

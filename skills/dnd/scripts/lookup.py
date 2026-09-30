@@ -319,7 +319,7 @@ LABELS = {
         "condition_immune": "Immunità alle condizioni", "languages": "Linguaggi: ",
         "feature_level": "  (livello {n})",
         # Italian books use metric units: 1 lb = 0.5 kg
-        "weight_unit": "kg", "weight_factor": 0.5,
+        "weight_unit": "kg", "weight_factor": 0.5, "decimal": ",",
     },
 }
 _EN = LABELS["en"]
@@ -367,7 +367,8 @@ def _fmt_equipment(r: dict, L: dict = _EN) -> str:
         lines.append(f"{L['cost']}{r['cost']}")
     if r.get("weight") is not None:
         if "weight_factor" in L:
-            lines.append(f"{L['weight']}{r['weight'] * L['weight_factor']:g} {L['weight_unit']}")
+            w = f"{r['weight'] * L['weight_factor']:g}".replace(".", L.get("decimal", "."))
+            lines.append(f"{L['weight']}{w} {L['weight_unit']}")
         else:
             lines.append(f"{L['weight']}{r['weight']} lb")
     if r.get("damage"):
@@ -679,15 +680,18 @@ def lookup_with_level(query: str, category=None, level=None, ruleset=None):
 
 
 def _localize(r: dict, lang: str):
-    """The record with its fields translated for `lang`, or None when there is
-    no translated description yet (a card with only the name translated
-    would be English text under an Italian title).
+    """The record with its fields translated for `lang`, or None when its
+    description isn't translated yet (a card with only the name translated
+    would be English text under an Italian title). A record with no English
+    description at all — most mundane gear — only needs its name.
 
     Per-record overlay values win; otherwise short repeated values go through
     the language's `_vocab` (strings and list items alike); anything left
     stays English. `_name_en` keeps the original name for the title."""
     tr = (r.get("_i18n") or {}).get(lang)
-    if not tr or not tr.get("description"):
+    if not tr or not (tr.get("description") or tr.get("name")):
+        return None
+    if r.get("description") and not tr.get("description"):
         return None
     vocab = _vocab_by_lang.get(lang, {})
     out = dict(r)
