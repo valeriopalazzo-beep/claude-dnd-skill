@@ -110,6 +110,24 @@
       "wikidot_url": "https://dnd5e.wikidot.com/spell:soffio-acido",
       "level": 0,
       "school": ""
+    },
+    {
+      "name": "Ascia bipenne",
+      "index": "ascia-bipenne",
+      "description": "See full description at https://dnd5e.wikidot.com/spell:ascia-bipenne",
+      "source": "dnd5e.wikidot.com (auto-fetched)",
+      "wikidot_url": "https://dnd5e.wikidot.com/spell:ascia-bipenne",
+      "level": 0,
+      "school": ""
+    },
+    {
+      "name": "Martello da guerra",
+      "index": "martello-da-guerra",
+      "description": "See full description at https://dnd5e.wikidot.com/spell:martello-da-guerra",
+      "source": "dnd5e.wikidot.com (auto-fetched)",
+      "wikidot_url": "https://dnd5e.wikidot.com/spell:martello-da-guerra",
+      "level": 0,
+      "school": ""
     }
   ],
   "features": [
@@ -213,6 +231,30 @@
       "description": "See full description at https://dnd5e.wikidot.com/eremita-background",
       "source": "dnd5e.wikidot.com (auto-fetched)",
       "wikidot_url": "https://dnd5e.wikidot.com/eremita-background",
+      "class": ""
+    },
+    {
+      "name": "Guerriero",
+      "index": "guerriero",
+      "description": "See full description at https://dnd5e.wikidot.com/guerriero",
+      "source": "dnd5e.wikidot.com (auto-fetched)",
+      "wikidot_url": "https://dnd5e.wikidot.com/guerriero",
+      "class": ""
+    },
+    {
+      "name": "Nano delle colline Racial",
+      "index": "nano-delle-colline-racial",
+      "description": "See full description at https://dnd5e.wikidot.com/nano-delle-colline-racial",
+      "source": "dnd5e.wikidot.com (auto-fetched)",
+      "wikidot_url": "https://dnd5e.wikidot.com/nano-delle-colline-racial",
+      "class": ""
+    },
+    {
+      "name": "Soldato Background",
+      "index": "soldato-background",
+      "description": "See full description at https://dnd5e.wikidot.com/soldato-background",
+      "source": "dnd5e.wikidot.com (auto-fetched)",
+      "wikidot_url": "https://dnd5e.wikidot.com/soldato-background",
       "class": ""
     }
   ]
