@@ -1,0 +1,296 @@
+{
+ "magic_items": {
+  "potion-of-growth": {
+   "name": "Pozione della Crescita",
+   "description": "Pozione, non comune\n\nQuando bevi questa pozione, ottieni l'effetto «ingrandire» dell'incantesimo ingrandire/ridurre per 1d4 ore (non richiede concentrazione). Il rosso nel liquido della pozione si espande continuamente da una minuscola perlina colorando il liquido trasparente attorno, e poi si contrae. Agitare la bottiglia non interrompe questo processo."
+  },
+  "potion-of-healing": {
+   "name": "Pozione di Guarigione",
+   "description": "Pozione, rarità variabile\n\nRecuperi punti ferita quando bevi questa pozione. Il numero di punti ferita dipende dalla rarità della pozione, come indicato nella tabella Pozioni di Guarigione. Qualunque sia la sua potenza, il liquido rosso della pozione luccica quando viene agitato.\n\nPozioni di Guarigione (tabella)\n\n| Pozione di... | Rarità | PF Recuperati |\n\n|---|---|---|\n\n| Guarigione | Comune | 2d4 + 2 |\n\n| Guarigione superiore | Non comune | 4d4 + 4 |\n\n| Guarigione eccellente | Rara | 8d4 + 8 |\n\n| Guarigione suprema | Molto rara | 10d4 + 20 |"
+  },
+  "potion-of-healing-common": {
+   "name": "Pozione di Guarigione",
+   "description": "Pozione, comune\n\nRecuperi 2d4 + 2 punti ferita quando bevi questa pozione. Il liquido rosso della pozione luccica quando viene agitato."
+  },
+  "potion-of-healing-greater": {
+   "name": "Pozione di Guarigione Superiore",
+   "description": "Pozione, non comune\n\nRecuperi 4d4 + 4 punti ferita quando bevi questa pozione. Il liquido rosso della pozione luccica quando viene agitato."
+  },
+  "potion-of-healing-superior": {
+   "name": "Pozione di Guarigione Eccellente",
+   "description": "Pozione, rara\n\nRecuperi 8d4 + 8 punti ferita quando bevi questa pozione. Il liquido rosso della pozione luccica quando viene agitato."
+  },
+  "potion-of-healing-supreme": {
+   "name": "Pozione di Guarigione Suprema",
+   "description": "Pozione, molto rara\n\nRecuperi 10d4 + 20 punti ferita quando bevi questa pozione. Il liquido rosso della pozione luccica quando viene agitato."
+  },
+  "potion-of-heroism": {
+   "name": "Pozione dell'Eroismo",
+   "description": "Pozione, rara\n\nPer 1 ora dopo averla bevuta, ottieni 10 punti ferita temporanei che durano 1 ora. Per la stessa durata, sei sotto l'effetto dell'incantesimo benedizione (non richiede concentrazione). Questa pozione blu gorgoglia e fuma come se stesse bollendo."
+  },
+  "potion-of-invisibility": {
+   "name": "Pozione dell'Invisibilità",
+   "description": "Pozione, molto rara\n\nIl contenitore di questa pozione sembra vuoto, ma al tatto sembra contenere del liquido. Quando la bevi, diventi invisibile per 1 ora. Tutto ciò che indossi o trasporti è invisibile insieme a te. L'effetto termina prima se attacchi o lanci un incantesimo."
+  },
+  "potion-of-mind-reading": {
+   "name": "Pozione della Lettura del Pensiero",
+   "description": "Pozione, rara\n\nQuando bevi questa pozione, ottieni l'effetto dell'incantesimo individuazione dei pensieri (CD del tiro salvezza 13). Nel liquido denso e viola della pozione galleggia una nuvoletta ovale rosa."
+  },
+  "potion-of-poison": {
+   "name": "Pozione Velenosa",
+   "description": "Pozione, non comune\n\nQuesto intruglio ha l'aspetto, l'odore e il sapore di una pozione di guarigione o di un'altra pozione benefica. In realtà è veleno mascherato da magia illusoria. Un incantesimo identificare ne rivela la vera natura.\n\nSe la bevi, subisci 3d6 danni da veleno e devi superare un tiro salvezza su Costituzione con CD 13 o essere avvelenato. All'inizio di ciascuno dei tuoi turni mentre sei avvelenato in questo modo, subisci 3d6 danni da veleno. Alla fine di ciascuno dei tuoi turni, puoi ripetere il tiro salvezza. Se lo superi, i danni da veleno che subisci nei turni successivi diminuiscono di 1d6. Il veleno termina quando i danni scendono a 0."
+  },
+  "potion-of-resistance": {
+   "name": "Pozione di Resistenza",
+   "description": "Pozione, non comune\n\nQuando bevi questa pozione, ottieni resistenza a un tipo di danno per 1 ora. Il GM sceglie il tipo o lo determina a caso tra le opzioni seguenti.\n\n| d10 | Tipo di Danno |\n\n|---|---|\n\n| 1 | Acido |\n\n| 2 | Freddo |\n\n| 3 | Fuoco |\n\n| 4 | Forza |\n\n| 5 | Fulmine |\n\n| 6 | Necrotico |\n\n| 7 | Veleno |\n\n| 8 | Psichico |\n\n| 9 | Radioso |\n\n| 10 | Tuono |"
+  },
+  "potion-of-resistance-acid": {
+   "name": "Pozione di Resistenza all'Acido",
+   "description": "Pozione, non comune\n\nQuando bevi questa pozione, ottieni resistenza ai danni da acido per 1 ora."
+  },
+  "potion-of-resistance-cold": {
+   "name": "Pozione di Resistenza al Freddo",
+   "description": "Pozione, non comune\n\nQuando bevi questa pozione, ottieni resistenza ai danni da freddo per 1 ora."
+  },
+  "potion-of-resistance-fire": {
+   "name": "Pozione di Resistenza al Fuoco",
+   "description": "Pozione, non comune\n\nQuando bevi questa pozione, ottieni resistenza ai danni da fuoco per 1 ora."
+  },
+  "potion-of-resistance-force": {
+   "name": "Pozione di Resistenza alla Forza",
+   "description": "Pozione, non comune\n\nQuando bevi questa pozione, ottieni resistenza ai danni da forza per 1 ora."
+  },
+  "potion-of-resistance-lightning": {
+   "name": "Pozione di Resistenza al Fulmine",
+   "description": "Pozione, non comune\n\nQuando bevi questa pozione, ottieni resistenza ai danni da fulmine per 1 ora."
+  },
+  "potion-of-resistance-necrotic": {
+   "name": "Pozione di Resistenza al Necrotico",
+   "description": "Pozione, non comune\n\nQuando bevi questa pozione, ottieni resistenza ai danni necrotici per 1 ora."
+  },
+  "potion-of-resistance-poison": {
+   "name": "Pozione di Resistenza al Veleno",
+   "description": "Pozione, non comune\n\nQuando bevi questa pozione, ottieni resistenza ai danni da veleno per 1 ora."
+  },
+  "potion-of-resistance-psychic": {
+   "name": "Pozione di Resistenza allo Psichico",
+   "description": "Pozione, non comune\n\nQuando bevi questa pozione, ottieni resistenza ai danni psichici per 1 ora."
+  },
+  "potion-of-resistance-radiant": {
+   "name": "Pozione di Resistenza al Radioso",
+   "description": "Pozione, non comune\n\nQuando bevi questa pozione, ottieni resistenza ai danni radiosi per 1 ora."
+  },
+  "potion-of-resistance-thunder": {
+   "name": "Pozione di Resistenza al Tuono",
+   "description": "Pozione, non comune\n\nQuando bevi questa pozione, ottieni resistenza ai danni da tuono per 1 ora."
+  },
+  "potion-of-speed": {
+   "name": "Pozione della Velocità",
+   "description": "Pozione, molto rara\n\nQuando bevi questa pozione, ottieni l'effetto dell'incantesimo velocità per 1 minuto (non richiede concentrazione). Il fluido giallo della pozione è striato di nero e vortica da solo."
+  },
+  "potion-of-water-breathing": {
+   "name": "Pozione della Respirazione Acquatica",
+   "description": "Pozione, non comune\n\nPuoi respirare sott'acqua per 1 ora dopo aver bevuto questa pozione. Il suo fluido verde e torbido sa di mare, e vi galleggia una bolla simile a una medusa."
+  },
+  "restorative-ointment": {
+   "name": "Unguento Ristoratore",
+   "description": "Oggetto meraviglioso, non comune\n\nQuesto vasetto di vetro, del diametro di 7,5 cm, contiene 1d4 + 1 dosi di una miscela densa che profuma leggermente di aloe. Il vasetto e il suo contenuto pesano 250 g.\n\nCon un'azione, una dose dell'unguento può essere ingerita o applicata sulla pelle. La creatura che la riceve recupera 2d8 + 2 punti ferita, smette di essere avvelenata e guarisce da qualsiasi malattia."
+  },
+  "ring-of-animal-influence": {
+   "name": "Anello dell'Influenza sugli Animali",
+   "description": "Anello, raro\n\nQuesto anello ha 3 cariche e recupera ogni giorno all'alba 1d3 cariche spese. Mentre indossi l'anello, puoi usare un'azione per spendere 1 delle sue cariche e lanciare uno dei seguenti incantesimi:\n\nAmicizia con gli animali (CD del tiro salvezza 13)\n\nPaura (CD del tiro salvezza 13), bersagliando solo bestie con Intelligenza pari o inferiore a 3\n\nParlare con gli animali"
+  },
+  "ring-of-djinni-summoning": {
+   "name": "Anello dell'Evocazione del Djinni",
+   "description": "Anello, leggendario (richiede sintonia)\n\nMentre indossi questo anello, puoi pronunciare la sua parola di comando con un'azione per evocare un particolare djinni dal Piano Elementale dell'Aria. Il djinni appare in uno spazio libero a tua scelta entro 36 metri da te. Resta finché ti concentri (come se ti concentrassi su un incantesimo), fino a un massimo di 1 ora, o finché non scende a 0 punti ferita. Poi torna al suo piano d'origine.\n\nMentre è evocato, il djinni è amichevole verso di te e i tuoi compagni. Obbedisce a qualsiasi comando tu gli dia, in qualunque lingua. Se non gli dai comandi, il djinni si difende dagli aggressori ma non compie altre azioni.\n\nDopo che il djinni se ne è andato, non può essere evocato di nuovo per 24 ore, e l'anello diventa non magico se il djinni muore."
+  },
+  "ring-of-elemental-command": {
+   "name": "Anello del Comando Elementale",
+   "description": "Anello, leggendario (richiede sintonia)\n\nQuesto anello è collegato a uno dei quattro Piani Elementali. Il GM sceglie o determina a caso il piano collegato.\n\nMentre indossi questo anello, hai vantaggio ai tiri per colpire contro gli elementali del piano collegato, e questi hanno svantaggio ai tiri per colpire contro di te. Inoltre, hai accesso a proprietà basate sul piano collegato.\n\nL'anello ha 5 cariche. Recupera ogni giorno all'alba 1d4 + 1 cariche spese. Gli incantesimi lanciati dall'anello hanno una CD del tiro salvezza di 17.\n\n***Anello del Comando degli Elementali dell'Aria.*** Puoi spendere 2 cariche dell'anello per lanciare dominare mostri su un elementale dell'aria. Inoltre, quando cadi, scendi di 18 metri per round e non subisci danni da caduta. Sai anche parlare e capire l'Auran.\n\nSe contribuisci a uccidere un elementale dell'aria mentre sei in sintonia con l'anello, ottieni accesso alle seguenti proprietà aggiuntive:\n\nHai resistenza ai danni da fulmine.\n\nHai una velocità di volo pari alla tua velocità sul terreno e puoi librarti.\n\nPuoi lanciare dall'anello i seguenti incantesimi, spendendo il numero di cariche necessario: catena di fulmini (3 cariche), folata di vento (2 cariche) o muro di vento (1 carica).\n\n***Anello del Comando degli Elementali della Terra.*** Puoi spendere 2 cariche dell'anello per lanciare dominare mostri su un elementale della terra. Inoltre, puoi muoverti nel terreno difficile composto da macerie, rocce o terra come se fosse terreno normale. Sai anche parlare e capire il Terran.\n\nSe contribuisci a uccidere un elementale della terra mentre sei in sintonia con l'anello, ottieni accesso alle seguenti proprietà aggiuntive:\n\nHai resistenza ai danni da acido.\n\nPuoi muoverti attraverso la terra o la roccia solida come se fossero terreno difficile. Se termini il turno al loro interno, vieni spinto fuori nello spazio libero più vicino che hai occupato per ultimo.\n\nPuoi lanciare dall'anello i seguenti incantesimi, spendendo il numero di cariche necessario: modellare pietra (2 cariche), pelle di pietra (3 cariche) o muro di pietra (3 cariche).\n\n***Anello del Comando degli Elementali del Fuoco.*** Puoi spendere 2 cariche dell'anello per lanciare dominare mostri su un elementale del fuoco. Inoltre, hai resistenza ai danni da fuoco. Sai anche parlare e capire l'Ignan.\n\nSe contribuisci a uccidere un elementale del fuoco mentre sei in sintonia con l'anello, ottieni accesso alle seguenti proprietà aggiuntive:\n\nSei immune ai danni da fuoco.\n\nPuoi lanciare dall'anello i seguenti incantesimi, spendendo il numero di cariche necessario: mani brucianti (1 carica), palla di fuoco (2 cariche) e muro di fuoco (3 cariche).\n\n***Anello del Comando degli Elementali dell'Acqua.*** Puoi spendere 2 cariche dell'anello per lanciare dominare mostri su un elementale dell'acqua. Inoltre, puoi stare in piedi e camminare sulle superfici liquide come se fossero terreno solido. Sai anche parlare e capire l'Aquan.\n\nSe contribuisci a uccidere un elementale dell'acqua mentre sei in sintonia con l'anello, ottieni accesso alle seguenti proprietà aggiuntive:\n\nPuoi respirare sott'acqua e hai una velocità di nuoto pari alla tua velocità sul terreno.\n\nPuoi lanciare dall'anello i seguenti incantesimi, spendendo il numero di cariche necessario: creare o distruggere acqua (1 carica), controllare acqua (3 cariche), tempesta di ghiaccio (2 cariche) o muro di ghiaccio (3 cariche)."
+  },
+  "ring-of-elemental-command-air": {
+   "name": "Anello del Comando degli Elementali dell'Aria",
+   "description": "Anello, leggendario (richiede sintonia)\n\nQuesto anello è collegato al Piano Elementale dell'Aria.\n\nMentre indossi questo anello, hai vantaggio ai tiri per colpire contro gli elementali dell'aria, e questi hanno svantaggio ai tiri per colpire contro di te. Inoltre, hai accesso a proprietà basate sul Piano Elementale dell'Aria.\n\nL'anello ha 5 cariche. Recupera ogni giorno all'alba 1d4 + 1 cariche spese. Gli incantesimi lanciati dall'anello hanno una CD del tiro salvezza di 17.\n\nPuoi spendere 2 cariche dell'anello per lanciare dominare mostri su un elementale dell'aria. Inoltre, quando cadi, scendi di 18 metri per round e non subisci danni da caduta. Sai anche parlare e capire l'Auran.\n\nSe contribuisci a uccidere un elementale dell'aria mentre sei in sintonia con l'anello, ottieni accesso alle seguenti proprietà aggiuntive:\n\nHai resistenza ai danni da fulmine.\n\nHai una velocità di volo pari alla tua velocità sul terreno e puoi librarti.\n\nPuoi lanciare dall'anello i seguenti incantesimi, spendendo il numero di cariche necessario: catena di fulmini (3 cariche), folata di vento (2 cariche) o muro di vento (1 carica)."
+  },
+  "ring-of-elemental-command-earth": {
+   "name": "Anello del Comando degli Elementali della Terra",
+   "description": "Anello, leggendario (richiede sintonia)\n\nQuesto anello è collegato al Piano Elementale della Terra.\n\nMentre indossi questo anello, hai vantaggio ai tiri per colpire contro gli elementali della terra, e questi hanno svantaggio ai tiri per colpire contro di te. Inoltre, hai accesso a proprietà basate sul Piano Elementale della Terra.\n\nL'anello ha 5 cariche. Recupera ogni giorno all'alba 1d4 + 1 cariche spese. Gli incantesimi lanciati dall'anello hanno una CD del tiro salvezza di 17.\n\nPuoi spendere 2 cariche dell'anello per lanciare dominare mostri su un elementale della terra. Inoltre, puoi muoverti nel terreno difficile composto da macerie, rocce o terra come se fosse terreno normale. Sai anche parlare e capire il Terran.\n\nSe contribuisci a uccidere un elementale della terra mentre sei in sintonia con l'anello, ottieni accesso alle seguenti proprietà aggiuntive:\n\nHai resistenza ai danni da acido.\n\nPuoi muoverti attraverso la terra o la roccia solida come se fossero terreno difficile. Se termini il turno al loro interno, vieni spinto fuori nello spazio libero più vicino che hai occupato per ultimo.\n\nPuoi lanciare dall'anello i seguenti incantesimi, spendendo il numero di cariche necessario: modellare pietra (2 cariche), pelle di pietra (3 cariche) o muro di pietra (3 cariche)."
+  },
+  "ring-of-elemental-command-fire": {
+   "name": "Anello del Comando degli Elementali del Fuoco",
+   "description": "Anello, leggendario (richiede sintonia)\n\nQuesto anello è collegato al Piano Elementale del Fuoco.\n\nMentre indossi questo anello, hai vantaggio ai tiri per colpire contro gli elementali del fuoco, e questi hanno svantaggio ai tiri per colpire contro di te. Inoltre, hai accesso a proprietà basate sul Piano Elementale del Fuoco.\n\nL'anello ha 5 cariche. Recupera ogni giorno all'alba 1d4 + 1 cariche spese. Gli incantesimi lanciati dall'anello hanno una CD del tiro salvezza di 17.\n\nPuoi spendere 2 cariche dell'anello per lanciare dominare mostri su un elementale del fuoco. Inoltre, hai resistenza ai danni da fuoco. Sai anche parlare e capire l'Ignan.\n\nSe contribuisci a uccidere un elementale del fuoco mentre sei in sintonia con l'anello, ottieni accesso alle seguenti proprietà aggiuntive:\n\nSei immune ai danni da fuoco.\n\nPuoi lanciare dall'anello i seguenti incantesimi, spendendo il numero di cariche necessario: mani brucianti (1 carica), palla di fuoco (2 cariche) e muro di fuoco (3 cariche)."
+  },
+  "ring-of-elemental-command-water": {
+   "name": "Anello del Comando degli Elementali dell'Acqua",
+   "description": "Anello, leggendario (richiede sintonia)\n\nQuesto anello è collegato al Piano Elementale dell'Acqua.\n\nMentre indossi questo anello, hai vantaggio ai tiri per colpire contro gli elementali dell'acqua, e questi hanno svantaggio ai tiri per colpire contro di te. Inoltre, hai accesso a proprietà basate sul Piano Elementale dell'Acqua.\n\nL'anello ha 5 cariche. Recupera ogni giorno all'alba 1d4 + 1 cariche spese. Gli incantesimi lanciati dall'anello hanno una CD del tiro salvezza di 17.\n\nPuoi spendere 2 cariche dell'anello per lanciare dominare mostri su un elementale dell'acqua. Inoltre, puoi stare in piedi e camminare sulle superfici liquide come se fossero terreno solido. Sai anche parlare e capire l'Aquan.\n\nSe contribuisci a uccidere un elementale dell'acqua mentre sei in sintonia con l'anello, ottieni accesso alle seguenti proprietà aggiuntive:\n\nPuoi respirare sott'acqua e hai una velocità di nuoto pari alla tua velocità sul terreno.\n\nPuoi lanciare dall'anello i seguenti incantesimi, spendendo il numero di cariche necessario: creare o distruggere acqua (1 carica), controllare acqua (3 cariche), tempesta di ghiaccio (2 cariche) o muro di ghiaccio (3 cariche)."
+  },
+  "ring-of-evasion": {
+   "name": "Anello dell'Evasione",
+   "description": "Anello, raro (richiede sintonia)\n\nQuesto anello ha 3 cariche e recupera ogni giorno all'alba 1d3 cariche spese. Quando fallisci un tiro salvezza su Destrezza mentre lo indossi, puoi usare la tua reazione per spendere 1 delle sue cariche e superare invece quel tiro salvezza."
+  },
+  "ring-of-feather-falling": {
+   "name": "Anello della Caduta Morbida",
+   "description": "Anello, raro (richiede sintonia)\n\nQuando cadi mentre indossi questo anello, scendi di 18 metri per round e non subisci danni da caduta."
+  },
+  "ring-of-free-action": {
+   "name": "Anello della Libertà d'Azione",
+   "description": "Anello, raro (richiede sintonia)\n\nMentre indossi questo anello, il terreno difficile non ti costa movimento extra. Inoltre, la magia non può ridurre la tua velocità né renderti paralizzato o trattenuto."
+  },
+  "ring-of-invisibility": {
+   "name": "Anello dell'Invisibilità",
+   "description": "Anello, leggendario (richiede sintonia)\n\nMentre indossi questo anello, puoi diventare invisibile con un'azione. Tutto ciò che indossi o trasporti è invisibile insieme a te. Resti invisibile finché l'anello non viene tolto, finché non attacchi o lanci un incantesimo, o finché non usi un'azione bonus per tornare visibile."
+  },
+  "ring-of-jumping": {
+   "name": "Anello del Salto",
+   "description": "Anello, non comune (richiede sintonia)\n\nMentre indossi questo anello, puoi lanciare da esso a volontà l'incantesimo saltare come azione bonus, ma quando lo fai puoi bersagliare solo te stesso."
+  },
+  "ring-of-mind-shielding": {
+   "name": "Anello dello Scudo Mentale",
+   "description": "Anello, non comune (richiede sintonia)\n\nMentre indossi questo anello, sei immune alla magia che permette ad altre creature di leggere i tuoi pensieri, determinare se stai mentendo, conoscere il tuo allineamento o conoscere il tuo tipo di creatura. Le creature possono comunicare telepaticamente con te solo se lo permetti.\n\nPuoi usare un'azione per rendere invisibile l'anello finché non usi un'altra azione per renderlo visibile, finché non togli l'anello o finché non muori.\n\nSe muori mentre indossi l'anello, la tua anima vi entra, a meno che non ospiti già un'anima. Puoi restare nell'anello o partire per l'aldilà. Finché la tua anima è nell'anello, puoi comunicare telepaticamente con qualsiasi creatura lo indossi. Chi lo indossa non può impedire questa comunicazione telepatica."
+  },
+  "ring-of-protection": {
+   "name": "Anello di Protezione",
+   "description": "Anello, raro (richiede sintonia)\n\nOttieni un bonus di +1 alla CA e ai tiri salvezza mentre indossi questo anello."
+  },
+  "ring-of-regeneration": {
+   "name": "Anello della Rigenerazione",
+   "description": "Anello, molto raro (richiede sintonia)\n\nMentre indossi questo anello, recuperi 1d6 punti ferita ogni 10 minuti, purché tu abbia almeno 1 punto ferita. Se perdi una parte del corpo, l'anello fa ricrescere la parte mancante e le fa riacquistare piena funzionalità dopo 1d6 + 1 giorni, se hai almeno 1 punto ferita per tutto il tempo."
+  },
+  "ring-of-resistance": {
+   "name": "Anello di Resistenza",
+   "description": "Anello, raro (richiede sintonia)\n\nHai resistenza a un tipo di danno mentre indossi questo anello. La gemma dell'anello indica il tipo, che il GM sceglie o determina a caso.\n\n| d10 | Tipo di Danno | Gemma |\n\n|---|---|---|\n\n| 1 | Acido | Perla |\n\n| 2 | Freddo | Tormalina |\n\n| 3 | Fuoco | Granato |\n\n| 4 | Forza | Zaffiro |\n\n| 5 | Fulmine | Citrino |\n\n| 6 | Necrotico | Giaietto |\n\n| 7 | Veleno | Ametista |\n\n| 8 | Psichico | Giada |\n\n| 9 | Radioso | Topazio |\n\n| 10 | Tuono | Spinello |"
+  },
+  "ring-of-resistance-acid": {
+   "name": "Anello di Resistenza all'Acido",
+   "description": "Anello, raro (richiede sintonia)\n\nHai resistenza ai danni da acido mentre indossi questo anello con la perla."
+  },
+  "ring-of-resistance-cold": {
+   "name": "Anello di Resistenza al Freddo",
+   "description": "Anello, raro (richiede sintonia)\n\nHai resistenza ai danni da freddo mentre indossi questo anello con la tormalina."
+  },
+  "ring-of-resistance-fire": {
+   "name": "Anello di Resistenza al Fuoco",
+   "description": "Anello, raro (richiede sintonia)\n\nHai resistenza ai danni da fuoco mentre indossi questo anello con il granato."
+  },
+  "ring-of-resistance-force": {
+   "name": "Anello di Resistenza alla Forza",
+   "description": "Anello, raro (richiede sintonia)\n\nHai resistenza ai danni da forza mentre indossi questo anello con lo zaffiro."
+  },
+  "ring-of-resistance-lightning": {
+   "name": "Anello di Resistenza al Fulmine",
+   "description": "Anello, raro (richiede sintonia)\n\nHai resistenza ai danni da fulmine mentre indossi questo anello con il citrino."
+  },
+  "ring-of-resistance-necrotic": {
+   "name": "Anello di Resistenza al Necrotico",
+   "description": "Anello, raro (richiede sintonia)\n\nHai resistenza ai danni necrotici mentre indossi questo anello con il giaietto."
+  },
+  "ring-of-resistance-poison": {
+   "name": "Anello di Resistenza al Veleno",
+   "description": "Anello, raro (richiede sintonia)\n\nHai resistenza ai danni da veleno mentre indossi questo anello con la ametista."
+  },
+  "ring-of-resistance-psychic": {
+   "name": "Anello di Resistenza allo Psichico",
+   "description": "Anello, raro (richiede sintonia)\n\nHai resistenza ai danni psichici mentre indossi questo anello con la giada."
+  },
+  "ring-of-resistance-radiant": {
+   "name": "Anello di Resistenza al Radioso",
+   "description": "Anello, raro (richiede sintonia)\n\nHai resistenza ai danni radiosi mentre indossi questo anello con il topazio."
+  },
+  "ring-of-resistance-thunder": {
+   "name": "Anello di Resistenza al Tuono",
+   "description": "Anello, raro (richiede sintonia)\n\nHai resistenza ai danni da tuono mentre indossi questo anello con lo spinello."
+  },
+  "ring-of-shooting-stars": {
+   "name": "Anello delle Stelle Cadenti",
+   "description": "Anello, molto raro (richiede sintonia all'aperto di notte)\n\nMentre indossi questo anello in luce fioca o nell'oscurità, puoi lanciare a volontà dall'anello luci danzanti e luce. Lanciare uno dei due incantesimi dall'anello richiede un'azione.\n\nL'anello ha 6 cariche per le seguenti altre proprietà. Recupera ogni giorno all'alba 1d6 cariche spese.\n\n***Luminescenza.*** Puoi spendere 1 carica con un'azione per lanciare luminescenza dall'anello.\n\n***Fulmine Globulare.*** Puoi spendere 2 cariche con un'azione per creare da una a quattro sfere di fulmine del diametro di 90 cm. Più sfere crei, meno potente è ciascuna singolarmente.\n\nOgni sfera appare in uno spazio libero che puoi vedere entro 36 metri da te. Le sfere durano finché ti concentri (come se ti concentrassi su un incantesimo), fino a 1 minuto. Ogni sfera emette luce fioca in un raggio di 9 metri.\n\nCome azione bonus, puoi muovere ogni sfera fino a 9 metri, ma non oltre 36 metri da te. Quando una creatura diversa da te arriva entro 1,5 metri da una sfera, la sfera scarica un fulmine su quella creatura e scompare. Quella creatura deve effettuare un tiro salvezza su Destrezza con CD 15. Se lo fallisce, subisce danni da fulmine in base al numero di sfere che hai creato.\n\n| Sfere | Danni da Fulmine |\n\n|---|---|\n\n| 4 | 2d4 |\n\n| 3 | 2d6 |\n\n| 2 | 5d4 |\n\n| 1 | 4d12 |\n\n***Stelle Cadenti.*** Puoi spendere da 1 a 3 cariche con un'azione. Per ogni carica spesa, lanci dall'anello un granello di luce splendente verso un punto che puoi vedere entro 18 metri da te. Ogni creatura in un cubo di 4,5 metri che parte da quel punto viene investita da una pioggia di scintille e deve effettuare un tiro salvezza su Destrezza con CD 15, subendo 5d4 danni da fuoco se lo fallisce, o la metà dei danni se lo supera."
+  },
+  "ring-of-spell-storing": {
+   "name": "Anello Immagazzina Incantesimi",
+   "description": "Anello, raro (richiede sintonia)\n\nQuesto anello immagazzina gli incantesimi lanciati al suo interno, conservandoli finché chi lo indossa ed è in sintonia con esso non li usa. L'anello può immagazzinare fino a 5 livelli di incantesimi alla volta. Quando viene trovato, contiene 1d6 - 1 livelli di incantesimi immagazzinati scelti dal GM.\n\nQualsiasi creatura può lanciare nell'anello un incantesimo dal 1° al 5° livello toccando l'anello mentre lancia l'incantesimo. L'incantesimo non ha effetto, se non quello di essere immagazzinato nell'anello. Se l'anello non può contenere l'incantesimo, questo viene speso senza effetto. Il livello dello slot usato per lanciare l'incantesimo determina quanto spazio occupa.\n\nMentre indossi questo anello, puoi lanciare qualsiasi incantesimo immagazzinato in esso. L'incantesimo usa il livello dello slot, la CD del tiro salvezza, il bonus di attacco e la caratteristica da incantatore dell'incantatore originale, ma per il resto è trattato come se lo lanciassi tu. L'incantesimo lanciato dall'anello non è più immagazzinato in esso, liberando spazio."
+  },
+  "ring-of-spell-turning": {
+   "name": "Anello Rifletti Incantesimi",
+   "description": "Anello, leggendario (richiede sintonia)\n\nMentre indossi questo anello, hai vantaggio ai tiri salvezza contro qualsiasi incantesimo che bersagli solo te (non ad area). Inoltre, se ottieni 20 al tiro salvezza e l'incantesimo è di 7° livello o inferiore, l'incantesimo non ha effetto su di te e bersaglia invece l'incantatore, usando il livello dello slot, la CD del tiro salvezza, il bonus di attacco e la caratteristica da incantatore dell'incantatore."
+  },
+  "ring-of-swimming": {
+   "name": "Anello del Nuoto",
+   "description": "Anello, non comune\n\nHai una velocità di nuoto di 12 metri mentre indossi questo anello."
+  },
+  "ring-of-telekinesis": {
+   "name": "Anello della Telecinesi",
+   "description": "Anello, molto raro (richiede sintonia)\n\nMentre indossi questo anello, puoi lanciare a volontà l'incantesimo telecinesi, ma puoi bersagliare solo oggetti che non sono indossati né trasportati."
+  },
+  "ring-of-the-ram": {
+   "name": "Anello dell'Ariete",
+   "description": "Anello, raro (richiede sintonia)\n\nQuesto anello ha 3 cariche e recupera ogni giorno all'alba 1d3 cariche spese. Mentre indossi l'anello, puoi usare un'azione per spendere da 1 a 3 delle sue cariche e attaccare una creatura che puoi vedere entro 18 metri da te. L'anello produce una testa di ariete spettrale ed effettua il suo tiro per colpire con un bonus di +7. Se colpisce, per ogni carica spesa il bersaglio subisce 2d10 danni da forza e viene spinto di 1,5 metri lontano da te.\n\nIn alternativa, puoi spendere da 1 a 3 cariche dell'anello con un'azione per tentare di rompere un oggetto che puoi vedere entro 18 metri da te e che non sia indossato né trasportato. L'anello effettua una prova di Forza con un bonus di +5 per ogni carica spesa."
+  },
+  "ring-of-three-wishes": {
+   "name": "Anello dei Tre Desideri",
+   "description": "Anello, leggendario\n\nMentre indossi questo anello, puoi usare un'azione per spendere 1 delle sue 3 cariche e lanciare da esso l'incantesimo desiderio. L'anello diventa non magico quando usi l'ultima carica."
+  },
+  "ring-of-warmth": {
+   "name": "Anello del Calore",
+   "description": "Anello, non comune (richiede sintonia)\n\nMentre indossi questo anello, hai resistenza ai danni da freddo. Inoltre, tu e tutto ciò che indossi e trasporti non subite danni da temperature fino a -45 °C."
+  },
+  "ring-of-water-walking": {
+   "name": "Anello del Camminare sull'Acqua",
+   "description": "Anello, non comune\n\nMentre indossi questo anello, puoi stare in piedi e muoverti su qualsiasi superficie liquida come se fosse terreno solido."
+  },
+  "ring-of-x-ray-vision": {
+   "name": "Anello della Vista a Raggi X",
+   "description": "Anello, raro (richiede sintonia)\n\nMentre indossi questo anello, puoi usare un'azione per pronunciare la sua parola di comando. Quando lo fai, puoi vedere dentro e attraverso la materia solida per 1 minuto. Questa vista ha un raggio di 9 metri. Ai tuoi occhi, gli oggetti solidi entro quel raggio appaiono trasparenti e non impediscono il passaggio della luce. La vista può penetrare 30 cm di pietra, 2,5 cm di metallo comune o fino a 90 cm di legno o terra. Le sostanze più spesse bloccano la vista, così come un sottile foglio di piombo.\n\nOgni volta che usi di nuovo l'anello prima di un riposo lungo, devi superare un tiro salvezza su Costituzione con CD 15 o subire un livello di indebolimento."
+  },
+  "robe-of-eyes": {
+   "name": "Veste degli Occhi",
+   "description": "Oggetto meraviglioso, raro (richiede sintonia)\n\nQuesta veste è decorata con motivi a forma di occhio. Mentre indossi la veste, ottieni i seguenti benefici:\n\nLa veste ti permette di vedere in tutte le direzioni, e hai vantaggio alle prove di Saggezza (Percezione) basate sulla vista.\n\nHai scurovisione fino a 36 metri.\n\nPuoi vedere le creature e gli oggetti invisibili, oltre a vedere nel Piano Etereo, fino a 36 metri.\n\nGli occhi sulla veste non possono essere chiusi né distolti. Anche se puoi chiudere o distogliere i tuoi occhi, mentre indossi questa veste non sei mai considerato come se lo facessi.\n\nUn incantesimo luce lanciato sulla veste o un incantesimo luce diurna lanciato entro 1,5 metri dalla veste ti rende accecato per 1 minuto. Alla fine di ciascuno dei tuoi turni, puoi effettuare un tiro salvezza su Costituzione (CD 11 per luce o CD 15 per luce diurna); se lo superi, la cecità termina."
+  },
+  "robe-of-scintillating-colors": {
+   "name": "Veste dei Colori Scintillanti",
+   "description": "Oggetto meraviglioso, molto raro (richiede sintonia)\n\nQuesta veste ha 3 cariche e recupera ogni giorno all'alba 1d3 cariche spese. Mentre la indossi, puoi usare un'azione e spendere 1 carica per far mostrare all'indumento un motivo cangiante di colori abbaglianti fino alla fine del tuo turno successivo. Durante questo periodo, la veste emette luce intensa in un raggio di 9 metri e luce fioca per altri 9 metri. Le creature che possono vederti hanno svantaggio ai tiri per colpire contro di te. Inoltre, qualsiasi creatura nella luce intensa che può vederti quando il potere della veste si attiva deve superare un tiro salvezza su Saggezza con CD 15 o essere stordita finché l'effetto non termina."
+  },
+  "robe-of-stars": {
+   "name": "Veste delle Stelle",
+   "description": "Oggetto meraviglioso, molto raro (richiede sintonia)\n\nQuesta veste nera o blu scuro è ricamata con piccole stelle bianche o argentate. Ottieni un bonus di +1 ai tiri salvezza mentre la indossi.\n\nSei stelle, sulla parte anteriore superiore della veste, sono particolarmente grandi. Mentre indossi questa veste, puoi usare un'azione per staccare una delle stelle e usarla per lanciare dardo incantato come incantesimo di 5° livello. Ogni giorno al tramonto, 1d6 stelle staccate ricompaiono sulla veste.\n\nMentre indossi la veste, puoi usare un'azione per entrare nel Piano Astrale insieme a tutto ciò che indossi e trasporti. Vi resti finché non usi un'azione per tornare al piano in cui ti trovavi. Ricompari nell'ultimo spazio che hai occupato o, se è occupato, nello spazio libero più vicino."
+  },
+  "robe-of-the-archmagi": {
+   "name": "Veste dell'Arcimago",
+   "description": "Oggetto meraviglioso, leggendario (richiede sintonia da parte di uno stregone, un warlock o un mago)\n\nQuesto indumento elegante è fatto di una stoffa pregiata bianca, grigia o nera e decorato con rune argentate. Il colore della veste corrisponde all'allineamento per cui l'oggetto è stato creato. Una veste bianca è stata creata per il bene, una grigia per la neutralità e una nera per il male. Non puoi sintonizzarti con una veste dell'arcimago che non corrisponde al tuo allineamento.\n\nMentre indossi la veste ottieni questi benefici:\n\nSe non indossi un'armatura, la tua Classe Armatura base è 15 + il tuo modificatore di Destrezza.\n\nHai vantaggio ai tiri salvezza contro gli incantesimi e gli altri effetti magici.\n\nLa CD del tiro salvezza dei tuoi incantesimi e il tuo bonus di attacco con gli incantesimi aumentano ciascuno di 2."
+  },
+  "robe-of-useful-items": {
+   "name": "Veste degli Oggetti Utili",
+   "description": "Oggetto meraviglioso, non comune\n\nQuesta veste è ricoperta di toppe di stoffa di varie forme e colori. Mentre indossi la veste, puoi usare un'azione per staccare una delle toppe, facendola diventare l'oggetto o la creatura che rappresenta. Una volta staccata l'ultima toppa, la veste diventa un indumento comune.\n\nLa veste ha due toppe per ciascuno dei seguenti oggetti:\n\nPugnale\n\nLanterna direzionale (piena e accesa)\n\nSpecchio d'acciaio\n\nPertica di 3 metri\n\nCorda di canapa (15 metri, arrotolata)\n\nSacco\n\nInoltre, la veste ha 4d4 altre toppe. Il GM sceglie le toppe o le determina a caso.\n\n| d100 | Toppa |\n\n|---|---|\n\n| 01-08 | Sacchetto con 100 mo |\n\n| 09-15 | Scrigno d'argento (lungo 30 cm, largo e profondo 15 cm) del valore di 500 mo |\n\n| 16-22 | Porta di ferro (larga e alta fino a 3 metri, sbarrata sul lato che scegli), che puoi collocare in un'apertura che puoi raggiungere; si adatta all'apertura, fissandosi e montando da sola i cardini |\n\n| 23-30 | 10 gemme del valore di 100 mo ciascuna |\n\n| 31-44 | Scala di legno (lunga 7,2 metri) |\n\n| 45-51 | Un cavallo da sella con bisacce |\n\n| 52-59 | Fossa (un cubo di 3 metri di lato), che puoi collocare sul terreno entro 3 metri da te |\n\n| 60-68 | 4 pozioni di guarigione |\n\n| 69-75 | Barca a remi (lunga 3,6 metri) |\n\n| 76-83 | Pergamena magica contenente un incantesimo dal 1° al 3° livello |\n\n| 84-90 | 2 mastini |\n\n| 91-96 | Finestra (60 cm per 1,2 metri, profonda fino a 60 cm), che puoi collocare su una superficie verticale che puoi raggiungere |\n\n| 97-100 | Ariete portatile |"
+  },
+  "rod-of-absorption": {
+   "name": "Verga dell'Assorbimento",
+   "description": "Verga, molto rara (richiede sintonia)\n\nMentre impugni questa verga, puoi usare la tua reazione per assorbire un incantesimo che bersaglia solo te e non ha un'area d'effetto. L'effetto dell'incantesimo assorbito viene annullato, e l'energia dell'incantesimo (non l'incantesimo stesso) viene immagazzinata nella verga. L'energia ha lo stesso livello dell'incantesimo quando è stato lanciato. La verga può assorbire e immagazzinare fino a 50 livelli di energia nel corso della sua esistenza. Una volta assorbiti 50 livelli di energia, non può assorbirne altri. Se vieni bersagliato da un incantesimo che la verga non può immagazzinare, la verga non ha effetto su quell'incantesimo.\n\nQuando ti sintonizzi con la verga, sai quanti livelli di energia ha assorbito nel corso della sua esistenza e quanti livelli di energia magica ha attualmente immagazzinati.\n\nSe sei un incantatore e impugni la verga, puoi convertire l'energia immagazzinata in slot incantesimo per lanciare incantesimi che hai preparato o che conosci. Puoi creare solo slot incantesimo di livello pari o inferiore ai tuoi slot incantesimo, fino a un massimo del 5° livello. Usi i livelli immagazzinati al posto dei tuoi slot, ma per il resto lanci l'incantesimo normalmente. Per esempio, puoi usare 3 livelli immagazzinati nella verga come uno slot incantesimo di 3° livello.\n\nUna verga appena trovata ha già 1d10 livelli di energia magica immagazzinati. Una verga che non può più assorbire energia magica e non ha energia rimasta diventa non magica."
+  },
+  "rod-of-alertness": {
+   "name": "Verga della Vigilanza",
+   "description": "Verga, molto rara (richiede sintonia)\n\nQuesta verga ha una testa flangiata e le seguenti proprietà.\n\n***Vigilanza.*** Mentre impugni la verga, hai vantaggio alle prove di Saggezza (Percezione) e ai tiri per l'iniziativa.\n\n***Incantesimi.*** Mentre impugni la verga, puoi usare un'azione per lanciare da essa uno dei seguenti incantesimi: individuazione del bene e del male, individuazione del magico, individuazione delle malattie e del veleno o vedere invisibilità.\n\n***Aura Protettiva.*** Con un'azione, puoi piantare nel terreno l'estremità del manico della verga; la testa della verga emette allora luce intensa in un raggio di 18 metri e luce fioca per altri 18 metri. Mentre vi trovate in quella luce intensa, tu e qualsiasi creatura a te amichevole ottenete un bonus di +1 alla CA e ai tiri salvezza e potete percepire la posizione di qualsiasi creatura ostile invisibile che si trovi anch'essa nella luce intensa.\n\nLa testa della verga smette di brillare e l'effetto termina dopo 10 minuti, o quando una creatura usa un'azione per estrarre la verga dal terreno. Questa proprietà non può essere usata di nuovo fino all'alba successiva."
+  },
+  "rod-of-lordly-might": {
+   "name": "Verga della Potenza Sovrana",
+   "description": "Verga, leggendaria (richiede sintonia)\n\nQuesta verga ha una testa flangiata e funziona come una mazza magica che concede un bonus di +3 ai tiri per colpire e per i danni effettuati con essa. La verga ha proprietà associate a sei diversi pulsanti disposti in fila lungo l'asta. Ha anche altre tre proprietà, descritte di seguito.\n\n***Sei Pulsanti.*** Puoi premere uno dei sei pulsanti della verga come azione bonus. L'effetto di un pulsante dura finché non premi un altro pulsante o finché non premi di nuovo lo stesso pulsante, il che fa tornare la verga alla sua forma normale.\n\nSe premi il **pulsante 1**, la verga diventa una lingua di fuoco, mentre una lama infuocata spunta dall'estremità opposta alla testa flangiata.\n\nSe premi il **pulsante 2**, la testa flangiata della verga si ripiega e ne scattano fuori due lame a mezzaluna, trasformando la verga in un'ascia da battaglia magica che concede un bonus di +3 ai tiri per colpire e per i danni effettuati con essa.\n\nSe premi il **pulsante 3**, la testa flangiata si ripiega, dalla punta della verga scatta una punta di lancia e l'impugnatura si allunga in un'asta di 1,8 metri, trasformando la verga in una lancia magica che concede un bonus di +3 ai tiri per colpire e per i danni effettuati con essa.\n\nSe premi il **pulsante 4**, la verga si trasforma in una pertica da scalata lunga fino a 15 metri, come preferisci. Su superfici dure come il granito, un chiodo in fondo e tre ganci in cima ancorano la pertica. Dai lati si aprono pioli orizzontali lunghi 7,5 cm, distanziati di 30 cm, formando una scala. La pertica può sostenere fino a 2.000 kg. Un peso maggiore o la mancanza di un ancoraggio solido fanno tornare la verga alla sua forma normale.\n\nSe premi il **pulsante 5**, la verga si trasforma in un ariete da sfondamento portatile e concede a chi la usa un bonus di +10 alle prove di Forza effettuate per sfondare porte, barricate e altre barriere.\n\nSe premi il **pulsante 6**, la verga assume o mantiene la sua forma normale e indica il nord magnetico (non succede nulla se questa funzione viene usata in un luogo privo di nord magnetico). La verga ti fornisce anche la conoscenza della tua profondità approssimativa sotto il terreno o della tua altezza sopra di esso.\n\n***Risucchiare Vita.*** Quando colpisci una creatura con un attacco in mischia usando la verga, puoi costringere il bersaglio a effettuare un tiro salvezza su Costituzione con CD 17. Se lo fallisce, il bersaglio subisce 4d6 danni necrotici extra, e tu recuperi un numero di punti ferita pari alla metà di quei danni necrotici. Questa proprietà non può essere usata di nuovo fino all'alba successiva.\n\n***Paralizzare.*** Quando colpisci una creatura con un attacco in mischia usando la verga, puoi costringere il bersaglio a effettuare un tiro salvezza su Forza con CD 17. Se lo fallisce, il bersaglio è paralizzato per 1 minuto. Il bersaglio può ripetere il tiro salvezza alla fine di ciascuno dei suoi turni e, se lo supera, l'effetto termina. Questa proprietà non può essere usata di nuovo fino all'alba successiva.\n\n***Terrorizzare.*** Mentre impugni la verga, puoi usare un'azione per costringere ogni creatura che puoi vedere entro 9 metri da te a effettuare un tiro salvezza su Saggezza con CD 17. Se lo fallisce, un bersaglio è spaventato da te per 1 minuto. Un bersaglio spaventato può ripetere il tiro salvezza alla fine di ciascuno dei suoi turni e, se lo supera, l'effetto su di lui termina. Questa proprietà non può essere usata di nuovo fino all'alba successiva."
+  },
+  "rod-of-rulership": {
+   "name": "Verga del Dominio",
+   "description": "Verga, rara (richiede sintonia)\n\nPuoi usare un'azione per mostrare la verga e ordinare obbedienza a ogni creatura a tua scelta che puoi vedere entro 36 metri da te. Ogni bersaglio deve superare un tiro salvezza su Saggezza con CD 15 o essere affascinato da te per 8 ore. Mentre è affascinata in questo modo, la creatura ti considera il suo leader di fiducia. Se viene danneggiato da te o dai tuoi compagni, o se riceve l'ordine di fare qualcosa di contrario alla sua natura, un bersaglio smette di essere affascinato in questo modo. La verga non può essere usata di nuovo fino all'alba successiva."
+  },
+  "rod-of-security": {
+   "name": "Verga della Sicurezza",
+   "description": "Verga, molto rara\n\nMentre impugni questa verga, puoi usare un'azione per attivarla. La verga trasporta allora istantaneamente te e fino ad altre 199 creature consenzienti che puoi vedere in un paradiso che esiste in uno spazio extraplanare. Scegli tu la forma che assume il paradiso. Potrebbe essere un giardino tranquillo, una radura incantevole, una taverna allegra, un immenso palazzo, un'isola tropicale, un luna park fantastico o qualsiasi altra cosa tu possa immaginare. Qualunque sia la sua natura, il paradiso contiene acqua e cibo sufficienti a sostentare i suoi visitatori. Tutto il resto con cui si può interagire all'interno dello spazio extraplanare può esistere solo lì. Per esempio, un fiore colto in un giardino del paradiso scompare se viene portato fuori dallo spazio extraplanare.\n\nPer ogni ora trascorsa nel paradiso, un visitatore recupera punti ferita come se avesse speso 1 Dado Vita. Inoltre, le creature non invecchiano mentre si trovano nel paradiso, anche se il tempo scorre normalmente. I visitatori possono restare nel paradiso per un massimo di 200 giorni divisi per il numero di creature presenti (arrotondato per difetto).\n\nQuando il tempo scade o usi un'azione per porvi fine, tutti i visitatori ricompaiono nel punto che occupavano quando hai attivato la verga, o nello spazio libero più vicino a quel punto. La verga non può essere usata di nuovo finché non sono trascorsi dieci giorni."
+  },
+  "rope-of-climbing": {
+   "name": "Corda da Scalata",
+   "description": "Oggetto meraviglioso, non comune\n\nQuesta corda di seta lunga 18 metri pesa 1,5 kg e può sostenere fino a 1.500 kg. Se tieni un'estremità della corda e usi un'azione per pronunciare la parola di comando, la corda si anima. Come azione bonus, puoi ordinare all'altra estremità di muoversi verso una destinazione a tua scelta. Quell'estremità si muove di 3 metri nel tuo turno quando le dai il primo ordine e di 3 metri in ciascuno dei tuoi turni successivi, finché non raggiunge la destinazione, arriva alla sua lunghezza massima o finché non le dici di fermarsi. Puoi anche dire alla corda di legarsi saldamente a un oggetto o di slegarsi, di annodarsi o sciogliere i nodi, o di arrotolarsi per essere trasportata.\n\nSe dici alla corda di annodarsi, lungo la corda appaiono grossi nodi a intervalli di 30 cm. Quando è annodata, la corda si accorcia a 15 metri e concede vantaggio alle prove effettuate per arrampicarsi su di essa.\n\nLa corda ha CA 20 e 20 punti ferita. Recupera 1 punto ferita ogni 5 minuti finché ha almeno 1 punto ferita. Se la corda scende a 0 punti ferita, viene distrutta."
+  },
+  "rope-of-entanglement": {
+   "name": "Corda Intrappolante",
+   "description": "Oggetto meraviglioso, raro\n\nQuesta corda è lunga 9 metri e pesa 1,5 kg. Se tieni un'estremità della corda e usi un'azione per pronunciare la sua parola di comando, l'altra estremità scatta in avanti per avvolgere una creatura che puoi vedere entro 6 metri da te. Il bersaglio deve superare un tiro salvezza su Destrezza con CD 15 o essere trattenuto.\n\nPuoi liberare la creatura usando un'azione bonus per pronunciare una seconda parola di comando. Un bersaglio trattenuto dalla corda può usare un'azione per effettuare una prova di Forza o di Destrezza con CD 15 (a sua scelta). Se ha successo, la creatura non è più trattenuta dalla corda.\n\nLa corda ha CA 20 e 20 punti ferita. Recupera 1 punto ferita ogni 5 minuti finché ha almeno 1 punto ferita. Se la corda scende a 0 punti ferita, viene distrutta."
+  },
+  "scarab-of-protection": {
+   "name": "Scarabeo della Protezione",
+   "description": "Oggetto meraviglioso, leggendario (richiede sintonia)\n\nSe tieni in mano per 1 round questo medaglione a forma di scarabeo, sulla sua superficie appare un'iscrizione che ne rivela la natura magica. Finché lo hai con te, fornisce due benefici:\n\nHai vantaggio ai tiri salvezza contro gli incantesimi.\n\nLo scarabeo ha 12 cariche. Se fallisci un tiro salvezza contro un incantesimo di necromanzia o un effetto dannoso originato da una creatura non morta, puoi usare la tua reazione per spendere 1 carica e trasformare il tiro salvezza fallito in un successo. Lo scarabeo si sbriciola in polvere e viene distrutto quando la sua ultima carica viene spesa."
+  }
+ }
+}
