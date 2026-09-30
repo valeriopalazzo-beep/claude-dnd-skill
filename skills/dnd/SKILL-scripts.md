@@ -583,6 +583,9 @@ python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --kind scene   --subject "Porto
 
 # A moment of the fight / a dramatic event — always a new image; the outcome, after the roll
 python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --kind action --subject "Lllooo colpisce il segugio"   --prompt "stout red-bearded dwarf in chain mail, greataxe, splitting an ash hound in two, sparks"   --caption "L'ascia di Lllooo spacca il segugio"
+
+# Two subjects: pin where each goes (depth ControlNet, local backend). Creature first in the prompt.
+python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --kind action --subject "Il segugio salta su Lllooo"   --prompt "a snarling hound made of cracked grey ash leaping at a stout red-bearded dwarf with a greataxe, dark tavern"   --compose "quadruped:right:large, humanoid-short:left:large" --caption "Il segugio salta addosso a Lllooo"
 python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --kind item    --subject "Lama di Vessar" --prompt "..."
 
 python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --list      # this campaign's images + the prompts used

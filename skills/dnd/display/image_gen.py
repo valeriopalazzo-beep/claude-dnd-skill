@@ -74,6 +74,14 @@ DEFAULTS = {
     "local_sampler": "",
     "local_scheduler": "",
     "local_model": "",         # checkpoint to use (Forge title or file name); empty = loaded one
+    # --compose: depth ControlNet that pins where each subject goes (compose.py).
+    # Name as Forge lists it (GET /controlnet/model_list); empty = --compose is ignored.
+    "local_controlnet_depth": "",
+    # Tested with SDXL Lightning (6 steps) + control-lora-depth-rank128: at
+    # 0.8 / 0.6 the silhouettes were ignored and the creature still vanished;
+    # full guidance keeps every subject where the sketch puts it.
+    "compose_weight": 1.0,     # how strictly the silhouettes are followed
+    "compose_end": 1.0,        # share of the steps that are guided
     "gemini_model": "gemini-2.5-flash-image",
     "timeout": 180,
     # Battle-map art (map_render.py → map_art.py): auto | paint | tiles | off
@@ -310,10 +318,23 @@ def local_params(cfg: dict) -> dict:
     return body
 
 
-def gen_local(prompt: str, kind: str, seed: int, cfg: dict) -> bytes:
+def compose_unit(spec: str, w: int, h: int, cfg: dict) -> dict:
+    """ControlNet unit (Forge / sd-webui-controlnet API) for a compose.py depth sketch."""
+    import compose
+    return {"enabled": True, "module": "None", "model": cfg["local_controlnet_depth"],
+            "image": base64.b64encode(compose.depth_png(spec, w, h)).decode("ascii"),
+            "weight": float(cfg["compose_weight"]), "guidance_start": 0.0,
+            "guidance_end": float(cfg["compose_end"]), "resize_mode": "Crop and Resize",
+            "control_mode": "Balanced", "pixel_perfect": False}
+
+
+def gen_local(prompt: str, kind: str, seed: int, cfg: dict, compose_spec: str = "") -> bytes:
     w, h = _size_for(kind, int(cfg["local_max_side"]))
-    return a1111("txt2img", {"prompt": prompt, "negative_prompt": NEGATIVE, "width": w,
-                             "height": h, "seed": seed, **local_params(cfg)}, cfg)
+    body = {"prompt": prompt, "negative_prompt": NEGATIVE, "width": w,
+            "height": h, "seed": seed, **local_params(cfg)}
+    if compose_spec:
+        body["alwayson_scripts"] = {"ControlNet": {"args": [compose_unit(compose_spec, w, h, cfg)]}}
+    return a1111("txt2img", body, cfg)
 
 
 def gemini(parts: list, aspect: str, cfg: dict) -> bytes:
@@ -348,10 +369,19 @@ def gen_gemini(prompt: str, kind: str, seed: int, cfg: dict) -> bytes:
 BACKENDS = {"pollinations": gen_pollinations, "local": gen_local, "gemini": gen_gemini}
 
 
-def generate(prompt: str, kind: str, seed: int, cfg: dict) -> bytes:
+def compose_usable(cfg: dict) -> bool:
+    return cfg["backend"] == "local" and bool(cfg.get("local_controlnet_depth"))
+
+
+def generate(prompt: str, kind: str, seed: int, cfg: dict, compose_spec: str = "") -> bytes:
     backend = cfg["backend"]
     if backend not in BACKENDS:
         raise ImageError(f"unknown backend {backend!r} (pollinations | local | gemini | off)")
+    if compose_spec:
+        if compose_usable(cfg):
+            return gen_local(prompt, kind, seed, cfg, compose_spec)
+        print("image_gen: --compose needs the local backend and local_controlnet_depth — ignored",
+              file=sys.stderr)
     return BACKENDS[backend](prompt, kind, seed, cfg)
 
 
@@ -379,6 +409,9 @@ def main() -> int:
     ap.add_argument("--subject", help="who/what this is — the cache key (e.g. the NPC's name)")
     ap.add_argument("--prompt", help="visual description, in English for best results")
     ap.add_argument("--caption", help="caption on the display (default: the subject)")
+    ap.add_argument("--compose", metavar="SPEC",
+                    help="where each subject goes, e.g. 'humanoid-short:left, quadruped:right' "
+                         "(compose.py; local backend + depth ControlNet)")
     ap.add_argument("--campaign", help="campaign name (default: the display's active campaign)")
     ap.add_argument("--backend", choices=[*BACKENDS, "off"], help="override the configured backend")
     ap.add_argument("--seed", type=int, help="fixed seed (default: random, stored in media/index.json)")
@@ -407,6 +440,8 @@ def main() -> int:
             gk = None
         print(f"gemini:        key {_mask(gk)}, model {cfg['gemini_model']}")
         import map_art
+        print(f"compose:       {cfg['local_controlnet_depth'] or 'off (set local_controlnet_depth)'}"
+              f" (weight {cfg['compose_weight']}, until {cfg['compose_end']})")
         print(f"map art:       {cfg['map_art']} → {map_art.resolve_mode(cfg['map_art'], cfg['backend'])}"
               f" (paint denoise {cfg['map_denoise']})")
         return 0
@@ -462,8 +497,14 @@ def main() -> int:
             ap.error("--prompt is required to generate a new image")
         seed = args.seed if args.seed is not None else random.randint(1, 2**31 - 1)
         full = build_prompt(args.kind, args.prompt, cfg["style"])
+        if args.compose:
+            import compose
+            try:
+                compose.parse(args.compose)
+            except compose.ComposeError as e:
+                ap.error(f"--compose: {e}")
         try:
-            data = generate(full, args.kind, seed, cfg)
+            data = generate(full, args.kind, seed, cfg, args.compose or "")
             ext = _ext_for(data)
         except ImageError as e:
             print(f"image_gen: {e}", file=sys.stderr)
@@ -474,6 +515,7 @@ def main() -> int:
         media.add_to_index(d, {
             "file": fname, "kind": args.kind, "subject": args.subject,
             "prompt": args.prompt, "full_prompt": full, "seed": seed,
+            **({"compose": args.compose} if args.compose and compose_usable(cfg) else {}),
             "backend": cfg["backend"],
             "created": _dt.datetime.now().isoformat(timespec="seconds"),
         })

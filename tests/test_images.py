@@ -324,6 +324,51 @@ class ImageGenTests(unittest.TestCase):
         self.assertTrue(p.endswith("a ghoul, oil painting"))
 
 
+class ComposeTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.cp = _load(DISPLAY / "compose.py", "compose_under_test")
+        cls.ig = _load(DISPLAY / "image_gen.py", "image_gen_for_compose")
+
+    def test_spec_accepts_names_aliases_numbers_and_sizes(self):
+        figs = self.cp.parse("dwarf:left:large, hound:0.72, explosion:far-right:small")
+        self.assertEqual(figs, [("humanoid-short", 0.3, 0.86), ("quadruped", 0.72, 0.62),
+                                ("blast", 0.86, 0.42)])
+
+    def test_bad_specs_are_refused_with_a_reason(self):
+        for bad in ("", "unicorn:left", "humanoid:up", "humanoid:1.5", "humanoid:left:huge",
+                    "humanoid, humanoid, humanoid, humanoid, humanoid"):
+            with self.assertRaises(self.cp.ComposeError, msg=bad):
+                self.cp.parse(bad)
+
+    def test_depth_sketch_is_a_png_with_bright_figures_on_a_dark_ground(self):
+        import struct, zlib
+        png = self.cp.depth_png("humanoid:left, quadruped:right", 256, 176)
+        self.assertEqual(png[:8], b"\x89PNG\r\n\x1a\n")
+        w, h = struct.unpack(">II", png[16:24])
+        self.assertEqual((w, h), (128, 88), "rendered at half size")
+        idat = png[png.index(b"IDAT") + 4:png.index(b"IEND") - 8]
+        raw = zlib.decompress(idat)
+        row = raw[1 + (h // 2) * (1 + w * 3):][: w * 3]   # middle row, skip filter byte
+        grey = row[::3]
+        self.assertLess(min(grey), 60, "background stays far (dark)")
+        self.assertGreater(max(grey), 180, "figures read near (bright)")
+
+    def test_compose_unit_carries_model_image_and_guidance(self):
+        cfg = dict(self.ig.DEFAULTS, local_controlnet_depth="depth [abc]")
+        unit = self.ig.compose_unit("humanoid:left", 512, 384, cfg)
+        self.assertEqual((unit["model"], unit["module"], unit["weight"], unit["guidance_end"]),
+                         ("depth [abc]", "None", 1.0, 1.0))
+        self.assertTrue(unit["image"].startswith("iVBOR"), "base64 PNG")
+
+    def test_compose_is_ignored_without_a_depth_model(self):
+        self.assertFalse(self.ig.compose_usable(dict(self.ig.DEFAULTS, backend="local")))
+        self.assertFalse(self.ig.compose_usable(dict(self.ig.DEFAULTS, backend="gemini",
+                                                     local_controlnet_depth="x")))
+        self.assertTrue(self.ig.compose_usable(dict(self.ig.DEFAULTS, backend="local",
+                                                    local_controlnet_depth="x")))
+
+
 class MediaRouteTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

@@ -67,6 +67,20 @@ Raise `local_max_side` to 1024 for SDXL models.
 
 `local_model` makes every call use that checkpoint (and leaves it loaded); `local_cfg`, `local_sampler` and `local_scheduler` are sent only when set. Measured on a GTX 1660 (6 GB, 32 GB RAM): Forge runs SDXL in float32 with offloading, about 50 s per 1024×704 image once the model is loaded, and the Forge process holds ~19 GB of RAM. Fine for images generated in the background while play goes on. The first request after a checkpoint change can drop the connection while Forge loads the model; image_gen.py retries it once.
 
+### Two subjects in one picture (`--compose`, local only)
+
+Even SDXL tends to drop the second figure of a scene. `--compose "humanoid-short:left:large, quadruped:right:large"` draws a rough depth sketch of the silhouettes (`display/compose.py`) and sends it to a depth ControlNet, so each subject lands where the sketch puts it. Setup in Forge:
+
+1. Download a depth ControlNet for your checkpoint's family into `models/ControlNet/`. For SDXL on a small GPU, Stability's Control-LoRA is light (396 MB): `control-LoRAs-rank128/control-lora-depth-rank128.safetensors` from https://huggingface.co/stabilityai/control-lora.
+2. Restart Forge (it lists ControlNet models only at start-up), then read the exact name from `http://127.0.0.1:7860/controlnet/model_list`.
+3. Configure:
+
+```json
+{ "local_controlnet_depth": "control-lora-depth-rank128 [df51c1c8]", "compose_weight": 1.0, "compose_end": 1.0 }
+```
+
+With SDXL Lightning at 6 steps, weaker guidance (0.8 until 60% of the steps) was ignored; full guidance works. Put the subject most likely to vanish first in the prompt. `python3 display/compose.py "<spec>" --out sketch.png` shows the sketch.
+
 ### Gemini
 
 Uses the same key as narration TTS (`DND_IMAGE_KEY`, else `DND_TTS_KEY` / `GEMINI_API_KEY` / `~/.config/claude-dnd/tts.key`). Image models are **not** on the Gemini free tier — enable billing first.
