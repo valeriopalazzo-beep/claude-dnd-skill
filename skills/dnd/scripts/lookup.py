@@ -321,6 +321,7 @@ LABELS = {
         # Italian books use metric units: 1 lb = 0.5 kg
         "weight_unit": "kg", "weight_factor": 0.5, "decimal": ",",
         "mi_header": "{category}, {rarity}",
+        "mon_header": "{type}, taglia {size}",
         "fem_categories": ["Pozione", "Arma", "Armatura", "Bacchetta", "Pergamena", "Verga", "Munizione"],
         "rarity_fem": {"raro": "rara", "molto raro": "molto rara", "leggendario": "leggendaria"},
     },
@@ -419,7 +420,8 @@ def _fmt_condition(r: dict, L: dict = _EN) -> str:
 
 def _fmt_monster(r: dict, L: dict = _EN) -> str:
     lines = [f"## {_title(r)}  [{L['cr']} {r.get('cr','?')} | {r.get('xp','?')} {L['xp']}]",
-             f"{r.get('size','')} {r.get('type','')}  ·  {r.get('alignment','')}",
+             L.get("mon_header", "{size} {type}").format(size=r.get("size", ""), type=r.get("type", ""))
+             + f"  ·  {r.get('alignment','')}",
              "", f"{L['ac']} {r.get('ac','?')}  ·  {L['hp']} {r.get('hp','?')} ({r.get('hp_dice','')})",
              f"{L['speed']}{r.get('speed','')}", ""]
     abbr = L["abbr"]
