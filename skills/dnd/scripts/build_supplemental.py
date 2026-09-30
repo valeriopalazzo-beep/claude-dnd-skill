@@ -232,10 +232,13 @@ def _extract_names_from_character(path: str) -> list[tuple[str, str]]:
             if name not in ("Name", "Attack") and len(name) > 2:
                 entries.append((name, "spell"))   # may be a spell/cantrip attack
 
-    # Deduplicate while preserving order
+    # Deduplicate while preserving order; drop field labels ("Spell save DC:",
+    # "CD TS incantesimi:") and attack-table headers
     seen: set[str] = set()
     unique: list[tuple[str, str]] = []
     for name, cat in entries:
+        if name.endswith(":") or name.lower() in ("damage", "notes", "range", "bonus", "danni", "note", "gittata"):
+            continue
         key = (_norm(name), cat)
         if key not in seen:
             seen.add(key)
@@ -276,8 +279,10 @@ def _build_entry(name: str, category: str) -> dict | None:
             time.sleep(FETCH_DELAY)
 
     if not text:
-        print(f"  [miss] No content found for '{name}' — adding stub with wikidot link only")
-        text = f"See full description at {WIKIDOT_BASE}/{path}"
+        # No stub: a link-only entry is never a real rule. Non-English sheets
+        # made this add labels, table headers and weapons as "spells".
+        print(f"  [miss] No content found for '{name}' — skipped")
+        return None
 
     cat_key = "spells" if category == "spell" else "features"
     entry: dict = {
