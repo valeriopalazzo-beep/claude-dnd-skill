@@ -567,6 +567,8 @@ Doors, known traps and stairs stay marked on top of painted art; tokens always d
 
 ## Generated Images — `display/image_gen.py`
 
+**In play, generate only `scene` images of places (plus battle maps via `map_render.py`)** — see SKILL.md → *Images & Maps*. The other kinds below are for explicit player requests only.
+
 Portraits, monsters, scenes and items. Backend (Pollinations / local Forge / Gemini / off) is set in `~/.config/claude-dnd/images.json` — setup: `docs/SKILL-images.md` at the plugin root.
 
 ```bash
