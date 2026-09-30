@@ -33,11 +33,13 @@ from __future__ import annotations
 
 import argparse
 import base64
+import contextlib
 import datetime as _dt
 import json
 import os
 import random
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.parse
@@ -220,8 +222,60 @@ def gen_pollinations(prompt: str, kind: str, seed: int, cfg: dict) -> bytes:
     raise ImageError(f"pollinations: {last}{hint}")
 
 
+LOCAL_LOCK = Path(tempfile.gettempdir()) / "claude-dnd-local-image.lock"
+
+
+@contextlib.contextmanager
+def local_gpu_lock(timeout: float = 900, path: Path = LOCAL_LOCK):
+    """One request at a time to the local server, across processes.
+
+    The DM starts images and map art as separate background calls. Queued in
+    Forge they mostly wait their turn, but a txt2img that arrived while an
+    SDXL img2img was running had its connection dropped twice (GTX 1660,
+    2026-09-30). Waiting here costs nothing: the GPU does one image at a time anyway.
+    """
+    path.touch(exist_ok=True)
+    f = open(path, "rb+")
+    locked = False
+    try:
+        deadline = time.time() + timeout
+        while not locked:
+            try:
+                if os.name == "nt":
+                    import msvcrt
+                    f.seek(0)
+                    msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
+                else:
+                    import fcntl
+                    fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                locked = True
+            except OSError:
+                if time.time() > deadline:
+                    raise ImageError(f"local: the GPU has been busy for over {int(timeout)} s")
+                time.sleep(0.5)
+        yield
+    finally:
+        if locked:
+            try:
+                if os.name == "nt":
+                    import msvcrt
+                    f.seek(0)
+                    msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
+                else:
+                    import fcntl
+                    fcntl.flock(f, fcntl.LOCK_UN)
+            except OSError:
+                pass
+        f.close()
+
+
 def a1111(endpoint: str, body: dict, cfg: dict) -> bytes:
     """POST to a Forge / A1111 /sdapi/v1/<endpoint> (txt2img, img2img); first image."""
+    with local_gpu_lock():
+        return _a1111(endpoint, body, cfg)
+
+
+def _a1111(endpoint: str, body: dict, cfg: dict) -> bytes:
     url = cfg["local_url"].rstrip("/") + "/sdapi/v1/" + endpoint
     req = urllib.request.Request(url, data=json.dumps(body).encode(), method="POST",
                                  headers={"Content-Type": "application/json"})

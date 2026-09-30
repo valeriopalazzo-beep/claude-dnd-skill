@@ -297,6 +297,16 @@ class ImageGenTests(unittest.TestCase):
             with self.assertRaises(self.ig.ImageError):
                 self.ig.a1111("txt2img", {}, dict(self.ig.DEFAULTS))
 
+    def test_gpu_lock_lets_one_request_through_at_a_time(self):
+        with tempfile.TemporaryDirectory() as t:
+            lock = pathlib.Path(t) / "gpu.lock"
+            with self.ig.local_gpu_lock(path=lock):
+                with self.assertRaises(self.ig.ImageError):
+                    with self.ig.local_gpu_lock(timeout=0.6, path=lock):
+                        pass
+            with self.ig.local_gpu_lock(timeout=0.6, path=lock):
+                pass   # released: the next one gets it
+
     def test_local_params_only_send_what_is_configured(self):
         base = dict(self.ig.DEFAULTS)
         body = self.ig.local_params(base)
