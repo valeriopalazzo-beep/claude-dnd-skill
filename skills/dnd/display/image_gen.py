@@ -65,6 +65,13 @@ DEFAULTS = {
     "local_url": "http://127.0.0.1:7860",
     "local_steps": 25,
     "local_max_side": 768,     # SD 1.5 on a 6 GB card; raise for SDXL
+    # Sampler settings for the local server. Empty = the server's current
+    # choice. Distilled models need their own: SDXL Lightning wants ~6 steps,
+    # CFG 2, "DPM++ SDE" + "Karras".
+    "local_cfg": 7.0,
+    "local_sampler": "",
+    "local_scheduler": "",
+    "local_model": "",         # checkpoint to use (Forge title or file name); empty = loaded one
     "gemini_model": "gemini-2.5-flash-image",
     "timeout": 180,
     # Battle-map art (map_render.py → map_art.py): auto | paint | tiles | off
@@ -90,6 +97,10 @@ NEGATIVE = "text, letters, watermark, signature, logo, frame, blurry, lowres, de
 
 class ImageError(Exception):
     pass
+
+
+class ConnectionDropped(ImageError):
+    """The server closed the socket mid-request (Forge does this while it swaps checkpoints)."""
 
 
 # ── Config ───────────────────────────────────────────────────────────────────
@@ -169,6 +180,8 @@ def _http(req: urllib.request.Request, timeout: float) -> bytes:
         raise ImageError(f"network: {e.reason}") from e
     except TimeoutError as e:
         raise ImageError("timed out") from e
+    except ConnectionError as e:
+        raise ConnectionDropped(f"connection dropped: {e}") from e
 
 
 # ── Backends — each returns raw image bytes ─────────────────────────────────
@@ -212,20 +225,41 @@ def a1111(endpoint: str, body: dict, cfg: dict) -> bytes:
     url = cfg["local_url"].rstrip("/") + "/sdapi/v1/" + endpoint
     req = urllib.request.Request(url, data=json.dumps(body).encode(), method="POST",
                                  headers={"Content-Type": "application/json"})
-    try:
-        raw = _http(req, max(cfg["timeout"], 300))
-    except ImageError as e:
-        raise ImageError(f"local ({cfg['local_url']}): {e} — is Forge/A1111 running with --api?") from e
+    for attempt in (1, 2):
+        try:
+            raw = _http(req, max(cfg["timeout"], 300))
+            break
+        except ConnectionDropped:
+            if attempt == 2:
+                raise ImageError(f"local ({cfg['local_url']}): connection dropped twice") from None
+            time.sleep(3)   # first call after a checkpoint change: retry once
+        except ImageError as e:
+            raise ImageError(f"local ({cfg['local_url']}): {e} — is Forge/A1111 running with --api?") from e
     try:
         return base64.b64decode(json.loads(raw)["images"][0].split(",", 1)[-1])
     except (KeyError, IndexError, ValueError) as e:
         raise ImageError(f"local: unexpected response shape: {e}") from e
 
 
+def local_params(cfg: dict) -> dict:
+    """Sampler/model fields shared by txt2img and img2img on the local server."""
+    body = {"steps": int(cfg["local_steps"]), "cfg_scale": float(cfg["local_cfg"])}
+    if cfg.get("local_sampler"):
+        body["sampler_name"] = cfg["local_sampler"]
+    if cfg.get("local_scheduler"):
+        body["scheduler"] = cfg["local_scheduler"]
+    if cfg.get("local_model"):
+        # Keep it loaded afterwards: swapping an SDXL checkpoint back and forth
+        # costs far more than the image itself on a small GPU.
+        body["override_settings"] = {"sd_model_checkpoint": cfg["local_model"]}
+        body["override_settings_restore_afterwards"] = False
+    return body
+
+
 def gen_local(prompt: str, kind: str, seed: int, cfg: dict) -> bytes:
     w, h = _size_for(kind, int(cfg["local_max_side"]))
     return a1111("txt2img", {"prompt": prompt, "negative_prompt": NEGATIVE, "width": w,
-                             "height": h, "steps": int(cfg["local_steps"]), "seed": seed}, cfg)
+                             "height": h, "seed": seed, **local_params(cfg)}, cfg)
 
 
 def gemini(parts: list, aspect: str, cfg: dict) -> bytes:
@@ -310,7 +344,9 @@ def main() -> int:
         print(f"backend:       {cfg['backend']}")
         print(f"style:         {cfg['style']}")
         print(f"pollinations:  key {_mask(_pollinations_key())}, model {cfg['pollinations_model']}")
-        print(f"local:         {cfg['local_url']} (steps {cfg['local_steps']}, max side {cfg['local_max_side']})")
+        print(f"local:         {cfg['local_url']} (model {cfg['local_model'] or 'as loaded'}, steps {cfg['local_steps']}, "
+              f"cfg {cfg['local_cfg']}, sampler {cfg['local_sampler'] or 'default'} {cfg['local_scheduler']}, "
+              f"max side {cfg['local_max_side']})")
         try:
             gk = _gemini_key()
         except Exception:

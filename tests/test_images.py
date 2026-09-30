@@ -268,6 +268,36 @@ class ImageGenTests(unittest.TestCase):
         w, h = self.ig._size_for("action", 768)
         self.assertEqual((w, h), (768, 512))
 
+    def test_dropped_connection_is_retried_once_then_reported(self):
+        from unittest import mock
+        calls = []
+
+        def flaky(req, timeout):
+            calls.append(1)
+            if len(calls) == 1:
+                raise self.ig.ConnectionDropped("connection dropped: reset")
+            return b'{"images": ["aGVsbG8="]}'
+        with mock.patch.object(self.ig, "_http", flaky), mock.patch.object(self.ig.time, "sleep"):
+            self.assertEqual(self.ig.a1111("txt2img", {}, dict(self.ig.DEFAULTS)), b"hello")
+        self.assertEqual(len(calls), 2)
+
+        def dead(req, timeout):
+            raise self.ig.ConnectionDropped("connection dropped: reset")
+        with mock.patch.object(self.ig, "_http", dead), mock.patch.object(self.ig.time, "sleep"):
+            with self.assertRaises(self.ig.ImageError):
+                self.ig.a1111("txt2img", {}, dict(self.ig.DEFAULTS))
+
+    def test_local_params_only_send_what_is_configured(self):
+        base = dict(self.ig.DEFAULTS)
+        body = self.ig.local_params(base)
+        self.assertEqual(body, {"steps": 25, "cfg_scale": 7.0}, "defaults leave sampler/model to the server")
+        body = self.ig.local_params({**base, "local_steps": 6, "local_cfg": 2, "local_sampler": "DPM++ SDE",
+                                     "local_scheduler": "Karras", "local_model": "DreamShaperXL_Lightning"})
+        self.assertEqual(body["sampler_name"], "DPM++ SDE")
+        self.assertEqual(body["scheduler"], "Karras")
+        self.assertEqual(body["override_settings"], {"sd_model_checkpoint": "DreamShaperXL_Lightning"})
+        self.assertIs(body["override_settings_restore_afterwards"], False)
+
     def test_prompt_carries_kind_preset_and_style(self):
         p = self.ig.build_prompt("monster", "a ghoul.", "oil painting")
         self.assertTrue(p.startswith("fantasy creature"))

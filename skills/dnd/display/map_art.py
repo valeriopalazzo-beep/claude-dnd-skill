@@ -156,7 +156,7 @@ def paint(kinds: list, desc: str, seed: int, cfg: dict) -> bytes:
             "init_images": ["data:image/png;base64," + init], "resize_mode": 0,
             "denoising_strength": float(cfg["map_denoise"]),
             "prompt": prompt, "negative_prompt": MAP_NEGATIVE,
-            "width": w, "height": h, "steps": int(cfg["local_steps"]), "seed": seed,
+            "width": w, "height": h, "seed": seed, **image_gen.local_params(cfg),
         }, cfg)
     if cfg["backend"] == "gemini":
         prompt = (f"Repaint this layout as a finished top-down battle map for a tabletop RPG, "

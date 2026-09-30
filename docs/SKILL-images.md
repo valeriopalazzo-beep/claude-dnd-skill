@@ -58,6 +58,15 @@ Or set `POLLINATIONS_KEY`. Model: `"pollinations_model": "flux"` (default) or an
 
 Raise `local_max_side` to 1024 for SDXL models.
 
+**Better images on a small GPU: SDXL Lightning.** SD 1.5 loses the second subject of a scene ("a dwarf splitting a hound") and misreads effects ("engulfed by an explosion"). A distilled SDXL checkpoint such as [DreamShaper XL Lightning](https://huggingface.co/Lykon/dreamshaper-xl-lightning) (openrail++, 6.9 GB) understands composition far better and needs only ~6 steps. Put the `.safetensors` in Forge's `models/Stable-diffusion/` and tell image_gen.py how to drive it:
+
+```json
+{ "backend": "local", "local_model": "DreamShaperXL_Lightning", "local_steps": 6, "local_cfg": 2,
+  "local_sampler": "DPM++ SDE", "local_scheduler": "karras", "local_max_side": 1024 }
+```
+
+`local_model` makes every call use that checkpoint (and leaves it loaded); `local_cfg`, `local_sampler` and `local_scheduler` are sent only when set. Measured on a GTX 1660 (6 GB, 32 GB RAM): Forge runs SDXL in float32 with offloading, about 50 s per 1024×704 image once the model is loaded, and the Forge process holds ~19 GB of RAM. Fine for images generated in the background while play goes on. The first request after a checkpoint change can drop the connection while Forge loads the model; image_gen.py retries it once.
+
 ### Gemini
 
 Uses the same key as narration TTS (`DND_IMAGE_KEY`, else `DND_TTS_KEY` / `GEMINI_API_KEY` / `~/.config/claude-dnd/tts.key`). Image models are **not** on the Gemini free tier — enable billing first.
