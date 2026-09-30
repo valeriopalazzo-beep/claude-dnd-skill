@@ -287,14 +287,16 @@ class ImageGenTests(unittest.TestCase):
             if len(calls) == 1:
                 raise self.ig.ConnectionDropped("connection dropped: reset")
             return b'{"images": ["aGVsbG8="]}'
-        with mock.patch.object(self.ig, "_http", flaky), mock.patch.object(self.ig, "_wait_idle") as idle:
+        with mock.patch.object(self.ig, "_http", flaky), mock.patch.object(self.ig, "_wait_idle") as idle, \
+                mock.patch.object(self.ig, "_recover", return_value=None):
             self.assertEqual(self.ig.a1111("txt2img", {}, dict(self.ig.DEFAULTS)), b"hello")
         self.assertEqual(len(calls), 2)
         idle.assert_called_once()   # waits for the orphaned job before asking again
 
         def dead(req, timeout):
             raise self.ig.ConnectionDropped("connection dropped: reset")
-        with mock.patch.object(self.ig, "_http", dead), mock.patch.object(self.ig, "_wait_idle"):
+        with mock.patch.object(self.ig, "_http", dead), mock.patch.object(self.ig, "_wait_idle"), \
+                mock.patch.object(self.ig, "_recover", return_value=None):
             with self.assertRaises(self.ig.ImageError):
                 self.ig.a1111("txt2img", {}, dict(self.ig.DEFAULTS))
 
@@ -307,6 +309,26 @@ class ImageGenTests(unittest.TestCase):
                         pass
             with self.ig.local_gpu_lock(timeout=0.6, path=lock):
                 pass   # released: the next one gets it
+
+    def test_dropped_connection_recovers_the_saved_image_instead_of_regenerating(self):
+        from unittest import mock
+        calls = []
+
+        def dropped(req, timeout):
+            calls.append(json.loads(req.data))
+            raise self.ig.ConnectionDropped("connection dropped: reset")
+        with tempfile.TemporaryDirectory() as t:
+            day = pathlib.Path(t) / "2026-09-30"
+            day.mkdir()
+            (day / "00007-4242.png").write_bytes(b"saved image")
+            (day / "00006-9999.png").write_bytes(b"another seed")
+            with mock.patch.object(self.ig, "_http", dropped), \
+                    mock.patch.object(self.ig, "_wait_idle"), \
+                    mock.patch.object(self.ig, "_output_dir", return_value=pathlib.Path(t)):
+                got = self.ig.a1111("txt2img", {"seed": 4242}, dict(self.ig.DEFAULTS))
+        self.assertEqual(got, b"saved image")
+        self.assertEqual(len(calls), 1, "no second generation")
+        self.assertIs(calls[0]["save_images"], True)
 
     def test_negative_adds_to_the_defaults(self):
         self.assertEqual(self.ig.negative_for({}), self.ig.NEGATIVE)

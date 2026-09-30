@@ -311,23 +311,58 @@ def _wait_idle(cfg: dict, timeout: float = 600) -> None:
         time.sleep(2)
 
 
+def _output_dir(cfg: dict, endpoint: str) -> Optional[Path]:
+    """Where the local server saves `endpoint` images, when it runs on this machine."""
+    base = cfg["local_url"].rstrip("/") + "/sdapi/v1/"
+    try:
+        flags = json.loads(_http(urllib.request.Request(base + "cmd-flags"), 10))
+        opts = json.loads(_http(urllib.request.Request(base + "options"), 10))
+        sub = opts.get(f"outdir_{endpoint}_samples") or opts.get("outdir_samples") or ""
+        if not sub:
+            return None
+        path = Path(sub)
+        if not path.is_absolute():
+            path = Path(flags.get("data_dir") or "") / sub
+        return path if path.is_dir() else None
+    except (ImageError, ValueError, OSError, TypeError):
+        return None
+
+
+def _recover(cfg: dict, endpoint: str, seed, since: float) -> Optional[bytes]:
+    """The image the server saved for this seed after `since`, if it is reachable on disk."""
+    d = _output_dir(cfg, endpoint)
+    if d is None or seed is None:
+        return None
+    hits = [p for p in d.rglob(f"*-{seed}.png") if p.stat().st_mtime >= since - 2]
+    return max(hits, key=lambda p: p.stat().st_mtime).read_bytes() if hits else None
+
+
 def _a1111(endpoint: str, body: dict, cfg: dict) -> bytes:
     url = cfg["local_url"].rstrip("/") + "/sdapi/v1/" + endpoint
+    # Also save to the server's outputs folder: see the dropped-connection note below.
+    body = dict(body, save_images=True)
     req = urllib.request.Request(url, data=json.dumps(body).encode(), method="POST",
                                  headers={"Content-Type": "application/json"})
-    # On this machine a request whose answer takes longer than ~100 s (model
-    # load, a ControlNet/extension switch) loses its connection while Forge
-    # carries on and finishes the job. Wait until Forge is idle, then ask again:
-    # everything is loaded by then and the retry is quick.
+    # On this machine the connection is sometimes reset (WinError 10054) while
+    # Forge carries on and finishes the job: nothing in Forge's log, jobs of
+    # ~50 s included. Wait until Forge is idle, take the image it saved for
+    # this seed; only if that is not reachable, ask again.
     attempts = 3
+    started = time.time()
     for attempt in range(1, attempts + 1):
         try:
             raw = _http(req, max(cfg["timeout"], 300))
             break
         except ConnectionDropped:
+            _wait_idle(cfg)
+            data = _recover(cfg, endpoint, body.get("seed"), started)
+            if data:
+                print("image_gen: connection dropped — image recovered from the server's outputs",
+                      file=sys.stderr)
+                return data
             if attempt == attempts:
                 raise ImageError(f"local ({cfg['local_url']}): connection dropped {attempts} times") from None
-            _wait_idle(cfg)
+            started = time.time()
         except ImageError as e:
             raise ImageError(f"local ({cfg['local_url']}): {e} — is Forge/A1111 running with --api?") from e
     try:
