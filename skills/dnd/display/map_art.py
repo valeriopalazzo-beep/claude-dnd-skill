@@ -212,9 +212,13 @@ def get_art(kinds: list, art_desc: str, d: Path, cfg: dict, mode: str,
     """
     desc = describe(kinds, art_desc)
     style, backend = cfg["style"], cfg["backend"]
+    # A different local checkpoint paints differently: it must not reuse the
+    # old model's art. Only part of the key when set, so existing caches stay valid.
+    model = cfg.get("local_model") if backend == "local" else ""
+    extra = (model,) if model else ()
 
     if mode == "paint":
-        stem = "mapart-" + _key("paint", kinds, desc, style, backend, cfg.get("map_denoise"))[:12]
+        stem = "mapart-" + _key("paint", kinds, desc, style, backend, cfg.get("map_denoise"), *extra)[:12]
         hit = _cached(d, stem)
         if hit:
             return Art("paint", image=_read(hit))
@@ -229,7 +233,7 @@ def get_art(kinds: list, art_desc: str, d: Path, cfg: dict, mode: str,
     needed = [k for k in TEXTURED if any(k in row for row in kinds)]
     art, missing = Art("tiles"), []
     for k in needed:
-        stem = f"maptex-{k}-" + _key("tiles", k, desc, style, backend)[:10]
+        stem = f"maptex-{k}-" + _key("tiles", k, desc, style, backend, *extra)[:10]
         hit = _cached(d, stem)
         if hit:
             art.textures[k] = _read(hit)

@@ -193,6 +193,16 @@ class MapArtTests(unittest.TestCase):
                           "changed terrain needs new art")
         self.assertEqual(self.calls, ["paint"])
 
+    def test_paint_cache_is_per_local_model(self):
+        kinds = self.mr.kind_grid(self.mr.parse(ART_MAP))
+        cfg = dict(self.cfg, backend="local")
+        self.ma.get_art(kinds, "", self.d, cfg, "paint")
+        sdxl = dict(cfg, local_model="DreamShaperXL_Lightning")
+        self.assertIsNone(self.ma.get_art(kinds, "", self.d, sdxl, "paint", generate=False),
+                          "another checkpoint must repaint, not reuse the old model's art")
+        self.assertIsNotNone(self.ma.get_art(kinds, "", self.d, cfg, "paint", generate=False),
+                             "no local_model keeps the original key, so old caches stay valid")
+
     def test_a_failed_texture_leaves_that_terrain_vector(self):
         def flaky(kind, desc, seed, cfg):
             if kind == "water":
