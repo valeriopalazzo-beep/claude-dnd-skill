@@ -410,6 +410,29 @@ def _fallback_categories(ruleset: str) -> set:
     return set()
 
 
+# Category order for an uncategorized lookup. Only breaks ties between equal
+# scores — items first keeps the old behaviour for names shared across
+# categories ("Shield" is both armor and a spell).
+_UNCATEGORIZED_ORDER = ["equipment", "magic_items", "spells", "conditions", "monsters", "features"]
+
+
+def _best_across(query: str, ruleset: str, cats: list):
+    """Best match across several categories of one ruleset, ranked by score
+    first. Returns (record, category, score) or (None, None, 0).
+
+    Without this, an uncategorized "Fireball" stopped at the first category
+    with *any* hit and returned "Necklace of Fireballs" (a contains-match in
+    magic_items) instead of the exact spell."""
+    data = _data_by_rs.get(ruleset, {})
+    best, best_cat, best_score = None, None, 0
+    for ck in cats:
+        for r in _find(query, data.get(ck, []), top_n=1):
+            s = _score(query, r)
+            if s > best_score:
+                best, best_cat, best_score = r, ck, s
+    return best, best_cat, best_score
+
+
 def _find_in_ruleset(query: str, cat_key, ruleset: str, top_n: int = 1):
     """Scan the dataset for `ruleset` for matches; if cat_key is given and the
     primary search misses, also scan 2014 when that category is in the
@@ -440,28 +463,22 @@ def lookup_record(query: str, category=None, ruleset=None):
     if not _data_by_rs.get(rs):
         return None
     cat_key = CATEGORY_MAP.get((category or "").lower()) if category else None
-    results, hit_rs, fb = _find_in_ruleset(query, cat_key, rs, top_n=1)
 
-    resolved_cat = cat_key
-    if not results and not category:
-        # Search every category in the active ruleset
-        for ck in ALL_CATEGORIES:
-            results = _find(query, _data_by_rs.get(rs, {}).get(ck, []), top_n=1)
-            if results:
-                resolved_cat = ck
-                hit_rs = rs
-                break
+    if not category:
+        # No category: rank every category together so an exact spell name
+        # beats a partial item name (see _best_across).
+        rec, resolved_cat, _ = _best_across(query, rs, _UNCATEGORIZED_ORDER)
+        results, hit_rs, fb = ([rec] if rec else []), rs, False
         # Fallback for 2024 cross-category — scan fallback categories in 2014
         if not results and rs == "2024":
-            for ck in ALL_CATEGORIES:
-                if ck not in _fallback_categories("2024"):
-                    continue
-                results = _find(query, _data_by_rs.get("2014", {}).get(ck, []), top_n=1)
-                if results:
-                    resolved_cat = ck
-                    hit_rs = "2014"
-                    fb = True
-                    break
+            _load_ruleset("2014")
+            fb_cats = [ck for ck in _UNCATEGORIZED_ORDER if ck in _fallback_categories("2024")]
+            rec, resolved_cat, _ = _best_across(query, "2014", fb_cats)
+            if rec:
+                results, hit_rs, fb = [rec], "2014", True
+    else:
+        results, hit_rs, fb = _find_in_ruleset(query, cat_key, rs, top_n=1)
+        resolved_cat = cat_key
 
     # item search — resolve sub-category and tag the record
     if results and cat_key is None and resolved_cat is None:
