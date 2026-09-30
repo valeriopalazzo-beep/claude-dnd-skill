@@ -278,7 +278,7 @@ class ImageGenTests(unittest.TestCase):
         w, h = self.ig._size_for("action", 768)
         self.assertEqual((w, h), (768, 512))
 
-    def test_dropped_connection_is_retried_once_then_reported(self):
+    def test_dropped_connection_waits_for_idle_retries_then_reports(self):
         from unittest import mock
         calls = []
 
@@ -287,13 +287,14 @@ class ImageGenTests(unittest.TestCase):
             if len(calls) == 1:
                 raise self.ig.ConnectionDropped("connection dropped: reset")
             return b'{"images": ["aGVsbG8="]}'
-        with mock.patch.object(self.ig, "_http", flaky), mock.patch.object(self.ig.time, "sleep"):
+        with mock.patch.object(self.ig, "_http", flaky), mock.patch.object(self.ig, "_wait_idle") as idle:
             self.assertEqual(self.ig.a1111("txt2img", {}, dict(self.ig.DEFAULTS)), b"hello")
         self.assertEqual(len(calls), 2)
+        idle.assert_called_once()   # waits for the orphaned job before asking again
 
         def dead(req, timeout):
             raise self.ig.ConnectionDropped("connection dropped: reset")
-        with mock.patch.object(self.ig, "_http", dead), mock.patch.object(self.ig.time, "sleep"):
+        with mock.patch.object(self.ig, "_http", dead), mock.patch.object(self.ig, "_wait_idle"):
             with self.assertRaises(self.ig.ImageError):
                 self.ig.a1111("txt2img", {}, dict(self.ig.DEFAULTS))
 
@@ -366,6 +367,45 @@ class ComposeTests(unittest.TestCase):
         self.assertEqual((unit["model"], unit["module"], unit["weight"], unit["guidance_end"]),
                          ("depth [abc]", "None", 1.0, 1.0))
         self.assertTrue(unit["image"].startswith("iVBOR"), "base64 PNG")
+
+    def test_regions_tile_the_width_between_figures_in_given_order(self):
+        figs = self.cp.parse("quadruped:right:large, humanoid-short:left:large")
+        self.assertEqual(self.cp.regions(figs), [(0.5, 1.0), (0.0, 0.5)])
+        three = self.cp.parse("humanoid:0.2, humanoid:0.5, beast:0.9")
+        self.assertEqual(self.cp.regions(three), [(0.0, 0.35), (0.35, 0.7), (0.7, 1.0)])
+
+    def test_couple_args_put_the_scene_first_then_one_band_per_figure(self):
+        cfg = dict(self.ig.DEFAULTS)
+        args = self.ig.couple_args(3, [(0.0, 0.5), (0.5, 1.0)], cfg)
+        self.assertEqual(len(args), 17, "Forge Couple's txt2img script takes 17 args")
+        self.assertEqual(args[:3], [True, False, "Advanced"])
+        self.assertEqual(args[3], "\n")
+        self.assertEqual(args[7], [[0.0, 1.0, 0.0, 1.0, 0.5], [0.0, 0.5, 0.0, 1.0, 1.0],
+                                   [0.5, 1.0, 0.0, 1.0, 1.0]])
+
+    def test_figures_use_couple_and_a_light_depth_touch_on_the_local_backend(self):
+        from unittest import mock
+        cfg = dict(self.ig.DEFAULTS, backend="local", local_couple=True,
+                   local_controlnet_depth="depth [abc]", style="oil")
+        sent = {}
+        with mock.patch.object(self.ig, "a1111", lambda ep, body, c: sent.update(body) or b"img"):
+            self.ig.generate("a tavern brawl", "action", 1, cfg, figures=[
+                ("humanoid-short:left", "a dwarf"), ("quadruped:right", "an ash hound")])
+        self.assertEqual(sent["prompt"].split("\n"), ["a tavern brawl", "a dwarf, oil", "an ash hound, oil"])
+        scripts = sent["alwayson_scripts"]
+        self.assertIn("forge couple", scripts)
+        unit = scripts["ControlNet"]["args"][0]
+        self.assertEqual((unit["weight"], unit["guidance_end"]), (0.6, 0.4))
+
+    def test_figures_fold_into_one_prompt_without_couple(self):
+        from unittest import mock
+        cfg = dict(self.ig.DEFAULTS, backend="local", local_couple=False)
+        sent = {}
+        with mock.patch.object(self.ig, "a1111", lambda ep, body, c: sent.update(body) or b"img"):
+            self.ig.generate("a tavern brawl", "action", 1, cfg, figures=[
+                ("humanoid-short:left", "a dwarf"), ("quadruped:right", "an ash hound")])
+        self.assertEqual(sent["prompt"], "a tavern brawl, a dwarf, an ash hound")
+        self.assertNotIn("alwayson_scripts", sent, "no depth model configured either")
 
     def test_compose_is_ignored_without_a_depth_model(self):
         self.assertFalse(self.ig.compose_usable(dict(self.ig.DEFAULTS, backend="local")))

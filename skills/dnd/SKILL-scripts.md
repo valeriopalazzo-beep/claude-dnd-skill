@@ -586,10 +586,12 @@ python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --kind action --subject "Lllooo
   --prompt "stout dwarf warrior, braided black beard, chain mail, greataxe raised high, dark tavern" \
   --caption "Lllooo alza l'ascia"
 
-# Two subjects: pin where each goes (depth ControlNet, local backend). Creature first in the prompt.
-python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --kind action --subject "Il segugio salta su Lllooo" \
-  --prompt "a snarling hound made of cracked grey ash leaping at a stout black-bearded dwarf with a greataxe, dark tavern" \
-  --compose "quadruped:right:large, humanoid-short:left:large" --caption "Il segugio salta addosso a Lllooo"
+# Two subjects: one --figure each (shape:position:size | its own description); --prompt = the whole scene.
+python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --kind action --subject "Lllooo spacca il segugio" \
+  --prompt "a dwarf warrior cleaving a fire elemental hound with a greataxe in a dark medieval tavern" \
+  --figure "humanoid-short:left:large | stout dwarf warrior facing right, braided black beard, chain mail, swinging a huge greataxe" \
+  --figure "quadruped:right:large | fire elemental hound facing left, body of cracked black charcoal and grey ash, glowing lava cracks" \
+  --caption "L'ascia di Lllooo spacca il segugio"
 
 python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --kind item    --subject "Lama di Vessar" --prompt "..."
 
@@ -597,7 +599,7 @@ python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --list      # this campaign's i
 python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --status    # backend + keys (masked)
 ```
 
-`--subject` is the cache key — always use the canonical name from `npcs.md`. `action` never reuses the cache (each call is the next `--vN` of its subject). Kinds and framing: `portrait` head and shoulders · `monster` full body · `scene` wide establishing shot · `action` medium shot, motion · `item` single object. Keep prompts to one subject and one action (12–25 words); start PC prompts with their sheet's `**Image look:**` line. `--regenerate` makes a new version (`--v2`, …) when the old one is wrong. `--seed N` fixes the seed; the one used is stored in `media/index.json`. Exit code 1 + a stderr line on a backend failure; exit 0 with "images are off" when disabled.
+`--subject` is the cache key — always use the canonical name from `npcs.md`. `action` never reuses the cache (each call is the next `--vN` of its subject). `--figure` (repeatable, up to 4): on the local backend with `local_couple` each description is its own regional prompt (Forge Couple) and a light depth sketch places the silhouettes; elsewhere the descriptions are folded into the one prompt. `--compose SPEC` = positions only, one shared prompt. Kinds and framing: `portrait` head and shoulders · `monster` full body · `scene` wide establishing shot · `action` medium shot, motion · `item` single object. Keep prompts to one subject and one action (12–25 words); start PC prompts with their sheet's `**Image look:**` line. `--regenerate` makes a new version (`--v2`, …) when the old one is wrong. `--seed N` fixes the seed; the one used is stored in `media/index.json`. Exit code 1 + a stderr line on a backend failure; exit 0 with "images are off" when disabled.
 
 ---
 

@@ -171,6 +171,21 @@ def _draw(c: Canvas, shape: str, fx: float, size: float, facing: int) -> None:
         c.ellipse(cx, ground - h * 0.2, h * 0.3, h * 0.2, v)
 
 
+def regions(figures: list) -> list:
+    """Horizontal band (x0, x1), 0..1, for each figure, in the given order.
+
+    Bands split at the midpoints between neighbouring figures, so they tile the
+    width: each subject's own prompt (Forge Couple) rules its side of the picture.
+    """
+    order = sorted(range(len(figures)), key=lambda i: figures[i][1])
+    xs = [figures[i][1] for i in order]
+    cuts = [0.0] + [(a + b) / 2 for a, b in zip(xs, xs[1:])] + [1.0]
+    bands = [None] * len(figures)
+    for rank, i in enumerate(order):
+        bands[i] = (round(cuts[rank], 4), round(cuts[rank + 1], 4))
+    return bands
+
+
 def depth_png(spec: str, width: int, height: int) -> bytes:
     """Depth sketch for `spec` at width x height (rendered at half size: ControlNet rescales)."""
     figures = parse(spec)

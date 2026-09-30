@@ -82,6 +82,13 @@ DEFAULTS = {
     # full guidance keeps every subject where the sketch puts it.
     "compose_weight": 1.0,     # how strictly the silhouettes are followed
     "compose_end": 1.0,        # share of the steps that are guided
+    # --figure: one prompt per subject, each ruling its own band of the picture
+    # (Forge Couple extension, Advanced mode). With it the depth sketch only
+    # needs a light touch: at full strength its crude limbs became wooden planks.
+    "local_couple": False,
+    "couple_bg_weight": 0.5,   # weight of the whole-scene prompt under the bands
+    "couple_compose_weight": 0.6,
+    "couple_compose_end": 0.4,
     "gemini_model": "gemini-2.5-flash-image",
     "timeout": 180,
     # Battle-map art (map_render.py → map_art.py): auto | paint | tiles | off
@@ -283,18 +290,37 @@ def a1111(endpoint: str, body: dict, cfg: dict) -> bytes:
         return _a1111(endpoint, body, cfg)
 
 
+def _wait_idle(cfg: dict, timeout: float = 600) -> None:
+    """Block until the local server has no job running (GET /sdapi/v1/progress)."""
+    url = cfg["local_url"].rstrip("/") + "/sdapi/v1/progress?skip_current_image=true"
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            st = json.loads(_http(urllib.request.Request(url), 10)).get("state", {})
+            if not st.get("job_count"):
+                return
+        except (ImageError, ValueError):
+            pass
+        time.sleep(2)
+
+
 def _a1111(endpoint: str, body: dict, cfg: dict) -> bytes:
     url = cfg["local_url"].rstrip("/") + "/sdapi/v1/" + endpoint
     req = urllib.request.Request(url, data=json.dumps(body).encode(), method="POST",
                                  headers={"Content-Type": "application/json"})
-    for attempt in (1, 2):
+    # On this machine a request whose answer takes longer than ~100 s (model
+    # load, a ControlNet/extension switch) loses its connection while Forge
+    # carries on and finishes the job. Wait until Forge is idle, then ask again:
+    # everything is loaded by then and the retry is quick.
+    attempts = 3
+    for attempt in range(1, attempts + 1):
         try:
             raw = _http(req, max(cfg["timeout"], 300))
             break
         except ConnectionDropped:
-            if attempt == 2:
-                raise ImageError(f"local ({cfg['local_url']}): connection dropped twice") from None
-            time.sleep(3)   # first call after a checkpoint change: retry once
+            if attempt == attempts:
+                raise ImageError(f"local ({cfg['local_url']}): connection dropped {attempts} times") from None
+            _wait_idle(cfg)
         except ImageError as e:
             raise ImageError(f"local ({cfg['local_url']}): {e} — is Forge/A1111 running with --api?") from e
     try:
@@ -328,12 +354,39 @@ def compose_unit(spec: str, w: int, h: int, cfg: dict) -> dict:
             "control_mode": "Balanced", "pixel_perfect": False}
 
 
-def gen_local(prompt: str, kind: str, seed: int, cfg: dict, compose_spec: str = "") -> bytes:
+def couple_args(lines: int, bands: list, cfg: dict) -> list:
+    """Forge Couple script args, Advanced mode: line 1 = whole scene, then one band per figure."""
+    mapping = [[0.0, 1.0, 0.0, 1.0, float(cfg["couple_bg_weight"])]]
+    mapping += [[x0, x1, 0.0, 1.0, 1.0] for x0, x1 in bands]
+    assert len(mapping) == lines
+    # enable, compatibility, mode, separator, direction, global effect, its weight,
+    # mapping, common-prompt syntax, debug, definitions in prompt, 6 tile slots
+    return [True, False, "Advanced", "\n", "Horizontal", "None", 0.5, mapping, "{ }",
+            False, False, None, None, None, None, None, None]
+
+
+def gen_local(prompt: str, kind: str, seed: int, cfg: dict, compose_spec: str = "",
+              figures: Optional[list] = None) -> bytes:
     w, h = _size_for(kind, int(cfg["local_max_side"]))
     body = {"prompt": prompt, "negative_prompt": NEGATIVE, "width": w,
             "height": h, "seed": seed, **local_params(cfg)}
-    if compose_spec:
-        body["alwayson_scripts"] = {"ControlNet": {"args": [compose_unit(compose_spec, w, h, cfg)]}}
+    scripts = {}
+    if figures and cfg.get("local_couple"):
+        import compose
+        specs = ", ".join(spec for spec, _ in figures)
+        bands = compose.regions(compose.parse(specs))
+        style = cfg["style"]
+        lines = [prompt] + [f"{desc}, {style}" if style else desc for _, desc in figures]
+        body["prompt"] = "\n".join(lines)
+        scripts["forge couple"] = {"args": couple_args(len(lines), bands, cfg)}
+        light = dict(cfg, compose_weight=cfg["couple_compose_weight"],
+                     compose_end=cfg["couple_compose_end"])
+        if compose_usable(cfg) and float(light["compose_weight"]) > 0:
+            scripts["ControlNet"] = {"args": [compose_unit(specs, w, h, light)]}
+    elif compose_spec:
+        scripts["ControlNet"] = {"args": [compose_unit(compose_spec, w, h, cfg)]}
+    if scripts:
+        body["alwayson_scripts"] = scripts
     return a1111("txt2img", body, cfg)
 
 
@@ -373,10 +426,19 @@ def compose_usable(cfg: dict) -> bool:
     return cfg["backend"] == "local" and bool(cfg.get("local_controlnet_depth"))
 
 
-def generate(prompt: str, kind: str, seed: int, cfg: dict, compose_spec: str = "") -> bytes:
+def generate(prompt: str, kind: str, seed: int, cfg: dict, compose_spec: str = "",
+             figures: Optional[list] = None) -> bytes:
+    """`figures` = [(compose spec, description), ...] - one prompt per subject where supported."""
     backend = cfg["backend"]
     if backend not in BACKENDS:
         raise ImageError(f"unknown backend {backend!r} (pollinations | local | gemini | off)")
+    if figures:
+        if backend == "local" and cfg.get("local_couple"):
+            return gen_local(prompt, kind, seed, cfg, figures=figures)
+        # No regional prompting: fold the descriptions into the one prompt,
+        # and still pin the positions when a depth model is there.
+        prompt = ", ".join([prompt] + [d for _, d in figures])
+        compose_spec = ", ".join(s for s, _ in figures) if compose_usable(cfg) else ""
     if compose_spec:
         if compose_usable(cfg):
             return gen_local(prompt, kind, seed, cfg, compose_spec)
@@ -409,6 +471,10 @@ def main() -> int:
     ap.add_argument("--subject", help="who/what this is — the cache key (e.g. the NPC's name)")
     ap.add_argument("--prompt", help="visual description, in English for best results")
     ap.add_argument("--caption", help="caption on the display (default: the subject)")
+    ap.add_argument("--figure", action="append", metavar="SHAPE:POS[:SIZE] | DESCRIPTION",
+                    help="one subject and its own prompt, e.g. "
+                         "\"humanoid-short:left:large | stout dwarf, black beard, greataxe\"; "
+                         "repeat per subject (local: Forge Couple + depth ControlNet)")
     ap.add_argument("--compose", metavar="SPEC",
                     help="where each subject goes, e.g. 'humanoid-short:left, quadruped:right' "
                          "(compose.py; local backend + depth ControlNet)")
@@ -440,6 +506,9 @@ def main() -> int:
             gk = None
         print(f"gemini:        key {_mask(gk)}, model {cfg['gemini_model']}")
         import map_art
+        print(f"figures:       {'Forge Couple' if cfg.get('local_couple') else 'off (set local_couple)'}"
+              f" (scene weight {cfg['couple_bg_weight']}, depth {cfg['couple_compose_weight']}"
+              f" until {cfg['couple_compose_end']})")
         print(f"compose:       {cfg['local_controlnet_depth'] or 'off (set local_controlnet_depth)'}"
               f" (weight {cfg['compose_weight']}, until {cfg['compose_end']})")
         print(f"map art:       {cfg['map_art']} → {map_art.resolve_mode(cfg['map_art'], cfg['backend'])}"
@@ -497,14 +566,25 @@ def main() -> int:
             ap.error("--prompt is required to generate a new image")
         seed = args.seed if args.seed is not None else random.randint(1, 2**31 - 1)
         full = build_prompt(args.kind, args.prompt, cfg["style"])
-        if args.compose:
+        figures = []
+        if args.compose or args.figure:
             import compose
             try:
-                compose.parse(args.compose)
+                if args.compose:
+                    compose.parse(args.compose)
+                for f in args.figure or []:
+                    spec, sep, desc = f.partition("|")
+                    if not sep or not desc.strip():
+                        raise compose.ComposeError(
+                            f"--figure needs 'SHAPE:POS[:SIZE] | description', got {f!r}")
+                    compose.parse(spec)
+                    figures.append((spec.strip(), desc.strip()))
+                if figures:
+                    compose.parse(", ".join(s for s, _ in figures))   # at most 4 in all
             except compose.ComposeError as e:
-                ap.error(f"--compose: {e}")
+                ap.error(str(e))
         try:
-            data = generate(full, args.kind, seed, cfg, args.compose or "")
+            data = generate(full, args.kind, seed, cfg, args.compose or "", figures or None)
             ext = _ext_for(data)
         except ImageError as e:
             print(f"image_gen: {e}", file=sys.stderr)
@@ -516,6 +596,7 @@ def main() -> int:
             "file": fname, "kind": args.kind, "subject": args.subject,
             "prompt": args.prompt, "full_prompt": full, "seed": seed,
             **({"compose": args.compose} if args.compose and compose_usable(cfg) else {}),
+            **({"figures": [f"{s} | {d}" for s, d in figures]} if figures else {}),
             "backend": cfg["backend"],
             "created": _dt.datetime.now().isoformat(timespec="seconds"),
         })

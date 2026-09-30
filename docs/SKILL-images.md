@@ -81,6 +81,21 @@ Even SDXL tends to drop the second figure of a scene. `--compose "humanoid-short
 
 With SDXL Lightning at 6 steps, weaker guidance (0.8 until 60% of the steps) was ignored; full guidance works. Put the subject most likely to vanish first in the prompt. Only solid figures belong in the spec — an explosion or a portal sketched as depth comes back as metal spheres; describe effects in the prompt. `python3 display/compose.py "<spec>" --out sketch.png` shows the sketch.
 
+### One prompt per subject (`--figure`, local only)
+
+Positions alone are not enough: with one shared prompt SDXL mixes the subjects' traits (the dwarf's chain mail ended up on the hound). `--figure "humanoid-short:left:large | stout dwarf, black beard, greataxe"`, repeated per subject, gives each one its own prompt over its own band of the picture with the [Forge Couple](https://github.com/Haoming02/sd-forge-couple) extension, and a light depth sketch (weight 0.6 until 40% of the steps) keeps the silhouettes in place. `--prompt` describes the whole scene.
+
+1. `git clone https://github.com/Haoming02/sd-forge-couple` into Forge's `extensions/`, restart Forge.
+2. Configure:
+
+```json
+{ "local_couple": true, "couple_bg_weight": 0.5, "couple_compose_weight": 0.6, "couple_compose_end": 0.4 }
+```
+
+Set `couple_compose_weight` to 0 to use Forge Couple without the depth sketch. Without `local_couple`, `--figure` still works: the descriptions are joined into the one prompt.
+
+Troubleshooting on a GTX 1660: a request whose answer takes longer than about 100 s (a model or ControlNet load) can lose its connection while Forge finishes the job anyway; image_gen.py waits until Forge is idle and asks again. To see Forge's own errors, start it with its output in a file: `cmd /c run.bat > forge.log 2>&1`.
+
 ### Gemini
 
 Uses the same key as narration TTS (`DND_IMAGE_KEY`, else `DND_TTS_KEY` / `GEMINI_API_KEY` / `~/.config/claude-dnd/tts.key`). Image models are **not** on the Gemini free tier — enable billing first.
