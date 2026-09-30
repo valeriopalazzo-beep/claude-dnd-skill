@@ -120,7 +120,24 @@
    "25/100 ft": "7,5/30 m",
    "100/400 ft": "30/120 m",
    "150/600 ft": "45/180 m",
-   "5/15 ft": "1,5/4,5 m"
+   "5/15 ft": "1,5/4,5 m",
+   "Touch": "Contatto",
+   "Self": "Incantatore",
+   "60 feet": "18 metri",
+   "30 feet": "9 metri",
+   "120 feet": "36 metri",
+   "90 feet": "27 metri",
+   "10 feet": "3 metri",
+   "150 feet": "45 metri",
+   "300 feet": "90 metri",
+   "1 mile": "1,5 km",
+   "500 feet": "150 metri",
+   "100 feet": "30 metri",
+   "Sight": "Vista",
+   "Special": "Speciale",
+   "500 miles": "750 km",
+   "Unlimited": "Illimitata",
+   "5 feet": "1,5 metri"
   },
   "throw_range": {
    "20/60 ft": "6/18 m",
@@ -137,6 +154,58 @@
    "AC 17 + DEX": "CA 17 + DES",
    "AC 18 + DEX": "CA 18 + DES",
    "AC 2 + DEX": "CA 2 + DES"
+  },
+  "school": {
+   "Evocation": "Invocazione",
+   "Transmutation": "Trasmutazione",
+   "Conjuration": "Evocazione",
+   "Abjuration": "Abiurazione",
+   "Enchantment": "Ammaliamento",
+   "Divination": "Divinazione",
+   "Illusion": "Illusione",
+   "Necromancy": "Necromanzia"
+  },
+  "casting_time": {
+   "1 action": "1 azione",
+   "1 minute": "1 minuto",
+   "10 minutes": "10 minuti",
+   "1 bonus action": "1 azione bonus",
+   "1 hour": "1 ora",
+   "1 reaction": "1 reazione",
+   "8 hours": "8 ore",
+   "24 hours": "24 ore",
+   "12 hours": "12 ore"
+  },
+  "duration": {
+   "Instantaneous": "Istantanea",
+   "Up to 1 minute": "Fino a 1 minuto",
+   "Up to 10 minutes": "Fino a 10 minuti",
+   "Up to 1 hour": "Fino a 1 ora",
+   "1 hour": "1 ora",
+   "1 minute": "1 minuto",
+   "8 hours": "8 ore",
+   "24 hours": "24 ore",
+   "Until dispelled": "Finché non viene dissolto",
+   "1 round": "1 round",
+   "10 minutes": "10 minuti",
+   "10 days": "10 giorni",
+   "Up to 24 hours": "Fino a 24 ore",
+   "Special": "Speciale",
+   "Up to 8 hours": "Fino a 8 ore",
+   "7 days": "7 giorni",
+   "30 days": "30 giorni",
+   "Up to 2 hours": "Fino a 2 ore",
+   "Up to 1 round": "Fino a 1 round"
+  },
+  "classes": {
+   "Wizard": "Mago",
+   "Sorcerer": "Stregone",
+   "Bard": "Bardo",
+   "Druid": "Druido",
+   "Cleric": "Chierico",
+   "Warlock": "Warlock",
+   "Ranger": "Ranger",
+   "Paladin": "Paladino"
   }
  }
 }
