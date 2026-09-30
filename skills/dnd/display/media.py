@@ -34,7 +34,7 @@ CAMP_FILE = rt(".campaign")
 # The server re-validates every name against this same pattern before it
 # touches the filesystem — keep the two in sync (dnd-display-app.py).
 MEDIA_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,120}\.(?:png|jpe?g|webp|svg)$")
-KINDS = ("portrait", "monster", "scene", "item", "map")
+KINDS = ("portrait", "monster", "scene", "action", "item", "map")
 
 
 def safe_campaign(name: str) -> str:

@@ -15,7 +15,9 @@ Three backends, chosen in ~/.config/claude-dnd/images.json (or --backend):
 
 Every image is cached per (kind, subject) in the campaign's media folder, so a
 recurring NPC keeps the SAME face: asking again for an existing subject just
-re-shows the file. --regenerate makes a new version.
+re-shows the file. --regenerate makes a new version. `action` images are the
+exception: each one is a single moment, so they are always generated anew
+(as the next --vN of their subject).
 
 Usage:
     python3 image_gen.py --kind portrait --subject "Vesna" \\
@@ -75,10 +77,14 @@ KIND_PRESETS = {
     "portrait": ("fantasy character portrait, head and shoulders, {p}", 768, 1024, "3:4"),
     "monster":  ("fantasy creature, full body, menacing, {p}", 1024, 1024, "1:1"),
     "scene":    ("fantasy environment, wide establishing shot, {p}", 1344, 768, "16:9"),
+    # A moment of the fight or a dramatic event (a blow, an explosion, a portal
+    # opening). Close framing keeps SD 1.5 on the action instead of drifting
+    # into a landscape the way "establishing shot" does.
+    "action":   ("dynamic fantasy action illustration, medium shot, motion, {p}", 1216, 832, "3:2"),
     "item":     ("fantasy item, single object centred on a plain background, {p}", 768, 768, "1:1"),
     "texture":  ("{p}", 512, 512, "1:1"),     # battle-map terrain, used by map_art.py
 }
-CLI_KINDS = ("item", "monster", "portrait", "scene")
+CLI_KINDS = ("action", "item", "monster", "portrait", "scene")
 NEGATIVE = "text, letters, watermark, signature, logo, frame, blurry, lowres, deformed, extra limbs"
 
 
@@ -358,7 +364,7 @@ def main() -> int:
     caption = args.caption if args.caption is not None else args.subject
     versions = existing_versions(d, args.kind, subj)
 
-    if versions and not args.regenerate:
+    if versions and not args.regenerate and args.kind != "action":
         fname = versions[-1].name
         print(f"image_gen: reusing {fname} (use --regenerate for a new one)", file=sys.stderr)
     else:

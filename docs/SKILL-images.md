@@ -17,11 +17,13 @@ The DM writes the layout as a text grid; `display/map_render.py` places grid, co
 { "backend": "local", "map_art": "auto", "map_denoise": 0.6 }
 ```
 
+**Effects.** Events on the field — an explosion, a portal, spreading fire, a poison cloud — are extra legend lines such as `@ 9,8 r1 fire | Esplosione`. They are tinted over the map without changing the terrain, so the cached painting is reused and the updated map appears instantly.
+
 `map_denoise` (paint only): lower keeps the layout more faithfully, higher gives the model more freedom. Art is cached per terrain in `<campaign>/media/` (`mapart-*`, `maptex-*`), so moving tokens never regenerates it. The first time a place is shown, the plain map appears at once and the painted one replaces it. If the backend fails, the plain map stays.
 
 ## Generated pictures — pick a backend
 
-`display/image_gen.py` generates images and caches them per subject in `<campaign>/media/`, so a recurring NPC keeps the same face. Choose a backend in `~/.config/claude-dnd/images.json`:
+`display/image_gen.py` generates images and caches them per subject in `<campaign>/media/`, so a recurring NPC keeps the same face. Kinds: `portrait`, `monster`, `scene` (wide establishing shot of a place), `action` (a moment of the fight or a dramatic event, close framing — always a fresh image) and `item`. With a small local model keep prompts short (one subject, one action); each character sheet has an `Image look` line that starts every prompt about that character, so they stay recognisable. Choose a backend in `~/.config/claude-dnd/images.json`:
 
 ```json
 { "backend": "pollinations" }

@@ -472,7 +472,7 @@ def main() -> None:
         help="Show an existing file from the campaign's media/ folder "
              "(used to replay `image` entries from session_tail.json).")
     parser.add_argument("--image-kind", default="scene",
-        choices=["portrait", "monster", "scene", "item", "map"],
+        choices=["portrait", "monster", "scene", "action", "item", "map"],
         help="Kind for --image (default scene)")
     parser.add_argument("--image-caption", default="", metavar="TEXT", help="Caption for --image")
     parser.add_argument("--image-subject", default="", metavar="TEXT", help="Subject for --image")

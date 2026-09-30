@@ -493,20 +493,25 @@ This fires a green-bordered block in the companion feed showing each character's
 
 Only when the display is running. Syntax: `SKILL-scripts.md` → *Battle Maps* / *Generated Images*.
 
-**Battle maps (`map_render.py`).** Draw one when combat starts, and when the party enters a space where position matters (ambush, trap room, chase, siege). Re-send it with the same title when positions have changed meaningfully — once per round at most, never every turn. Keep it ≤ 20×15, faithful to what the narration established (exits, cover, light sources), and never reveal hidden things (unspotted traps, invisible or hidden creatures, secret doors) — the map shows what the characters perceive.
+**Pictures are part of the narration, not a garnish.** The table wants to *see* what you describe: the people they meet, the places they reach, and above all the moments that matter in a fight. Illustrate generously — several images per scene is normal when things happen.
 
-You write the layout and the tokens; the image backend paints the terrain's look, and the script puts grid, coordinates and tokens on top in the exact squares. Add an `art:` header line — **English**, what the place looks like (materials, mood, light), no names or game terms — and keep it identical on every re-send of that place. The art is cached per terrain: a re-send where only tokens moved is instant and goes in the normal send batch. A new place, or changed walls/water/terrain, takes 5–90 s: run that call as its **own Bash call with `run_in_background: true`** — a plain map appears at once and the painted one replaces it. If the art fails, the plain map stays; carry on and never mention it in the fiction.
+**Battle maps (`map_render.py`).** Draw one when combat starts, and when the party enters a space where position matters (ambush, trap room, chase, siege). Re-send it with the same title **whenever the field changes**: someone moves meaningfully, a creature arrives or dies, or something happens in a place — an explosion, a portal opening, a fire spreading, a cloud of poison, a wall collapsing. Mark those events with an effect line (`@ col,row r1 fire | Esplosione di cenere`): the area is tinted over the map without touching the terrain, so the painted art stays cached and the re-send is instant and goes in the normal send batch. Drop the effect line on the next re-send once it's over. Keep maps ≤ 20×15, faithful to what the narration established (exits, cover, light sources), and never reveal hidden things (unspotted traps, invisible or hidden creatures, secret doors) — the map shows what the characters perceive.
 
-**Pictures (`image_gen.py`).** Generate when:
-- a named NPC who will recur first appears → `portrait`
-- a new creature type first appears in combat → `monster`
-- the party first arrives somewhere significant (a town, a dungeon mouth, a set piece) → `scene`
-- a notable magic item or artifact is found → `item`
-- a player asks what something looks like
+You write the layout and the tokens; the image backend paints the terrain's look, and the script puts grid, coordinates, tokens and effects on top in the exact squares. Add an `art:` header line — **English**, what the place looks like (materials, mood, light), no names or game terms — and keep it identical on every re-send of that place. A new place, or changed walls/water/terrain (a collapse is a terrain change; a fireball is an effect), takes 5–90 s: run that call as its **own Bash call with `run_in_background: true`** — a plain map appears at once and the painted one replaces it. If the art fails, the plain map stays; carry on and never mention it in the fiction.
 
-At most one new image per scene; none for one-off extras. Prompts in **English**, physical description only (species, age, build, clothing, distinguishing marks, mood, setting) — no names, no game terms, no text in the image — and consistent with `npcs.md`. `--subject` = the canonical name, so the next call re-shows the same face instead of generating a new one. Caption in the campaign language.
+**Pictures (`image_gen.py`).** Generate:
+- `portrait` — a named NPC who will recur, on first appearance
+- `monster` — a new creature type, the first time it shows up
+- `scene` — the party first arrives somewhere significant (a town, a dungeon mouth, a set piece); wide establishing shot
+- `action` — **the moments of the fight and the dramatic events**: a PC's attack or spell (*Lllooo swings the axe at the hound*), a decisive blow, a monster's big move, an explosion, a portal opening, a collapse, a creature destroyed. One per salient beat, not every die roll: in combat, roughly one per round, on the most dramatic beat of that round.
+- `item` — a notable magic item or artifact is found
+- anything a player asks to see
 
-Generation takes 5–60 s: run `image_gen.py` as its **own Bash call with `run_in_background: true`**, then carry on narrating — the image lands in the feed when ready. A map re-send with cached art goes in the normal send batch, right after the narration that sets the scene. If `image_gen.py` fails or reports images are off, stop calling it for the rest of the session and never mention it in the fiction.
+**Show the outcome, not the attempt.** Generate the action image *after* the roll resolves and paint what actually happened: a hit shows the axe biting, a miss shows the hound twisting away, a failed save shows the character engulfed, a success shows them diving clear. Never illustrate a result the dice didn't give.
+
+**Prompts** — **English**, physical description only, no names, no game terms, no text in the image. **Short: one subject, one action, 12–25 words.** Small local models (SD 1.5) drop details from long prompts and drift into landscapes; a tight prompt keeps the subject in frame. For PCs, start the prompt with the character's `**Image look:**` line from their sheet (English, ≤ 15 words — write one at character creation if missing), verbatim every time, so the same hero is recognisable across images. NPC descriptions stay consistent with `npcs.md`. `--subject` = the canonical name for portraits/monsters/scenes/items (the next call re-shows the same face instead of generating a new one); for `action` it is a short slug of the beat and a new image is always made. Caption in the campaign language.
+
+Generation takes 5–60 s each: run every `image_gen.py` call as its **own Bash call with `run_in_background: true`**, then carry on narrating — the image lands in the feed when ready. Several can be queued at once. If `image_gen.py` fails or reports images are off, stop calling it for the rest of the session and never mention it in the fiction.
 
 ---
 

@@ -36,6 +36,14 @@ Tokens: any letter. Legend line `X: Name | side` — side is one of
 pc, ally, npc, foe, neutral. Without a legend entry, UPPERCASE = pc and
 lowercase = foe, labelled with the letter itself.
 
+Effects (in the legend section): what just happened on the field, drawn as a
+tinted area over the map without touching the terrain, so painted art stays
+cached and the re-send is instant. Coordinates are the ruler's (column,row):
+    @ 9,8 r1 fire | Esplosione di cenere     9,8 plus 1 square around (3x3)
+    @ 4,2-6,3 magic | Portale                a rectangle, corner to corner
+    @ 12,5 light                             one square, no label
+Kinds: fire, magic, cold, poison, acid, lightning, dark, light, blood, smoke.
+
 Usage:
     python3 map_render.py << 'DNDEND'  ...map...  DNDEND      # render + show
     python3 map_render.py --file map.txt --no-send             # render only
@@ -47,6 +55,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import os
+import re
 import sys
 from dataclasses import dataclass, field
 from xml.sax.saxutils import escape
@@ -77,6 +86,19 @@ SIDE_ALIASES = {"enemy": "foe", "monster": "foe", "hostile": "foe",
                 "player": "pc", "friend": "ally", "friendly": "ally"}
 
 HEADER_KEYS = ("title", "scale", "titolo", "scala", "art")
+# effect kind → (fill, glyph)
+EFFECTS = {
+    "fire": ("#ff6a1a", "✹"), "magic": ("#9b5de5", "✦"), "cold": ("#5fc4ef", "❄"),
+    "poison": ("#5fae3a", "☠"), "acid": ("#b5d334", "☠"), "lightning": ("#ffd93d", "ϟ"),
+    "dark": ("#1b1726", "●"), "light": ("#fff1a8", "☀"), "blood": ("#a4161a", "✖"),
+    "smoke": ("#8d8d8d", "≋"),
+}
+EFFECT_ALIASES = {"portal": "magic", "arcane": "magic", "explosion": "fire", "flame": "fire",
+                  "ice": "cold", "frost": "cold", "shadow": "dark", "darkness": "dark",
+                  "holy": "light", "radiant": "light", "thunder": "lightning", "fog": "smoke",
+                  "gas": "poison"}
+_EFFECT_RE = re.compile(r"^@\s*(\d+)\s*,\s*(\d+)(?:\s*-\s*(\d+)\s*,\s*(\d+))?"
+                        r"(?:\s+r(\d+))?(?:\s+([A-Za-z]+))?\s*(?:\|\s*(.*))?$")
 TEXTURED = ("floor", "wall", "water", "grass", "rough")   # map_art.TEXTURED
 PAINT_MARKERS = ("door", "trap", "stairs_up", "stairs_down")  # kept visible over painted art
 TEX_TILE = 4 * CELL   # one texture spans 4x4 squares; its seams fall on grid lines
@@ -98,7 +120,42 @@ class MapSpec:
     art: str = ""        # English visual description for the generated terrain
     rows: list = field(default_factory=list)
     legend: dict = field(default_factory=dict)   # letter → (name, side)
+    effects: list = field(default_factory=list)  # Effect, drawn over terrain, under tokens
     warnings: list = field(default_factory=list)
+
+
+@dataclass
+class Effect:
+    x0: int   # 0-based, inclusive
+    y0: int
+    x1: int
+    y1: int
+    kind: str
+    label: str = ""
+
+
+def _parse_effect(line: str, w: int, h: int, warnings: list):
+    m = _EFFECT_RE.match(line.strip())
+    if not m:
+        warnings.append(f"effect line not understood: {line.strip()!r}")
+        return None
+    c0, r0, c1, r1, rad, kind, label = m.groups()
+    kind = (kind or "fire").lower()
+    kind = EFFECT_ALIASES.get(kind, kind)
+    if kind not in EFFECTS:
+        warnings.append(f"unknown effect kind {kind!r} — drawn as magic")
+        kind = "magic"
+    x0, y0 = int(c0) - 1, int(r0) - 1
+    x1, y1 = (int(c1) - 1, int(r1) - 1) if c1 else (x0, y0)
+    x0, x1 = sorted((x0, x1))
+    y0, y1 = sorted((y0, y1))
+    r = int(rad or 0)
+    x0, y0, x1, y1 = x0 - r, y0 - r, x1 + r, y1 + r
+    x0, y0, x1, y1 = max(0, x0), max(0, y0), min(w - 1, x1), min(h - 1, y1)
+    if x0 > x1 or y0 > y1:
+        warnings.append(f"effect outside the map: {line.strip()!r}")
+        return None
+    return Effect(x0, y0, x1, y1, kind, (label or "").strip())
 
 
 def parse(text: str) -> MapSpec:
@@ -149,6 +206,11 @@ def parse(text: str) -> MapSpec:
 
     for sec in sections[1:]:
         for l in sec:
+            if l.strip().startswith("@"):
+                eff = _parse_effect(l, width, len(spec.rows), spec.warnings)
+                if eff:
+                    spec.effects.append(eff)
+                continue
             if ":" not in l:
                 continue
             k, v = l.split(":", 1)
@@ -275,6 +337,20 @@ def _draw_token(ch: str, spec: MapSpec, x: int, y: int) -> list:
     ]
 
 
+def _draw_effect(e: Effect) -> list:
+    fill, glyph = EFFECTS[e.kind]
+    px, py = PAD + e.x0 * CELL, PAD + e.y0 * CELL
+    w, h = (e.x1 - e.x0 + 1) * CELL, (e.y1 - e.y0 + 1) * CELL
+    cx, cy = px + w / 2, py + h / 2
+    out = [f'<g><title>{escape(e.label or e.kind)}</title>',
+           f'<rect x="{px + 2}" y="{py + 2}" width="{w - 4}" height="{h - 4}" rx="6" fill="{fill}" '
+           f'fill-opacity="0.42" stroke="{fill}" stroke-width="3" stroke-dasharray="7 4"/>',
+           f'<text x="{cx}" y="{cy + 11}" font-size="{min(30, 14 + 6 * min(w, h) // CELL)}" '
+           f'text-anchor="middle" fill="{fill}" stroke="#000" stroke-width="0.8" '
+           f'opacity="0.9">{glyph}</text></g>']
+    return out
+
+
 def kind_grid(spec: MapSpec) -> list:
     """Terrain kind of every square (tokens stand on floor) — what map_art paints."""
     return [[_cell_kind(spec, x, y) for x in range(len(spec.rows[0]))]
@@ -312,9 +388,11 @@ def render_svg(spec: MapSpec, art=None) -> str:
     order = list(SIDES)   # pc, ally, npc, foe, neutral
     seen.sort(key=lambda ch: order.index(
         spec.legend.get(ch, (ch, "pc" if ch.isupper() else "foe"))[1]))
+    labelled = [e for e in spec.effects if e.label]
     cols = max(1, min(3, (grid_w + PAD) // 190))
-    leg_rows = (len(seen) + cols - 1) // cols
-    legend_h = (leg_rows * 24 + 16) if seen else 0
+    n_items = len(seen) + len(labelled)
+    leg_rows = (n_items + cols - 1) // cols
+    legend_h = (leg_rows * 24 + 16) if n_items else 0
     scale_h = 20 if spec.scale else 0
 
     total_w = PAD + grid_w + 12
@@ -345,6 +423,8 @@ def render_svg(spec: MapSpec, art=None) -> str:
             if painted or _cell_kind(spec, x, y) != "void":
                 out.append(f'<rect x="{PAD + x * CELL}" y="{PAD + y * CELL}" width="{CELL}" '
                            f'height="{CELL}" fill="none" {grid}/>')
+    for e in spec.effects:
+        out.extend(_draw_effect(e))
     for y, row in enumerate(spec.rows):
         for x, ch in enumerate(row):
             if ch.isalpha():
@@ -369,6 +449,14 @@ def render_svg(spec: MapSpec, art=None) -> str:
         out.append(f'<text x="{lx + 9}" y="{yy - 0.5}" font-size="11" font-weight="700" '
                    f'text-anchor="middle" fill="#fff">{escape(ch)}</text>')
         out.append(f'<text x="{lx + 24}" y="{yy}" font-size="13" fill="{C["ink"]}">{escape(name[:28])}</text>')
+    for j, e in enumerate(labelled, start=len(seen)):
+        fill, glyph = EFFECTS[e.kind]
+        lx = PAD + (j % cols) * col_w
+        yy = ly + (j // cols) * 24
+        out.append(f'<rect x="{lx}" y="{yy - 14}" width="18" height="18" rx="4" fill="{fill}" '
+                   f'fill-opacity="0.6" stroke="{fill}" stroke-width="2" stroke-dasharray="4 2"/>')
+        out.append(f'<text x="{lx + 24}" y="{yy}" font-size="13" font-style="italic" '
+                   f'fill="{C["ink"]}">{escape(e.label[:28])}</text>')
     if spec.scale:
         out.append(f'<text x="{total_w - 12}" y="{total_h - 8}" font-size="11" text-anchor="end" '
                    f'font-style="italic" fill="{C["ink"]}" opacity="0.7">{escape(spec.scale)}</text>')

@@ -542,6 +542,16 @@ python3 ${CLAUDE_SKILL_DIR}/display/map_render.py --symbols   # print the full k
 
 Tokens are letters. Legend line `X: Name | side`, side ∈ `pc`, `ally`, `npc`, `foe`, `neutral`. Unlisted letters: UPPERCASE = pc, lowercase = foe. Header and legend are optional; `---` separates the three parts. Max 60×60 — keep maps ≤ 20×15 so they read on a phone.
 
+**Effects** — what just happened on the field, as extra lines in the legend part. Coordinates are the map's ruler (column,row, from 1):
+
+```
+@ 9,8 r1 fire | Esplosione di cenere      # 9,8 and one square around it (3×3)
+@ 4,2-6,3 magic | Portale                 # rectangle, corner to corner
+@ 12,5 light                              # one square, no legend entry
+```
+
+Kinds: `fire` `magic` `cold` `poison` `acid` `lightning` `dark` `light` `blood` `smoke` (aliases: explosion→fire, portal/arcane→magic, ice→cold, shadow→dark, holy/radiant→light, fog→smoke, gas→poison). Effects are drawn over the art and under the tokens and never change the terrain, so a re-send with an effect uses the cached painting and is instant. Labelled effects are listed in the map legend. Leave the line out on the next re-send once the effect is gone.
+
 Re-sending a map with the same title (or `--name <id>`) marks the older copy in the feed as superseded. `--caption TEXT` overrides the caption, `--no-send` only saves, `--out file.svg` writes a plain map elsewhere.
 
 **Terrain art.** `art:` (English, optional) describes the look; without it the look is guessed from the symbols. How it is made depends on the backend (`map_art` in `images.json`, or `--art`):
@@ -570,13 +580,16 @@ python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --kind portrait --subject "Vesn
 
 python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --kind monster --subject "Ghoul" --prompt "..."
 python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --kind scene   --subject "Porto di Karsa" --prompt "..."
+
+# A moment of the fight / a dramatic event — always a new image; the outcome, after the roll
+python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --kind action --subject "Lllooo colpisce il segugio"   --prompt "stout red-bearded dwarf in chain mail, greataxe, splitting an ash hound in two, sparks"   --caption "L'ascia di Lllooo spacca il segugio"
 python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --kind item    --subject "Lama di Vessar" --prompt "..."
 
 python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --list      # this campaign's images + the prompts used
 python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --status    # backend + keys (masked)
 ```
 
-`--subject` is the cache key — always use the canonical name from `npcs.md`. `--regenerate` makes a new version (`--v2`, …) when the old one is wrong. `--seed N` fixes the seed; the one used is stored in `media/index.json`. Exit code 1 + a stderr line on a backend failure; exit 0 with "images are off" when disabled.
+`--subject` is the cache key — always use the canonical name from `npcs.md`. `action` never reuses the cache (each call is the next `--vN` of its subject). Kinds and framing: `portrait` head and shoulders · `monster` full body · `scene` wide establishing shot · `action` medium shot, motion · `item` single object. Keep prompts to one subject and one action (12–25 words); start PC prompts with their sheet's `**Image look:**` line. `--regenerate` makes a new version (`--v2`, …) when the old one is wrong. `--seed N` fixes the seed; the one used is stored in `media/index.json`. Exit code 1 + a stderr line on a backend failure; exit 0 with "images are off" when disabled.
 
 ---
 

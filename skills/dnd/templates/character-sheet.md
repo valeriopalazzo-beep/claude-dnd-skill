@@ -4,6 +4,7 @@
 ## Identity
 - **Race:** | **Class:** | **Level:** | **Background:**
 - **Alignment:** | **XP:** / <next level threshold>
+- **Image look:** <English, ≤ 15 words — how the character looks in pictures; reused verbatim in every image prompt>
 
 ## Character Pillar
 - **Player's sentence:** *"<the raw one-sentence answer to "what should the DM know about you?">"*

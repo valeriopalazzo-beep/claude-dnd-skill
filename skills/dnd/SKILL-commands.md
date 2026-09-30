@@ -565,7 +565,7 @@ Default to `Step by step` if the question is dismissed. Either path lands in the
 4. Apply racial bonuses. Run `character.py calc` to derive all secondary stats.
 5. Ask: Fighting Style (Fighter/Paladin/Ranger), spells (if caster)
 6. Assign starting equipment per class + background
-7. Write to `characters/<name>.md` using `templates/character-sheet.md`; set `## Campaign History → Origin campaign`
+7. Write to `characters/<name>.md` using `templates/character-sheet.md`; set `## Campaign History → Origin campaign`. Fill `**Image look:**` with a short English description (≤ 15 words: species, build, hair/beard, armour, signature weapon) derived from the build and anything the player said about their appearance — every image of this character starts from it.
 8. Add to `state.md` party line
 9. Mirror to global roster: `cp characters/<name>.md ~/.claude/dnd/characters/<name>.md`
 10. Run supplemental builder to fetch any non-SRD spells/features the character uses:

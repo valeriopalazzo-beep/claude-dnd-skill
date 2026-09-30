@@ -75,6 +75,27 @@ class MapRenderTests(unittest.TestCase):
         self.assertNotIn("<script>", svg)
         self.assertIn("&lt;script&gt;", svg)
 
+    def test_effects_are_parsed_with_radius_rectangle_and_clipping(self):
+        spec = self.mr.parse("######\n#A...#\n#..g.#\n######\n---\n"
+                             "@ 4,3 r1 explosion | Boom\n@ 2,2-3,2 portal\n@ 1,1 r9 cold\n"
+                             "@ 30,30 fire\n@ nonsense")
+        boom, portal, cold = spec.effects
+        self.assertEqual((boom.x0, boom.y0, boom.x1, boom.y1, boom.kind, boom.label),
+                         (2, 1, 4, 3, "fire", "Boom"), "r1 = one square around; 'explosion' is fire")
+        self.assertEqual((portal.x0, portal.x1, portal.kind), (1, 2, "magic"))
+        self.assertEqual((cold.x0, cold.y0, cold.x1, cold.y1), (0, 0, 5, 3), "clipped to the map")
+        self.assertEqual(len(spec.warnings), 2, "off-map and unreadable lines warn, never fail")
+
+    def test_effects_do_not_change_terrain_so_painted_art_stays_cached(self):
+        plain = self.mr.parse("#####\n#A..#\n#####")
+        burst = self.mr.parse("#####\n#A..#\n#####\n---\n@ 3,2 r1 fire | Fuoco")
+        self.assertEqual(self.mr.kind_grid(plain), self.mr.kind_grid(burst))
+
+    def test_effect_labels_are_escaped_and_listed(self):
+        svg = self.mr.render_svg(self.mr.parse("####\n#A.#\n####\n---\n@ 3,2 fire | <img src=x>"))
+        self.assertNotIn("<img", svg)
+        self.assertIn("&lt;img src=x&gt;", svg)
+
     def test_oversized_and_empty_maps_are_rejected(self):
         with self.assertRaises(ValueError):
             self.mr.parse("")
@@ -239,6 +260,13 @@ class ImageGenTests(unittest.TestCase):
         self.assertEqual(self.ig._ext_for(b"\xff\xd8\xff\xe0"), "jpg")
         with self.assertRaises(self.ig.ImageError):
             self.ig._ext_for(b'{"error": "queue full"}')
+
+    def test_action_kind_is_close_framed_and_fits_sd15(self):
+        self.assertIn("action", self.ig.CLI_KINDS)
+        self.assertIn("medium shot", self.ig.build_prompt("action", "a dwarf swings an axe", ""))
+        self.assertNotIn("establishing", self.ig.build_prompt("action", "x", ""))
+        w, h = self.ig._size_for("action", 768)
+        self.assertEqual((w, h), (768, 512))
 
     def test_prompt_carries_kind_preset_and_style(self):
         p = self.ig.build_prompt("monster", "a ghoul.", "oil painting")

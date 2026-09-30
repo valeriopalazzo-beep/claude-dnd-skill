@@ -1397,7 +1397,7 @@ def chunk():
 # Files live in <campaign>/media/. Only the ACTIVE campaign's folder is served,
 # and names must match the same allowlist media.py writes with.
 _MEDIA_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,120}\.(?:png|jpe?g|webp|svg)$")
-_IMAGE_KINDS = {"portrait", "monster", "scene", "item", "map"}
+_IMAGE_KINDS = {"portrait", "monster", "scene", "action", "item", "map"}
 
 
 def _active_campaign() -> str:
