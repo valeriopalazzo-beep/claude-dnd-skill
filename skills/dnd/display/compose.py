@@ -9,13 +9,16 @@ silhouettes fix the composition, the prompt still decides what they look like.
 Spec — comma-separated figures, each `shape:position[:size]`:
 
     humanoid:left, quadruped:right
-    humanoid-short:0.35:large, blast:0.7:medium
-    humanoid:center:large, portal:right:large
+    humanoid-short:0.35:large, beast:0.7:large
+    humanoid:center:large, object:right:small
 
 Shapes:    humanoid, humanoid-short (dwarf, halfling), humanoid-tall, quadruped
            (dog, wolf, horse), beast (bear, big cat), flyer (bird, bat, dragon in
-           flight), serpent, blast (explosion, cloud, burst of flame), portal,
-           object (a chest, an altar, a boulder)
+           flight), serpent, object (a chest, an altar, a boulder)
+
+Only SOLID figures. Explosions, clouds, fire and portals are not surfaces: a
+depth sketch of them came back as metal spheres (SDXL + control-lora-depth,
+2026-09-30). Describe effects in the prompt and leave them out of the spec.
 Positions: far-left, left, center, right, far-right, or a number 0..1
 Sizes:     small, medium, large (default medium); larger also reads nearer
 
@@ -34,14 +37,14 @@ if _HERE not in sys.path:
     sys.path.insert(0, _HERE)
 
 SHAPES = ("humanoid", "humanoid-short", "humanoid-tall", "quadruped", "beast", "flyer",
-          "serpent", "blast", "portal", "object")
+          "serpent", "object")
+EFFECTS = ("blast", "explosion", "cloud", "fire", "burst", "smoke", "portal", "gate", "light")
 SHAPE_ALIASES = {
     "human": "humanoid", "person": "humanoid", "dwarf": "humanoid-short", "halfling": "humanoid-short",
     "gnome": "humanoid-short", "giant": "humanoid-tall", "ogre": "humanoid-tall", "troll": "humanoid-tall",
     "dog": "quadruped", "wolf": "quadruped", "hound": "quadruped", "horse": "quadruped",
     "bear": "beast", "cat": "beast", "bird": "flyer", "bat": "flyer", "dragon": "flyer",
-    "snake": "serpent", "worm": "serpent", "explosion": "blast", "cloud": "blast", "fire": "blast",
-    "burst": "blast", "gate": "portal", "chest": "object", "altar": "object", "rock": "object",
+    "snake": "serpent", "worm": "serpent", "chest": "object", "altar": "object", "rock": "object",
 }
 POSITIONS = {"far-left": 0.14, "left": 0.3, "center": 0.5, "centre": 0.5, "right": 0.7, "far-right": 0.86}
 SIZES = {"small": 0.42, "medium": 0.62, "large": 0.86}   # share of the image height
@@ -59,6 +62,9 @@ def parse(spec: str) -> list:
             continue
         bits = [b.strip().lower() for b in part.split(":")]
         shape = SHAPE_ALIASES.get(bits[0], bits[0])
+        if shape in EFFECTS:
+            raise ComposeError(f"{bits[0]!r} is an effect, not a solid figure: describe it in the "
+                               f"prompt and leave it out of --compose")
         if shape not in SHAPES:
             raise ComposeError(f"unknown shape {bits[0]!r} (one of: {', '.join(SHAPES)})")
         pos = bits[1] if len(bits) > 1 and bits[1] else "center"
@@ -161,16 +167,6 @@ def _draw(c: Canvas, shape: str, fx: float, size: float, facing: int) -> None:
             y = ground - h * 0.2 - math.sin(t * math.pi * 2.2) * h * 0.12 - t * h * 0.35
             c.ellipse(x, y, h * 0.07, h * 0.07, v)
         c.ellipse(cx + h * 0.58 * facing, ground - h * 0.62, h * 0.11, h * 0.09, v)
-    elif shape == "blast":
-        cy = ground - h * 0.5
-        r = h * 0.5
-        # Bright core fading outwards, with ragged lobes, so it reads as a burst.
-        for i in range(9):
-            a = i / 9 * 2 * math.pi
-            c.ellipse(cx + math.cos(a) * r * 0.55, cy + math.sin(a) * r * 0.5, r * 0.42, r * 0.38, v * 0.8)
-        c.ellipse(cx, cy, r * 0.6, r * 0.55, min(255, v * 1.08))
-    elif shape == "portal":
-        c.ellipse(cx, ground - h * 0.5, h * 0.3, h * 0.48, v, rim=0.18)
     else:  # object
         c.ellipse(cx, ground - h * 0.2, h * 0.3, h * 0.2, v)
 

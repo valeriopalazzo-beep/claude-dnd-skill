@@ -79,7 +79,7 @@ Even SDXL tends to drop the second figure of a scene. `--compose "humanoid-short
 { "local_controlnet_depth": "control-lora-depth-rank128 [df51c1c8]", "compose_weight": 1.0, "compose_end": 1.0 }
 ```
 
-With SDXL Lightning at 6 steps, weaker guidance (0.8 until 60% of the steps) was ignored; full guidance works. Put the subject most likely to vanish first in the prompt. `python3 display/compose.py "<spec>" --out sketch.png` shows the sketch.
+With SDXL Lightning at 6 steps, weaker guidance (0.8 until 60% of the steps) was ignored; full guidance works. Put the subject most likely to vanish first in the prompt. Only solid figures belong in the spec — an explosion or a portal sketched as depth comes back as metal spheres; describe effects in the prompt. `python3 display/compose.py "<spec>" --out sketch.png` shows the sketch.
 
 ### Gemini
 

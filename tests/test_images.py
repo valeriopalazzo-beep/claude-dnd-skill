@@ -331,9 +331,15 @@ class ComposeTests(unittest.TestCase):
         cls.ig = _load(DISPLAY / "image_gen.py", "image_gen_for_compose")
 
     def test_spec_accepts_names_aliases_numbers_and_sizes(self):
-        figs = self.cp.parse("dwarf:left:large, hound:0.72, explosion:far-right:small")
+        figs = self.cp.parse("dwarf:left:large, hound:0.72, chest:far-right:small")
         self.assertEqual(figs, [("humanoid-short", 0.3, 0.86), ("quadruped", 0.72, 0.62),
-                                ("blast", 0.86, 0.42)])
+                                ("object", 0.86, 0.42)])
+
+    def test_effects_are_refused_because_depth_turns_them_into_solids(self):
+        for fx in ("explosion:right", "blast:left", "portal:center", "fire"):
+            with self.assertRaises(self.cp.ComposeError, msg=fx) as ctx:
+                self.cp.parse("humanoid:left, " + fx)
+            self.assertIn("prompt", str(ctx.exception))
 
     def test_bad_specs_are_refused_with_a_reason(self):
         for bad in ("", "unicorn:left", "humanoid:up", "humanoid:1.5", "humanoid:left:huge",
