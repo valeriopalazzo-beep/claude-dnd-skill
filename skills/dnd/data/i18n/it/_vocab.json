@@ -24,7 +24,15 @@
    "Mounts and Vehicles": "Cavalcature e veicoli",
    "Weapon": "Arma",
    "Tools": "Strumenti",
-   "Armor": "Armatura"
+   "Armor": "Armatura",
+   "Wondrous Items": "Oggetto meraviglioso",
+   "Potion": "Pozione",
+   "Ring": "Anello",
+   "Wand": "Bacchetta",
+   "Staff": "Bastone",
+   "Scroll": "Pergamena",
+   "Rod": "Verga",
+   "Ammunition": "Munizione"
   },
   "properties": {
    "Two-Handed": "Due mani",
@@ -206,6 +214,15 @@
    "Warlock": "Warlock",
    "Ranger": "Ranger",
    "Paladin": "Paladino"
+  },
+  "rarity": {
+   "Rare": "raro",
+   "Uncommon": "non comune",
+   "Very Rare": "molto raro",
+   "Legendary": "leggendario",
+   "Varies": "variabile",
+   "Common": "comune",
+   "Artifact": "artefatto"
   }
  }
 }

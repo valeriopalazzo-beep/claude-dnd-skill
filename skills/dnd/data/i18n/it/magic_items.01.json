@@ -1,0 +1,296 @@
+{
+ "magic_items": {
+  "adamantine-armor": {
+   "name": "Armatura di Adamantio",
+   "description": "Armatura (media o pesante, ma non di pelle), non comune\n\nQuesta armatura è rinforzata con l'adamantio, una delle sostanze più dure esistenti. Mentre la indossi, qualsiasi colpo critico contro di te diventa un colpo normale."
+  },
+  "ammunition": {
+   "name": "Munizioni +1, +2 o +3",
+   "description": "Arma (qualsiasi munizione), non comune (+1), rara (+2) o molto rara (+3)\n\nHai un bonus ai tiri per colpire e per i danni effettuati con questa munizione magica. Il bonus è determinato dalla rarità della munizione. Una volta che colpisce un bersaglio, la munizione non è più magica."
+  },
+  "ammunition-1": {
+   "name": "Munizioni +1",
+   "description": "Arma (qualsiasi munizione), non comune\n\nHai un bonus di +1 ai tiri per colpire e per i danni effettuati con questa munizione magica. Una volta che colpisce un bersaglio, la munizione non è più magica."
+  },
+  "ammunition-2": {
+   "name": "Munizioni +2",
+   "description": "Arma (qualsiasi munizione), rara\n\nHai un bonus di +2 ai tiri per colpire e per i danni effettuati con questa munizione magica. Una volta che colpisce un bersaglio, la munizione non è più magica."
+  },
+  "ammunition-3": {
+   "name": "Munizioni +3",
+   "description": "Arma (qualsiasi munizione), molto rara\n\nHai un bonus di +3 ai tiri per colpire e per i danni effettuati con questa munizione magica. Una volta che colpisce un bersaglio, la munizione non è più magica."
+  },
+  "amulet-of-health": {
+   "name": "Amuleto della Salute",
+   "description": "Oggetto meraviglioso, raro (richiede sintonia)\n\nIl tuo punteggio di Costituzione è 19 finché indossi questo amuleto. Non ha effetto su di te se la tua Costituzione è già 19 o superiore."
+  },
+  "amulet-of-proof-against-detection-and-location": {
+   "name": "Amuleto Anti-Individuazione e Localizzazione",
+   "description": "Oggetto meraviglioso, non comune (richiede sintonia)\n\nMentre indossi questo amuleto, sei nascosto alla magia di divinazione. Non puoi essere bersagliato da tale magia né percepito attraverso sensori magici di scrutamento."
+  },
+  "amulet-of-the-planes": {
+   "name": "Amuleto dei Piani",
+   "description": "Oggetto meraviglioso, molto raro (richiede sintonia)\n\nMentre indossi questo amuleto, puoi usare un'azione per nominare un luogo che conosci su un altro piano di esistenza. Poi effettua una prova di Intelligenza con CD 15. Se la superi, lanci l'incantesimo spostamento planare. Se la fallisci, tu e ogni creatura e oggetto entro 4,5 metri da te viaggiate verso una destinazione casuale. Tira un d100. Con 1-60, viaggi verso un luogo casuale del piano che hai nominato. Con 61-100, viaggi verso un piano di esistenza determinato a caso."
+  },
+  "animated-shield": {
+   "name": "Scudo Animato",
+   "description": "Armatura (scudo), molto raro (richiede sintonia)\n\nMentre impugni questo scudo, puoi pronunciare la sua parola di comando come azione bonus per animarlo. Lo scudo balza in aria e fluttua nel tuo spazio per proteggerti come se lo stessi impugnando, lasciandoti le mani libere. Lo scudo resta animato per 1 minuto, finché non usi un'azione bonus per porre fine all'effetto, o finché non sei incapacitato o muori; a quel punto lo scudo cade a terra o nella tua mano, se ne hai una libera."
+  },
+  "apparatus-of-the-crab": {
+   "name": "Apparato del Granchio",
+   "description": "Oggetto meraviglioso, leggendario\n\nA prima vista questo oggetto sembra un grosso barile di ferro sigillato di taglia Grande che pesa 250 kg. Il barile ha un fermo nascosto, che si può trovare con una prova di Intelligenza (Indagare) con CD 20 superata. Sganciare il fermo apre un portello a un'estremità del barile, permettendo a due creature Medie o più piccole di infilarsi dentro. All'estremità opposta ci sono dieci leve in fila, ciascuna in posizione neutra, che possono muoversi verso l'alto o verso il basso. Quando si usano certe leve, l'apparato si trasforma fino a somigliare a un'aragosta gigante.\n\nL'apparato del Granchio è un oggetto Grande con le seguenti statistiche:\n\nClasse Armatura: 20\n\nPunti Ferita: 200\n\nVelocità: 9 m, nuoto 9 m (oppure 0 m per entrambe se zampe e coda non sono estese)\n\nImmunità ai Danni: veleno, psichici\n\nPer essere usato come veicolo, l'apparato richiede un pilota. Mentre il portello dell'apparato è chiuso, lo scompartimento è ermetico e stagno. Lo scompartimento contiene aria sufficiente per 10 ore di respirazione, divise per il numero di creature che respirano al suo interno.\n\nL'apparato galleggia sull'acqua. Può anche immergersi fino a una profondità di 270 metri. Oltre quella profondità, il veicolo subisce 2d6 danni contundenti al minuto a causa della pressione.\n\nUna creatura nello scompartimento può usare un'azione per muovere fino a due leve dell'apparato verso l'alto o verso il basso. Dopo ogni uso, una leva torna nella posizione neutra. Ogni leva, da sinistra a destra, funziona come indicato nella tabella Leve dell'Apparato del Granchio.\n\nLeve dell'Apparato del Granchio\n\n| Leva | Su | Giù |\n\n|---|---|---|\n\n| 1 | Zampe e coda si estendono, permettendo all'apparato di camminare e nuotare. | Zampe e coda si ritraggono, riducendo la velocità dell'apparato a 0 e impedendogli di beneficiare di bonus alla velocità. |\n\n| 2 | Si apre l'imposta del finestrino anteriore. | Si chiude l'imposta del finestrino anteriore. |\n\n| 3 | Si aprono le imposte dei finestrini laterali (due per lato). | Si chiudono le imposte dei finestrini laterali (due per lato). |\n\n| 4 | Due chele si estendono dai lati anteriori dell'apparato. | Le chele si ritraggono. |\n\n| 5 | Ogni chela estesa effettua il seguente attacco in mischia con un'arma: +8 a colpire, portata 1,5 m, un bersaglio. Colpito: 7 (2d6) danni contundenti. | Ogni chela estesa effettua il seguente attacco in mischia con un'arma: +8 a colpire, portata 1,5 m, un bersaglio. Colpito: il bersaglio è afferrato (CD 15 per liberarsi). |\n\n| 6 | L'apparato cammina o nuota in avanti. | L'apparato cammina o nuota all'indietro. |\n\n| 7 | L'apparato ruota di 90 gradi a sinistra. | L'apparato ruota di 90 gradi a destra. |\n\n| 8 | Dispositivi simili a occhi emettono luce intensa in un raggio di 9 metri e luce fioca per altri 9 metri. | La luce si spegne. |\n\n| 9 | L'apparato affonda fino a 6 metri nel liquido. | L'apparato risale fino a 6 metri nel liquido. |\n\n| 10 | Il portello posteriore si sblocca e si apre. | Il portello posteriore si chiude e si sigilla. |"
+  },
+  "armor": {
+   "name": "Armatura +1, +2 o +3",
+   "description": "Armatura (leggera, media o pesante), rara (+1), molto rara (+2) o leggendaria (+3)\n\nHai un bonus alla CA mentre indossi questa armatura. Il bonus è determinato dalla sua rarità."
+  },
+  "armor-1": {
+   "name": "Armatura +1",
+   "description": "Armatura (leggera, media o pesante), rara\n\nHai un bonus di +1 alla CA mentre indossi questa armatura."
+  },
+  "armor-2": {
+   "name": "Armatura +2",
+   "description": "Armatura (leggera, media o pesante), molto rara\n\nHai un bonus di +2 alla CA mentre indossi questa armatura."
+  },
+  "armor-3": {
+   "name": "Armatura +3",
+   "description": "Armatura (leggera, media o pesante), leggendaria\n\nHai un bonus di +3 alla CA mentre indossi questa armatura."
+  },
+  "armor-of-invulnerability": {
+   "name": "Armatura dell'Invulnerabilità",
+   "description": "Armatura (completa), leggendaria (richiede sintonia)\n\nHai resistenza ai danni non magici mentre indossi questa armatura. Inoltre, puoi usare un'azione per renderti immune ai danni non magici per 10 minuti o finché non indossi più l'armatura. Una volta usata questa azione speciale, non può essere usata di nuovo fino all'alba successiva."
+  },
+  "armor-of-resistance": {
+   "name": "Armatura della Resistenza",
+   "description": "Armatura (leggera, media o pesante), rara (richiede sintonia)\n\nHai resistenza a un tipo di danno mentre indossi questa armatura. Il GM sceglie il tipo o lo determina a caso tra le opzioni seguenti.\n\n| d10 | Tipo di Danno |\n\n|---|---|\n\n| 1 | Acido |\n\n| 2 | Freddo |\n\n| 3 | Fuoco |\n\n| 4 | Forza |\n\n| 5 | Fulmine |\n\n| 6 | Necrotico |\n\n| 7 | Veleno |\n\n| 8 | Psichico |\n\n| 9 | Radioso |\n\n| 10 | Tuono |"
+  },
+  "armor-of-vulnerability": {
+   "name": "Armatura della Vulnerabilità",
+   "description": "Armatura (completa), rara (richiede sintonia)\n\nMentre indossi questa armatura, hai resistenza a uno dei seguenti tipi di danno: contundente, perforante o tagliente. Il GM sceglie il tipo o lo determina a caso.\n\n***Maledizione.*** Questa armatura è maledetta, cosa che si rivela solo quando si lancia un incantesimo identificare sull'armatura o quando ti sintonizzi con essa. Sintonizzarti con l'armatura ti maledice finché non vieni bersagliato dall'incantesimo rimuovi maledizione o da una magia simile; togliere l'armatura non pone fine alla maledizione. Mentre sei maledetto, hai vulnerabilità a due dei tre tipi di danno associati all'armatura (non quello a cui concede resistenza)."
+  },
+  "arrow-catching-shield": {
+   "name": "Scudo Acchiappafrecce",
+   "description": "Armatura (scudo), rara (richiede sintonia)\n\nOttieni un bonus di +2 alla CA contro gli attacchi a distanza mentre impugni questo scudo. Questo bonus si somma al normale bonus alla CA dello scudo. Inoltre, ogni volta che un attaccante effettua un attacco a distanza contro un bersaglio entro 1,5 metri da te, puoi usare la tua reazione per diventare tu il bersaglio dell'attacco."
+  },
+  "arrow-of-slaying": {
+   "name": "Freccia Assassina",
+   "description": "Arma (freccia), molto rara\n\nUna freccia assassina è un'arma magica creata per uccidere un particolare tipo di creatura. Alcune sono più specifiche di altre; per esempio, esistono sia frecce ammazzadraghi sia frecce ammazza-draghi-blu. Se una creatura appartenente al tipo, alla razza o al gruppo associato a una freccia assassina subisce danni dalla freccia, deve effettuare un tiro salvezza su Costituzione con CD 17, subendo 6d10 danni perforanti extra se lo fallisce, o la metà dei danni extra se lo supera.\n\nUna volta che una freccia assassina infligge i suoi danni extra a una creatura, diventa una freccia non magica.\n\nEsistono altri tipi di munizioni magiche di questo genere, come i quadrelli assassini per le balestre, ma le frecce sono le più comuni."
+  },
+  "bag-of-beans": {
+   "name": "Borsa dei Fagioli",
+   "description": "Oggetto meraviglioso, raro\n\nIn questa pesante borsa di stoffa ci sono 3d4 fagioli secchi. La borsa pesa 250 g più 125 g per ogni fagiolo che contiene.\n\nSe rovesci il contenuto della borsa sul terreno, i fagioli esplodono in un raggio di 3 metri a partire da essi. Ogni creatura nell'area, te compreso, deve effettuare un tiro salvezza su Destrezza con CD 15, subendo 5d4 danni da fuoco se lo fallisce, o la metà dei danni se lo supera. Il fuoco incendia gli oggetti infiammabili nell'area che non sono indossati o trasportati.\n\nSe estrai un fagiolo dalla borsa, lo pianti nella terra o nella sabbia e poi lo annaffi, il fagiolo produce un effetto 1 minuto dopo dal punto in cui è stato piantato. Il GM può scegliere un effetto dalla tabella seguente, determinarlo a caso o crearne uno.\n\n| d100 | Effetto |\n\n|---|---|\n\n| 01 | Spuntano 5d4 funghi. Se una creatura mangia un fungo, tira un dado qualsiasi. Con un risultato dispari, chi lo mangia deve superare un tiro salvezza su Costituzione con CD 15 o subire 5d6 danni da veleno ed essere avvelenato per 1 ora. Con un risultato pari, chi lo mangia ottiene 5d6 punti ferita temporanei per 1 ora. |\n\n| 02-10 | Erutta un geyser che spruzza acqua, birra, succo di bacche, tè, aceto, vino oppure olio (a scelta del GM) fino a 9 metri d'altezza per 1d12 round. |\n\n| 11-20 | Spunta un treant. C'è il 50 per cento di probabilità che il treant sia caotico malvagio e attacchi. |\n\n| 21-30 | Si solleva una statua di pietra animata e immobile con le tue sembianze. Rivolge minacce verbali contro di te. Se te ne vai e altri si avvicinano, ti descrive come il più atroce dei malvagi e indirizza i nuovi arrivati a trovarti e attaccarti. Se ti trovi sul suo stesso piano di esistenza, la statua sa dove sei. La statua diventa inanimata dopo 24 ore. |\n\n| 31-40 | Si accende un fuoco da campo con fiamme blu, che brucia per 24 ore (o finché non viene spento). |\n\n| 41-50 | Spuntano 1d6 + 6 strillatori. |\n\n| 51-60 | Strisciano fuori 1d4 + 8 rospi rosa brillante. Ogni volta che un rospo viene toccato, si trasforma in un mostro di taglia Grande o inferiore a scelta del GM. Il mostro resta per 1 minuto, poi scompare in uno sbuffo di fumo rosa brillante. |\n\n| 61-70 | Una bulette affamata emerge scavando e attacca. |\n\n| 71-80 | Cresce un albero da frutto. Ha 1d10 + 20 frutti, 1d8 dei quali agiscono come pozioni magiche determinate a caso, mentre uno agisce come un veleno ingerito a scelta del GM. L'albero svanisce dopo 1 ora. I frutti raccolti restano e conservano la loro magia per 30 giorni. |\n\n| 81-90 | Spunta un nido con 1d4 + 3 uova. Qualsiasi creatura che mangia un uovo deve effettuare un tiro salvezza su Costituzione con CD 20. Se lo supera, aumenta permanentemente di 1 il suo punteggio di caratteristica più basso, scegliendo a caso tra punteggi ugualmente bassi. Se lo fallisce, subisce 10d6 danni da forza per un'esplosione magica interna. |\n\n| 91-99 | Emerge una piramide con una base di 18 metri di lato. All'interno c'è un sarcofago che contiene un signore delle mummie. La piramide è considerata la tana del signore delle mummie, e il suo sarcofago contiene un tesoro a scelta del GM. |\n\n| 100 | Spunta una gigantesca pianta di fagioli, che cresce fino a un'altezza a scelta del GM. La cima conduce dove sceglie il GM, per esempio a un panorama grandioso, al castello di un gigante delle nuvole o a un altro piano di esistenza. |"
+  },
+  "bag-of-devouring": {
+   "name": "Borsa Divoratrice",
+   "description": "Oggetto meraviglioso, molto raro\n\nQuesta borsa somiglia in apparenza a una borsa conservante, ma è l'orifizio di nutrimento di una gigantesca creatura extradimensionale. Rovesciare la borsa chiude l'orifizio.\n\nLa creatura extradimensionale collegata alla borsa percepisce qualsiasi cosa venga messa nella borsa. La materia animale o vegetale messa interamente nella borsa viene divorata e perduta per sempre. Quando una parte di una creatura vivente viene messa nella borsa, come accade quando qualcuno ci infila la mano, c'è il 50 per cento di probabilità che la creatura venga trascinata dentro. Una creatura all'interno della borsa può usare la sua azione per tentare di fuggire con una prova di Forza con CD 20 superata. Un'altra creatura può usare la sua azione per infilare la mano nella borsa e tirarne fuori una creatura, riuscendoci con una prova di Forza con CD 20 superata (purché non venga prima trascinata dentro). Qualsiasi creatura che inizia il suo turno all'interno della borsa viene divorata, e il suo corpo distrutto.\n\nNella borsa si possono riporre oggetti inanimati, fino a circa 30 decimetri cubi. Tuttavia, una volta al giorno, la borsa inghiotte tutti gli oggetti al suo interno e li sputa su un altro piano di esistenza. Il GM determina il momento e il piano.\n\nSe la borsa viene perforata o strappata, viene distrutta, e tutto ciò che contiene viene trasportato in un luogo casuale del Piano Astrale."
+  },
+  "bag-of-holding": {
+   "name": "Borsa Conservante",
+   "description": "Oggetto meraviglioso, non comune\n\nQuesta borsa ha uno spazio interno molto più grande delle sue dimensioni esterne, circa 60 cm di diametro all'imboccatura e 1,2 metri di profondità. La borsa può contenere fino a 250 kg, senza superare un volume di 1,8 metri cubi. La borsa pesa 7,5 kg, indipendentemente dal suo contenuto. Estrarre un oggetto dalla borsa richiede un'azione.\n\nSe la borsa viene sovraccaricata, perforata o strappata, si rompe e viene distrutta, e il suo contenuto viene disperso nel Piano Astrale. Se la borsa viene rovesciata, il suo contenuto fuoriesce illeso, ma la borsa deve essere rimessa a posto prima di poter essere usata di nuovo. Le creature che respirano all'interno della borsa possono sopravvivere per un numero di minuti pari a 10 diviso per il numero di creature (minimo 1 minuto), dopodiché iniziano a soffocare.\n\nMettere una borsa conservante all'interno di uno spazio extradimensionale creato da uno zaino pratico, da un buco portatile o da un oggetto simile distrugge istantaneamente entrambi gli oggetti e apre un portale verso il Piano Astrale. Il portale si origina dove un oggetto è stato messo dentro l'altro. Qualsiasi creatura entro 3 metri dal portale viene risucchiata attraverso di esso in un luogo casuale del Piano Astrale. Poi il portale si chiude. Il portale è a senso unico e non può essere riaperto."
+  },
+  "bag-of-tricks": {
+   "name": "Borsa dei Trucchi",
+   "description": "Oggetto meraviglioso, non comune\n\nQuesta borsa comune, fatta di stoffa grigia, color ruggine o marrone chiaro, sembra vuota. Tuttavia, infilando la mano nella borsa si scopre la presenza di un piccolo oggetto peloso. La borsa pesa 250 g.\n\nPuoi usare un'azione per estrarre l'oggetto peloso dalla borsa e lanciarlo fino a 6 metri. Quando l'oggetto atterra, si trasforma in una creatura che determini tirando un d8 e consultando la tabella corrispondente al colore della borsa. La creatura svanisce all'alba successiva o quando viene ridotta a 0 punti ferita.\n\nLa creatura è amichevole verso di te e i tuoi compagni e agisce nel tuo turno. Puoi usare un'azione bonus per ordinare come si muove la creatura e quale azione compie nel suo turno successivo, oppure per darle ordini generici, come attaccare i tuoi nemici. In assenza di tali ordini, la creatura agisce in modo adatto alla sua natura.\n\nUna volta estratti tre oggetti pelosi dalla borsa, la borsa non può essere usata di nuovo fino all'alba successiva.\n\nBorsa Grigia:\n\n| d8 | Creatura |\n\n|---|---|\n\n| 01 | Donnola |\n\n| 02 | Ratto gigante |\n\n| 03 | Tasso |\n\n| 04 | Cinghiale |\n\n| 05 | Pantera |\n\n| 06 | Tasso gigante |\n\n| 07 | Lupo crudele |\n\n| 08 | Alce gigante |\n\nBorsa Ruggine:\n\n| d8 | Creatura |\n\n|---|---|\n\n| 01 | Ratto |\n\n| 02 | Gufo |\n\n| 03 | Mastino |\n\n| 04 | Capra |\n\n| 05 | Capra gigante |\n\n| 06 | Cinghiale gigante |\n\n| 07 | Leone |\n\n| 08 | Orso bruno |\n\nBorsa Marrone Chiaro:\n\n| d8 | Creatura |\n\n|---|---|\n\n| 01 | Sciacallo |\n\n| 02 | Scimmia |\n\n| 03 | Babbuino |\n\n| 04 | Becco d'ascia |\n\n| 05 | Orso nero |\n\n| 06 | Donnola gigante |\n\n| 07 | Iena gigante |\n\n| 08 | Tigre |"
+  },
+  "bag-of-tricks-gray": {
+   "name": "Borsa dei Trucchi Grigia",
+   "description": "Oggetto meraviglioso, non comune\n\nQuesta borsa comune, fatta di stoffa grigia, sembra vuota. Tuttavia, infilando la mano nella borsa si scopre la presenza di un piccolo oggetto peloso. La borsa pesa 250 g.\n\nPuoi usare un'azione per estrarre l'oggetto peloso dalla borsa e lanciarlo fino a 6 metri. Quando l'oggetto atterra, si trasforma in una creatura che determini tirando un d8 e consultando la tabella corrispondente al colore della borsa. La creatura svanisce all'alba successiva o quando viene ridotta a 0 punti ferita.\n\nLa creatura è amichevole verso di te e i tuoi compagni e agisce nel tuo turno. Puoi usare un'azione bonus per ordinare come si muove la creatura e quale azione compie nel suo turno successivo, oppure per darle ordini generici, come attaccare i tuoi nemici. In assenza di tali ordini, la creatura agisce in modo adatto alla sua natura.\n\nUna volta estratti tre oggetti pelosi dalla borsa, la borsa non può essere usata di nuovo fino all'alba successiva.\n\nBorsa Grigia:\n\n| d8 | Creatura |\n\n|---|---|\n\n| 01 | Donnola |\n\n| 02 | Ratto gigante |\n\n| 03 | Tasso |\n\n| 04 | Cinghiale |\n\n| 05 | Pantera |\n\n| 06 | Tasso gigante |\n\n| 07 | Lupo crudele |\n\n| 08 | Alce gigante |"
+  },
+  "bag-of-tricks-rust": {
+   "name": "Borsa dei Trucchi Ruggine",
+   "description": "Oggetto meraviglioso, non comune\n\nQuesta borsa comune, fatta di stoffa color ruggine, sembra vuota. Tuttavia, infilando la mano nella borsa si scopre la presenza di un piccolo oggetto peloso. La borsa pesa 250 g.\n\nPuoi usare un'azione per estrarre l'oggetto peloso dalla borsa e lanciarlo fino a 6 metri. Quando l'oggetto atterra, si trasforma in una creatura che determini tirando un d8 e consultando la tabella corrispondente al colore della borsa. La creatura svanisce all'alba successiva o quando viene ridotta a 0 punti ferita.\n\nLa creatura è amichevole verso di te e i tuoi compagni e agisce nel tuo turno. Puoi usare un'azione bonus per ordinare come si muove la creatura e quale azione compie nel suo turno successivo, oppure per darle ordini generici, come attaccare i tuoi nemici. In assenza di tali ordini, la creatura agisce in modo adatto alla sua natura.\n\nUna volta estratti tre oggetti pelosi dalla borsa, la borsa non può essere usata di nuovo fino all'alba successiva.\n\nBorsa Ruggine:\n\n| d8 | Creatura |\n\n|---|---|\n\n| 01 | Ratto |\n\n| 02 | Gufo |\n\n| 03 | Mastino |\n\n| 04 | Capra |\n\n| 05 | Capra gigante |\n\n| 06 | Cinghiale gigante |\n\n| 07 | Leone |\n\n| 08 | Orso bruno |"
+  },
+  "bag-of-tricks-tan": {
+   "name": "Borsa dei Trucchi Marrone Chiaro",
+   "description": "Oggetto meraviglioso, non comune\n\nQuesta borsa comune, fatta di stoffa marrone chiaro, sembra vuota. Tuttavia, infilando la mano nella borsa si scopre la presenza di un piccolo oggetto peloso. La borsa pesa 250 g.\n\nPuoi usare un'azione per estrarre l'oggetto peloso dalla borsa e lanciarlo fino a 6 metri. Quando l'oggetto atterra, si trasforma in una creatura che determini tirando un d8 e consultando la tabella corrispondente al colore della borsa. La creatura svanisce all'alba successiva o quando viene ridotta a 0 punti ferita.\n\nLa creatura è amichevole verso di te e i tuoi compagni e agisce nel tuo turno. Puoi usare un'azione bonus per ordinare come si muove la creatura e quale azione compie nel suo turno successivo, oppure per darle ordini generici, come attaccare i tuoi nemici. In assenza di tali ordini, la creatura agisce in modo adatto alla sua natura.\n\nUna volta estratti tre oggetti pelosi dalla borsa, la borsa non può essere usata di nuovo fino all'alba successiva.\n\nBorsa Marrone Chiaro:\n\n| d8 | Creatura |\n\n|---|---|\n\n| 01 | Sciacallo |\n\n| 02 | Scimmia |\n\n| 03 | Babbuino |\n\n| 04 | Becco d'ascia |\n\n| 05 | Orso nero |\n\n| 06 | Donnola gigante |\n\n| 07 | Iena gigante |\n\n| 08 | Tigre |"
+  },
+  "bead-of-force": {
+   "name": "Perla della Forza",
+   "description": "Oggetto meraviglioso, raro\n\nQuesta piccola sfera nera misura 2 cm di diametro e pesa circa 30 grammi. Di solito si trovano insieme 1d4 + 4 perle della forza.\n\nPuoi usare un'azione per lanciare la perla fino a 18 metri. La perla esplode all'impatto e viene distrutta. Ogni creatura entro un raggio di 3 metri dal punto in cui è atterrata la perla deve superare un tiro salvezza su Destrezza con CD 15 o subire 5d4 danni da forza. Poi una sfera di forza trasparente racchiude l'area per 1 minuto. Qualsiasi creatura che ha fallito il tiro salvezza e si trova completamente all'interno dell'area resta intrappolata nella sfera. Le creature che hanno superato il tiro salvezza, o che si trovano solo in parte nell'area, vengono spinte lontano dal centro della sfera finché non ne sono più all'interno. Solo l'aria respirabile può attraversare la parete della sfera. Nessun attacco o altro effetto può farlo.\n\nUna creatura racchiusa può usare la sua azione per spingere contro la parete della sfera, muovendola fino a metà della propria velocità sul terreno. La sfera può essere sollevata, e la sua magia fa sì che pesi solo 0,5 kg, indipendentemente dal peso delle creature al suo interno."
+  },
+  "belt-of-dwarvenkind": {
+   "name": "Cintura dei Nani",
+   "description": "Oggetto meraviglioso, raro (richiede sintonia)\n\nMentre indossi questa cintura, ottieni i seguenti benefici:\n\nIl tuo punteggio di Costituzione aumenta di 2, fino a un massimo di 20.\n\nHai vantaggio alle prove di Carisma (Persuasione) effettuate per interagire con i nani.\n\nInoltre, mentre sei in sintonia con la cintura, ogni giorno all'alba hai il 50 per cento di probabilità che ti cresca una barba folta, se puoi farla crescere, o una barba visibilmente più folta, se ne hai già una.\n\nSe non sei un nano, ottieni i seguenti benefici aggiuntivi mentre indossi la cintura:\n\nHai vantaggio ai tiri salvezza contro il veleno e hai resistenza ai danni da veleno.\n\nSai parlare, leggere e scrivere il Nanico."
+  },
+  "belt-of-giant-strength": {
+   "name": "Cintura della Forza dei Giganti",
+   "description": "Oggetto meraviglioso, rarità variabile (richiede sintonia)\n\nMentre indossi questa cintura, il tuo punteggio di Forza diventa il punteggio concesso dalla cintura. Se la tua Forza è già pari o superiore al punteggio della cintura, l'oggetto non ha effetto su di te.\n\nEsistono sei varietà di questa cintura, corrispondenti ai sei tipi di veri giganti e con rarità in base a essi. La cintura della forza del gigante di pietra e la cintura della forza del gigante del gelo hanno un aspetto diverso, ma lo stesso effetto.\n\n| Tipo | Forza | Rarità |\n\n|---|---|---|\n\n| Gigante delle colline | 21 | Rara |\n\n| Gigante di pietra / Gigante del gelo | 23 | Molto rara |\n\n| Gigante del fuoco | 25 | Molto rara |\n\n| Gigante delle nuvole | 27 | Leggendaria |\n\n| Gigante delle tempeste | 29 | Leggendaria |"
+  },
+  "belt-of-giant-strength-hill": {
+   "name": "Cintura della Forza del Gigante delle Colline",
+   "description": "Oggetto meraviglioso, raro (richiede sintonia)\n\nMentre indossi questa cintura, il tuo punteggio di Forza diventa 21. Se la tua Forza è già pari o superiore al punteggio della cintura, l'oggetto non ha effetto su di te."
+  },
+  "belt-of-giant-strength-stone": {
+   "name": "Cintura della Forza del Gigante di Pietra",
+   "description": "Oggetto meraviglioso, molto raro (richiede sintonia)\n\nMentre indossi questa cintura, il tuo punteggio di Forza diventa 23. Se la tua Forza è già pari o superiore al punteggio della cintura, l'oggetto non ha effetto su di te."
+  },
+  "belt-of-giant-strength-frost": {
+   "name": "Cintura della Forza del Gigante del Gelo",
+   "description": "Oggetto meraviglioso, molto raro (richiede sintonia)\n\nMentre indossi questa cintura, il tuo punteggio di Forza diventa 23. Se la tua Forza è già pari o superiore al punteggio della cintura, l'oggetto non ha effetto su di te."
+  },
+  "belt-of-giant-strength-fire": {
+   "name": "Cintura della Forza del Gigante del Fuoco",
+   "description": "Oggetto meraviglioso, molto raro (richiede sintonia)\n\nMentre indossi questa cintura, il tuo punteggio di Forza diventa 25. Se la tua Forza è già pari o superiore al punteggio della cintura, l'oggetto non ha effetto su di te."
+  },
+  "belt-of-giant-strength-cloud": {
+   "name": "Cintura della Forza del Gigante delle Nuvole",
+   "description": "Oggetto meraviglioso, leggendario (richiede sintonia)\n\nMentre indossi questa cintura, il tuo punteggio di Forza diventa 27. Se la tua Forza è già pari o superiore al punteggio della cintura, l'oggetto non ha effetto su di te."
+  },
+  "belt-of-giant-strength-storm": {
+   "name": "Cintura della Forza del Gigante delle Tempeste",
+   "description": "Oggetto meraviglioso, leggendario (richiede sintonia)\n\nMentre indossi questa cintura, il tuo punteggio di Forza diventa 29. Se la tua Forza è già pari o superiore al punteggio della cintura, l'oggetto non ha effetto su di te."
+  },
+  "berserker-axe": {
+   "name": "Ascia del Berserker",
+   "description": "Arma (qualsiasi ascia), rara (richiede sintonia)\n\nOttieni un bonus di +1 ai tiri per colpire e per i danni effettuati con quest'arma magica. Inoltre, mentre sei in sintonia con quest'arma, il tuo massimo dei punti ferita aumenta di 1 per ogni livello che hai raggiunto.\n\n***Maledizione.*** Quest'ascia è maledetta, e sintonizzarsi con essa estende la maledizione a te. Finché resti maledetto, non vuoi separarti dall'ascia e la tieni sempre a portata di mano. Hai anche svantaggio ai tiri per colpire con armi diverse da questa, a meno che non ci siano nemici entro 18 metri da te che puoi vedere o sentire.\n\nOgni volta che una creatura ostile ti danneggia mentre l'ascia è in tuo possesso, devi superare un tiro salvezza su Saggezza con CD 15 o entrare in furia. Mentre sei in furia, devi usare la tua azione a ogni round per attaccare con l'ascia la creatura più vicina a te. Se puoi effettuare attacchi extra come parte dell'azione Attacco, usi quegli attacchi extra, spostandoti ad attaccare la creatura successiva più vicina dopo aver abbattuto il bersaglio attuale. Se hai più bersagli possibili, ne attacchi uno a caso. Resti in furia finché non inizi il tuo turno senza creature entro 18 metri da te che puoi vedere o sentire."
+  },
+  "boots-of-elvenkind": {
+   "name": "Stivali Elfici",
+   "description": "Oggetto meraviglioso, non comune\n\nMentre indossi questi stivali, i tuoi passi non fanno alcun rumore, qualunque sia la superficie su cui ti muovi. Hai anche vantaggio alle prove di Destrezza (Furtività) che richiedono di muoversi in silenzio."
+  },
+  "boots-of-levitation": {
+   "name": "Stivali della Levitazione",
+   "description": "Oggetto meraviglioso, raro (richiede sintonia)\n\nMentre indossi questi stivali, puoi usare un'azione per lanciare a volontà su di te l'incantesimo levitazione."
+  },
+  "boots-of-speed": {
+   "name": "Stivali della Velocità",
+   "description": "Oggetto meraviglioso, raro (richiede sintonia)\n\nMentre indossi questi stivali, puoi usare un'azione bonus e battere i tacchi degli stivali l'uno contro l'altro. Se lo fai, gli stivali raddoppiano la tua velocità sul terreno, e qualsiasi creatura che effettua un attacco di opportunità contro di te ha svantaggio al tiro per colpire. Se batti di nuovo i tacchi, poni fine all'effetto.\n\nQuando la proprietà degli stivali è stata usata per un totale di 10 minuti, la magia smette di funzionare finché non termini un riposo lungo."
+  },
+  "boots-of-striding-and-springing": {
+   "name": "Stivali del Passo e del Balzo",
+   "description": "Oggetto meraviglioso, non comune (richiede sintonia)\n\nMentre indossi questi stivali, la tua velocità sul terreno diventa 9 metri, a meno che non sia più alta, e la tua velocità non si riduce se sei ingombrato o indossi un'armatura pesante. Inoltre, puoi saltare tre volte la distanza normale, ma non puoi saltare più lontano di quanto ti permetta il movimento rimanente."
+  },
+  "boots-of-the-winterlands": {
+   "name": "Stivali delle Terre Invernali",
+   "description": "Oggetto meraviglioso, non comune (richiede sintonia)\n\nQuesti stivali foderati di pelliccia sono aderenti e molto caldi. Mentre li indossi, ottieni i seguenti benefici:\n\n* Hai resistenza ai danni da freddo.\n\n* Ignori il terreno difficile creato da ghiaccio o neve.\n\n* Puoi sopportare temperature fino a -45 °C senza alcuna protezione aggiuntiva. Se indossi abiti pesanti, puoi sopportare temperature fino a -73 °C."
+  },
+  "bowl-of-commanding-water-elementals": {
+   "name": "Ciotola del Comando degli Elementali dell'Acqua",
+   "description": "Oggetto meraviglioso, raro\n\nFinché questa ciotola è piena d'acqua, puoi usare un'azione per pronunciare la sua parola di comando ed evocare un elementale dell'acqua, come se avessi lanciato l'incantesimo evoca elementale. La ciotola non può essere usata di nuovo in questo modo fino all'alba successiva.\n\nLa ciotola ha un diametro di circa 30 cm e una profondità pari alla metà. Pesa 1,5 kg e contiene circa 12 litri."
+  },
+  "bracers-of-archery": {
+   "name": "Bracciali dell'Arciere",
+   "description": "Oggetto meraviglioso, non comune (richiede sintonia)\n\nMentre indossi questi bracciali, hai competenza nell'arco lungo e nell'arco corto, e ottieni un bonus di +2 ai tiri per i danni degli attacchi a distanza effettuati con tali armi."
+  },
+  "bracers-of-defense": {
+   "name": "Bracciali della Difesa",
+   "description": "Oggetto meraviglioso, raro (richiede sintonia)\n\nMentre indossi questi bracciali, ottieni un bonus di +2 alla CA se non indossi un'armatura e non usi uno scudo."
+  },
+  "brazier-of-commanding-fire-elementals": {
+   "name": "Braciere del Comando degli Elementali del Fuoco",
+   "description": "Oggetto meraviglioso, raro\n\nFinché in questo braciere d'ottone arde un fuoco, puoi usare un'azione per pronunciare la sua parola di comando ed evocare un elementale del fuoco, come se avessi lanciato l'incantesimo evoca elementale. Il braciere non può essere usato di nuovo in questo modo fino all'alba successiva.\n\nIl braciere pesa 2,5 kg."
+  },
+  "brooch-of-shielding": {
+   "name": "Spilla dello Scudo",
+   "description": "Oggetto meraviglioso, non comune (richiede sintonia)\n\nMentre indossi questa spilla, hai resistenza ai danni da forza e sei immune ai danni dell'incantesimo dardo incantato."
+  },
+  "broom-of-flying": {
+   "name": "Scopa Volante",
+   "description": "Oggetto meraviglioso, non comune\n\nQuesta scopa di legno, che pesa 1,5 kg, funziona come una scopa comune finché non ti ci metti a cavalcioni e pronunci la sua parola di comando. A quel punto si libra sotto di te e può essere cavalcata in aria. Ha una velocità di volo di 15 metri. Può trasportare fino a 200 kg, ma la sua velocità di volo diventa 9 metri se trasporta più di 100 kg. La scopa smette di librarsi quando atterri.\n\nPuoi mandare la scopa a viaggiare da sola verso una destinazione entro 1,5 km da te se pronunci la parola di comando, nomini il luogo e lo conosci. La scopa torna da te quando pronunci un'altra parola di comando, purché si trovi ancora entro 1,5 km da te."
+  },
+  "candle-of-invocation": {
+   "name": "Candela dell'Invocazione",
+   "description": "Oggetto meraviglioso, molto raro (richiede sintonia)\n\nQuesto sottile cero è dedicato a una divinità e ne condivide l'allineamento. L'allineamento della candela può essere individuato con l'incantesimo individuazione del bene e del male. Il GM sceglie il dio e l'allineamento associato, oppure determina l'allineamento a caso.\n\n| d20 | Allineamento |\n\n|---|---|\n\n| 1-2 | Caotico malvagio |\n\n| 3-4 | Caotico neutrale |\n\n| 5-7 | Caotico buono |\n\n| 8-9 | Neutrale malvagio |\n\n| 10-11 | Neutrale |\n\n| 12-13 | Neutrale buono |\n\n| 14-15 | Legale malvagio |\n\n| 16-17 | Legale neutrale |\n\n| 18-20 | Legale buono |\n\nLa magia della candela si attiva quando la candela viene accesa, il che richiede un'azione. Dopo aver bruciato per 4 ore, la candela viene distrutta. Puoi spegnerla prima per usarla in un secondo momento. Sottrai il tempo in cui ha bruciato, in intervalli di 1 minuto, dal tempo di combustione totale della candela.\n\nMentre è accesa, la candela emette luce fioca in un raggio di 9 metri. Qualsiasi creatura in quella luce il cui allineamento corrisponde a quello della candela effettua tiri per colpire, tiri salvezza e prove di caratteristica con vantaggio. Inoltre, un chierico o un druido nella luce il cui allineamento corrisponde a quello della candela può lanciare gli incantesimi di 1° livello che ha preparato senza spendere slot incantesimo, anche se l'effetto dell'incantesimo è come se fosse lanciato con uno slot di 1° livello.\n\nIn alternativa, quando accendi la candela per la prima volta, puoi lanciare con essa l'incantesimo portale. Così facendo la candela viene distrutta."
+  },
+  "cape-of-the-mountebank": {
+   "name": "Cappa del Ciarlatano",
+   "description": "Oggetto meraviglioso, raro\n\nQuesta cappa ha un leggero odore di zolfo. Mentre la indossi, puoi usarla per lanciare l'incantesimo porta dimensionale come azione. Questa proprietà della cappa non può essere usata di nuovo fino all'alba successiva.\n\nQuando scompari, lasci dietro di te una nube di fumo, e appari in una nube di fumo simile a destinazione. Il fumo oscura leggermente lo spazio che hai lasciato e quello in cui appari, e si dissolve alla fine del tuo turno successivo. Un vento leggero o più forte disperde il fumo."
+  },
+  "carpet-of-flying": {
+   "name": "Tappeto Volante",
+   "description": "Oggetto meraviglioso, molto raro\n\nPuoi pronunciare la parola di comando del tappeto con un'azione per farlo librare e volare. Si muove secondo le tue indicazioni verbali, purché tu ti trovi entro 9 metri da esso.\n\nEsistono quattro misure di tappeto volante. Il GM sceglie la misura di un certo tappeto o la determina a caso.\n\n| d100 | Misura | Capacità | Velocità di Volo |\n\n|---|---|---|---|\n\n| 01-20 | 90 cm × 1,5 m | 100 kg | 24 metri |\n\n| 21-55 | 1,2 m × 1,8 m | 200 kg | 18 metri |\n\n| 56-80 | 1,5 m × 2,1 m | 300 kg | 12 metri |\n\n| 81-100 | 1,8 m × 2,7 m | 400 kg | 9 metri |\n\nUn tappeto può trasportare fino al doppio del peso indicato nella tabella, ma vola a velocità dimezzata se trasporta più della sua capacità normale."
+  },
+  "carpet-of-flying-3x5": {
+   "name": "Tappeto Volante (90 cm × 1,5 m)",
+   "description": "Oggetto meraviglioso, molto raro\n\nPuoi pronunciare la parola di comando del tappeto con un'azione per farlo librare e volare. Si muove secondo le tue indicazioni verbali, purché tu ti trovi entro 9 metri da esso.\n\nQuesto tappeto misura 90 cm per 1,5 metri e ha una velocità di volo di 24 metri. Può trasportare fino a 200 kg, ma la sua velocità di volo diventa 12 metri se trasporta più di 100 kg."
+  },
+  "carpet-of-flying-4x6": {
+   "name": "Tappeto Volante (1,2 m × 1,8 m)",
+   "description": "Oggetto meraviglioso, molto raro\n\nPuoi pronunciare la parola di comando del tappeto con un'azione per farlo librare e volare. Si muove secondo le tue indicazioni verbali, purché tu ti trovi entro 9 metri da esso.\n\nQuesto tappeto misura 1,2 per 1,8 metri e ha una velocità di volo di 18 metri. Può trasportare fino a 400 kg, ma la sua velocità di volo diventa 9 metri se trasporta più di 200 kg."
+  },
+  "carpet-of-flying-5x7": {
+   "name": "Tappeto Volante (1,5 m × 2,1 m)",
+   "description": "Oggetto meraviglioso, molto raro\n\nPuoi pronunciare la parola di comando del tappeto con un'azione per farlo librare e volare. Si muove secondo le tue indicazioni verbali, purché tu ti trovi entro 9 metri da esso.\n\nQuesto tappeto misura 1,5 per 2,1 metri e ha una velocità di volo di 12 metri. Può trasportare fino a 600 kg, ma la sua velocità di volo diventa 6 metri se trasporta più di 300 kg."
+  },
+  "carpet-of-flying-6x9": {
+   "name": "Tappeto Volante (1,8 m × 2,7 m)",
+   "description": "Oggetto meraviglioso, molto raro\n\nPuoi pronunciare la parola di comando del tappeto con un'azione per farlo librare e volare. Si muove secondo le tue indicazioni verbali, purché tu ti trovi entro 9 metri da esso.\n\nQuesto tappeto misura 1,8 per 2,7 metri e ha una velocità di volo di 9 metri. Può trasportare fino a 800 kg, ma la sua velocità di volo diventa 4,5 metri se trasporta più di 400 kg."
+  },
+  "censer-of-controlling-air-elementals": {
+   "name": "Incensiere del Controllo degli Elementali dell'Aria",
+   "description": "Oggetto meraviglioso, raro\n\nMentre in questo incensiere brucia dell'incenso, puoi usare un'azione per pronunciare la sua parola di comando ed evocare un elementale dell'aria, come se avessi lanciato l'incantesimo evoca elementale. L'incensiere non può essere usato di nuovo in questo modo fino all'alba successiva.\n\nQuesto recipiente largo 15 cm e alto 30 cm somiglia a un calice con un coperchio decorato. Pesa 0,5 kg."
+  },
+  "chime-of-opening": {
+   "name": "Campanella dell'Apertura",
+   "description": "Oggetto meraviglioso, raro\n\nQuesto tubo di metallo cavo è lungo circa 30 cm e pesa 0,5 kg. Puoi percuoterlo con un'azione, puntandolo verso un oggetto entro 36 metri da te che può essere aperto, come una porta, un coperchio o una serratura. La campanella emette un suono limpido, e una serratura o un chiavistello dell'oggetto si apre, a meno che il suono non possa raggiungere l'oggetto. Se non restano serrature o chiavistelli, si apre l'oggetto stesso.\n\nLa campanella può essere usata dieci volte. Dopo la decima volta, si incrina e diventa inutile."
+  },
+  "circlet-of-blasting": {
+   "name": "Diadema dell'Esplosione",
+   "description": "Oggetto meraviglioso, non comune\n\nMentre indossi questo diadema, puoi usare un'azione per lanciare con esso l'incantesimo raggio rovente. Quando effettui gli attacchi dell'incantesimo, li effettui con un bonus di attacco di +5. Il diadema non può essere usato di nuovo in questo modo fino all'alba successiva."
+  },
+  "cloak-of-arachnida": {
+   "name": "Mantello dell'Aracnide",
+   "description": "Oggetto meraviglioso, molto raro (richiede sintonia)\n\nQuesto indumento pregiato è fatto di seta nera intessuta di sottili fili argentati. Mentre lo indossi, ottieni i seguenti benefici:\n\n* Hai resistenza ai danni da veleno.\n\n* Hai una velocità di scalata pari alla tua velocità sul terreno.\n\n* Puoi muoverti su, giù e lungo superfici verticali e a testa in giù lungo i soffitti, lasciando le mani libere.\n\n* Non puoi restare impigliato in ragnatele di alcun tipo e puoi muoverti attraverso le ragnatele come se fossero terreno difficile.\n\n* Puoi usare un'azione per lanciare l'incantesimo ragnatela (CD del tiro salvezza 13). La ragnatela creata dall'incantesimo riempie il doppio della sua area normale. Una volta usata, questa proprietà del mantello non può essere usata di nuovo fino all'alba successiva."
+  },
+  "cloak-of-displacement": {
+   "name": "Mantello della Distorsione",
+   "description": "Oggetto meraviglioso, raro (richiede sintonia)\n\nMentre indossi questo mantello, proietta un'illusione che ti fa sembrare in un punto vicino alla tua posizione reale, facendo avere a qualsiasi creatura svantaggio ai tiri per colpire contro di te. Se subisci danni, la proprietà smette di funzionare fino all'inizio del tuo turno successivo. Questa proprietà è soppressa mentre sei incapacitato, trattenuto o comunque impossibilitato a muoverti."
+  },
+  "cloak-of-elvenkind": {
+   "name": "Mantello Elfico",
+   "description": "Oggetto meraviglioso, non comune (richiede sintonia)\n\nMentre indossi questo mantello con il cappuccio alzato, le prove di Saggezza (Percezione) effettuate per vederti hanno svantaggio, e tu hai vantaggio alle prove di Destrezza (Furtività) effettuate per nasconderti, poiché il colore del mantello cambia per mimetizzarti. Alzare o abbassare il cappuccio richiede un'azione."
+  },
+  "cloak-of-protection": {
+   "name": "Mantello della Protezione",
+   "description": "Oggetto meraviglioso, non comune (richiede sintonia)\n\nOttieni un bonus di +1 alla CA e ai tiri salvezza mentre indossi questo mantello."
+  },
+  "cloak-of-the-bat": {
+   "name": "Mantello del Pipistrello",
+   "description": "Oggetto meraviglioso, raro (richiede sintonia)\n\nMentre indossi questo mantello, hai vantaggio alle prove di Destrezza (Furtività). In un'area di luce fioca o di oscurità, puoi afferrare i lembi del mantello con entrambe le mani e usarlo per volare a una velocità di 12 metri. Se smetti di afferrare i lembi del mantello mentre voli in questo modo, o se non ti trovi più in luce fioca o nell'oscurità, perdi questa velocità di volo.\n\nMentre indossi il mantello in un'area di luce fioca o di oscurità, puoi usare la tua azione per lanciare metamorfosi su di te, trasformandoti in un pipistrello. Mentre sei in forma di pipistrello, mantieni i tuoi punteggi di Intelligenza, Saggezza e Carisma. Il mantello non può essere usato di nuovo in questo modo fino all'alba successiva."
+  },
+  "cloak-of-the-manta-ray": {
+   "name": "Mantello della Manta",
+   "description": "Oggetto meraviglioso, non comune\n\nMentre indossi questo mantello con il cappuccio alzato, puoi respirare sott'acqua e hai una velocità di nuoto di 18 metri. Alzare o abbassare il cappuccio richiede un'azione."
+  },
+  "crystal-ball": {
+   "name": "Sfera di Cristallo",
+   "description": "Oggetto meraviglioso, molto raro o leggendario (richiede sintonia)\n\nLa tipica sfera di cristallo, un oggetto molto raro, ha un diametro di circa 15 cm. Mentre la tocchi, puoi lanciare con essa l'incantesimo scrutare (CD del tiro salvezza 17).\n\nLe seguenti varianti della sfera di cristallo sono oggetti leggendari e hanno proprietà aggiuntive.\n\n***Sfera di Cristallo della Lettura del Pensiero.*** Mentre scruti con la sfera di cristallo, puoi usare un'azione per lanciare l'incantesimo individuazione dei pensieri (CD del tiro salvezza 17), bersagliando creature che puoi vedere entro 9 metri dal sensore dell'incantesimo. Non devi concentrarti su questa individuazione dei pensieri per mantenerla durante la sua durata, ma termina se lo scrutamento termina.\n\n***Sfera di Cristallo della Telepatia.*** Mentre scruti con la sfera di cristallo, puoi comunicare telepaticamente con le creature che puoi vedere entro 9 metri dal sensore dell'incantesimo. Puoi anche usare un'azione per lanciare l'incantesimo suggestione (CD del tiro salvezza 17) attraverso il sensore su una di quelle creature. Non devi concentrarti su questa suggestione per mantenerla durante la sua durata, ma termina se lo scrutamento termina. Una volta usato, il potere di suggestione della sfera di cristallo non può essere usato di nuovo fino all'alba successiva.\n\n***Sfera di Cristallo della Visione del Vero.*** Mentre scruti con la sfera di cristallo, hai vista pura in un raggio di 36 metri centrato sul sensore dell'incantesimo."
+  },
+  "crystal-ball-of-mind-reading": {
+   "name": "Sfera di Cristallo della Lettura del Pensiero",
+   "description": "Oggetto meraviglioso, leggendario (richiede sintonia)\n\nLa sfera di cristallo ha un diametro di circa 15 cm. Mentre la tocchi, puoi lanciare con essa l'incantesimo scrutare (CD del tiro salvezza 17).\n\n***Sfera di Cristallo della Lettura del Pensiero.*** Mentre scruti con la sfera di cristallo, puoi usare un'azione per lanciare l'incantesimo individuazione dei pensieri (CD del tiro salvezza 17), bersagliando creature che puoi vedere entro 9 metri dal sensore dell'incantesimo. Non devi concentrarti su questa individuazione dei pensieri per mantenerla durante la sua durata, ma termina se lo scrutamento termina."
+  },
+  "crystal-ball-of-telepathy": {
+   "name": "Sfera di Cristallo della Telepatia",
+   "description": "Oggetto meraviglioso, leggendario (richiede sintonia)\n\nLa sfera di cristallo ha un diametro di circa 15 cm. Mentre la tocchi, puoi lanciare con essa l'incantesimo scrutare (CD del tiro salvezza 17).\n\n***Sfera di Cristallo della Telepatia.*** Mentre scruti con la sfera di cristallo, puoi comunicare telepaticamente con le creature che puoi vedere entro 9 metri dal sensore dell'incantesimo. Puoi anche usare un'azione per lanciare l'incantesimo suggestione (CD del tiro salvezza 17) attraverso il sensore su una di quelle creature. Non devi concentrarti su questa suggestione per mantenerla durante la sua durata, ma termina se lo scrutamento termina. Una volta usato, il potere di suggestione della sfera di cristallo non può essere usato di nuovo fino all'alba successiva."
+  },
+  "crystal-ball-of-true-seeing": {
+   "name": "Sfera di Cristallo della Visione del Vero",
+   "description": "Oggetto meraviglioso, leggendario (richiede sintonia)\n\nLa sfera di cristallo ha un diametro di circa 15 cm. Mentre la tocchi, puoi lanciare con essa l'incantesimo scrutare (CD del tiro salvezza 17).\n\n***Sfera di Cristallo della Visione del Vero.*** Mentre scruti con la sfera di cristallo, hai vista pura in un raggio di 36 metri centrato sul sensore dell'incantesimo."
+  },
+  "cube-of-force": {
+   "name": "Cubo della Forza",
+   "description": "Oggetto meraviglioso, raro (richiede sintonia)\n\nQuesto cubo ha un lato di circa 2,5 cm. Ogni faccia reca un segno distinto che può essere premuto. Il cubo inizia con 36 cariche e recupera ogni giorno all'alba 1d20 cariche spese.\n\nPuoi usare un'azione per premere una delle facce del cubo, spendendo un numero di cariche in base alla faccia scelta, come indicato nella tabella Facce del Cubo della Forza. Ogni faccia ha un effetto diverso. Se il cubo non ha cariche sufficienti, non succede nulla. Altrimenti, una barriera di forza invisibile prende forma, formando un cubo di 4,5 metri di lato. La barriera è centrata su di te, si muove con te e dura 1 minuto, finché non usi un'azione per premere la sesta faccia del cubo o finché il cubo non esaurisce le cariche. Puoi cambiare l'effetto della barriera premendo un'altra faccia del cubo e spendendo il numero di cariche richiesto, azzerando la durata.\n\nSe il tuo movimento porta la barriera a contatto con un oggetto solido che non può attraversare il cubo, non puoi avvicinarti ulteriormente a quell'oggetto finché la barriera resta attiva.\n\nFacce del Cubo della Forza\n\n| Faccia | Cariche | Effetto |\n\n|---|---|---|\n\n| 1 | 1 | Gas, vento e nebbia non possono attraversare la barriera.\n\n| 2 | 2 | La materia non vivente non può attraversare la barriera. Muri, pavimenti e soffitti possono attraversarla a tua discrezione.\n\n| 3 | 3 | La materia vivente non può attraversare la barriera.\n\n| 4 | 4 | Gli effetti degli incantesimi non possono attraversare la barriera.\n\n| 5 | 5 | Nulla può attraversare la barriera. Muri, pavimenti e soffitti possono attraversarla a tua discrezione.\n\n| 6 | 0 | La barriera si disattiva.\n\nIl cubo perde cariche quando la barriera è bersagliata da certi incantesimi o entra in contatto con gli effetti di certi incantesimi od oggetti magici, come indicato nella tabella seguente.\n\n| Incantesimo od Oggetto | Cariche Perse |\n\n|---|---|\n\n| Disintegrazione | 1d12 |\n\n| Corno della distruzione | 1d10 |\n\n| Passapareti | 1d6 |\n\n| Spruzzo prismatico | 1d20 |\n\n| Muro di fuoco | 1d4 |"
+  },
+  "cubic-gate": {
+   "name": "Portale Cubico",
+   "description": "Oggetto meraviglioso, leggendario\n\nQuesto cubo ha un lato di 7,5 cm e irradia un'energia magica palpabile. Ognuna delle sei facce del cubo è collegata a un diverso piano di esistenza, uno dei quali è il Piano Materiale. Le altre facce sono collegate a piani stabiliti dal GM.\n\nPuoi usare un'azione per premere una faccia del cubo e lanciare con esso l'incantesimo portale, aprendo un passaggio verso il piano collegato a quella faccia. In alternativa, se usi un'azione per premere due volte una faccia, puoi lanciare con il cubo l'incantesimo spostamento planare (CD del tiro salvezza 17) e trasportare i bersagli sul piano collegato a quella faccia.\n\nIl cubo ha 3 cariche. Ogni uso del cubo spende 1 carica. Il cubo recupera ogni giorno all'alba 1d3 cariche spese."
+  },
+  "dagger-of-venom": {
+   "name": "Pugnale Velenoso",
+   "description": "Arma (pugnale), rara\n\nOttieni un bonus di +1 ai tiri per colpire e per i danni effettuati con quest'arma magica.\n\nPuoi usare un'azione per far ricoprire la lama da un veleno denso e nero. Il veleno resta per 1 minuto o finché un attacco con quest'arma non colpisce una creatura. Quella creatura deve superare un tiro salvezza su Costituzione con CD 15 o subire 2d10 danni da veleno ed essere avvelenata per 1 minuto. Il pugnale non può essere usato di nuovo in questo modo fino all'alba successiva."
+  },
+  "dancing-sword": {
+   "name": "Spada Danzante",
+   "description": "Arma (qualsiasi spada), molto rara (richiede sintonia)\n\nPuoi usare un'azione bonus per lanciare in aria questa spada magica e pronunciare la parola di comando. Quando lo fai, la spada inizia a librarsi, vola fino a 9 metri e attacca una creatura a tua scelta entro 1,5 metri da essa. La spada usa il tuo tiro per colpire e il tuo modificatore di caratteristica ai tiri per i danni.\n\nMentre la spada si libra, puoi usare un'azione bonus per farla volare fino a 9 metri verso un altro punto entro 9 metri da te. Come parte della stessa azione bonus, puoi far attaccare alla spada una creatura entro 1,5 metri da essa.\n\nDopo che la spada fluttuante ha attaccato per la quarta volta, vola fino a 9 metri e tenta di tornare nella tua mano. Se non hai una mano libera, cade a terra ai tuoi piedi. Se la spada non ha un percorso libero fino a te, si avvicina il più possibile e poi cade a terra. Smette di librarsi anche se la afferri o se ti allontani di più di 9 metri da essa."
+  },
+  "decanter-of-endless-water": {
+   "name": "Caraffa dell'Acqua Infinita",
+   "description": "Oggetto meraviglioso, non comune\n\nQuesta fiasca tappata sciaborda quando viene scossa, come se contenesse acqua. La caraffa pesa 1 kg.\n\nPuoi usare un'azione per togliere il tappo e pronunciare una di tre parole di comando, al che dalla fiasca sgorga una certa quantità di acqua dolce o salata (a tua scelta). L'acqua smette di sgorgare all'inizio del tuo turno successivo. Scegli tra le seguenti opzioni:\n\n«Ruscello» produce 4 litri d'acqua.\n\n«Fontana» produce 20 litri d'acqua.\n\n«Geyser» produce 120 litri d'acqua che sgorgano in un getto lungo 9 metri e largo 30 cm. Come azione bonus mentre tieni la caraffa, puoi dirigere il getto contro una creatura che puoi vedere entro 9 metri da te. Il bersaglio deve superare un tiro salvezza su Forza con CD 13 o subire 1d4 danni contundenti e cadere prono. Invece di una creatura, puoi bersagliare un oggetto che non sia indossato né trasportato e che non pesi più di 100 kg. L'oggetto viene rovesciato o spinto fino a 4,5 metri lontano da te."
+  },
+  "deck-of-illusions": {
+   "name": "Mazzo delle Illusioni",
+   "description": "Oggetto meraviglioso, non comune\n\nQuesta scatola contiene un mazzo di carte di pergamena. Un mazzo completo ha 34 carte. A un mazzo trovato come tesoro mancano di solito 1d20 - 1 carte.\n\nLa magia del mazzo funziona solo se le carte vengono pescate a caso (puoi usare un mazzo di carte da gioco modificato per simulare il mazzo). Puoi usare un'azione per pescare una carta a caso dal mazzo e gettarla a terra in un punto entro 9 metri da te.\n\nSopra la carta gettata si forma l'illusione di una o più creature, che resta finché non viene dissolta. Una creatura illusoria sembra reale, della taglia appropriata, e si comporta come se fosse una creatura reale, tranne che non può fare alcun male. Mentre ti trovi entro 36 metri dalla creatura illusoria e puoi vederla, puoi usare un'azione per muoverla magicamente ovunque entro 9 metri dalla sua carta. Qualsiasi interazione fisica con la creatura illusoria rivela che si tratta di un'illusione, perché gli oggetti la attraversano. Chi usa un'azione per esaminare visivamente la creatura la riconosce come illusoria con una prova di Intelligenza (Indagare) con CD 15 superata. La creatura appare allora traslucida.\n\nL'illusione dura finché la sua carta non viene spostata o l'illusione non viene dissolta. Quando l'illusione termina, l'immagine sulla sua carta scompare e quella carta non può essere usata di nuovo.\n\n| Carta da Gioco | Illusione |\n\n|---|---|\n\n| Asso di cuori | Drago rosso |\n\n| Re di cuori | Cavaliere e quattro guardie |\n\n| Regina di cuori | Succube o incubo |\n\n| Fante di cuori | Druido |\n\n| Dieci di cuori | Gigante delle nuvole |\n\n| Nove di cuori | Ettin |\n\n| Otto di cuori | Bugbear |\n\n| Due di cuori | Goblin |\n\n| Asso di quadri | Beholder |\n\n| Re di quadri | Arcimago e apprendista mago |\n\n| Regina di quadri | Megera notturna |\n\n| Fante di quadri | Assassino |\n\n| Dieci di quadri | Gigante del fuoco |\n\n| Nove di quadri | Oni |\n\n| Otto di quadri | Gnoll |\n\n| Due di quadri | Coboldo |\n\n| Asso di picche | Lich |\n\n| Re di picche | Sacerdote e due accoliti |\n\n| Regina di picche | Medusa |\n\n| Fante di picche | Veterano |\n\n| Dieci di picche | Gigante del gelo |\n\n| Nove di picche | Troll |\n\n| Otto di picche | Hobgoblin |\n\n| Due di picche | Goblin |\n\n| Asso di fiori | Golem di ferro |\n\n| Re di fiori | Capitano dei banditi e tre banditi |\n\n| Regina di fiori | Erinni |\n\n| Fante di fiori | Berserker |\n\n| Dieci di fiori | Gigante delle colline |\n\n| Nove di fiori | Ogre |\n\n| Otto di fiori | Orco |\n\n| Due di fiori | Coboldo |\n\n| Jolly (2) | Tu (il proprietario del mazzo) |"
+  }
+ }
+}

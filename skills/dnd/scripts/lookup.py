@@ -320,6 +320,9 @@ LABELS = {
         "feature_level": "  (livello {n})",
         # Italian books use metric units: 1 lb = 0.5 kg
         "weight_unit": "kg", "weight_factor": 0.5, "decimal": ",",
+        "mi_header": "{category}, {rarity}",
+        "fem_categories": ["Pozione", "Arma", "Armatura", "Bacchetta", "Pergamena", "Verga", "Munizione"],
+        "rarity_fem": {"raro": "rara", "molto raro": "molto rara", "leggendario": "leggendaria"},
     },
 }
 _EN = LABELS["en"]
@@ -394,7 +397,12 @@ def _fmt_equipment(r: dict, L: dict = _EN) -> str:
 
 
 def _fmt_magic_item(r: dict, L: dict = _EN) -> str:
-    lines = [f"## {_title(r)}  [{r.get('rarity','')} {r.get('category','')}]", ""]
+    rarity, cat = r.get("rarity", ""), r.get("category", "")
+    # Italian puts rarity after the category and makes it agree ("Pozione, rara")
+    if cat in L.get("fem_categories", ()):
+        rarity = L["rarity_fem"].get(rarity, rarity)
+    header = L.get("mi_header", "{rarity} {category}").format(rarity=rarity, category=cat)
+    lines = [f"## {_title(r)}  [{header}]", ""]
     if r.get("attunement"):
         lines.append(L["attunement"])
         lines.append("")
