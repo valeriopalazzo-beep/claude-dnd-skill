@@ -30,6 +30,7 @@ import subprocess
 import sys
 import threading
 from collections import deque
+from pathlib import Path
 from typing import Optional
 from flask import Flask, Response, request, render_template, jsonify, send_from_directory
 from flask_cors import CORS
@@ -1125,6 +1126,37 @@ def _broadcast(payload: dict) -> None:
 
 # ─── Routes ──────────────────────────────────────────────────────────────────
 
+I18N_DIR = os.path.join(_HERE, "i18n")
+
+
+def _load_i18n_json() -> str:
+    """All display translations as one JSON object, {lang_code: {key: text}}.
+
+    One file per language in display/i18n/<code>.json — adding a language is
+    dropping a file there. Read on every page load, so wording edits show up on
+    reload without restarting the server. A malformed file is skipped (the page
+    falls back to English, then to the raw key) instead of breaking the display.
+    The result is embedded in a <script>, so "</" is escaped.
+    """
+    langs = {}
+    try:
+        names = sorted(os.listdir(I18N_DIR))
+    except OSError:
+        names = []
+    for name in names:
+        code, ext = os.path.splitext(name)
+        if ext != ".json":
+            continue
+        try:
+            data = json.loads(_read_text(Path(I18N_DIR, name)))
+        except (OSError, ValueError) as exc:
+            print(f"[i18n] skipping {name}: {exc}", file=sys.stderr)
+            continue
+        if isinstance(data, dict):
+            langs[code.lower()] = {k: v for k, v in data.items() if isinstance(v, str)}
+    return json.dumps(langs, ensure_ascii=False).replace("</", "<\\/")
+
+
 @app.route("/")
 def index():
     # Pass LAN token to template so the browser can authenticate /help-request
@@ -1133,6 +1165,7 @@ def index():
         lan_token=_lan_token or "",
         narrator_voice=_read_narrator_voice(),
         tts_available=(_tts is not None),
+        i18n=_load_i18n_json(),
     )
 
 
