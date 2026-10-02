@@ -110,7 +110,15 @@ class CharCreateTests(unittest.TestCase):
             self.assertTrue(problems, why)
 
     def test_rolled_scores_must_match_a_server_roll(self):
-        rolls = [[16, 14, 13, 12, 11, 9]]
+        # Same shape as conv["rolls"]: one entry per [[TIRA]], three series each.
+        rolls = [[[17, 15, 14, 12, 12, 10], [12, 12, 12, 10, 9, 7], [13, 13, 13, 11, 8, 7]],
+                 [[16, 14, 13, 12, 11, 9], [10, 10, 10, 10, 10, 10], [9, 9, 9, 9, 9, 9]]]
+        base = {"str": 17, "dex": 14, "con": 15, "int": 12, "wis": 12, "cha": 10}  # series 1, reordered
+        ok, p = self.cc.validate(_sheet(ability_method="tiro", ability_base=base), rolls)
+        self.assertEqual(p, [])
+        base = {"str": 9, "dex": 16, "con": 14, "int": 13, "wis": 12, "cha": 11}   # second roll
+        ok, p = self.cc.validate(_sheet(ability_method="tiro", ability_base=base), rolls)
+        self.assertEqual(p, [])
         base = {"str": 16, "dex": 14, "con": 13, "int": 12, "wis": 11, "cha": 9}
         ok, p = self.cc.validate(_sheet(ability_method="tiro", ability_base=base), rolls)
         self.assertEqual(p, [])

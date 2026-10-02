@@ -393,7 +393,8 @@ def validate(data: dict, rolls: list) -> tuple:
         if any(v not in POINT_COST for v in vals) or sum(POINT_COST.get(v, 99) for v in vals) > 27:
             p.append("con il point buy ogni punteggio base va da 8 a 15 e il costo totale non supera 27")
     elif method.startswith("tir") or method.startswith("roll"):
-        if not any(sorted(r, reverse=True) == vals for r in rolls):
+        # rolls holds one entry per [[TIRA]], each the three series roll_arrays() made.
+        if not any(sorted(s, reverse=True) == vals for arrays in rolls for s in arrays):
             p.append("con il tiro i punteggi base devono essere esattamente una delle serie tirate dal sistema")
     else:
         p.append("ability_method deve essere standard, point buy oppure tiro")
