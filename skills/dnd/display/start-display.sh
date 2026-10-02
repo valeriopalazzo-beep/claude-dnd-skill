@@ -9,6 +9,8 @@
 # Public certificate: if <runtime>/public_host names a host and cert.pem/key.pem
 # are a certificate for it (e.g. Let's Encrypt), --lan switches to HTTPS on its
 # own — no self-signed cert, no :8080 cert server, nothing to install on devices.
+# public_host may carry the router's external port ("host:25001") when it
+# forwards a different port to 5001; players are given that address.
 #
 # HTTP is the default. Guests and new devices connect instantly with no setup.
 # TLS adds encryption but requires a one-time certificate install on each device.
@@ -128,7 +130,8 @@ for i in $(seq 1 10); do
     [[ -n "$LAN_IP" ]] && echo "LAN access:     ${SCHEME}://${LAN_IP}:5001"
 
     if [[ -n "$PUBLIC_HOST" ]]; then
-      echo "Players:        https://${PUBLIC_HOST}:5001  (public certificate — nothing to install)"
+      [[ "$PUBLIC_HOST" == *:* ]] && PLAYERS_URL="https://${PUBLIC_HOST}" || PLAYERS_URL="https://${PUBLIC_HOST}:5001"
+      echo "Players:        ${PLAYERS_URL}  (public certificate — nothing to install)"
     elif $TLS_MODE; then
       echo ""
       echo "══════════════════════════════════════════════════════════════"
