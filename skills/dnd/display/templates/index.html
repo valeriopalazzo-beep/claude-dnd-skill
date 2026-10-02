@@ -23,7 +23,8 @@
   if (window._IS_PLAYER) document.documentElement.classList.add('player-login');
 </script>
 <style>
-  :root.player-login #dm-help-btn,
+  /* repeated id: outranks the skins' own !important placement of this button */
+  :root.player-login #dm-help-btn#dm-help-btn#dm-help-btn,
   :root.player-login [data-ln-proxy="dm-help-btn"],
   :root.player-login #sfx-row,
   :root.player-login #verbosity-row,
@@ -94,6 +95,7 @@
     { id: 'editorial', label: 'Editorial' },
     { id: 'lanterna',  label: 'Lanterna'  },
   ];
+  window._DEFAULT_SKIN = 'lanterna';
 
   (function () {
     try {
@@ -108,6 +110,13 @@
       // data-skin to their own id. Overlays set data-skin to base AND
       // data-variant to variant — mirrored in _apply() so the anti-FOUC and
       // the picker stay in lockstep.
+      // The default style. Each browser saves its style on first load, so a new
+      // default is applied once to every browser (tracked by dnd-skin-default);
+      // after that a style the player picks stays theirs.
+      if (window.localStorage.getItem('dnd-skin-default') !== window._DEFAULT_SKIN) {
+        window.localStorage.setItem('dnd-skin', window._DEFAULT_SKIN);
+        window.localStorage.setItem('dnd-skin-default', window._DEFAULT_SKIN);
+      }
       var skId = window.localStorage.getItem('dnd-skin');
       var sk = null;
       for (var i = 0; i < window._SKINS.length; i++) {
@@ -7869,7 +7878,7 @@ function _effectiveTheme(theme) {
 
     function _read() {
       let v = null; try { v = localStorage.getItem('dnd-skin'); } catch (_) {}
-      return _SKINS.some(s => s.id === v) ? v : 'vellum';
+      return _SKINS.some(s => s.id === v) ? v : window._DEFAULT_SKIN;
     }
 
     function _apply(skin) {
