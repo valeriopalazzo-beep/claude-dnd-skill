@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="robots" content="noindex">
+<title>D&amp;D — Nuova campagna</title>
+<link rel="icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+
+<!-- Same i18n runtime as index.html / login.html / crea.html. -->
+<script>
+  window._I18N = {{ i18n|safe }};
+  window._CAMP = { authed: {{ 'true' if authed else 'false' }}, configured: {{ 'true' if configured else 'false' }} };
+  (function () {
+    var all = window._I18N || {}, pick = null;
+    try { pick = localStorage.getItem('dnd-lang'); } catch (_) {}
+    if (!all[pick]) {
+      pick = null;
+      var langs = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || 'en'];
+      for (var i = 0; i < langs.length && !pick; i++) {
+        var base = String(langs[i] || '').toLowerCase().split('-')[0];
+        if (all[base]) pick = base;
+      }
+    }
+    window._LANG = pick || 'en';
+    document.documentElement.lang = window._LANG;
+    var cur = all[window._LANG] || {}, en = all.en || {};
+    window._t = function (key, vars, fallback) {
+      var str = cur[key];
+      if (str == null) str = en[key];
+      if (str == null) str = (fallback != null ? fallback : key);
+      if (vars) str = String(str).replace(/\{(\w+)\}/g, function (m, k) { return vars[k] != null ? vars[k] : m; });
+      return str;
+    };
+  })();
+</script>
+
+<style>
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html, body{ height:100%; }
+  body{
+    background:#14110C; color:#F3EFE4; font-family:'Syne',sans-serif;
+    display:flex; justify-content:center;
+    padding:0 max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
+    -webkit-text-size-adjust:100%; }
+  .wrap{ width:100%; max-width:640px; display:flex; flex-direction:column; height:100%; }
+  header{ padding:22px 0 12px; display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
+  .kicker{ font-weight:800; font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:#FF7A2D; }
+  .title{ font-family:'Newsreader',serif; font-style:italic; font-size:28px; line-height:1.1; margin-top:4px; }
+  .actions{ display:flex; gap:16px; }
+  .link{ background:none; border:0; cursor:pointer; color:#FF7A2D; font-family:'Syne',sans-serif;
+    font-weight:700; font-size:11px; letter-spacing:.14em; text-transform:uppercase; padding:8px 0; white-space:nowrap; }
+
+  #log{ flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding:8px 0 16px; }
+  .m{ max-width:88%; padding:12px 15px; border-radius:10px; line-height:1.45; font-size:16px; overflow-wrap:anywhere; }
+  .m.guide{ align-self:flex-start; background:#221C16; border:1px solid rgba(237,230,214,.12);
+    font-family:'Newsreader',serif; font-size:18px; color:#EDE6D6; }
+  .m.guide strong{ font-weight:600; color:#FFD9BF; }
+  .m.player{ align-self:flex-end; background:#FF7A2D; color:#14110C; font-weight:600; white-space:pre-line; }
+  .m.note{ align-self:stretch; max-width:none; background:none; border:1px dashed rgba(255,122,45,.5);
+    color:#FFB58A; font-size:14px; font-weight:600; white-space:pre-line; }
+  .m.wait{ align-self:flex-start; background:none; color:rgba(237,230,214,.55);
+    font-family:'Newsreader',serif; font-style:italic; }
+  .m.wait::after{ content:'…'; animation:dots 1.2s steps(3) infinite; display:inline-block; width:1em; overflow:hidden; vertical-align:bottom; }
+  @keyframes dots{ from{ width:0 } to{ width:1em } }
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; align-self:flex-start; max-width:88%; }
+  .chip{ background:none; border:1px solid rgba(255,122,45,.6); color:#FF9C6B; border-radius:999px; cursor:pointer;
+    font-family:'Syne',sans-serif; font-weight:700; font-size:13px; padding:8px 14px; -webkit-tap-highlight-color:transparent; }
+  .chip:active{ background:#FF7A2D; color:#14110C; }
+
+  form.say{ display:flex; gap:8px; padding:10px 0 max(14px, env(safe-area-inset-bottom)); border-top:1px solid rgba(237,230,214,.1); }
+  textarea{ flex:1; resize:none; min-height:48px; max-height:140px; background:#221C16; color:#EDE6D6;
+    border:1px solid rgba(237,230,214,.2); border-radius:8px; padding:12px; font:inherit; font-size:16px; }
+  textarea:focus, input:focus{ outline:2px solid #FF7A2D; outline-offset:1px; }
+  .btn{ background:#FF7A2D; color:#14110C; border:0; border-radius:8px; cursor:pointer; font-family:'Syne',sans-serif;
+    font-weight:800; font-size:13px; letter-spacing:.1em; text-transform:uppercase; padding:0 18px; min-height:48px; }
+  .btn:disabled{ opacity:.45; cursor:default; }
+
+  .panel{ background:#221C16; border:1px solid #FF7A2D; border-radius:10px; padding:18px; margin:6px 0 14px;
+    display:flex; flex-direction:column; gap:10px; }
+  .panel h2{ font-family:'Newsreader',serif; font-style:italic; font-weight:400; font-size:24px; }
+  .panel p{ font-family:'Newsreader',serif; font-size:17px; line-height:1.4; color:#EDE6D6; }
+  .panel label{ font-size:12px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#FF9C6B; }
+  .panel input{ background:#14110C; color:#EDE6D6; border:1px solid rgba(237,230,214,.25); border-radius:8px;
+    padding:12px; font:inherit; font-size:18px; width:100%; }
+  .panel code{ background:#14110C; padding:2px 6px; border-radius:4px; font-size:15px; }
+  #gate{ margin-top:12vh; }
+  dl.brief{ display:grid; grid-template-columns:auto 1fr; gap:4px 12px; font-size:14px; }
+  dl.brief dt{ color:#FF9C6B; font-weight:700; }
+  dl.brief dd{ color:#EDE6D6; overflow-wrap:anywhere; }
+  .steps{ list-style:none; display:flex; flex-direction:column; gap:6px; font-size:15px; }
+  .steps li{ color:rgba(237,230,214,.5); }
+  .steps li.now{ color:#FFD9BF; } .steps li.now::after{ content:' …'; }
+  .steps li.ok{ color:#EDE6D6; } .steps li.ok::before{ content:'✓ '; color:#FF7A2D; }
+  .err{ min-height:20px; font-size:13px; font-weight:600; color:#FF9C6B; }
+  a{ color:#FF7A2D; }
+  [hidden]{ display:none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="kicker" id="kicker"></div>
+      <div class="title" id="title"></div>
+    </div>
+    <div class="actions" id="actions" hidden>
+      <button class="link" id="restart" type="button"></button>
+      <button class="link" id="logout" type="button"></button>
+    </div>
+  </header>
+
+  <section class="panel" id="gate" hidden>
+    <h2 id="g-title"></h2>
+    <p id="g-text"></p>
+    <form id="g-form">
+      <label for="pw" id="l-pw"></label>
+      <input id="pw" type="password" autocomplete="current-password" maxlength="200">
+      <div class="err" id="g-err" role="alert"></div>
+      <button class="btn" id="g-go" type="submit"></button>
+    </form>
+  </section>
+
+  <div id="log" aria-live="polite" hidden></div>
+
+  <section class="panel" id="ready-panel" hidden>
+    <h2 id="rp-title"></h2>
+    <dl class="brief" id="rp-brief"></dl>
+    <p id="rp-text"></p>
+    <div class="err" id="rp-err" role="alert"></div>
+    <button class="btn" id="generate" type="button"></button>
+  </section>
+
+  <section class="panel" id="gen-panel" hidden>
+    <h2 id="gp-title"></h2>
+    <p id="gp-text"></p>
+    <ul class="steps" id="gp-steps"></ul>
+    <div class="err" id="gp-err" role="alert"></div>
+    <button class="btn" id="retry" type="button" hidden></button>
+  </section>
+
+  <form class="say" id="say" hidden>
+    <textarea id="text" rows="1" maxlength="2000"></textarea>
+    <button class="btn" id="send" type="submit"></button>
+  </form>
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var KEY = 'dnd-campagna-id';
+  var conv = null, busy = false, pollTimer = null;
+
+  $('kicker').textContent  = _t('camp.kicker', null, 'Dungeon Master');
+  $('title').textContent   = _t('camp.title', null, 'New campaign');
+  $('restart').textContent = _t('camp.restart', null, 'Start over');
+  $('logout').textContent  = _t('camp.logout', null, 'Log out');
+  $('send').textContent    = _t('camp.send', null, 'Send');
+  $('text').placeholder    = _t('camp.placeholder', null, 'Write your answer…');
+  $('g-title').textContent = _t('camp.gateTitle', null, 'DM only');
+  $('g-text').textContent  = _t('camp.gateText', null, 'Enter the password to create a new campaign.');
+  $('l-pw').textContent    = _t('camp.password', null, 'Password');
+  $('g-go').textContent    = _t('camp.enter', null, 'Enter');
+  $('generate').textContent = _t('camp.generate', null, 'Create the campaign');
+  $('retry').textContent   = _t('camp.retry', null, 'Try again');
+
+  var STEP_LABEL = {
+    'world.md': _t('camp.stepWorld', null, 'The world: tone, places, threat, mystery, factions'),
+    'npcs.md':  _t('camp.stepNpcs', null, 'The three main NPCs and their relationships'),
+    'state.md': _t('camp.stepState', null, 'Starting situation and story arc')
+  };
+  var FILES = ['world.md', 'npcs.md', 'state.md'];
+  var LABELS = {
+    tone: { grimdark: 'Grimdark', 'dark fantasy': 'Dark fantasy', heroic: 'Eroico', horror: 'Horror', political: 'Politico',
+            swashbuckling: 'Cappa e spada', cosmic: 'Cosmico', random: 'A caso' },
+    magic: { none: 'Nessuna', low: 'Bassa', medium: 'Media', high: 'Alta', random: 'A caso' },
+    setting: { medieval: 'Medievale', renaissance: 'Rinascimentale', ancient: 'Antica', nautical: 'Marinaresca',
+               underground: 'Sotterranea', random: 'A caso' },
+    danger: { lethal: 'Letale', gritty: 'Crudo', standard: 'Standard', heroic: 'Eroico', random: 'A caso' },
+    roll_mode: { players: 'I giocatori tirano i propri dadi', auto: 'Il Master tira tutto' },
+    arc: { dynamic: 'Arco dinamico in tre atti', sandbox: 'Sandbox' }
+  };
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function fmt(s) {
+    return esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\n/g, '<br>');
+  }
+  // Quick replies: the bold label of each numbered / bulleted option line.
+  function chipsFor(text) {
+    var out = [];
+    String(text).split('\n').forEach(function (line) {
+      var m = line.match(/^\s*(?:\d+[.)]|[-•*])\s*\*\*(.+?)\*\*/);
+      if (m) out.push(m[1].replace(/[:：]\s*$/, ''));
+    });
+    return out;
+  }
+  function scrollDown() { var l = $('log'); l.scrollTop = l.scrollHeight; }
+
+  function showGate() {
+    $('gate').hidden = false; $('log').hidden = true; $('say').hidden = true; $('actions').hidden = true;
+    $('ready-panel').hidden = true; $('gen-panel').hidden = true;
+    if (!window._CAMP.configured) {
+      $('g-text').textContent = _t('camp.notConfigured', null,
+        'No password is set yet. On the DM computer run: echo <password> | python3 camp_create.py set-password');
+      $('g-form').hidden = true;
+    }
+    setTimeout(function () { $('pw').focus(); }, 50);
+  }
+
+  function render() {
+    $('gate').hidden = true; $('log').hidden = false; $('actions').hidden = false;
+    var log = $('log'); log.innerHTML = '';
+    var h = (conv && conv.history) || [];
+    var gen = conv && conv.gen;
+    var generating = gen && (gen.status === 'running' || gen.status === 'error' || gen.status === 'done');
+    h.forEach(function (m) {
+      var d = document.createElement('div');
+      d.className = 'm ' + m.role;
+      if (m.role === 'guide') d.innerHTML = fmt(m.text); else d.textContent = m.text;
+      log.appendChild(d);
+    });
+    var last = h[h.length - 1];
+    if (last && last.role === 'guide' && !busy && !generating && !conv.finished) {
+      var chips = chipsFor(last.text);
+      if (chips.length) {
+        var c = document.createElement('div'); c.className = 'chips';
+        chips.forEach(function (label) {
+          var b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = label;
+          b.addEventListener('click', function () { send(label); });
+          c.appendChild(b);
+        });
+        log.appendChild(c);
+      }
+    }
+    if (busy) {
+      var w = document.createElement('div'); w.className = 'm wait';
+      w.textContent = _t('camp.thinking', null, 'Thinking');
+      log.appendChild(w);
+    }
+    renderReady(generating);
+    renderGen();
+    $('say').hidden = !!(generating && gen.status !== 'error') || conv.finished;
+    $('send').disabled = busy;
+    scrollDown();
+  }
+
+  function renderReady(generating) {
+    var show = conv && conv.ready && conv.brief && !generating;
+    $('ready-panel').hidden = !show;
+    if (!show) return;
+    var b = conv.brief;
+    $('rp-title').textContent = _t('camp.readyTitle', { name: b.name }, '“{name}” is ready to be written');
+    var rows = [
+      [_t('camp.f.folder', null, 'Folder'), b.folder],
+      [_t('camp.f.rules', null, 'Rules'), b.ruleset],
+      [_t('camp.f.rolls', null, 'Dice'), LABELS.roll_mode[b.roll_mode] || b.roll_mode],
+      [_t('camp.f.party', null, 'Party'), _t('camp.partyVal', { n: b.party_size, l: b.start_level }, '{n} players, level {l}')],
+      [_t('camp.f.tone', null, 'Tone'), [LABELS.tone[b.tone], LABELS.magic[b.magic] && ('magia ' + LABELS.magic[b.magic].toLowerCase()),
+        LABELS.setting[b.setting], LABELS.danger[b.danger] && ('pericolo ' + LABELS.danger[b.danger].toLowerCase())].filter(Boolean).join(' · ')],
+      [_t('camp.f.premise', null, 'Premise'), b.premise],
+      [_t('camp.f.arc', null, 'Arc'), LABELS.arc[b.arc] || b.arc]
+    ];
+    $('rp-brief').innerHTML = rows.filter(function (r) { return r[1]; })
+      .map(function (r) { return '<dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd>'; }).join('');
+    $('rp-text').textContent = _t('camp.readyText', null,
+      'Writing the world, the NPCs and the arc takes a few minutes. To change something, keep writing in the chat.');
+  }
+
+  function renderGen() {
+    var gen = conv && conv.gen;
+    $('gen-panel').hidden = !gen || !gen.status;
+    if (!gen || !gen.status) return;
+    var name = (conv.brief && conv.brief.name) || conv.folder;
+    $('gp-steps').innerHTML = FILES.map(function (f, i) {
+      var cls = conv.finished || gen.step > i + 1 ? 'ok' : (gen.step === i + 1 && gen.status === 'running' ? 'now' : '');
+      return '<li class="' + cls + '">' + esc(STEP_LABEL[f]) + '</li>';
+    }).join('');
+    $('retry').hidden = gen.status !== 'error';
+    $('gp-err').textContent = gen.status === 'error'
+      ? _t('camp.genError', { e: gen.error }, 'Generation stopped: {e}') : '';
+    if (gen.status === 'done' || conv.finished) {
+      $('gp-title').textContent = _t('camp.doneTitle', { name: name }, '“{name}” is ready');
+      $('gp-text').innerHTML = fmt(_t('camp.doneText', { folder: conv.folder },
+        'The campaign is saved in the folder **{folder}**. To play it, in Claude Code: `/dm:dnd load {folder}`. Players can create their characters at /crea.'));
+    } else {
+      $('gp-title').textContent = _t('camp.genTitle', { name: name }, 'Writing “{name}”');
+      $('gp-text').textContent = gen.status === 'error' ? '' : _t('camp.genText', null,
+        'This takes a few minutes. You can close the page: the work goes on, and you will find the result here.');
+    }
+  }
+
+  function note(text) {
+    var d = document.createElement('div'); d.className = 'm note'; d.textContent = text;
+    $('log').appendChild(d); scrollDown();
+  }
+
+  function api(path, body) {
+    return fetch(path, {
+      method: body === undefined ? 'GET' : 'POST',
+      headers: body === undefined ? {} : { 'Content-Type': 'application/json' },
+      body: body === undefined ? undefined : JSON.stringify(body),
+      credentials: 'same-origin'
+    }).then(function (r) { return r.json().then(function (j) { return { status: r.status, body: j }; }); });
+  }
+
+  function authLost(r) {
+    if (r.status !== 401) return false;
+    window._CAMP.authed = false; showGate(); return true;
+  }
+
+  function poll() {
+    clearTimeout(pollTimer);
+    if (!conv || !conv.gen || conv.gen.status !== 'running') return;
+    pollTimer = setTimeout(function () {
+      api('/campagna/conv/' + encodeURIComponent(conv.id)).then(function (r) {
+        if (authLost(r)) return;
+        if (r.status === 200) { conv = r.body; render(); }
+        poll();
+      }).catch(poll);
+    }, 4000);
+  }
+
+  function start() {
+    try { localStorage.removeItem(KEY); } catch (_) {}
+    clearTimeout(pollTimer);
+    api('/campagna/start', {}).then(function (r) {
+      if (authLost(r)) return;
+      if (r.status === 200) {
+        conv = r.body;
+        try { localStorage.setItem(KEY, conv.id); } catch (_) {}
+        render();
+      } else note(_t('camp.error', null, 'Something went wrong. Try again.'));
+    }).catch(function () { note(_t('camp.error', null, 'Something went wrong. Try again.')); });
+  }
+
+  function send(text) {
+    text = String(text || '').trim();
+    if (!text || busy || !conv || !conv.id || conv.finished) return;
+    busy = true;
+    conv.history.push({ role: 'player', text: text });
+    $('text').value = '';
+    render();
+    api('/campagna/msg', { id: conv.id, text: text }).then(function (r) {
+      busy = false;
+      if (authLost(r)) return;
+      if (r.status === 200) { conv = r.body.view; render(); return; }
+      conv.history.pop(); render();
+      $('text').value = text;
+      var e = r.body && r.body.error;
+      note(e === 'long' ? _t('camp.long', { n: r.body.max }, 'Shorter please: at most {n} characters.')
+         : e === 'unknown' ? _t('camp.expired', null, 'This conversation has expired. Start over.')
+         : e === 'busy' ? _t('camp.busy', null, 'Wait for the answer before writing again.')
+         : _t('camp.claude', null, 'No answer came. Send your message again in a moment.'));
+    }).catch(function () {
+      busy = false; conv.history.pop(); render(); $('text').value = text;
+      note(_t('camp.error', null, 'Something went wrong. Try again.'));
+    });
+  }
+
+  function generate(btn, errBox) {
+    btn.disabled = true; errBox.textContent = '';
+    api('/campagna/generate', { id: conv.id }).then(function (r) {
+      btn.disabled = false;
+      if (authLost(r)) return;
+      if (r.status === 200) { conv = r.body.view; render(); poll(); return; }
+      var e = r.body && r.body.error;
+      errBox.textContent = e === 'exists'
+        ? _t('camp.exists', { folder: r.body.folder }, 'A campaign called {folder} already exists: ask for a different name in the chat.')
+        : e === 'busy' ? _t('camp.genBusy', null, 'Another campaign is being written right now. Try again in a few minutes.')
+        : _t('camp.error', null, 'Something went wrong. Try again.');
+    }).catch(function () { btn.disabled = false; errBox.textContent = _t('camp.error', null, 'Something went wrong. Try again.'); });
+  }
+
+  $('generate').addEventListener('click', function () { generate($('generate'), $('rp-err')); });
+  $('retry').addEventListener('click', function () { generate($('retry'), $('gp-err')); });
+
+  $('say').addEventListener('submit', function (e) { e.preventDefault(); send($('text').value); });
+  $('text').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey && window.matchMedia('(pointer:fine)').matches) { e.preventDefault(); send($('text').value); }
+  });
+  $('text').addEventListener('input', function () { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 140) + 'px'; });
+  $('restart').addEventListener('click', function () {
+    var running = conv && conv.gen && conv.gen.status === 'running';
+    if (running) { note(_t('camp.genBusy', null, 'Another campaign is being written right now. Try again in a few minutes.')); return; }
+    if (!conv || !conv.history || conv.history.length < 2 || conv.finished ||
+        window.confirm(_t('camp.restartConfirm', null, 'Start over? This conversation will be lost.'))) start();
+  });
+  $('logout').addEventListener('click', function () {
+    api('/campagna/logout', {}).finally(function () { window._CAMP.authed = false; showGate(); });
+  });
+
+  $('g-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    $('g-err').textContent = ''; $('g-go').disabled = true;
+    api('/campagna/login', { password: $('pw').value }).then(function (r) {
+      $('g-go').disabled = false;
+      if (r.status === 200) { $('pw').value = ''; window._CAMP.authed = true; resume(); return; }
+      var e = r.body && r.body.error;
+      $('g-err').textContent = e === 'locked'
+        ? _t('camp.locked', { m: Math.ceil((r.body.retry_after || 60) / 60) }, 'Too many attempts. Try again in {m} min.')
+        : _t('camp.wrong', null, 'Wrong password.');
+    }).catch(function () { $('g-go').disabled = false; $('g-err').textContent = _t('camp.error', null, 'Something went wrong. Try again.'); });
+  });
+
+  // Resume the conversation after a reload, or begin a new one.
+  function resume() {
+    var saved = null;
+    try { saved = localStorage.getItem(KEY); } catch (_) {}
+    if (!saved) { start(); return; }
+    api('/campagna/conv/' + encodeURIComponent(saved)).then(function (r) {
+      if (authLost(r)) return;
+      if (r.status === 200) { conv = r.body; render(); poll(); } else start();
+    }).catch(start);
+  }
+
+  if (window._CAMP.authed) resume(); else showGate();
+})();
+</script>
+</body>
+</html>

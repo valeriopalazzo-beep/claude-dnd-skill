@@ -66,6 +66,16 @@ Full step-by-step procedures for all `/dm:dnd` slash commands. Load this file at
 
 ---
 
+## Web campaign creation (`/campagna`)
+
+When the display is running, the DM can open `<display URL>/campagna` from any device and create a campaign there instead of in the terminal. The login screen links to it. The page asks for a password first, on every device including this PC. The password is stored only as a salted hash in the runtime dir. Set or change it with `echo <password> | python3 ${CLAUDE_SKILL_DIR}/display/camp_create.py set-password`. A new password logs out every browser, and `clear-password` closes the page. Never write the password into a file or repeat it back.
+
+Claude asks the choices of `/dm:dnd new` one at a time: ruleset, dice, party size, starting level, tone, magic, setting, danger, the DM's wishes, a pitch with settlement, threat and mystery, and whether to have an arc. This Claude has no tools and no files (`claude -p --tools ""`). After the DM confirms, Opus writes `world.md`, then `npcs.md`, then `state.md`. It follows the templates and the `/dm:dnd new` procedure above, which `camp_create.py` reads from this file. The server checks every section before it creates `~/.claude/dnd/campaigns/<folder>/`.
+
+The display question is skipped, because `/dm:dnd load` asks it. The graph and calendar are also set up at load, as for any campaign. A web-created campaign has no PCs yet: players build them at `/crea`, and the DM imports them with `/dm:dnd character import`.
+
+---
+
 ## `/dm:dnd load <campaign-name>`
 0. **Pick the campaign if none was named.** If `<campaign-name>` was supplied (or the player clearly named one), use it. Otherwise `ls` the campaigns dir (`~/.claude/dnd/campaigns/` or `$DND_CAMPAIGN_ROOT/campaigns/`) and **call `AskUserQuestion`**: *"Which campaign?"* with the existing campaign names as options (most-recently-played first — sort by `state.md` mtime). The player can pick "Other" to type a name. If there are no campaigns, tell them and offer `/dm:dnd new`.
 1. **Session setup — call `AskUserQuestion`** with **three questions** (not typed y/n prompts). List `characters/*.md` first — Q3 needs the PC names.

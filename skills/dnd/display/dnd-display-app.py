@@ -457,7 +457,10 @@ _login_lock = threading.Lock()
 
 # Reachable without logging in. Every other endpoint needs a login.
 _PUBLIC_ENDPOINTS = {"ping", "serve_icon", "favicon", "login", "login_options", "logout", "static",
-                     "crea_page", "crea_start", "crea_conv", "crea_msg", "crea_finish"}
+                     "crea_page", "crea_start", "crea_conv", "crea_msg", "crea_finish",
+                     # /campagna checks its own password cookie (camp_create.py).
+                     "campagna_page", "campagna_login", "campagna_logout", "campagna_start",
+                     "campagna_conv", "campagna_msg", "campagna_generate"}
 # Only the DM may call these (the narration feed, stats, dice requests, queue
 # plumbing, device approval, wiping the log).
 _DM_ENDPOINTS = {
@@ -800,6 +803,129 @@ def crea_finish():
     _create.save_conv(conv)
     print(f"[crea] new character from the web: {conv['sheet']['name']} — pending DM approval", file=sys.stderr)
     return jsonify({"ok": True, "name": conv["sheet"]["name"]})
+
+
+# ─── Campaign creation from the web (/campagna) ──────────────────────────────
+# DM only, behind its own password (camp_create.py set-password), on every
+# device — this PC included. Claude asks the `/dm:dnd new` questions, then Opus
+# writes the campaign files in a background thread; the page polls for it.
+
+import camp_create as _camp
+
+
+def _camp_authed() -> bool:
+    return _camp.session_ok(request.cookies.get(_camp.COOKIE, ""))
+
+
+def _camp_guard():
+    """None when the caller may use /campagna, else the refusal to return."""
+    if not _same_origin():
+        return "Forbidden", 403
+    if not _camp_authed():
+        return jsonify({"error": "auth"}), 401
+    return None
+
+
+@app.route("/campagna")
+def campagna_page():
+    return render_template("campagna.html", i18n=_load_i18n_json(),
+                           authed=_camp_authed(), configured=bool(_camp.password_record()))
+
+
+@app.route("/campagna/login", methods=["POST"])
+def campagna_login():
+    if not _same_origin():
+        return "Forbidden", 403
+    ip = request.remote_addr or "?"
+    wait = _camp.login_wait(ip)
+    if wait:
+        return jsonify({"error": "locked", "retry_after": wait}), 429
+    pw = str((request.get_json(silent=True) or {}).get("password", ""))
+    if not _camp.check_password(pw):
+        _camp.login_failed(ip)
+        print(f"[campagna] wrong password from {ip}", file=sys.stderr)
+        return jsonify({"error": "password"}), 403
+    resp = jsonify({"ok": True})
+    resp.set_cookie(_camp.COOKIE, _camp.new_session(), max_age=_camp.SESSION_TTL, httponly=True,
+                    samesite="Strict", secure=_TLS_MODE, path="/campagna")
+    return resp
+
+
+@app.route("/campagna/logout", methods=["POST"])
+def campagna_logout():
+    if not _same_origin():
+        return "Forbidden", 403
+    _camp.end_session(request.cookies.get(_camp.COOKIE, ""))
+    resp = jsonify({"ok": True})
+    resp.delete_cookie(_camp.COOKIE, path="/campagna")
+    return resp
+
+
+@app.route("/campagna/start", methods=["POST"])
+def campagna_start():
+    refused = _camp_guard()
+    if refused:
+        return refused
+    return jsonify(_camp.public_view(_camp.new_conv()))
+
+
+@app.route("/campagna/conv/<cid>")
+def campagna_conv(cid):
+    if not _camp_authed():
+        return jsonify({"error": "auth"}), 401
+    conv = _camp.load_conv(cid)
+    if not conv:
+        return jsonify({"error": "unknown"}), 404
+    return jsonify(_camp.public_view(conv))
+
+
+@app.route("/campagna/msg", methods=["POST"])
+def campagna_msg():
+    refused = _camp_guard()
+    if refused:
+        return refused
+    data = request.get_json(silent=True) or {}
+    conv = _camp.load_conv(str(data.get("id", "")))
+    if not conv or conv.get("finished"):
+        return jsonify({"error": "unknown"}), 404
+    text = str(data.get("text", "")).strip()
+    if not text:
+        return jsonify({"error": "empty"}), 400
+    if len(text) > _camp.MAX_MSG_LEN:
+        return jsonify({"error": "long", "max": _camp.MAX_MSG_LEN}), 400
+    if sum(1 for m in conv["history"] if m["role"] == "player") >= _camp.MAX_TURNS:
+        return jsonify({"error": "turns"}), 429
+    with _camp._gen_lock:
+        if conv["id"] in _camp._busy or conv["id"] in _camp._generating:
+            return jsonify({"error": "busy"}), 409
+        _camp._busy.add(conv["id"])
+    try:
+        try:
+            out = _camp.handle_message(conv, text)
+        except Exception as e:
+            print(f"[campagna] {conv['id'][:8]}: {e}", file=sys.stderr)
+            return jsonify({"error": "claude"}), 502
+        return jsonify(out | {"view": _camp.public_view(conv)})
+    finally:
+        with _camp._gen_lock:
+            _camp._busy.discard(conv["id"])
+
+
+@app.route("/campagna/generate", methods=["POST"])
+def campagna_generate():
+    refused = _camp_guard()
+    if refused:
+        return refused
+    conv = _camp.load_conv(str((request.get_json(silent=True) or {}).get("id", "")))
+    if not conv or not conv.get("brief") or conv.get("finished"):
+        return jsonify({"error": "unknown"}), 404
+    if conv["id"] in _camp._busy:
+        return jsonify({"error": "busy"}), 409
+    if _camp.folder_taken(conv["brief"]["folder"]):
+        return jsonify({"error": "exists", "folder": conv["brief"]["folder"]}), 409
+    if not _camp.start_generation(conv):
+        return jsonify({"error": "busy"}), 409
+    return jsonify({"view": _camp.public_view(conv)})
 
 
 # Wire audio broadcast after _broadcast is defined (see bottom of file)

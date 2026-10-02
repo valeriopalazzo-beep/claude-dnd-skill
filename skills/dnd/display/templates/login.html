@@ -231,6 +231,11 @@
     c.className = 'opt dm'; c.href = '/crea';
     c.textContent = _t('login.create', null, '✦ Create a new character');
     list.appendChild(c);
+    // The DM can start a new campaign from any device (/campagna, password).
+    var nc = document.createElement('a');
+    nc.className = 'opt dm'; nc.href = '/campagna';
+    nc.textContent = _t('login.newCampaign', null, '✦ New campaign (DM)');
+    list.appendChild(nc);
   }).catch(function () {
     $('list').innerHTML = '';
     var e = document.createElement('div');
