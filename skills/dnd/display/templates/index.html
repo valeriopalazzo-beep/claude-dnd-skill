@@ -6,6 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="dnd-token" content="{{ lan_token }}">
+<meta name="dnd-login" content="{{ login_role }}">
 <meta name="narrator-voice" content="{{ narrator_voice }}">
 <meta name="tts-available" content="{{ '1' if tts_available else '0' }}">
 
@@ -4458,6 +4459,7 @@
     <label class="ph-set-opt ph-set-row" id="ph-skin-opt"><span data-i18n="ph.style">Style</span><select id="ph-skin-select" class="ph-set-select" aria-label="Display style"><option value="vellum">Vellum</option><option value="editorial">Editorial</option><option value="lanterna">Lanterna</option></select></label>
     <label class="ph-set-opt ph-set-row" id="ph-lang-opt"><span data-i18n="settings.language">Language</span><select id="ph-lang-select" class="ph-set-select" aria-label="Display language" data-i18n-aria="settings.language"></select></label>
     <button class="ph-set-opt" id="ph-roll-opt" type="button" hidden><span data-i18n="ph.rolls">Rolls</span><strong id="ph-roll-val">Players</strong></button>
+    <button class="ph-set-opt" id="ph-logout-opt" type="button" hidden><span data-i18n="ph.logout">Log out</span><strong>⏻</strong></button>
   </div>
 </div>
 
@@ -8736,6 +8738,14 @@ function connect() {
 
   evtSource.onerror = () => {
     evtSource.close();
+    // Logged-in browser: if the login itself is gone (PIN reset, campaign
+    // changed, DM logged everyone out), reload to land on the login screen.
+    const _lm = document.querySelector('meta[name="dnd-login"]');
+    if (_lm && _lm.getAttribute('content')) {
+      fetch('/login/options').then(r => r.json()).then(o => {
+        if (o && !o.me) window.location.href = '/';
+      }).catch(() => {});
+    }
     setTimeout(() => {
       reconnectDelay = Math.min(reconnectDelay * 1.5, 3000);
       connect();
@@ -8888,6 +8898,17 @@ function _onscreenDiceOn() { try { return localStorage.getItem('dnd-onscreen-dic
     // the native picker doesn't close the menu via the document-click listener.
     const sOpt = document.getElementById('ph-skin-opt');
     if (sOpt) sOpt.addEventListener('click', e => e.stopPropagation());
+
+    // Log out — only for a browser that logged in with a PIN (LAN mode, not this PC).
+    const loOpt = document.getElementById('ph-logout-opt');
+    const loginMeta = document.querySelector('meta[name="dnd-login"]');
+    if (loOpt && loginMeta && loginMeta.getAttribute('content')) {
+      loOpt.hidden = false;
+      loOpt.addEventListener('click', e => {
+        e.stopPropagation();
+        fetch('/logout', { method: 'POST' }).finally(() => { window.location.href = '/'; });
+      });
+    }
 
     // Per-player roll override — only meaningful when this phone is bound to a PC.
     const boundChar = new URLSearchParams(location.search).get('char')

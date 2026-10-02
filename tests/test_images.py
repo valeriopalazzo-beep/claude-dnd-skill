@@ -488,9 +488,12 @@ class MediaRouteTests(unittest.TestCase):
             r.close()
 
     def test_lan_mode_needs_the_token_in_header_or_query(self):
+        # From another device (this PC is the DM and needs nothing): no login
+        # and no token → refused; ?t=<token> still works for <img> tags.
         self.app._lan_token = "t" * 64
-        self.assertEqual(self.client.get("/media/portrait-vesna.png").status_code, 403)
-        r = self.client.get("/media/portrait-vesna.png?t=" + "t" * 64)
+        phone = {"REMOTE_ADDR": "192.168.1.50"}
+        self.assertEqual(self.client.get("/media/portrait-vesna.png", environ_base=phone).status_code, 401)
+        r = self.client.get("/media/portrait-vesna.png?t=" + "t" * 64, environ_base=phone)
         self.assertEqual(r.status_code, 200)
         r.close()
 

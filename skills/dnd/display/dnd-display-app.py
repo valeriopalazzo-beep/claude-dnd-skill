@@ -18,8 +18,11 @@ Endpoints:
     POST /player-input/unstage → remove a staged action
     POST /player-input/skip    → skip a character's turn (stages + readies a skip entry)
     GET  /srd-lookup           → look up a spell/item/feature/condition by name
+    GET  /login/options        → (LAN) characters that can log in
+    POST /login, /logout       → (LAN) PIN login for players / DM — see accounts.py
 """
 
+import hashlib
 import hmac
 import json
 import os
@@ -32,7 +35,8 @@ import threading
 from collections import deque
 from pathlib import Path
 from typing import Optional
-from flask import Flask, Response, request, render_template, jsonify, send_from_directory
+from urllib.parse import quote, urlparse
+from flask import Flask, Response, g, redirect, request, render_template, jsonify, send_from_directory
 from flask_cors import CORS
 
 # This file lives at <code-root>/display/ — resolve dirs from its location so
@@ -405,17 +409,305 @@ def _check_auto_trigger() -> None:
 
 
 def _token_ok() -> bool:
-    """Return True if the request carries the correct LAN token (or we're in localhost mode)."""
+    """Return True if the request is authenticated (or we're in localhost mode).
+
+    In LAN mode the before_request gate (_auth_gate) has already resolved who
+    is calling — the DM (token header or this PC) or a logged-in player — and
+    refused DM-only endpoints to players, so this only checks that someone
+    is logged in.
+    """
     if _lan_token is None:
         return True   # localhost mode — no token required
-    provided = request.headers.get("X-DND-Token", "")
-    return hmac.compare_digest(provided, _lan_token)
+    return getattr(g, "role", None) is not None
 
 
 app = Flask(__name__)
 
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 CORS(app)
+
+
+# ─── Login (LAN mode) ─────────────────────────────────────────────────────────
+# In LAN mode nothing is served to a browser that isn't logged in, except the
+# login page itself. Three ways to be authenticated:
+#   - the X-DND-Token header (send.py / push_stats.py / wrapper.py)  → DM
+#   - a request from this PC (loopback)                              → DM
+#   - a session cookie from POST /login                              → DM or player
+# A player session is bound to one character: the server acts as that
+# character whatever name the browser sends, and refuses DM-only endpoints.
+# PINs are stored hashed by accounts.py (see its docstring).
+
+import accounts as _accounts
+
+SESSIONS_FILE   = rt("sessions.json")
+_SESSION_COOKIE = "dnd_session"
+_SESSION_TTL    = 30 * 86400   # a phone stays logged in for 30 days
+
+# sha256(session id) → {"role", "character", "campaign", "created"}. Only the
+# hash is persisted, so the sessions file can't be replayed as cookies.
+_sessions: dict[str, dict] = {}
+_sessions_lock = threading.Lock()
+
+# Failed-PIN throttling: 5 misses per IP in 15 min, 10 per character in 1 h.
+_LOGIN_IP_MAX,   _LOGIN_IP_WINDOW   = 5, 15 * 60
+_LOGIN_CHAR_MAX, _LOGIN_CHAR_WINDOW = 10, 60 * 60
+_login_fails_ip:   dict[str, list] = {}
+_login_fails_char: dict[str, list] = {}
+_login_lock = threading.Lock()
+
+# Reachable without logging in. Every other endpoint needs a login.
+_PUBLIC_ENDPOINTS = {"ping", "serve_icon", "favicon", "login", "login_options", "logout", "static"}
+# Only the DM may call these (the narration feed, stats, dice requests, queue
+# plumbing, device approval, wiping the log).
+_DM_ENDPOINTS = {
+    "chunk", "image", "stats", "clear", "health", "tts_voice",
+    "dice_request", "dice_request_status", "dice_request_cancel",
+    "device_approve", "device_deny",
+    "queue_consumed", "submit_now", "drain_player_input",
+}
+
+
+def _sid_key(sid: str) -> str:
+    return hashlib.sha256(sid.encode("utf-8")).hexdigest()
+
+
+def _load_sessions() -> None:
+    try:
+        with open(SESSIONS_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return
+    now = _time.time()
+    if isinstance(data, dict):
+        for k, v in data.items():
+            if isinstance(v, dict) and now - float(v.get("created", 0)) < _SESSION_TTL:
+                _sessions[k] = v
+
+
+def _persist_sessions() -> None:
+    with _sessions_lock:
+        data = dict(_sessions)
+    try:
+        tmp = SESSIONS_FILE + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f)
+        os.replace(tmp, SESSIONS_FILE)
+        os.chmod(SESSIONS_FILE, 0o600)
+    except OSError:
+        pass
+
+
+_load_sessions()
+
+
+def _is_loopback(ip: Optional[str]) -> bool:
+    return ip in ("127.0.0.1", "::1") or (ip or "").startswith("::ffff:127.")
+
+
+def _login_campaign() -> str:
+    """Active campaign name, sanitised the same way accounts.py does."""
+    try:
+        camp = open(CAMP_FILE, encoding="utf-8").read().strip()
+    except OSError:
+        camp = ""
+    return re.sub(r"[^A-Za-z0-9_-]", "", camp)[:50]
+
+
+def _session_from_request() -> Optional[dict]:
+    """The caller's session if its cookie is valid right now, else None.
+
+    A session dies when it expires, when the active campaign is not the one it
+    was created for, when its PIN was changed after it was created, or after
+    `accounts.py logout-all`.
+    """
+    sid = request.cookies.get(_SESSION_COOKIE, "")
+    if not sid:
+        return None
+    key = _sid_key(sid)
+    with _sessions_lock:
+        s = _sessions.get(key)
+    if not s:
+        return None
+    created = float(s.get("created", 0))
+    if _time.time() - created > _SESSION_TTL:
+        with _sessions_lock:
+            _sessions.pop(key, None)
+        _persist_sessions()
+        return None
+    if s.get("role") == "dm":
+        rec = _accounts.dm_record()
+        return s if rec and created >= float(rec.get("changed", 0)) else None
+    camp = _login_campaign()
+    if not camp or s.get("campaign") != camp:
+        return None
+    data = _accounts.load(camp)
+    stored = _accounts.find_character(data, s.get("character", ""))
+    if not stored:
+        return None
+    if created < float(data["characters"][stored].get("changed", 0)):
+        return None
+    if created < float(data.get("logout_before", 0) or 0):
+        return None
+    return s
+
+
+def _login_wait(ip: str, char_key: str) -> int:
+    """Seconds this IP / character must wait before another PIN try (0 = free)."""
+    now = _time.time()
+    wait = 0
+    with _login_lock:
+        for table, key, mx, win in (
+            (_login_fails_ip, ip, _LOGIN_IP_MAX, _LOGIN_IP_WINDOW),
+            (_login_fails_char, char_key, _LOGIN_CHAR_MAX, _LOGIN_CHAR_WINDOW),
+        ):
+            fails = [t for t in table.get(key, []) if now - t < win]
+            table[key] = fails
+            if len(fails) >= mx:
+                wait = max(wait, int(fails[0] + win - now) + 1)
+    return wait
+
+
+def _login_failed(ip: str, char_key: str) -> None:
+    now = _time.time()
+    with _login_lock:
+        _login_fails_ip.setdefault(ip, []).append(now)
+        _login_fails_char.setdefault(char_key, []).append(now)
+
+
+def _acting_character(requested: str) -> str:
+    """The character this request may act as.
+
+    A player always acts as their own character, whatever name the browser
+    sent (returned with the party's spelling when the party lists it). The
+    DM may act as anyone.
+    """
+    if getattr(g, "role", None) != "player":
+        return requested
+    own = g.character or ""
+    with _stats_lock:
+        names = [p.get("name", "") for p in _current_stats.get("players", [])]
+    return next((n for n in names if n.lower() == own.lower()), own)
+
+
+def _is_other_character(name: str) -> bool:
+    """True when a logged-in player names a character that isn't theirs."""
+    return (getattr(g, "role", None) == "player"
+            and (name or "").strip().lower() != (g.character or "").lower())
+
+
+def _render_login():
+    return render_template("login.html", i18n=_load_i18n_json())
+
+
+@app.before_request
+def _auth_gate():
+    g.role = None
+    g.character = None
+    if _lan_token is None:
+        g.role = "dm"          # localhost-only mode: no login at all
+        return None
+
+    provided = request.headers.get("X-DND-Token", "")
+    if not provided and request.endpoint == "media_file":
+        provided = request.args.get("t", "")   # <img> can't send headers
+    if provided and hmac.compare_digest(provided, _lan_token):
+        g.role = "dm"
+    elif _is_loopback(request.remote_addr):
+        g.role = "dm"
+    else:
+        s = _session_from_request()
+        if s:
+            # Cookie-authenticated writes must come from our own pages.
+            origin = request.headers.get("Origin", "")
+            if (request.method not in ("GET", "HEAD", "OPTIONS") and origin
+                    and urlparse(origin).netloc != request.host):
+                return "Forbidden", 403
+            g.role = s.get("role")
+            g.character = s.get("character")
+
+    ep = request.endpoint
+    if ep is None or ep in _PUBLIC_ENDPOINTS:
+        return None
+    if g.role is None:
+        if ep == "index":
+            return _render_login()
+        return "Login required", 401
+    if ep in _DM_ENDPOINTS and g.role != "dm":
+        return "Forbidden", 403
+    return None
+
+
+@app.route("/login/options")
+def login_options():
+    """What the login screen offers: characters with a PIN, and the DM entry.
+
+    `me` is the caller's current login ("dm" / "player" / null), so a page whose
+    session died can notice and go back to the login screen.
+    """
+    if _lan_token is None:
+        return "Not found", 404
+    camp = _login_campaign()
+    names = sorted(_accounts.load(camp)["characters"]) if camp else []
+    return jsonify({"characters": names, "dm": _accounts.dm_record() is not None,
+                    "me": g.role})
+
+
+@app.route("/login", methods=["POST"])
+def login():
+    """Body: {"character": "Mira", "pin": "123456"} or {"dm": true, "pin": "..."}."""
+    if _lan_token is None:
+        return "Not found", 404
+    ip = request.remote_addr or "?"
+    if not _rate_ok(ip):
+        return jsonify({"error": "rate"}), 429
+    data = request.get_json(silent=True) or {}
+    pin = str(data.get("pin", "")).strip()
+    as_dm = bool(data.get("dm"))
+    camp = _login_campaign()
+
+    if as_dm:
+        char_key, rec, stored = "__dm__", _accounts.dm_record(), None
+    else:
+        acc = _accounts.load(camp) if camp else {"characters": {}}
+        stored = _accounts.find_character(acc, str(data.get("character", ""))[:50])
+        if not stored:
+            return jsonify({"error": "unknown"}), 404
+        char_key, rec = f"{camp}/{stored.lower()}", acc["characters"][stored]
+
+    wait = _login_wait(ip, char_key)
+    if wait:
+        return jsonify({"error": "locked", "retry_after": wait}), 429
+    if not _accounts.verify_pin(pin, rec):
+        _login_failed(ip, char_key)
+        print(f"[login] wrong PIN for {stored or 'DM'} from {ip}", flush=True)
+        return jsonify({"error": "pin"}), 403
+
+    sid = secrets.token_urlsafe(32)
+    sess = {"role": "dm" if as_dm else "player", "character": stored,
+            "campaign": camp, "created": _time.time()}
+    with _sessions_lock:
+        _sessions[_sid_key(sid)] = sess
+    _persist_sessions()
+    print(f"[login] {stored or 'DM'} logged in from {ip}", flush=True)
+
+    target = "/" if as_dm else "/?char=" + quote(stored)
+    resp = jsonify({"ok": True, "redirect": target})
+    resp.set_cookie(_SESSION_COOKIE, sid, max_age=_SESSION_TTL, httponly=True,
+                    samesite="Lax", secure=_TLS_MODE)
+    return resp
+
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    sid = request.cookies.get(_SESSION_COOKIE, "")
+    if sid:
+        with _sessions_lock:
+            _sessions.pop(_sid_key(sid), None)
+        _persist_sessions()
+    resp = jsonify({"ok": True})
+    resp.delete_cookie(_SESSION_COOKIE)
+    return resp
+
 
 # Wire audio broadcast after _broadcast is defined (see bottom of file)
 # — done lazily via set_broadcast() called after app is created.
@@ -1159,10 +1451,18 @@ def _load_i18n_json() -> str:
 
 @app.route("/")
 def index():
-    # Pass LAN token to template so the browser can authenticate /help-request
+    # A player's phone always opens bound to their own character.
+    if g.role == "player":
+        asked = request.args.get("char") or request.args.get("character")
+        wants_input = request.args.get("view") == "input" or asked is not None
+        if wants_input and _is_other_character(asked or ""):
+            return redirect("/?char=" + quote(g.character or ""))
+    # The token is never written into the page: in LAN mode browsers
+    # authenticate as this PC (loopback) or with their login cookie.
     return render_template(
         "index.html",
-        lan_token=_lan_token or "",
+        lan_token="",
+        login_role=(g.role or "") if (_lan_token is not None and not _is_loopback(request.remote_addr)) else "",
         narrator_voice=_read_narrator_voice(),
         tts_available=(_tts is not None),
         i18n=_load_i18n_json(),
@@ -1459,11 +1759,10 @@ def _media_dir() -> "str | None":
 
 @app.route("/media/<name>")
 def media_file(name):
-    # <img> tags cannot send headers, so LAN mode also accepts ?t=<token>.
-    if _lan_token is not None:
-        provided = request.headers.get("X-DND-Token", "") or request.args.get("t", "")
-        if not hmac.compare_digest(provided, _lan_token):
-            return "Forbidden", 403
+    # <img> tags cannot send headers: LAN mode authenticates them by login
+    # cookie, or by ?t=<token> (checked in _auth_gate).
+    if not _token_ok():
+        return "Forbidden", 403
     d = _media_dir()
     if not d or not _MEDIA_NAME_RE.match(name):
         return "Not found", 404
@@ -1786,6 +2085,8 @@ def effects_expire():
     name  = data.get("name", "").strip()
     if not owner or not name:
         return "", 400
+    if _is_other_character(owner):
+        return "Forbidden", 403   # a player's timer only expires their own effects
 
     expire_evt = None
     with _stats_lock:
@@ -1879,7 +2180,7 @@ def roll_pref():
     if not _rate_ok(request.remote_addr or "?"):
         return "Rate limited", 429
     data = request.get_json(silent=True) or {}
-    char = (data.get("character") or "").strip()
+    char = _acting_character((data.get("character") or "").strip())
     mode = (data.get("mode") or "").strip().lower()
     if not char or mode not in ("auto", "players"):
         return {"ok": False}, 400
@@ -2121,7 +2422,7 @@ def player_input():
 
     import time
     data = request.get_json(force=True, silent=True) or {}
-    character = str(data.get("character", "Party"))[:50]
+    character = _acting_character(str(data.get("character", "Party"))[:50])
     text = str(data.get("text", ""))[:500]
     hold = bool(data.get("hold", False))
 
@@ -2162,7 +2463,7 @@ def player_dice():
         return "Forbidden", 403
 
     data = request.get_json(force=True, silent=True) or {}
-    character = re.sub(r"[`\\$]", "", str(data.get("character", "Player"))[:50]).strip() or "Player"
+    character = re.sub(r"[`\\$]", "", _acting_character(str(data.get("character", "Player"))[:50])).strip() or "Player"
     spec      = str(data.get("spec", "1d20")).strip().lower()
     modifier  = int(data.get("modifier", 0) or 0)
     adv       = str(data.get("advantage", "normal")).strip().lower()
@@ -2378,6 +2679,8 @@ def get_character_sheet(character):
     if not _token_ok():
         return "Forbidden", 403
 
+    if _is_other_character(character):
+        return "Forbidden", 403   # players read only their own sheet
     safe = re.sub(r"[^A-Za-z0-9 _-]", "", character).strip()[:50]
     if not safe:
         return "Bad character name", 400
@@ -2458,7 +2761,7 @@ def stage_input():
         return jsonify({"status": "pending"}), 202
 
     data      = request.get_json(force=True, silent=True) or {}
-    character = str(data.get("character", ""))[:50].strip()
+    character = _acting_character(str(data.get("character", ""))[:50].strip())
     text      = _sanitize_input(str(data.get("text", "")))
 
     if not character or not text:
@@ -2508,7 +2811,7 @@ def ready_input():
         return jsonify({"status": "pending"}), 202
 
     data      = request.get_json(force=True, silent=True) or {}
-    character = str(data.get("character", ""))[:50].strip()
+    character = _acting_character(str(data.get("character", ""))[:50].strip())
     ready     = bool(data.get("ready", True))
 
     with _staged_lock:
@@ -2539,7 +2842,7 @@ def unstage_input():
         return "Forbidden", 403
 
     data      = request.get_json(force=True, silent=True) or {}
-    character = str(data.get("character", ""))[:50].strip()
+    character = _acting_character(str(data.get("character", ""))[:50].strip())
 
     with _staged_lock:
         _staged.pop(character, None)
@@ -2564,7 +2867,7 @@ def skip_input():
         return "Forbidden", 403
 
     data      = request.get_json(force=True, silent=True) or {}
-    character = str(data.get("character", ""))[:50].strip()
+    character = _acting_character(str(data.get("character", ""))[:50].strip())
     if not character:
         return "Bad Request", 400
 
@@ -2655,6 +2958,8 @@ def stream():
         # Register this client's bound character (phones pass ?character=/?char=);
         # the main display passes neither. Drives dice-request phone-vs-screen routing.
         _ch = (request.args.get("character") or request.args.get("char") or "").strip().lower()[:48]
+        if g.role == "player":
+            _ch = (g.character or "").lower()[:48]   # a phone is bound to its login
         if _ch:
             _client_chars[q] = _ch
 
@@ -2791,6 +3096,7 @@ if __name__ == "__main__":
         print(f"  Local:  {scheme}://localhost:5001")
         print("  Token stored at:", TOKEN_FILE)
         print("  POST endpoints require X-DND-Token header (send.py/push_stats.py handle this automatically)")
+        print("  Other devices must log in with a character PIN (display/accounts.py set-pin)")
         print()
     else:
         print(f"DnD DM Display — Flask server starting on {scheme}://localhost:5001")

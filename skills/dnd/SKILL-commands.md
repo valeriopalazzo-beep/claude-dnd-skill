@@ -100,6 +100,7 @@ Full step-by-step procedures for all `/dm:dnd` slash commands. Load this file at
 
      ⚠ **`--clear` wipes both text log AND stats** (player card, world time, factions, quests). It must always be paired with the full `--replace-players ... --world-time ... --factions ... --quests ...` push from step 4 — otherwise the sidebar card and sheet tab render empty. Same rule applies any time you `--clear` mid-session (e.g. restoring scene state after a re-replay): always re-push the full character JSON + world-time + factions + quests in the same bash burst as the clear.
    - Register active campaign for DM Help: `python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --set-campaign <campaign-name>`
+   - **LAN login check (LAN modes only).** In LAN mode every device except this PC must log in with its character's PIN — see *Display login PINs* below. Run `python3 ${CLAUDE_SKILL_DIR}/display/accounts.py list --campaign <campaign-name>`. If a PC who is present (not in `absent:`) has no PIN, say so and offer to set it now (ask for that PC's PIN as its own question). Then tell the table: *"Open the display link, tap your character and enter your PIN."* Never list or repeat a PIN.
    - If autorun **yes** → write `autorun: true` to `state.md → ## Session Flags`; enter the autorun wait after the recap paragraph.
    - If autorun **no** → continue without autorun; DM drives turns manually.
    - **Physical dice server check (only if installed).** Skip this step unless the optional dice server is set up: probe with `test -d ~/.dnd-dice || test "$DND_DICE_PHYSICAL" = "1"` and short-circuit out if the test fails. When it passes, run `curl -sf http://localhost:7777/health` (timeout 1s). If it returns OK, fetch the LAN IP with `python3 -c "import socket; s=socket.socket(socket.AF_INET, socket.SOCK_DGRAM); s.connect(('8.8.8.8', 80)); print(s.getsockname()[0]); s.close()"` and announce to the table: *"Dice server is up. Each player, open `http://<ip>:7777/?player=<your-pc-name>` on your phone (lowercase name, hyphens for spaces — same name I'll use when calling for rolls) and tap **consecrate** before we begin. NPC and DM rolls auto-resolve here."* Then list the short-names of the PCs who are present (skip anyone in `absent:`) so players know what to type. If the server is unreachable, skip silently — `dice.py` falls back to local random.
@@ -527,6 +528,26 @@ Pull the latest skill changes from `origin/main`.
 - `status` → `curl -sk $(cat ${CLAUDE_SKILL_DIR}/display/.scheme 2>/dev/null || echo http)://localhost:5001/ping` — reachable or unreachable
 - No argument → print quick-start instructions
 
+### Display login PINs
+
+In LAN mode (`--lan`) the display shows a login screen to every device except this PC: the player taps their character and types its PIN, and from then on that phone acts **only** as that character — actions, rolls, its own sheet. Players can't reach DM controls. This PC (localhost) is always the DM and needs no PIN. Local mode (no `--lan`) has no login.
+
+PINs are stored only as salted hashes — in `<campaign>/accounts.json` for characters, in the runtime dir for the DM PIN.
+
+| Request | Command |
+|---|---|
+| Set or reset a character's PIN | `python3 ${CLAUDE_SKILL_DIR}/display/accounts.py set-pin --campaign <c> --character "<Name>" --pin <digits>` |
+| Remove a character's login | `python3 ${CLAUDE_SKILL_DIR}/display/accounts.py remove --campaign <c> --character "<Name>"` |
+| Who has a PIN | `python3 ${CLAUDE_SKILL_DIR}/display/accounts.py list --campaign <c>` |
+| Log every player out | `python3 ${CLAUDE_SKILL_DIR}/display/accounts.py logout-all --campaign <c>` |
+| DM PIN (to run the main display from a TV or tablet) | `python3 ${CLAUDE_SKILL_DIR}/display/accounts.py set-dm-pin --pin <digits>` / `remove-dm-pin` |
+
+Rules:
+- A PIN is 4–8 digits. Setting a new PIN logs out whoever was logged in as that character.
+- **Never** write a PIN into a character sheet, `state.md`, the session log, or the display, and never repeat it back. Confirm only "PIN set for [Name]".
+- Wrong PINs are throttled (5 per device per 15 min, 10 per character per hour). If a player is locked out, they wait, or the DM resets the PIN.
+- Sessions last 30 days, and end on a PIN change, on `logout-all`, or when another campaign is loaded. Players can also log out from the phone ⚙ menu.
+
 ---
 
 ## `/dm:dnd list`
@@ -583,6 +604,7 @@ Default to `Step by step` if the question is dismissed. Either path lands in the
     python3 ${CLAUDE_SKILL_DIR}/scripts/build_supplemental.py --character ~/.claude/dnd/campaigns/<name>/characters/<charname>.md
     ```
     This scans the character file for spells and features not in the SRD and fetches descriptions from dnd5e.wikidot.com into `dnd5e_supplemental.json`. Skips any entries already present. Safe to re-run.
+11. **Display login PIN.** Ask, as its own question: *"Choose a numeric PIN for [Name] (4–8 digits; 6 is safer). The player types it on their phone to log in to the display as [Name] — nobody else can play them. Say 'later' to skip."* Then set it — see *Display login PINs* below. A skipped PIN means [Name] can't log in from another device until one is set.
 
 ---
 
@@ -602,7 +624,8 @@ Read `characters/<name>.md`, display cleanly. If name omitted and one character 
     ```bash
     python3 ${CLAUDE_SKILL_DIR}/scripts/build_supplemental.py --character ~/.claude/dnd/campaigns/<name>/characters/<charname>.md
     ```
-7. Deliver one-paragraph in-character aside — how does it feel to step into a new world?
+7. PINs are per campaign, so ask for this character's display login PIN in the new campaign (same question as `character new` step 11) and set it.
+8. Deliver one-paragraph in-character aside — how does it feel to step into a new world?
 
 ---
 

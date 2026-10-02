@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="robots" content="noindex">
+<title>D&amp;D — Login</title>
+<link rel="icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap" rel="stylesheet">
+
+<!-- Same i18n runtime as index.html: localStorage["dnd-lang"], else the device
+     language, else English. -->
+<script>
+  window._I18N = {{ i18n|safe }};
+  (function () {
+    var all = window._I18N || {}, pick = null;
+    try { pick = localStorage.getItem('dnd-lang'); } catch (_) {}
+    if (!all[pick]) {
+      pick = null;
+      var langs = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || 'en'];
+      for (var i = 0; i < langs.length && !pick; i++) {
+        var base = String(langs[i] || '').toLowerCase().split('-')[0];
+        if (all[base]) pick = base;
+      }
+    }
+    window._LANG = pick || 'en';
+    document.documentElement.lang = window._LANG;
+    var cur = all[window._LANG] || {}, en = all.en || {};
+    window._t = function (key, vars, fallback) {
+      var str = cur[key];
+      if (str == null) str = en[key];
+      if (str == null) str = (fallback != null ? fallback : key);
+      if (vars) str = String(str).replace(/\{(\w+)\}/g, function (m, k) { return vars[k] != null ? vars[k] : m; });
+      return str;
+    };
+  })();
+</script>
+
+<style>
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html, body{ height:100%; }
+  body{
+    background:#14110C; color:#F3EFE4;
+    font-family:'Syne',sans-serif;
+    display:flex; align-items:center; justify-content:center;
+    padding:24px max(16px, env(safe-area-inset-right)) 24px max(16px, env(safe-area-inset-left));
+    -webkit-text-size-adjust:100%; }
+  .card{ width:100%; max-width:440px; display:flex; flex-direction:column; gap:6px; }
+  .kicker{ font-weight:800; font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:#FF7A2D; }
+  .title{ font-family:'Newsreader',serif; font-style:italic; font-size:30px; line-height:1.1; margin-bottom:18px; }
+  .list{ display:flex; flex-direction:column; gap:10px; }
+  .opt{
+    display:block; width:100%; text-align:left; cursor:pointer;
+    background:#221C16; color:#EDE6D6;
+    border:1px solid rgba(237,230,214,.16); border-radius:6px;
+    font-family:'Syne',sans-serif; font-weight:700; font-size:17px; letter-spacing:.02em;
+    padding:18px 20px; -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+    transition:background .12s, border-color .12s; }
+  .opt:active{ background:#FF7A2D; color:#14110C; border-color:#FF7A2D; }
+  .opt.dm{ background:none; border-style:dashed; font-size:14px; letter-spacing:.14em; text-transform:uppercase; }
+  .empty{ font-family:'Newsreader',serif; font-style:italic; color:rgba(237,230,214,.6); padding:8px 2px; line-height:1.4; }
+
+  /* PIN step */
+  .dots{ display:flex; gap:12px; justify-content:center; margin:6px 0 22px; min-height:18px; }
+  .dot{ width:14px; height:14px; border-radius:50%; border:2px solid rgba(237,230,214,.4); }
+  .dot.on{ background:#FF7A2D; border-color:#FF7A2D; }
+  .pad{ display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
+  .key{
+    background:#221C16; color:#EDE6D6; border:1px solid rgba(237,230,214,.16); border-radius:8px;
+    font-family:'Syne',sans-serif; font-weight:700; font-size:24px; padding:16px 0; cursor:pointer;
+    -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+  .key:active{ background:#FF7A2D; color:#14110C; }
+  .key.aux{ font-size:13px; letter-spacing:.12em; text-transform:uppercase; }
+  .key.go{ background:#FF7A2D; color:#14110C; border-color:#FF7A2D; }
+  .key:disabled{ opacity:.4; }
+  .msg{ min-height:22px; margin-top:14px; text-align:center; font-size:13px; font-weight:600; color:#FF9C6B; }
+  .back{
+    margin-top:14px; background:none; border:0; cursor:pointer; align-self:flex-start;
+    font-family:'Syne',sans-serif; font-weight:700; font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:#FF7A2D; padding:10px 2px; -webkit-tap-highlight-color:transparent; }
+  [hidden]{ display:none !important; }
+  @keyframes shake{ 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+  .dots.bad{ animation:shake .3s; }
+</style>
+</head>
+<body>
+<main class="card">
+  <section id="step-pick">
+    <div class="kicker" id="pick-kicker"></div>
+    <div class="title" id="pick-title"></div>
+    <div class="list" id="list"></div>
+  </section>
+
+  <section id="step-pin" hidden>
+    <div class="kicker" id="pin-kicker"></div>
+    <div class="title" id="pin-who"></div>
+    <div class="dots" id="dots" aria-live="polite"></div>
+    <div class="pad" id="pad"></div>
+    <div class="msg" id="msg" role="alert"></div>
+    <button class="back" id="back" type="button"></button>
+  </section>
+</main>
+
+<script>
+(function () {
+  var MAX = 8, MIN = 4;
+  var who = null;          // {dm: bool, name: string}
+  var pin = '';
+  var busy = false;
+  var $ = function (id) { return document.getElementById(id); };
+
+  $('pick-kicker').textContent = _t('login.kicker', null, 'Login');
+  $('pick-title').textContent  = _t('login.title', null, 'Who are you playing?');
+  $('pin-kicker').textContent  = _t('login.pinKicker', null, 'Enter your PIN');
+  $('back').textContent        = _t('login.back', null, '← Back');
+
+  function showPick() {
+    who = null; pin = ''; $('msg').textContent = '';
+    $('step-pin').hidden = true; $('step-pick').hidden = false;
+  }
+
+  function showPin(sel) {
+    who = sel; pin = ''; $('msg').textContent = '';
+    $('pin-who').textContent = sel.dm ? _t('login.dm', null, 'Dungeon Master') : sel.name;
+    $('step-pick').hidden = true; $('step-pin').hidden = false;
+    renderDots();
+  }
+
+  function renderDots() {
+    var d = $('dots'); d.innerHTML = '';
+    var n = Math.max(MIN, pin.length);
+    for (var i = 0; i < n; i++) {
+      var s = document.createElement('span');
+      s.className = 'dot' + (i < pin.length ? ' on' : '');
+      d.appendChild(s);
+    }
+    $('go').disabled = pin.length < MIN || busy;
+  }
+
+  function press(k) {
+    if (busy) return;
+    if (k === 'del') pin = pin.slice(0, -1);
+    else if (k === 'go') return submit();
+    else if (pin.length < MAX) pin += k;
+    $('msg').textContent = '';
+    renderDots();
+  }
+
+  function fail(text) {
+    pin = ''; renderDots();
+    $('msg').textContent = text;
+    var d = $('dots'); d.classList.remove('bad'); void d.offsetWidth; d.classList.add('bad');
+  }
+
+  function submit() {
+    if (pin.length < MIN || busy) return;
+    busy = true; renderDots();
+    var body = who.dm ? { dm: true, pin: pin } : { character: who.name, pin: pin };
+    fetch('/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return [r.status, j]; }); })
+      .then(function (res) {
+        var st = res[0], j = res[1] || {};
+        busy = false;
+        if (st === 200 && j.ok) { window.location.href = j.redirect || '/'; return; }
+        if (j.error === 'locked') {
+          var min = Math.max(1, Math.ceil((j.retry_after || 60) / 60));
+          fail(_t('login.locked', { n: min }, 'Too many attempts. Try again in {n} min.'));
+        } else if (j.error === 'pin') {
+          fail(_t('login.wrong', null, 'Wrong PIN.'));
+        } else if (j.error === 'unknown') {
+          fail(_t('login.unknown', null, 'This character can no longer log in. Ask the DM.'));
+        } else {
+          fail(_t('login.error', null, 'Something went wrong. Try again.'));
+        }
+      })
+      .catch(function () { busy = false; fail(_t('login.error', null, 'Something went wrong. Try again.')); });
+  }
+
+  // Keypad
+  var keys = ['1','2','3','4','5','6','7','8','9','del','0','go'];
+  keys.forEach(function (k) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'key' + (k === 'del' ? ' aux' : k === 'go' ? ' aux go' : '');
+    if (k === 'go') b.id = 'go';
+    b.textContent = k === 'del' ? '⌫' : k === 'go' ? _t('login.enter', null, 'Enter') : k;
+    if (k === 'del') b.setAttribute('aria-label', _t('login.delete', null, 'Delete'));
+    b.addEventListener('click', function () { press(k); });
+    $('pad').appendChild(b);
+  });
+  document.addEventListener('keydown', function (e) {
+    if ($('step-pin').hidden) return;
+    if (/^[0-9]$/.test(e.key)) press(e.key);
+    else if (e.key === 'Backspace') press('del');
+    else if (e.key === 'Enter') press('go');
+    else if (e.key === 'Escape') showPick();
+  });
+  $('back').addEventListener('click', showPick);
+
+  // Character list
+  fetch('/login/options').then(function (r) { return r.json(); }).then(function (o) {
+    if (o && o.me) { window.location.href = '/'; return; }   // already logged in
+    var list = $('list'); list.innerHTML = '';
+    var names = (o && o.characters) || [];
+    if (!names.length) {
+      var e = document.createElement('div');
+      e.className = 'empty';
+      e.textContent = _t('login.none', null, 'No character has a PIN yet. Ask the DM to set one.');
+      list.appendChild(e);
+    }
+    names.forEach(function (name) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'opt'; b.textContent = name;
+      b.addEventListener('click', function () { showPin({ dm: false, name: name }); });
+      list.appendChild(b);
+    });
+    if (o && o.dm) {
+      var d = document.createElement('button');
+      d.type = 'button'; d.className = 'opt dm';
+      d.textContent = _t('login.dm', null, 'Dungeon Master');
+      d.addEventListener('click', function () { showPin({ dm: true, name: '' }); });
+      list.appendChild(d);
+    }
+  }).catch(function () {
+    $('list').innerHTML = '';
+    var e = document.createElement('div');
+    e.className = 'empty';
+    e.textContent = _t('login.error', null, 'Something went wrong. Try again.');
+    $('list').appendChild(e);
+  });
+})();
+</script>
+</body>
+</html>
