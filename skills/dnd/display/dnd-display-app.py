@@ -3081,8 +3081,31 @@ if __name__ == "__main__":
     _display_dir = os.path.dirname(os.path.abspath(__file__))
     _cert = rt("cert.pem")
     _key  = rt("key.pem")
-    ssl_ctx = (_cert, _key) if (_TLS_MODE and os.path.exists(_cert) and os.path.exists(_key)) else None
+    ssl_ctx = None
+    if _TLS_MODE and os.path.exists(_cert) and os.path.exists(_key):
+        import ssl
+
+        # Werkzeug wraps the listening socket, so by default every TLS handshake
+        # runs inside accept() on the main thread: one client that connects and
+        # never finishes the handshake (a port scanner on the public port) stalls
+        # the whole server. Defer the handshake to the request thread instead,
+        # where the handler timeout below bounds it.
+        class _LazyHandshakeContext(ssl.SSLContext):
+            def wrap_socket(self, sock, *args, **kwargs):
+                kwargs["do_handshake_on_connect"] = False
+                return super().wrap_socket(sock, *args, **kwargs)
+
+        ssl_ctx = _LazyHandshakeContext(ssl.PROTOCOL_TLS_SERVER)
+        ssl_ctx.load_cert_chain(_cert, _key)
     scheme  = "https" if ssl_ctx else "http"
+
+    from werkzeug.serving import WSGIRequestHandler
+
+    class _TimeoutRequestHandler(WSGIRequestHandler):
+        # Drops connections that stay silent this long while we wait to read
+        # (stalled handshakes, idle keep-alives). SSE streams only write, so
+        # they are unaffected unless the client stops reading entirely.
+        timeout = 30
 
     # Write .scheme so push_stats.py / send.py / autorun_wait.py know which to use
     try:
@@ -3102,4 +3125,5 @@ if __name__ == "__main__":
         print(f"DnD DM Display — Flask server starting on {scheme}://localhost:5001")
         print(f"Open {scheme}://localhost:5001 in your browser, then Chromecast the tab.")
         print()
-    app.run(host=host, port=5001, threaded=True, debug=False, ssl_context=ssl_ctx)
+    app.run(host=host, port=5001, threaded=True, debug=False, ssl_context=ssl_ctx,
+            request_handler=_TimeoutRequestHandler)
