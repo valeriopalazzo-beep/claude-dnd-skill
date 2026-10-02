@@ -70,6 +70,9 @@
   .chip{ background:none; border:1px solid rgba(255,122,45,.6); color:#FF9C6B; border-radius:999px; cursor:pointer;
     font-family:'Syne',sans-serif; font-weight:700; font-size:13px; padding:8px 14px; -webkit-tap-highlight-color:transparent; }
   .chip:active{ background:#FF7A2D; color:#14110C; }
+  .chip.on{ background:#FF7A2D; color:#14110C; border-color:#FF7A2D; }
+  .chip.on::before{ content:'✓ '; }
+  .pick-ok{ align-self:flex-start; padding:0 22px; }
 
   form.say{ display:flex; gap:8px; padding:10px 0 max(14px, env(safe-area-inset-bottom)); border-top:1px solid rgba(237,230,214,.1); }
   textarea{ flex:1; resize:none; min-height:48px; max-height:140px; background:#221C16; color:#EDE6D6;
@@ -172,14 +175,35 @@
     var last = h[h.length - 1];
     if (last && last.role === 'guide' && !busy && !finished) {
       var chips = chipsFor(last.text);
+      var need = last.pick > 1 && chips.length >= last.pick ? last.pick : 0;
       if (chips.length) {
         var c = document.createElement('div'); c.className = 'chips';
+        var picked = [];
+        var ok = null;
         chips.forEach(function (label) {
           var b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = label;
-          b.addEventListener('click', function () { send(label); });
+          b.addEventListener('click', function () {
+            if (!need) { send(label); return; }
+            // Pick several: toggle, never more than asked; Confirm sends them together.
+            var i = picked.indexOf(label);
+            if (i >= 0) picked.splice(i, 1);
+            else if (picked.length < need) picked.push(label);
+            b.classList.toggle('on', picked.indexOf(label) >= 0);
+            b.setAttribute('aria-pressed', picked.indexOf(label) >= 0 ? 'true' : 'false');
+            ok.disabled = picked.length !== need;
+            ok.textContent = _t('crea.pickConfirm', { k: picked.length, n: need }, 'Confirm ({k}/{n})');
+          });
+          if (need) b.setAttribute('aria-pressed', 'false');
           c.appendChild(b);
         });
         log.appendChild(c);
+        if (need) {
+          ok = document.createElement('button'); ok.type = 'button'; ok.className = 'btn pick-ok';
+          ok.disabled = true;
+          ok.textContent = _t('crea.pickConfirm', { k: 0, n: need }, 'Confirm ({k}/{n})');
+          ok.addEventListener('click', function () { if (picked.length === need) send(picked.join(', ')); });
+          log.appendChild(ok);
+        }
       }
     }
     if (busy) {

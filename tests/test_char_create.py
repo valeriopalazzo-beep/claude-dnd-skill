@@ -142,6 +142,16 @@ class CharCreateTests(unittest.TestCase):
         self.assertFalse(any("<scheda>" in m["text"] or "necromancer" in m["text"] for m in shown))
         self.assertTrue(any(m["role"] == "draft" for m in conv["history"]))
 
+    def test_multi_pick_marker(self):
+        conv = self.cc.new_conv("1.2.3.4")
+        reply = "Scegli 2 abilità:\n1. **Furtività**\n2. **Inganno**\n3. **Atletica**\n[[SCEGLI 2]]\n"
+        out = self.cc.handle_message(conv, "passo passo", ask=lambda c: reply)
+        self.assertNotIn("[[SCEGLI", out["reply"])
+        self.assertEqual(conv["history"][-1]["pick"], 2)
+        self.assertEqual(self.cc.public_view(conv)["history"][-1]["pick"], 2)
+        out = self.cc.handle_message(conv, "ok", ask=lambda c: "Bene. [[SCEGLI 1]]")
+        self.assertNotIn("pick", conv["history"][-1])     # one choice: plain buttons
+
     def test_failed_reply_drops_the_message(self):
         conv = self.cc.new_conv("1.2.3.4")
 

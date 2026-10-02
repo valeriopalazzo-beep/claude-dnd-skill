@@ -107,6 +107,7 @@ Come lavori:
 - Rispondi nella lingua del giocatore (di solito italiano) e usa i nomi ufficiali italiani delle regole (Ladro, Dragonide, Furtività, Tiro salvezza…).
 - Fai UNA sola domanda per messaggio. Messaggi brevi.
 - Quando dai delle scelte, o le elenchi TUTTE (per esempio tutte le razze, tutte le classi o tutti i background del Manuale, in una lista numerata compatta con il nome in grassetto) oppure non ne elenchi nessuna e fai una domanda aperta. MAI una lista parziale o "per esempio…". Puoi indicare un'opzione consigliata.
+- Quando il giocatore deve scegliere PIÙ voci dalla stessa lista (per esempio 4 abilità, 2 trucchetti, 2 lingue), chiedile tutte in UN solo messaggio: elenca tutte le opzioni possibili in lista numerata con il nome in grassetto e aggiungi, da sola su una riga, [[SCEGLI n]] dove n è quante ne deve scegliere. La pagina gli farà selezionare esattamente n voci e te le manderà insieme. Non chiedere mai una voce alla volta.
 - Il primo messaggio (già inviato) chiedeva come procedere: passo passo, descrivilo, oppure proponimi idee. Segui la strada scelta.
   - Passo passo: nome, razza (e sottorazza), classe, background, una frase su chi è il personaggio, metodo delle caratteristiche, abilità, scelte di classe (stile di combattimento, incantesimi, maestria…), equipaggiamento.
   - Descrivilo: ricava dalla descrizione una build legale, mostrala tutta in una volta e chiedi se cambiare qualcosa. Poi chiedi solo ciò che manca (di sicuro il nome, se non c'è).
@@ -327,6 +328,7 @@ def dice_text(arrays: list) -> str:
 # ─── The sheet ──────────────────────────────────────────────────────────────
 
 _SHEET_RX = re.compile(r"<scheda>\s*(.*?)\s*</scheda>", re.S)
+_PICK_RX = re.compile(r"[ \t]*\[\[SCEGLI\s+(\d+)\]\][ \t]*\n?")
 
 
 def split_reply(text: str) -> tuple:
@@ -475,6 +477,11 @@ def handle_message(conv: dict, text: str, ask=None) -> dict:
         for _attempt in range(3):
             raw = ask(conv)
             shown, data, err = split_reply(raw)
+            pick = None
+            m = _PICK_RX.search(shown)
+            if m:
+                pick = max(1, min(12, int(m.group(1))))
+                shown = _PICK_RX.sub("", shown).strip()
             if "[[TIRA]]" in shown:
                 shown = shown.replace("[[TIRA]]", "").strip()
                 arrays = roll_arrays()
@@ -501,7 +508,10 @@ def handle_message(conv: dict, text: str, ask=None) -> dict:
         conv["history"].pop()
         raise
     shown = scrub(shown) or "…"
-    conv["history"].append({"role": "guide", "text": shown})
+    entry = {"role": "guide", "text": shown}
+    if pick and pick > 1:
+        entry["pick"] = pick      # the page lets the player tick exactly this many options
+    conv["history"].append(entry)
     if dice:
         conv["history"].append({"role": "dice", "text": dice})
     save_conv(conv)

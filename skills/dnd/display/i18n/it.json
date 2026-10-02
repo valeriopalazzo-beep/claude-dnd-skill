@@ -316,5 +316,6 @@
   "crea.long": "Più breve, per favore: al massimo {n} caratteri.",
   "crea.expired": "Questa conversazione è scaduta. Ricomincia.",
   "crea.claude": "La guida non ha risposto. Rimanda il messaggio tra poco.",
-  "crea.error": "Qualcosa è andato storto. Riprova."
+  "crea.error": "Qualcosa è andato storto. Riprova.",
+  "crea.pickConfirm": "Conferma ({k}/{n})"
 }

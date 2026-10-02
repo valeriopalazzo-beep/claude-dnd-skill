@@ -289,5 +289,6 @@
   "crea.long": "Shorter please: at most {n} characters.",
   "crea.expired": "This conversation has expired. Start over.",
   "crea.claude": "The guide did not answer. Send your message again in a moment.",
-  "crea.error": "Something went wrong. Try again."
+  "crea.error": "Something went wrong. Try again.",
+  "crea.pickConfirm": "Confirm ({k}/{n})"
 }
