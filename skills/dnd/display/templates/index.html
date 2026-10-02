@@ -7,8 +7,30 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="dnd-token" content="{{ lan_token }}">
 <meta name="dnd-login" content="{{ login_role }}">
+<meta name="dnd-char" content="{{ login_char }}">
 <meta name="narrator-voice" content="{{ narrator_voice }}">
 <meta name="tts-available" content="{{ '1' if tts_available else '0' }}">
+
+<!-- A browser logged in with a character PIN is that player, in the phone view
+     and in the full view alike: only their own chat, dice and sheet, none of the
+     DM's controls. The server enforces the same limits; this only tidies the UI. -->
+<script>
+  window._LOGIN_CHAR = (document.querySelector('meta[name="dnd-char"]') || {}).content || '';
+  window._IS_PLAYER = !!window._LOGIN_CHAR;
+  window._isMyChar = function (name) {
+    return String(name || '').trim().toLowerCase() === window._LOGIN_CHAR.toLowerCase();
+  };
+  if (window._IS_PLAYER) document.documentElement.classList.add('player-login');
+</script>
+<style>
+  :root.player-login #dm-help-btn,
+  :root.player-login [data-ln-proxy="dm-help-btn"],
+  :root.player-login #sfx-row,
+  :root.player-login #verbosity-row,
+  :root.player-login #onscreen-dice-row,
+  :root.player-login #device-approvals,
+  :root.player-login #ln-switch { display: none !important; }
+</style>
 
 <!-- Display language. One JSON file per language in display/i18n/<code>.json,
      embedded here by the index route. Each browser picks its own language:
@@ -6633,6 +6655,7 @@ function _smDivider() {
 let _openSheetName = null;
 
 function openSheet(name) {
+  if (window._IS_PLAYER && !window._isMyChar(name)) return;   // players see only their own sheet
   _openSheetName = name;
   const p = _playerData[name];
   if (!p) {
@@ -8005,7 +8028,14 @@ _inputPanelHdr.addEventListener('click', () => {
 
 // ── Build character tabs from stats players array ─────────────────
 function _buildCharTabs(players) {
-  const names = ['Everybody', ...(players || []).map(p => p.name).filter(Boolean)];
+  let names = ['Everybody', ...(players || []).map(p => p.name).filter(Boolean)];
+  if (window._IS_PLAYER) {
+    // A player speaks only as their own character — no "Everybody" tab.
+    const own = names.find(n => window._isMyChar(n)) || window._LOGIN_CHAR;
+    names = [own];
+    _selectedChar = own;
+    _skipTurnBtn.style.display = '';
+  }
   _charTabs.innerHTML = '';
   names.forEach(name => {
     const btn = document.createElement('button');
@@ -8799,6 +8829,14 @@ connect();
       const _nameEl = _pad.querySelector('#dp-name');
       window._onDiceRequest = (req) => {
         const tgt = (req && req.characters && req.characters[0]) || (req && req.character) || '';
+        if (window._IS_PLAYER) {
+          // A player's full view rolls only their own prescribed rolls.
+          const mine = (req && req.characters || [tgt]).some(c => window._isMyChar(c) || String(c).toLowerCase() === 'any');
+          if (!mine) return;
+          if (typeof _prefill === 'function') _prefill(req);
+          if (typeof window._edOpenDrawer === 'function') window._edOpenDrawer('dice-drawer');
+          return;
+        }
         if (_nameEl && tgt && tgt.toLowerCase() !== 'any') _nameEl.value = tgt;
         if (typeof _prefill === 'function') _prefill(req);
         // Open when on-screen rolling is forced on (Settings), OR auto-detected:
@@ -9036,6 +9074,11 @@ function _initModeSwitcher(inputMode) {
   btn.textContent = _t('mode.phoneMode');
   btn.addEventListener('click', e => {
     e.stopPropagation();
+    // A logged-in player goes straight to their own character's phone view.
+    if (window._IS_PLAYER) {
+      window.location.href = '/?char=' + encodeURIComponent(window._LOGIN_CHAR);
+      return;
+    }
     const url = new URL(window.location.href);
     url.searchParams.set('view', 'input');
     window.location.href = url.toString();
@@ -9218,7 +9261,7 @@ function _initDicePad() {
   // that player. Without the param the phone falls back to a free-text name
   // + localStorage. Short form (?char=) is preferred for hand-typed URLs.
   const _qp = new URLSearchParams(location.search);
-  const _bound = (_qp.get('char') || _qp.get('character') || '').trim().slice(0, 24);
+  const _bound = (_qp.get('char') || _qp.get('character') || window._LOGIN_CHAR || '').trim().slice(0, 24);
   if (_bound) {
     nameEl.value = _bound;
     nameEl.classList.add('locked');
@@ -9539,6 +9582,7 @@ function _initDicePad() {
   }
   function resolveMe() {
     const names = Object.keys(_playerData);
+    if (window._IS_PLAYER) { me = names.find(n => window._isMyChar(n)) || ''; return me; }
     if (!names.includes(me)) me = names[0] || '';
     return me;
   }

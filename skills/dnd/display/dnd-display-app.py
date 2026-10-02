@@ -464,6 +464,8 @@ _DM_ENDPOINTS = {
     "dice_request", "dice_request_status", "dice_request_cancel",
     "device_approve", "device_deny",
     "queue_consumed", "submit_now", "drain_player_input",
+    # Table-wide settings and the DM hint — the DM's, not a player's.
+    "help_request", "narration_pref", "audio_toggle",
 }
 
 
@@ -1463,6 +1465,7 @@ def index():
         "index.html",
         lan_token="",
         login_role=(g.role or "") if (_lan_token is not None and not _is_loopback(request.remote_addr)) else "",
+        login_char=(g.character or "") if g.role == "player" else "",
         narrator_voice=_read_narrator_voice(),
         tts_available=(_tts is not None),
         i18n=_load_i18n_json(),
@@ -2950,9 +2953,51 @@ def drain_player_input():
     return jsonify(drained), 200
 
 
+# Per-player fields kept for other characters when a logged-in player is
+# watching: enough for the party cards (HP, AC, conditions), never the sheet.
+_PARTY_CARD_KEYS = {
+    "name", "race", "class", "level", "background", "hp", "ac", "speed",
+    "conditions", "concentration", "inspiration", "xp", "hit_dice",
+    "spell_slots", "effects", "initiative", "player_name",
+}
+
+
+def _for_viewer(payload: dict, viewer: Optional[str]) -> Optional[dict]:
+    """What a logged-in player's browser may see of a broadcast.
+
+    `viewer` is the player's character (lowercase), or None for the DM, who
+    gets everything. A player gets the full sheet of their own character only,
+    sees only their own queued and staged actions, and never sees the DM's
+    device approvals. Returns None when nothing is left to send.
+    """
+    if viewer is None:
+        return payload
+    out = dict(payload)
+    for k in ("device_request", "device_approved", "device_denied"):
+        out.pop(k, None)
+    stats = out.get("stats")
+    if isinstance(stats, dict) and isinstance(stats.get("players"), list):
+        stats = dict(stats)
+        stats["players"] = [
+            p if (str(p.get("name", "")).lower() == viewer)
+            else {k: v for k, v in p.items() if k in _PARTY_CARD_KEYS}
+            for p in stats["players"] if isinstance(p, dict)
+        ]
+        out["stats"] = stats
+    staged = out.get("staged_inputs")
+    if isinstance(staged, dict):
+        out["staged_inputs"] = {k: v for k, v in staged.items() if str(k).lower() == viewer}
+    pending = out.get("pending_input")
+    if isinstance(pending, list):
+        out["pending_input"] = [e for e in pending if isinstance(e, dict)
+                                and str(e.get("character", "")).lower() == viewer]
+    return out or None
+
+
 @app.route("/stream")
 def stream():
     q: queue.Queue = queue.Queue(maxsize=256)
+    _viewer = (g.character or "").lower() if g.role == "player" else None
     with _clients_lock:
         _clients.append(q)
         # Register this client's bound character (phones pass ?character=/?char=);
@@ -3039,8 +3084,9 @@ def stream():
         try:
             while True:
                 try:
-                    payload = q.get(timeout=5)
-                    yield f"data: {json.dumps(payload)}\n\n"
+                    payload = _for_viewer(q.get(timeout=5), _viewer)
+                    if payload:
+                        yield f"data: {json.dumps(payload)}\n\n"
                 except queue.Empty:
                     yield ": keepalive\n\n"   # prevent proxy timeout
         except GeneratorExit:
