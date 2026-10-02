@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="robots" content="noindex">
+<title>D&amp;D — Nuovo personaggio</title>
+<link rel="icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+
+<!-- Same i18n runtime as index.html / login.html. -->
+<script>
+  window._I18N = {{ i18n|safe }};
+  (function () {
+    var all = window._I18N || {}, pick = null;
+    try { pick = localStorage.getItem('dnd-lang'); } catch (_) {}
+    if (!all[pick]) {
+      pick = null;
+      var langs = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || 'en'];
+      for (var i = 0; i < langs.length && !pick; i++) {
+        var base = String(langs[i] || '').toLowerCase().split('-')[0];
+        if (all[base]) pick = base;
+      }
+    }
+    window._LANG = pick || 'en';
+    document.documentElement.lang = window._LANG;
+    var cur = all[window._LANG] || {}, en = all.en || {};
+    window._t = function (key, vars, fallback) {
+      var str = cur[key];
+      if (str == null) str = en[key];
+      if (str == null) str = (fallback != null ? fallback : key);
+      if (vars) str = String(str).replace(/\{(\w+)\}/g, function (m, k) { return vars[k] != null ? vars[k] : m; });
+      return str;
+    };
+  })();
+</script>
+
+<style>
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html, body{ height:100%; }
+  body{
+    background:#14110C; color:#F3EFE4; font-family:'Syne',sans-serif;
+    display:flex; justify-content:center;
+    padding:0 max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
+    -webkit-text-size-adjust:100%; }
+  .wrap{ width:100%; max-width:640px; display:flex; flex-direction:column; height:100%; }
+  header{ padding:22px 0 12px; display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
+  .kicker{ font-weight:800; font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:#FF7A2D; }
+  .title{ font-family:'Newsreader',serif; font-style:italic; font-size:28px; line-height:1.1; margin-top:4px; }
+  .restart{ background:none; border:0; cursor:pointer; color:#FF7A2D; font-family:'Syne',sans-serif;
+    font-weight:700; font-size:11px; letter-spacing:.14em; text-transform:uppercase; padding:8px 0; white-space:nowrap; }
+
+  #log{ flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding:8px 0 16px; }
+  .m{ max-width:88%; padding:12px 15px; border-radius:10px; line-height:1.45; font-size:16px; overflow-wrap:anywhere; }
+  .m.guide{ align-self:flex-start; background:#221C16; border:1px solid rgba(237,230,214,.12);
+    font-family:'Newsreader',serif; font-size:18px; color:#EDE6D6; }
+  .m.guide strong{ font-weight:600; color:#FFD9BF; }
+  .m.player{ align-self:flex-end; background:#FF7A2D; color:#14110C; font-weight:600; }
+  .m.dice{ align-self:stretch; max-width:none; background:none; border:1px dashed rgba(255,122,45,.5);
+    color:#FFB58A; font-size:14px; font-weight:600; white-space:pre-line; }
+  .m.wait{ align-self:flex-start; background:none; color:rgba(237,230,214,.55);
+    font-family:'Newsreader',serif; font-style:italic; }
+  .m.wait::after{ content:'…'; animation:dots 1.2s steps(3) infinite; display:inline-block; width:1em; overflow:hidden; vertical-align:bottom; }
+  @keyframes dots{ from{ width:0 } to{ width:1em } }
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; align-self:flex-start; max-width:88%; }
+  .chip{ background:none; border:1px solid rgba(255,122,45,.6); color:#FF9C6B; border-radius:999px; cursor:pointer;
+    font-family:'Syne',sans-serif; font-weight:700; font-size:13px; padding:8px 14px; -webkit-tap-highlight-color:transparent; }
+  .chip:active{ background:#FF7A2D; color:#14110C; }
+
+  form.say{ display:flex; gap:8px; padding:10px 0 max(14px, env(safe-area-inset-bottom)); border-top:1px solid rgba(237,230,214,.1); }
+  textarea{ flex:1; resize:none; min-height:48px; max-height:140px; background:#221C16; color:#EDE6D6;
+    border:1px solid rgba(237,230,214,.2); border-radius:8px; padding:12px; font:inherit; font-size:16px; }
+  textarea:focus, input:focus{ outline:2px solid #FF7A2D; outline-offset:1px; }
+  .btn{ background:#FF7A2D; color:#14110C; border:0; border-radius:8px; cursor:pointer; font-family:'Syne',sans-serif;
+    font-weight:800; font-size:13px; letter-spacing:.1em; text-transform:uppercase; padding:0 18px; min-height:48px; }
+  .btn:disabled{ opacity:.45; cursor:default; }
+  .note{ font-size:12px; color:rgba(237,230,214,.5); padding:0 2px 6px; }
+
+  #done-panel{ background:#221C16; border:1px solid #FF7A2D; border-radius:10px; padding:18px; margin:6px 0 14px;
+    display:flex; flex-direction:column; gap:10px; }
+  #done-panel h2{ font-family:'Newsreader',serif; font-style:italic; font-weight:400; font-size:24px; }
+  #done-panel p{ font-family:'Newsreader',serif; font-size:17px; line-height:1.4; color:#EDE6D6; }
+  #done-panel label{ font-size:12px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#FF9C6B; }
+  #done-panel input{ background:#14110C; color:#EDE6D6; border:1px solid rgba(237,230,214,.25); border-radius:8px;
+    padding:12px; font:inherit; font-size:18px; width:100%; }
+  .row{ display:flex; gap:10px; } .row > div{ flex:1; display:flex; flex-direction:column; gap:6px; }
+  .err{ min-height:20px; font-size:13px; font-weight:600; color:#FF9C6B; }
+  a{ color:#FF7A2D; }
+  [hidden]{ display:none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="kicker" id="kicker"></div>
+      <div class="title" id="title"></div>
+    </div>
+    <button class="restart" id="restart" type="button"></button>
+  </header>
+
+  <div id="log" aria-live="polite"></div>
+
+  <section id="done-panel" hidden>
+    <h2 id="dp-title"></h2>
+    <p id="dp-text"></p>
+    <div class="row">
+      <div><label for="pin1" id="l-pin1"></label><input id="pin1" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8"></div>
+      <div><label for="pin2" id="l-pin2"></label><input id="pin2" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8"></div>
+    </div>
+    <div><label for="player" id="l-player"></label><input id="player" type="text" maxlength="40" autocomplete="name"></div>
+    <div class="err" id="dp-err" role="alert"></div>
+    <button class="btn" id="save" type="button"></button>
+  </section>
+
+  <form class="say" id="say">
+    <textarea id="text" rows="1" maxlength="800"></textarea>
+    <button class="btn" id="send" type="submit"></button>
+  </form>
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var KEY = 'dnd-crea-id';
+  var conv = null, busy = false, finished = false;
+
+  $('kicker').textContent  = _t('crea.kicker', null, 'New character');
+  $('title').textContent   = _t('crea.title', null, 'Create your hero');
+  $('restart').textContent = _t('crea.restart', null, 'Start over');
+  $('send').textContent    = _t('crea.send', null, 'Send');
+  $('text').placeholder    = _t('crea.placeholder', null, 'Write your answer…');
+  $('l-pin1').textContent  = _t('crea.pin', null, 'PIN (4–8 digits)');
+  $('l-pin2').textContent  = _t('crea.pin2', null, 'Repeat the PIN');
+  $('l-player').textContent = _t('crea.player', null, 'Your name (optional)');
+  $('save').textContent    = _t('crea.save', null, 'Save the character');
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  // Guide text: escape, then **bold** and line breaks — nothing else.
+  function fmt(s) {
+    return esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+  }
+  // Quick replies: the bold label of each numbered / bulleted option line.
+  function chipsFor(text) {
+    var out = [];
+    String(text).split('\n').forEach(function (line) {
+      var m = line.match(/^\s*(?:\d+[.)]|[-•*])\s*\*\*(.+?)\*\*/);
+      if (m && out.length < 6) out.push(m[1].replace(/[:：]\s*$/, ''));
+    });
+    return out;
+  }
+
+  function scrollDown() { var l = $('log'); l.scrollTop = l.scrollHeight; }
+
+  function render() {
+    var log = $('log'); log.innerHTML = '';
+    var h = (conv && conv.history) || [];
+    h.forEach(function (m) {
+      var d = document.createElement('div');
+      d.className = 'm ' + m.role;
+      if (m.role === 'guide') d.innerHTML = fmt(m.text); else d.textContent = m.text;
+      log.appendChild(d);
+    });
+    var last = h[h.length - 1];
+    if (last && last.role === 'guide' && !busy && !finished) {
+      var chips = chipsFor(last.text);
+      if (chips.length) {
+        var c = document.createElement('div'); c.className = 'chips';
+        chips.forEach(function (label) {
+          var b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = label;
+          b.addEventListener('click', function () { send(label); });
+          c.appendChild(b);
+        });
+        log.appendChild(c);
+      }
+    }
+    if (busy) {
+      var w = document.createElement('div'); w.className = 'm wait';
+      w.textContent = _t('crea.thinking', null, 'The guide is thinking');
+      log.appendChild(w);
+    }
+    $('done-panel').hidden = !(conv && conv.ready) || finished;
+    if (conv && conv.ready && !finished) {
+      $('dp-title').textContent = _t('crea.readyTitle', { name: conv.name }, '{name} is ready');
+      $('dp-text').textContent = _t('crea.readyText', null,
+        'Choose a PIN: you will type it on the display to play this character. If you want to change something, keep writing to the guide.');
+    }
+    $('send').disabled = busy || finished;
+    $('text').disabled = finished;
+    scrollDown();
+  }
+
+  function note(text) {
+    var d = document.createElement('div'); d.className = 'm dice'; d.textContent = text;
+    $('log').appendChild(d); scrollDown();
+  }
+
+  function api(path, body) {
+    return fetch(path, {
+      method: body === undefined ? 'GET' : 'POST',
+      headers: body === undefined ? {} : { 'Content-Type': 'application/json' },
+      body: body === undefined ? undefined : JSON.stringify(body)
+    }).then(function (r) { return r.json().then(function (j) { return { status: r.status, body: j }; }); });
+  }
+
+  function start() {
+    try { localStorage.removeItem(KEY); } catch (_) {}
+    finished = false;
+    api('/crea/start', {}).then(function (r) {
+      if (r.status === 200) {
+        conv = r.body;
+        try { localStorage.setItem(KEY, conv.id); } catch (_) {}
+        render();
+      } else {
+        conv = { history: [] }; render();
+        note(_t('crea.limit', null, 'Too many characters were created today. Try again tomorrow.'));
+      }
+    }).catch(function () { note(_t('crea.error', null, 'Something went wrong. Try again.')); });
+  }
+
+  function send(text) {
+    text = String(text || '').trim();
+    if (!text || busy || !conv || !conv.id || finished) return;
+    busy = true;
+    conv.history.push({ role: 'player', text: text });
+    $('text').value = '';
+    render();
+    api('/crea/msg', { id: conv.id, text: text }).then(function (r) {
+      busy = false;
+      if (r.status === 200) { conv = r.body.view; render(); return; }
+      conv.history.pop(); render();
+      $('text').value = text;
+      var e = r.body && r.body.error;
+      note(e === 'limit' || e === 'turns' ? _t('crea.limit', null, 'Too many characters were created today. Try again tomorrow.')
+         : e === 'long' ? _t('crea.long', { n: r.body.max }, 'Shorter please: at most {n} characters.')
+         : e === 'unknown' ? _t('crea.expired', null, 'This conversation has expired. Start over.')
+         : _t('crea.claude', null, 'The guide did not answer. Send your message again in a moment.'));
+    }).catch(function () {
+      busy = false; conv.history.pop(); render(); $('text').value = text;
+      note(_t('crea.error', null, 'Something went wrong. Try again.'));
+    });
+  }
+
+  $('say').addEventListener('submit', function (e) { e.preventDefault(); send($('text').value); });
+  $('text').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey && window.matchMedia('(pointer:fine)').matches) { e.preventDefault(); send($('text').value); }
+  });
+  $('text').addEventListener('input', function () { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 140) + 'px'; });
+  $('restart').addEventListener('click', function () {
+    if (!conv || !conv.history || conv.history.length < 2 || finished ||
+        window.confirm(_t('crea.restartConfirm', null, 'Start over? This conversation will be lost.'))) start();
+  });
+
+  $('save').addEventListener('click', function () {
+    var p1 = $('pin1').value.trim(), p2 = $('pin2').value.trim();
+    $('dp-err').textContent = '';
+    if (!/^[0-9]{4,8}$/.test(p1)) { $('dp-err').textContent = _t('crea.pinBad', null, 'The PIN must be 4 to 8 digits.'); return; }
+    if (p1 !== p2) { $('dp-err').textContent = _t('crea.pinMismatch', null, 'The two PINs are different.'); return; }
+    $('save').disabled = true;
+    api('/crea/finish', { id: conv.id, pin: p1, player: $('player').value }).then(function (r) {
+      $('save').disabled = false;
+      if (r.status === 200) {
+        finished = true;
+        try { localStorage.removeItem(KEY); } catch (_) {}
+        render();
+        var d = document.createElement('div'); d.className = 'm guide';
+        d.innerHTML = fmt(_t('crea.saved', { name: r.body.name },
+          '**{name}** is saved. The DM will add them to a campaign: then open the display, tap {name} and enter your PIN.'));
+        $('log').appendChild(d);
+        var a = document.createElement('a'); a.href = '/'; a.textContent = _t('crea.toDisplay', null, 'Go to the display →');
+        a.className = 'm'; $('log').appendChild(a); scrollDown();
+        return;
+      }
+      var e = r.body && r.body.error;
+      $('dp-err').textContent = e === 'name'
+        ? _t('crea.nameTaken', null, 'This name is already taken: ask the guide to change it.')
+        : e === 'pin' ? _t('crea.pinBad', null, 'The PIN must be 4 to 8 digits.')
+        : _t('crea.error', null, 'Something went wrong. Try again.');
+    }).catch(function () { $('save').disabled = false; $('dp-err').textContent = _t('crea.error', null, 'Something went wrong. Try again.'); });
+  });
+
+  // Resume the conversation after a reload, or begin a new one.
+  var saved = null;
+  try { saved = localStorage.getItem(KEY); } catch (_) {}
+  if (saved) {
+    api('/crea/conv/' + encodeURIComponent(saved)).then(function (r) {
+      if (r.status === 200 && !r.body.finished) { conv = r.body; render(); } else start();
+    }).catch(start);
+  } else start();
+})();
+</script>
+</body>
+</html>

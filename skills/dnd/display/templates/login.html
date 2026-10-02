@@ -62,6 +62,7 @@
     transition:background .12s, border-color .12s; }
   .opt:active{ background:#FF7A2D; color:#14110C; border-color:#FF7A2D; }
   .opt.dm{ background:none; border-style:dashed; font-size:14px; letter-spacing:.14em; text-transform:uppercase; }
+  a.opt{ text-decoration:none; color:#FF9C6B; border-color:rgba(255,122,45,.5); }
   .empty{ font-family:'Newsreader',serif; font-style:italic; color:rgba(237,230,214,.6); padding:8px 2px; line-height:1.4; }
 
   /* PIN step */
@@ -225,6 +226,11 @@
       d.addEventListener('click', function () { showPin({ dm: true, name: '' }); });
       list.appendChild(d);
     }
+    // New players build their own character first (/crea); the DM imports it.
+    var c = document.createElement('a');
+    c.className = 'opt dm'; c.href = '/crea';
+    c.textContent = _t('login.create', null, '✦ Create a new character');
+    list.appendChild(c);
   }).catch(function () {
     $('list').innerHTML = '';
     var e = document.createElement('div');

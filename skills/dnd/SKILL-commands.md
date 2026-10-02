@@ -624,7 +624,7 @@ Read `characters/<name>.md`, display cleanly. If name omitted and one character 
     ```bash
     python3 ${CLAUDE_SKILL_DIR}/scripts/build_supplemental.py --character ~/.claude/dnd/campaigns/<name>/characters/<charname>.md
     ```
-7. PINs are per campaign, so ask for this character's display login PIN in the new campaign (same question as `character new` step 11) and set it.
+7. PINs are per campaign. **Web-created character** (the sheet has a `**Status:**` line): first run `python3 ${CLAUDE_SKILL_DIR}/display/accounts.py import-web-pin --campaign <campaign> --character "<Name>"` — it copies the PIN the player chose on the web, so don't ask for one. Then delete the `**Status:**` line from both the campaign copy and the roster sheet, and fill `**Player:**`/`**Campaign:**`/`Origin campaign` as usual. If the import was the DM's decision to change the level, do the level-up at step 2 as for any import. Otherwise (no web PIN), ask for this character's display login PIN in the new campaign (same question as `character new` step 11) and set it.
 8. Deliver one-paragraph in-character aside — how does it feel to step into a new world?
 
 ---
@@ -706,6 +706,12 @@ The registry by default captures **canonical** characters (those in `npcs.md` / 
 
 ## `/dm:dnd characters`
 List all characters in global roster (`~/.claude/dnd/characters/`). Display: name, race/class/level, origin campaign, previous campaigns, last updated.
+
+Characters players built themselves on the web (`/crea`, see *Web character creation* below) carry a `**Status:** da approvare` line: list those first, marked as pending. `python3 ${CLAUDE_SKILL_DIR}/display/char_create.py list` prints just them.
+
+### Web character creation (`/crea`)
+
+When the display is running, anyone can open `<display URL>/crea` (also linked from the login screen as *Crea un nuovo personaggio*) and build a **level-1, 2014-rules** character in a chat where Claude asks the questions one at a time — the same flow as `/dm:dnd character new`. That Claude runs with no tools, no files and no memory (`claude -p --tools ""`), and the server computes every number itself (modifiers, saves, skills, HP) and rolls the ability scores when the player asks to roll. At the end the player picks a PIN on the page. The sheet is written to the global roster with `**Status:** da approvare`, and the PIN is stored hashed in `~/.claude/dnd/characters/web-accounts.json` — never in the sheet. Nothing reaches a campaign until the DM imports it with `/dm:dnd character import <name>`. The site is public, so it is rate limited (per IP and per day; see `LIMITS` in `char_create.py`).
 
 ---
 

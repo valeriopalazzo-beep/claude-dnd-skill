@@ -456,7 +456,8 @@ _login_fails_char: dict[str, list] = {}
 _login_lock = threading.Lock()
 
 # Reachable without logging in. Every other endpoint needs a login.
-_PUBLIC_ENDPOINTS = {"ping", "serve_icon", "favicon", "login", "login_options", "logout", "static"}
+_PUBLIC_ENDPOINTS = {"ping", "serve_icon", "favicon", "login", "login_options", "logout", "static",
+                     "crea_page", "crea_start", "crea_conv", "crea_msg", "crea_finish"}
 # Only the DM may call these (the narration feed, stats, dice requests, queue
 # plumbing, device approval, wiping the log).
 _DM_ENDPOINTS = {
@@ -709,6 +710,96 @@ def logout():
     resp = jsonify({"ok": True})
     resp.delete_cookie(_SESSION_COOKIE)
     return resp
+
+
+# ─── Character creation from the web (/crea) ─────────────────────────────────
+# Public, no login: anyone can build a level-1 character with Claude asking the
+# questions. char_create.py holds the conversation, the Claude call (no tools)
+# and the sheet; these routes only add the HTTP edges and the rate limits.
+
+import char_create as _create
+
+
+def _same_origin() -> bool:
+    origin = request.headers.get("Origin", "")
+    return not origin or urlparse(origin).netloc == request.host
+
+
+@app.route("/crea")
+def crea_page():
+    return render_template("crea.html", i18n=_load_i18n_json())
+
+
+@app.route("/crea/start", methods=["POST"])
+def crea_start():
+    if not _same_origin():
+        return "Forbidden", 403
+    ip = request.remote_addr or "?"
+    if _create.allow("convs", ip):
+        return jsonify({"error": "limit"}), 429
+    return jsonify(_create.public_view(_create.new_conv(ip)))
+
+
+@app.route("/crea/conv/<cid>")
+def crea_conv(cid):
+    conv = _create.load_conv(cid)
+    if not conv:
+        return jsonify({"error": "unknown"}), 404
+    return jsonify(_create.public_view(conv))
+
+
+@app.route("/crea/msg", methods=["POST"])
+def crea_msg():
+    if not _same_origin():
+        return "Forbidden", 403
+    data = request.get_json(silent=True) or {}
+    conv = _create.load_conv(str(data.get("id", "")))
+    if not conv or conv.get("finished"):
+        return jsonify({"error": "unknown"}), 404
+    text = str(data.get("text", "")).strip()
+    if not text:
+        return jsonify({"error": "empty"}), 400
+    if len(text) > _create.MAX_MSG_LEN:
+        return jsonify({"error": "long", "max": _create.MAX_MSG_LEN}), 400
+    if sum(1 for m in conv["history"] if m["role"] == "player") >= _create.MAX_TURNS:
+        return jsonify({"error": "turns"}), 429
+    with _create._usage_lock:
+        if conv["id"] in _create._busy:
+            return jsonify({"error": "busy"}), 409
+        _create._busy.add(conv["id"])
+    try:
+        if _create.allow("msgs", request.remote_addr or "?"):
+            return jsonify({"error": "limit"}), 429
+        try:
+            out = _create.handle_message(conv, text)
+        except Exception as e:
+            print(f"[crea] {conv['id'][:8]}: {e}", file=sys.stderr)
+            return jsonify({"error": "claude"}), 502
+        return jsonify(out | {"view": _create.public_view(conv)})
+    finally:
+        with _create._usage_lock:
+            _create._busy.discard(conv["id"])
+
+
+@app.route("/crea/finish", methods=["POST"])
+def crea_finish():
+    if not _same_origin():
+        return "Forbidden", 403
+    data = request.get_json(silent=True) or {}
+    conv = _create.load_conv(str(data.get("id", "")))
+    if not conv or not conv.get("sheet") or conv.get("finished"):
+        return jsonify({"error": "unknown"}), 404
+    pin = str(data.get("pin", "")).strip()
+    player = re.sub(r"[^\w' -]", "", str(data.get("player", "")), flags=re.U).strip()[:40]
+    try:
+        _create.save_character(conv["sheet"], pin, player)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    conv["finished"] = True
+    conv["player"] = player
+    _create.save_conv(conv)
+    print(f"[crea] new character from the web: {conv['sheet']['name']} — pending DM approval", file=sys.stderr)
+    return jsonify({"ok": True, "name": conv["sheet"]["name"]})
 
 
 # Wire audio broadcast after _broadcast is defined (see bottom of file)

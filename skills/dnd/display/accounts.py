@@ -194,6 +194,36 @@ def remove_dm_pin() -> bool:
         return False
 
 
+def web_accounts_path() -> Path:
+    """PINs chosen by players who created their character on the web (/crea)."""
+    from paths import characters_dir
+    return characters_dir() / "web-accounts.json"
+
+
+def import_web_pin(campaign: str, character: str) -> bool:
+    """Copy the PIN a player chose at /crea into the campaign's accounts.
+
+    Returns False when that character has no web PIN. The record keeps its
+    hash; its "changed" time is reset so older sessions for the name end.
+    """
+    path = accounts_path(campaign)
+    if path is None:
+        raise ValueError("invalid campaign name")
+    web = _read_json(web_accounts_path())
+    stored = find_character(web, character) if isinstance(web.get("characters"), dict) else None
+    if stored is None:
+        return False
+    rec = dict(web["characters"][stored])
+    rec["changed"] = time.time()
+    data = load(campaign)
+    old = find_character(data, stored)
+    if old:
+        data["characters"].pop(old)
+    data["characters"][stored] = rec
+    _write_json(path, data)
+    return True
+
+
 # ─── CLI ──────────────────────────────────────────────────────────────────────
 
 def _read_pin(args) -> str:
@@ -205,7 +235,7 @@ def _read_pin(args) -> str:
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description="Manage display login PINs.")
     sub = p.add_subparsers(dest="cmd", required=True)
-    for name in ("set-pin", "remove"):
+    for name in ("set-pin", "remove", "import-web-pin"):
         s = sub.add_parser(name)
         s.add_argument("--campaign", required=True)
         s.add_argument("--character", required=True)
@@ -224,6 +254,12 @@ def main(argv=None) -> int:
             set_pin(args.campaign, args.character, _read_pin(args))
             print(f"PIN set for {args.character.strip()} (campaign {args.campaign}). "
                   "Any open session for this character was logged out.")
+        elif args.cmd == "import-web-pin":
+            if import_web_pin(args.campaign, args.character):
+                print(f"{args.character.strip()} can log in with the PIN chosen on the web (campaign {args.campaign}).")
+            else:
+                print(f"No web PIN for {args.character}: set one with set-pin.")
+                return 1
         elif args.cmd == "remove":
             if remove(args.campaign, args.character):
                 print(f"Removed {args.character}: that character can no longer log in.")
