@@ -3099,13 +3099,58 @@ if __name__ == "__main__":
         ssl_ctx.load_cert_chain(_cert, _key)
     scheme  = "https" if ssl_ctx else "http"
 
+    import socket as _socket
     from werkzeug.serving import WSGIRequestHandler
+
+    _HOST_RE = re.compile(r"^[A-Za-z0-9.\-]+(:\d{1,5})?$|^\[[0-9A-Fa-f:]+\](:\d{1,5})?$")
 
     class _TimeoutRequestHandler(WSGIRequestHandler):
         # Drops connections that stay silent this long while we wait to read
         # (stalled handshakes, idle keep-alives). SSE streams only write, so
         # they are unaffected unless the client stops reading entirely.
         timeout = 30
+        _redirected = False
+
+        def setup(self):
+            super().setup()
+            if ssl_ctx is None:
+                return
+            # A phone that opens "host:port" without a scheme speaks plain HTTP to
+            # the TLS port and just gets an error. Peek at the raw bytes (the
+            # handshake hasn't run yet) and send plain HTTP clients to https://.
+            raw = self.connection
+            try:
+                first = _socket.socket.recv(raw, 1, _socket.MSG_PEEK)
+            except OSError:
+                return  # timeout / reset: let the normal handler fail quietly
+            if not first or first[0] == 0x16:  # 0x16 = TLS handshake record
+                return
+            self._redirected = True
+            try:
+                head = _socket.socket.recv(raw, 4096).decode("latin-1", "replace")
+                lines = head.split("\r\n")
+                parts = lines[0].split(" ")
+                path = parts[1] if len(parts) >= 2 and parts[1].startswith("/") else "/"
+                host = ""
+                for line in lines[1:]:
+                    if line.lower().startswith("host:"):
+                        host = line[5:].strip()
+                        break
+                if _HOST_RE.match(host):
+                    location = f"https://{host}{path}".replace("\r", "").replace("\n", "")
+                    reply = ("HTTP/1.1 301 Moved Permanently\r\n"
+                             f"Location: {location}\r\n"
+                             "Content-Length: 0\r\nConnection: close\r\n\r\n")
+                else:
+                    reply = ("HTTP/1.1 400 Bad Request\r\n"
+                             "Content-Length: 0\r\nConnection: close\r\n\r\n")
+                _socket.socket.sendall(raw, reply.encode("latin-1"))
+            except OSError:
+                pass
+
+        def handle(self):
+            if not self._redirected:
+                super().handle()
 
     # Write .scheme so push_stats.py / send.py / autorun_wait.py know which to use
     try:
