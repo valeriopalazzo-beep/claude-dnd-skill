@@ -21,6 +21,10 @@ Usage:
     # Award for a qualifying non-combat encounter:
     python3 xp.py award --campaign my-campaign --characters "Aldric,Mira" \\
         --difficulty medium --type noncombat --note "guild informant interrogation"
+
+    # A player missed the session — their PC still gets the same award:
+    python3 xp.py award --campaign my-campaign --characters "Aldric,Mira" \\
+        --absent "Thorne" --monsters "goblin:1/4:3"
 """
 
 import sys
@@ -399,19 +403,33 @@ def cmd_award(args: argparse.Namespace) -> None:
     enc_type   = (args.type or ("combat" if args.monsters else "noncombat")).lower()
     note       = args.note or ""
 
+    # Absent PCs (their player missed the session) get the same award as the
+    # table, but they did not fight: they don't split the monster XP, don't
+    # shift the party level, and aren't pushed to the sidebar, where an
+    # --xp update for an unlisted name would add an empty card.
+    absent_names = [c.strip() for c in (args.absent or "").split(",") if c.strip()]
+    absent_keys  = {n.lower() for n in absent_names}
+    char_names   = [n for n in char_names if n.lower() not in absent_keys]
+    if not char_names:
+        print("  Error: --characters must name at least one PC who was present.",
+              file=sys.stderr)
+        sys.exit(1)
+
     # Load character state from files
     chars = []
-    for name in char_names:
+    for name in char_names + absent_names:
         try:
             path = _find_char_path(campaign, name)
         except FileNotFoundError as e:
             print(f"  Error: {e}", file=sys.stderr)
             sys.exit(1)
         xp, level = _read_char_state(path)
-        chars.append({"name": name, "xp": xp, "level": level, "path": path})
+        chars.append({"name": name, "xp": xp, "level": level, "path": path,
+                      "absent": name in absent_names})
 
-    avg_level = round(sum(c["level"] for c in chars) / len(chars))
-    players   = len(chars)
+    present   = [c for c in chars if not c["absent"]]
+    avg_level = round(sum(c["level"] for c in present) / len(present))
+    players   = len(present)
 
     # Calculate XP per player
     if args.monsters:
@@ -451,7 +469,8 @@ def cmd_award(args: argparse.Namespace) -> None:
         old_xp  = c["xp"]
         new_xp  = old_xp + per_player
         leveled = _write_char_xp(c["path"], new_xp, c["level"])
-        _push_xp_display(c["name"], new_xp, c["level"])
+        if not c["absent"]:
+            _push_xp_display(c["name"], new_xp, c["level"])
         _ledger_entries.append({"name": c["name"], "awarded": per_player,
                                 "total_after": new_xp})
 
@@ -459,7 +478,8 @@ def cmd_award(args: argparse.Namespace) -> None:
         up_tag     = f"  ⚠ LEVEL {c['level'] + 1} UP!" if leveled else ""
         remaining  = max(0, next_lvl - new_xp)
         rem_note   = "" if leveled else f"  ({remaining:,} to Level {c['level'] + 1})"
-        print(f"  {c['name']}: {old_xp:,} + {per_player:,} = {new_xp:,} / {next_lvl:,}{rem_note}{up_tag}")
+        away_tag   = "  (absent)" if c["absent"] else ""
+        print(f"  {c['name']}: {old_xp:,} + {per_player:,} = {new_xp:,} / {next_lvl:,}{rem_note}{up_tag}{away_tag}")
         if leveled:
             any_levelup = True
 
@@ -508,6 +528,9 @@ def main() -> None:
                          help="name:cr:count,... for exact CR-based calculation")
     award_p.add_argument("--note",       metavar="TEXT",
                          help="Brief label for this award (printed only, not stored)")
+    award_p.add_argument("--absent",     metavar="NAMES",
+                         help="Comma-separated PCs whose player missed the session: "
+                              "same award, but not counted in the split or party level")
 
     check_p = sub.add_parser(
         "check", help="Reconcile the award ledger against the character sheets")

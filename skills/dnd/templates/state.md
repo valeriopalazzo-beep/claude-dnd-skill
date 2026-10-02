@@ -151,7 +151,8 @@ revision_log: []
 *(leave empty until the first arc completes)*
 
 ## Session Flags
-*(tutor_mode, autorun, autorun_interval, tts_voice, sfx_languages, autosave — session-scoped flags set via /dnd commands or by the display companion)*
+*(tutor_mode, autorun, autorun_interval, tts_voice, sfx_languages, autosave, absent — session-scoped flags set via /dnd commands or by the display companion)*
+*(absent: PCs whose player isn't at the table this session, or `none` — asked fresh at every /dm:dnd load. Benched PCs are left off the sidebar and out of scenes, but still receive XP.)*
 *(autosave: on|off — default on. Governs the behind-the-scenes continuity checkpoint (Live State Flags + graph + session tail). Toggle with /dm:dnd autosave on|off.)*
 
 ## DM Notes (hidden from players)

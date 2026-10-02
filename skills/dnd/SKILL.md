@@ -419,6 +419,19 @@ Step (g) uses `push_stats.py --turn-current` directly because it has no narratio
 
 ---
 
+## Absent Players
+
+When `state.md → ## Session Flags → absent:` names one or more PCs, their players aren't at the table this session. Bench those PCs for the whole session:
+
+- **In the fiction:** give each a plausible reason to be off-screen — keeping watch at camp, recovering, tending to their own business, following another lead. Pick what fits where the party is; never kill, capture or harm a benched PC, and never make decisions or speak for them. If the scene makes their absence impossible (they were mid-dungeon with the party), they "fade into the background": present but passive, never targeted, never rolling.
+- **Mechanics:** no rolls, no turns in initiative, no resource use. Their sheet is frozen except for XP.
+- **Encounter balance:** build and rate encounters on the PCs who are present — `xp.py calc --players <present count>`.
+- **XP:** benched PCs receive **every** award the table receives — pass them with `--absent` (see *XP Awards*), never in `--characters`.
+- **Display:** they are not in the sidebar (see `/dm:dnd load` step 6) and never targeted by `send.py --player` or `--stat-*` flags.
+- **A player arrives late:** remove them from `absent:`, push their full card with `push_stats.py --json` (no `--replace-players`, so the others stay), and write them into the scene with one line.
+
+When they come back at a later load, they rejoin the scene with one line of fiction — see `/dm:dnd load` step 8.
+
 ## XP Awards
 
 **Never calculate XP in context.** Use `scripts/xp.py` — it holds all tables and handles character file updates and display pushes. The DM's only decision is the difficulty tier and encounter type.
@@ -473,9 +486,16 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/xp.py award \
   --campaign $CAMP --characters "Max of Thraxx,Ethros the 19th" --difficulty medium --type noncombat \
   --note "brief description"
 
+# A PC is benched this session (absent: in Session Flags) — they still get the award:
+python3 ${CLAUDE_SKILL_DIR}/scripts/xp.py award \
+  --campaign $CAMP --characters "Max of Thraxx,Ethros the 19th" --absent "Mara" \
+  --monsters "goblin:1/4:3" --note "description"
+
 # Preview before awarding:
 python3 ${CLAUDE_SKILL_DIR}/scripts/xp.py calc --level 3 --players 2 --difficulty hard
 ```
+
+**Absent PCs always get XP.** Every award goes to the whole party: present PCs in `--characters`, benched PCs in `--absent`. They receive the same amount per player, but don't split the monster XP, don't shift the party level, and aren't pushed to the sidebar. List them in the `--xp-award` block's `names` too, so the table sees they kept pace.
 
 Award XP at the **end of the scene** when the outcome is clear — not mid-combat or mid-negotiation. If a session ends before XP is awarded, note it in the session log and award at the start of the next session before anything else.
 

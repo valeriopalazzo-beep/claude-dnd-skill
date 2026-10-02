@@ -77,6 +77,11 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/xp.py award \
 python3 ${CLAUDE_SKILL_DIR}/scripts/xp.py award \
   --campaign <name> --characters "Max of Thraxx,Ethros the 19th" --difficulty medium --type noncombat \
   --note "guild informant interrogation"
+
+# A PC whose player missed the session — same award, not counted in the split:
+python3 ${CLAUDE_SKILL_DIR}/scripts/xp.py award \
+  --campaign <name> --characters "Max of Thraxx,Ethros the 19th" --absent "Mara" \
+  --difficulty hard --type combat
 ```
 
 **Difficulty tiers:** `easy` `medium` `hard` `deadly`

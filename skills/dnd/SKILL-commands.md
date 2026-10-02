@@ -68,7 +68,7 @@ Full step-by-step procedures for all `/dm:dnd` slash commands. Load this file at
 
 ## `/dm:dnd load <campaign-name>`
 0. **Pick the campaign if none was named.** If `<campaign-name>` was supplied (or the player clearly named one), use it. Otherwise `ls` the campaigns dir (`~/.claude/dnd/campaigns/` or `$DND_CAMPAIGN_ROOT/campaigns/`) and **call `AskUserQuestion`**: *"Which campaign?"* with the existing campaign names as options (most-recently-played first — sort by `state.md` mtime). The player can pick "Other" to type a name. If there are no campaigns, tell them and offer `/dm:dnd new`.
-1. **Session setup — call `AskUserQuestion`** with **two questions** (not typed y/n prompts):
+1. **Session setup — call `AskUserQuestion`** with **three questions** (not typed y/n prompts). List `characters/*.md` first — Q3 needs the PC names.
 
    **Q1 *"Display & input mode?"***
    - `No display` → continue without display.
@@ -80,7 +80,13 @@ Full step-by-step procedures for all `/dm:dnd` slash commands. Load this file at
    - `Players roll their own` → write `roll_mode: players`. Call for each PC roll and wait — never auto-roll a PC.
    - `DM rolls everything openly` → write `roll_mode: auto`. Resolve PC rolls yourself with full math shown.
 
-   - (Defaults if the player dismisses: no display, no autorun, `roll_mode: players` — or the existing saved value.)
+   **Q3 *"Who's playing tonight?"*** — skip it when the party has a single PC. Build it from the PCs in `characters/` (the party line in `state.md`):
+   - **2–4 PCs** → `multiSelect: true`, one option per PC (label = character name, description = player name if known). Selected = present; the rest are absent.
+   - **5+ PCs** → single-select: `Everyone` / `Someone's missing`. On the second, ask in one plain line which PCs are missing.
+
+   Write the answer to `state.md → ## Session Flags` as `absent: <comma-separated PC names>`, or `absent: none` when everyone is there. This **replaces** any previous value — absence is decided fresh at every load, never carried over. Absent PCs are **benched** for the whole session (see SKILL.md → *Absent players*): left off the sidebar, never in a scene or a roll call, not counted for encounter balance — but they still receive every XP award.
+
+   - (Defaults if the player dismisses: no display, no autorun, `roll_mode: players` — or the existing saved value — and everyone present.)
    - **Session tail replay:** before clearing the display, check if the campaign's `session_tail.json` exists. The campaign-side path is the authoritative one — `~/.claude/dnd/campaigns/<name>/session_tail.json`. **Do NOT read** the legacy/fallback at `${CLAUDE_SKILL_DIR}/display/session_tail.json`; that file may exist from older sessions or other campaigns and will mislead the replay. If the campaign-side file does not exist, skip replay (display starts blank). If it does, read it. After `--clear` and full stats push (step 4 below), replay the tail by sending each entry via the appropriate `send.py` flag. Entry type → flag mapping:
      - `player` key present → `send.py --player <name>` with text via stdin
      - `npc` key present → `send.py --npc <name>` with text via stdin
@@ -96,7 +102,7 @@ Full step-by-step procedures for all `/dm:dnd` slash commands. Load this file at
    - Register active campaign for DM Help: `python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --set-campaign <campaign-name>`
    - If autorun **yes** → write `autorun: true` to `state.md → ## Session Flags`; enter the autorun wait after the recap paragraph.
    - If autorun **no** → continue without autorun; DM drives turns manually.
-   - **Physical dice server check (only if installed).** Skip this step unless the optional dice server is set up: probe with `test -d ~/.dnd-dice || test "$DND_DICE_PHYSICAL" = "1"` and short-circuit out if the test fails. When it passes, run `curl -sf http://localhost:7777/health` (timeout 1s). If it returns OK, fetch the LAN IP with `python3 -c "import socket; s=socket.socket(socket.AF_INET, socket.SOCK_DGRAM); s.connect(('8.8.8.8', 80)); print(s.getsockname()[0]); s.close()"` and announce to the table: *"Dice server is up. Each player, open `http://<ip>:7777/?player=<your-pc-name>` on your phone (lowercase name, hyphens for spaces — same name I'll use when calling for rolls) and tap **consecrate** before we begin. NPC and DM rolls auto-resolve here."* Then list the PC short-names from `characters/` so players know what to type. If the server is unreachable, skip silently — `dice.py` falls back to local random.
+   - **Physical dice server check (only if installed).** Skip this step unless the optional dice server is set up: probe with `test -d ~/.dnd-dice || test "$DND_DICE_PHYSICAL" = "1"` and short-circuit out if the test fails. When it passes, run `curl -sf http://localhost:7777/health` (timeout 1s). If it returns OK, fetch the LAN IP with `python3 -c "import socket; s=socket.socket(socket.AF_INET, socket.SOCK_DGRAM); s.connect(('8.8.8.8', 80)); print(s.getsockname()[0]); s.close()"` and announce to the table: *"Dice server is up. Each player, open `http://<ip>:7777/?player=<your-pc-name>` on your phone (lowercase name, hyphens for spaces — same name I'll use when calling for rolls) and tap **consecrate** before we begin. NPC and DM rolls auto-resolve here."* Then list the short-names of the PCs who are present (skip anyone in `absent:`) so players know what to type. If the server is unreachable, skip silently — `dice.py` falls back to local random.
 
 2. **Backwards-compat: ruleset migration check.** Before reading state.md, run:
 
@@ -164,6 +170,8 @@ Full step-by-step procedures for all `/dm:dnd` slash commands. Load this file at
 
    `--replace-players` clears stale characters from previous campaigns. Build the JSON from the character file — every field above is required for the card and sheet tabs to render correctly.
 
+   **Present PCs only.** Leave out every PC named in `state.md → ## Session Flags → absent:` — the sidebar shows who is at the table tonight. Their sheets stay untouched on disk.
+
    Also push `--world-time`, `--factions`, and `--quests` in the **same** `push_stats.py` call as the player JSON to avoid race conditions where the display server receives a partial update. Combine all into one invocation:
 
    ```bash
@@ -230,7 +238,7 @@ Full step-by-step procedures for all `/dm:dnd` slash commands. Load this file at
 
    6. Re-run scene-context (now populated). Then proceed to step 6 (recap).
 
-8. Deliver one in-character paragraph recapping current situation — where the party is, what's at stake, what was last happening.
+8. Deliver one in-character paragraph recapping current situation — where the party is, what's at stake, what was last happening. **Attendance:** if `absent:` names anyone, give each benched PC one in-fiction line explaining why they're not in the scene (see SKILL.md → *Absent players*). If a PC who was absent last session (`## Recent Events → Absent: …`) is back, write them back in with one line, and give their player a two-sentence out-of-character catch-up on what they missed.
 9. Enter active DM mode — no `/dm:dnd` prefix needed from this point.
 
 ---
@@ -357,6 +365,8 @@ Campaign "<name>" created from <source title>.
 
 ## `/dm:dnd save`
 Write session events to session-log.md, update state.md (location, active quests, party HP/resources, recent events), update any characters/*.md that changed. Mirror each updated character to global roster (`~/.claude/dnd/characters/<name>.md`).
+
+**Absent players:** if `## Session Flags → absent:` names anyone, open this session's session-log entry with `Absent: <names> — <one-line in-fiction reason>` and add the same line to `## Recent Events`, so the next load can write them back in. Absent PCs' sheets change only by the XP they were awarded — never touch their HP, slots, inventory or conditions.
 
 **Inspiration tracking:** On every save, record each PC's Inspiration state in `state.md → ## Current Situation → Party status`. Use explicit text: `Inspiration ✓` if held, omit or `No Inspiration` if not. Inspiration persists across sessions and is NOT cleared by long rests. Example: `Mara: HP 24/24. Inspiration ✓. Theo: HP 24/24.`
 
