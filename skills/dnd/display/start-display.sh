@@ -6,6 +6,10 @@
 #   bash start-display.sh --lan        # LAN mode, HTTP  ← use this for home/trusted networks
 #   bash start-display.sh --lan --tls  # LAN mode, HTTPS ← use this on public/untrusted networks
 #
+# Public certificate: if <runtime>/public_host names a host and cert.pem/key.pem
+# are a certificate for it (e.g. Let's Encrypt), --lan switches to HTTPS on its
+# own — no self-signed cert, no :8080 cert server, nothing to install on devices.
+#
 # HTTP is the default. Guests and new devices connect instantly with no setup.
 # TLS adds encryption but requires a one-time certificate install on each device.
 
@@ -33,6 +37,12 @@ for arg in "$@"; do
   esac
 done
 
+PUBLIC_HOST=""
+if [[ -n "$LAN_FLAG" && -f "$RT/public_host" && -f "$RT/cert.pem" && -f "$RT/key.pem" ]]; then
+  PUBLIC_HOST="$(tr -d '[:space:]' < "$RT/public_host")"
+  [[ -n "$PUBLIC_HOST" ]] && TLS_MODE=true
+fi
+
 if $TLS_MODE && [[ -z "$LAN_FLAG" ]]; then
   echo "Error: --tls requires --lan (TLS is only meaningful for network access)"
   exit 1
@@ -47,7 +57,8 @@ if [[ -n "$LAN_FLAG" ]]; then
 fi
 
 # ── TLS: generate cert if missing, then start cert server ────────────────────
-if $TLS_MODE; then
+# (not with a public certificate: devices already trust it)
+if $TLS_MODE && [[ -z "$PUBLIC_HOST" ]]; then
   if [[ ! -f "$RT/cert.pem" || ! -f "$RT/key.pem" ]]; then
     echo "Generating self-signed certificate..."
     openssl req -x509 -newkey rsa:2048 \
@@ -116,7 +127,9 @@ for i in $(seq 1 10); do
     echo "Display started — $LOCAL_URL"
     [[ -n "$LAN_IP" ]] && echo "LAN access:     ${SCHEME}://${LAN_IP}:5001"
 
-    if $TLS_MODE; then
+    if [[ -n "$PUBLIC_HOST" ]]; then
+      echo "Players:        https://${PUBLIC_HOST}:5001  (public certificate — nothing to install)"
+    elif $TLS_MODE; then
       echo ""
       echo "══════════════════════════════════════════════════════════════"
       echo "  TLS MODE — one-time certificate install required per device"
