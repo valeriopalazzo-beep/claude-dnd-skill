@@ -153,7 +153,7 @@
     var out = [];
     String(text).split('\n').forEach(function (line) {
       var m = line.match(/^\s*(?:\d+[.)]|[-•*])\s*\*\*(.+?)\*\*/);
-      if (m && out.length < 6) out.push(m[1].replace(/[:：]\s*$/, ''));
+      if (m) out.push(m[1].replace(/[:：]\s*$/, ''));   // every option, never a partial list
     });
     return out;
   }
