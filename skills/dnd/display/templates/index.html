@@ -1383,6 +1383,34 @@
   .sb-quest-status.resolved { color: rgba(80,200,130,0.70); }
   .sb-quest-status.failed   { color: rgba(200,100,80,0.50); }
   .sb-quest-status.unknown  { color: rgba(200,185,150,0.25); }
+  /* Quests with details unfold on tap (_questDetail) */
+  .sb-quest-item.has-detail { flex-wrap: wrap; cursor: pointer; }
+  .sb-quest-item.has-detail .sb-quest-name::before {
+    content: '▸'; display: inline-block; width: 1.1em; opacity: .6; transition: transform .15s;
+  }
+  .sb-quest-item.has-detail.open .sb-quest-name::before { transform: rotate(90deg); }
+  .sb-quest-item.open .sb-quest-name { white-space: normal; }
+  .sb-quest-item:focus-visible { outline: 1px solid rgba(180,140,60,0.6); outline-offset: 2px; }
+  .sb-quest-detail {
+    display: none; flex-basis: 100%; cursor: auto; user-select: text;
+    margin: 4px 0 6px 1.1em; font-size: 9px; line-height: 1.45; color: rgba(200,185,150,0.75);
+  }
+  .sb-quest-item.open .sb-quest-detail { display: block; }
+  .sb-qd-summary { margin: 0 0 5px; }
+  .sb-qd-facts { display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; margin: 0 0 5px; }
+  .sb-qd-facts dt, .sb-qd-head {
+    font-family: 'Cinzel', serif; font-size: 7.5px; letter-spacing: 1px;
+    text-transform: uppercase; color: rgba(180,140,60,0.6);
+  }
+  .sb-qd-facts dt { padding-top: 1px; }
+  .sb-qd-facts dd { margin: 0; }
+  .sb-qd-head { margin: 4px 0 2px; }
+  .sb-qd-objectives, .sb-qd-clues { margin: 0 0 4px; padding: 0; list-style: none; }
+  .sb-qd-objectives li, .sb-qd-clues li { position: relative; padding-left: 1.3em; margin-bottom: 2px; }
+  .sb-qd-objectives li::before { content: '☐'; position: absolute; left: 0; }
+  .sb-qd-objectives li.done { opacity: .55; text-decoration: line-through; }
+  .sb-qd-objectives li.done::before { content: '☑'; }
+  .sb-qd-clues li::before { content: '•'; position: absolute; left: .3em; }
 
   /* ── Relationships (sheet modal) ── */
   .sm-relationship { display: flex; gap: 10px; align-items: baseline; margin-bottom: 8px; }
@@ -3583,6 +3611,11 @@
   :root[data-skin="editorial"] body:not(.input-only) .sb-faction-standing,
   :root[data-skin="editorial"] body:not(.input-only) .sb-quest-status{
     font-family:'Syne',sans-serif; font-weight:700; font-size:8.5px; letter-spacing:.1em; }
+  :root[data-skin="editorial"] body:not(.input-only) .sb-quest-detail{
+    font-family:'Newsreader',serif; font-size:12px; color:var(--e-on-strong); opacity:.82; }
+  :root[data-skin="editorial"] body:not(.input-only) .sb-qd-facts dt,
+  :root[data-skin="editorial"] body:not(.input-only) .sb-qd-head{
+    font-family:'Syne',sans-serif; font-weight:700; font-size:8.5px; letter-spacing:.14em; color:var(--e-accent); }
 
   /* ══ Phone display-settings popover (#phone-settings) — both skins, phone only ══ */
   #phone-settings{ display:none; }
@@ -4082,6 +4115,19 @@
   :root[data-skin="lanterna"] .sb-quest-status.active{ color:var(--ln-on-accent); background:var(--ln-accent); border-color:var(--ln-accent); }
   :root[data-skin="lanterna"] .sb-quest-status.threat{ color:var(--ln-on-bad); background:var(--ln-bad); border-color:var(--ln-bad); }
   :root[data-skin="lanterna"] .sb-quest-status.resolved{ color:var(--ln-good); } :root[data-skin="lanterna"] .sb-quest-status.failed{ color:var(--ln-bad); } :root[data-skin="lanterna"] .sb-quest-status.unknown{ color:var(--ln-text-muted); }
+  :root[data-skin="lanterna"] body.ln-on .sb-quest-item.has-detail{ flex-wrap:wrap; }
+  :root[data-skin="lanterna"] body.ln-on .sb-quest-item.has-detail:hover{ border-color:var(--ln-accent); }
+  :root[data-skin="lanterna"] body.ln-on .sb-quest-item:focus-visible{ outline:2px solid var(--ln-accent); outline-offset:2px; }
+  :root[data-skin="lanterna"] body.ln-on .sb-quest-detail{ margin:10px 0 0; padding-top:12px; border-top:1px solid var(--ln-line);
+    font-family:'Alegreya Sans',sans-serif; font-size:16px; line-height:1.5; color:var(--ln-text); }
+  :root[data-skin="lanterna"] body.ln-on .sb-qd-summary{ margin:0 0 12px; }
+  :root[data-skin="lanterna"] body.ln-on .sb-qd-facts{ gap:6px 14px; margin:0 0 12px; }
+  :root[data-skin="lanterna"] body.ln-on .sb-qd-facts dt, :root[data-skin="lanterna"] body.ln-on .sb-qd-head{ font-family:'Alegreya Sans',sans-serif; font-weight:800;
+    font-size:12px; letter-spacing:.08em; color:var(--ln-text-muted); padding-top:3px; }
+  :root[data-skin="lanterna"] body.ln-on .sb-qd-head{ margin:12px 0 6px; padding:0; }
+  :root[data-skin="lanterna"] body.ln-on .sb-qd-objectives li, :root[data-skin="lanterna"] body.ln-on .sb-qd-clues li{ margin-bottom:6px; padding-left:1.6em; }
+  :root[data-skin="lanterna"] body.ln-on .sb-qd-objectives li::before{ color:var(--ln-accent); }
+  :root[data-skin="lanterna"] body.ln-on .sb-qd-objectives li.done::before{ color:var(--ln-good); }
   :root[data-skin="lanterna"] body.ln-on .sb-faction-item{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 4px; border-bottom:1px solid var(--ln-line); }
   :root[data-skin="lanterna"] body.ln-on .sb-faction-item:last-child{ border-bottom:0; }
   :root[data-skin="lanterna"] .sb-faction-standing.allied, :root[data-skin="lanterna"] .sb-faction-standing.friendly{ color:var(--ln-good); }
@@ -7160,6 +7206,62 @@ setInterval(() => {
 
 // ── Stats update ─────────────────────────────────────────────────────────────
 
+// Quest names whose detail is unfolded — kept across stats re-renders.
+const _openQuests = new Set();
+
+// The unfolded part of a quest: what the party knows. Every field is optional;
+// a quest with none of them stays a plain line. Returns null in that case.
+function _questDetail(q) {
+  const box = document.createElement('div');
+  box.className = 'sb-quest-detail';
+  const text = v => (typeof v === 'string' ? v.trim() : '');
+  const summary = text(q.summary || q.description);
+  if (summary) {
+    const p = document.createElement('p');
+    p.className = 'sb-qd-summary';
+    p.textContent = summary;
+    box.appendChild(p);
+  }
+  const facts = [['giver', 'quest.giver'], ['location', 'quest.location'],
+                 ['reward', 'quest.reward'], ['deadline', 'quest.deadline']]
+    .filter(([k]) => text(q[k]));
+  if (facts.length) {
+    const dl = document.createElement('dl');
+    dl.className = 'sb-qd-facts';
+    facts.forEach(([k, label]) => {
+      const dt = document.createElement('dt');
+      dt.textContent = _t(label);
+      const dd = document.createElement('dd');
+      dd.textContent = text(q[k]);
+      dl.appendChild(dt);
+      dl.appendChild(dd);
+    });
+    box.appendChild(dl);
+  }
+  const list = (key, label, cls) => {
+    const items = (Array.isArray(q[key]) ? q[key] : [])
+      .map(o => (typeof o === 'string' ? { text: o } : (o || {})))
+      .filter(o => text(o.text));
+    if (!items.length) return;
+    const h = document.createElement('div');
+    h.className = 'sb-qd-head';
+    h.textContent = _t(label);
+    box.appendChild(h);
+    const ul = document.createElement('ul');
+    ul.className = cls;
+    items.forEach(o => {
+      const li = document.createElement('li');
+      if (o.done) li.className = 'done';
+      li.textContent = text(o.text);
+      ul.appendChild(li);
+    });
+    box.appendChild(ul);
+  };
+  list('objectives', 'quest.objectives', 'sb-qd-objectives');
+  list('clues', 'quest.clues', 'sb-qd-clues');
+  return box.childNodes.length ? box : null;
+}
+
 function updateStats(stats) {
   if (!stats || !stats.players) return;
   const sidebar = document.getElementById('sidebar');
@@ -7258,6 +7360,31 @@ function updateStats(stats) {
         st.textContent = QCLS[_qk] ? _t('quest.status.' + _qk, null, q.status) : (q.status || '—');
         item.appendChild(nm);
         item.appendChild(st);
+        const detail = _questDetail(q);
+        if (detail) {
+          // Tap a quest to read what the party knows about it. The open set
+          // survives the re-render every stats push does.
+          const key = q.name || '';
+          const setOpen = open => {
+            item.classList.toggle('open', open);
+            item.setAttribute('aria-expanded', open ? 'true' : 'false');
+            if (open) _openQuests.add(key); else _openQuests.delete(key);
+          };
+          item.classList.add('has-detail');
+          item.tabIndex = 0;
+          item.setAttribute('role', 'button');
+          item.appendChild(detail);
+          setOpen(_openQuests.has(key));
+          item.addEventListener('click', e => {
+            if (e.target.closest('.sb-quest-detail')) return;   // leave the text selectable
+            setOpen(!item.classList.contains('open'));
+          });
+          item.addEventListener('keydown', e => {
+            if (e.target !== item || (e.key !== 'Enter' && e.key !== ' ')) return;
+            e.preventDefault();
+            setOpen(!item.classList.contains('open'));
+          });
+        }
         questPanel.appendChild(item);
       });
       questPanel.style.display = '';

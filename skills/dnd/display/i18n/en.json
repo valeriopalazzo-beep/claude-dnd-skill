@@ -182,6 +182,12 @@
   "sb.secondWindOff": "2nd Wind ✗",
   "sb.factions": "Factions",
   "sb.quests": "Quests",
+  "quest.giver": "Given by",
+  "quest.location": "Where",
+  "quest.reward": "Reward",
+  "quest.deadline": "Deadline",
+  "quest.objectives": "Objectives",
+  "quest.clues": "What we know",
   "turn.round": "Round",
   "turn.initiative": "Initiative",
 

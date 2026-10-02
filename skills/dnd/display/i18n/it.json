@@ -182,6 +182,12 @@
   "sb.secondWindOff": "Recuperare Energie ✗",
   "sb.factions": "Fazioni",
   "sb.quests": "Missioni",
+  "quest.giver": "Affidata da",
+  "quest.location": "Dove",
+  "quest.reward": "Ricompensa",
+  "quest.deadline": "Scadenza",
+  "quest.objectives": "Obiettivi",
+  "quest.clues": "Cosa sappiamo",
   "turn.round": "Round",
   "turn.initiative": "Iniziativa",
 

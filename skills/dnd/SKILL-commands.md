@@ -203,13 +203,20 @@ The display question is skipped, because `/dm:dnd load` asks it. The graph and c
 
    Quest JSON structure:
    ```json
-   [{"name":"The Missing Shipment","status":"resolved"},{"name":"Keth the Collector","status":"threat"}]
+   [{"name":"The Missing Shipment","status":"active",
+     "summary":"Two wagons of Brenn ore never reached the river. The guild wants to know why.",
+     "giver":"Foreman Dalla","location":"The north road, past the ford","reward":"40 gp","deadline":"Before the barge leaves (3 days)",
+     "objectives":[{"text":"Find the wagons","done":true},{"text":"Learn who took the ore","done":false}],
+     "clues":["The drivers' tracks lead into the marsh","Fresh ash on the wagon seats"]},
+    {"name":"Keth the Collector","status":"threat","summary":"Keth wants the ledger back and knows our faces."}]
    ```
    Quest `status` values: `active` (amber), `threat` (red), `resolved` (green), `failed` (muted). Use `[]` to clear all quests:
    ```bash
    python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --quests '[...]'
    ```
    The quest panel only appears when at least one quest is present — do not skip this push.
+
+   **Quest details — always fill them.** Players tap a quest on the display to read its detail, so a bare name/status list is not enough. Every quest gets a `summary` (1–2 sentences: what it is and why it matters), plus `giver`, `location`, `reward`, `deadline` when known, `objectives` (concrete steps, `done: true` once achieved) and `clues` (the leads the party has gathered). Build them from `state.md → ## Active Quests`, `## Open Threads & Rumours` and `## Recent Events`, in the campaign's language. **Write only what the party knows** — every player can read the display, so never put DM secrets, hidden motives or unrevealed truths there. Re-push the full `--quests` list whenever a quest changes: a new lead, an objective achieved, a new quest, a status change.
 7. **Pull scene-context from the campaign graph.** Always run, even if you suspect `graph.json` doesn't exist — the script exits cleanly with a notice when uninitialized.
    ```bash
    python3 ${CLAUDE_SKILL_DIR}/scripts/campaign_graph.py scene-context \
