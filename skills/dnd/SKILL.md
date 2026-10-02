@@ -303,6 +303,8 @@ Roll handling is chosen at game start and stored as `roll_mode` in `state.md →
 
 **Per-player override:** a player can flip their own PC via the phone Settings → *Rolls* toggle. When that player has a queued action, `check_input.py` prepends a `[[<Char> roll mode: auto|players]]` directive — honor it for that character, overriding the campaign default. Precedence: **per-character directive > campaign `roll_mode`**.
 
+**NPCs are always yours — decide for them, never wait for them.** Whatever an NPC or monster does (an ally travelling with the party, a prisoner, an enemy), you choose it and resolve it in the same response; never ask the table what an NPC does and never leave an NPC's turn open. In combat, run every NPC turn yourself and move straight on. On the display, NPCs never go in the player list: no `--player <NPC>` / `--stat-*` push and no NPC in `--json` players. The player list is PCs only, and each entry gets a character card, an input tab and an autorun slot that someone would have to skip. Track NPC HP with `tracker.py` / `combat.py`, and show it in the turn order or narration. (The display drops any name without a character sheet and `push_stats.py` warns about it.)
+
 **NPC/monster rolls are always yours** — resolve via `dice.py`, show math inline:
   `Goblin attacks: d20+4 = 17 vs AC 16 — hit! 1d6+2 = 5 piercing damage`
 

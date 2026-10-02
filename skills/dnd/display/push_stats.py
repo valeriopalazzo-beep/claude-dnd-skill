@@ -116,9 +116,17 @@ def _send(url: str, data: bytes, token: str) -> None:
         headers["X-DND-Token"] = token
     req = urllib.request.Request(url, data=data, headers=headers, method="POST")
     try:
-        urllib.request.urlopen(req, timeout=TIMEOUT, context=_SSL_CTX)
+        resp = urllib.request.urlopen(req, timeout=TIMEOUT, context=_SSL_CTX)
+        body = resp.read()
     except Exception:
-        pass  # Display not running — fail silently
+        return  # Display not running — fail silently
+    try:
+        ignored = json.loads(body).get("ignored_players") if body else None
+    except Exception:
+        ignored = None
+    if ignored:
+        print("push_stats: not a PC (no character sheet), left off the player list: "
+              + ", ".join(ignored) + ". NPCs never go in the player list.", file=sys.stderr)
 
 
 def main() -> None:
@@ -168,7 +176,9 @@ def main() -> None:
     parser.add_argument("--factions", metavar="JSON",
                         help='Party faction standings: [{"name":"Pale Court","standing":"Suspicious"},...]; [] clears')
     parser.add_argument("--quests", metavar="JSON",
-                        help='Quest tracker: [{"name":"The Ward-Points","status":"resolved"},{"name":"Vedra Ceth","status":"threat"},...]; [] clears. Status values: active, threat, resolved, failed')
+                        help='Quest tracker: [{"name":"The Ward-Points","status":"resolved"},{"name":"Vedra Ceth","status":"threat"},...]; [] clears. Status values: active, threat, resolved, failed. '
+                             'Optional detail shown when a quest is tapped: summary, giver, location, reward, deadline (strings), '
+                             'objectives ([{"text":"...","done":false}]) and clues (["..."]) — only what the party knows')
     parser.add_argument("--turn-order", metavar="JSON",
                         help='Full turn order JSON: {"order":[...],"current":"Name","round":1}')
     parser.add_argument("--turn-current", metavar="NAME",

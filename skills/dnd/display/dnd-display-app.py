@@ -2018,6 +2018,45 @@ def image():
     return "", 204
 
 
+def _pc_slug(name: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+
+
+def _known_pc_slugs(extra_campaign: str = "") -> set:
+    """Slugs of every character with a sheet: the active campaign's characters/
+    (plus the one this request switches to) and the global roster. Empty when
+    none of those folders exist — then nothing is filtered."""
+    dirs = []
+    for camp in (_active_campaign(), extra_campaign):
+        camp = re.sub(r"[^A-Za-z0-9_-]", "", camp or "")[:50]
+        if camp:
+            try:
+                dirs.append(_find_campaign(camp) / "characters")
+            except Exception:
+                pass
+    try:
+        from paths import characters_dir as _characters_dir
+        dirs.append(_characters_dir())
+    except Exception:
+        pass
+    slugs: set = set()
+    for d in dirs:
+        try:
+            files = list(d.glob("*.md"))
+        except Exception:
+            continue
+        for f in files:
+            slugs.add(_pc_slug(f.stem))
+            try:
+                with open(f, encoding="utf-8") as fh:
+                    first = fh.readline()
+            except Exception:
+                continue
+            if first.startswith("# "):
+                slugs.add(_pc_slug(first[2:].strip()))
+    return slugs
+
+
 @app.route("/stats", methods=["POST"])
 def stats():
     """Receive character/combat stat updates. Merges players by name, replaces turn_order.
@@ -2032,17 +2071,29 @@ def stats():
         return "", 204
 
     _effect_expire_events: list[dict] = []
+    ignored_players: list[str] = []
     with _stats_lock:
         if "players" in data:
             # replace_players=true wipes the list first — used on campaign load
             if data.get("replace_players"):
                 _current_stats["players"] = []
             existing_players: list = _current_stats.setdefault("players", [])
+            known_pcs = None   # read lazily, only when a new name shows up
             for incoming in data["players"]:
                 name = incoming.get("name")
                 if not name:
                     continue
                 match = next((p for p in existing_players if p.get("name") == name), None)
+                if not match:
+                    # The player list is PCs only: an NPC there gets a card, an
+                    # input tab and an autorun slot the table has to skip.
+                    if known_pcs is None:
+                        known_pcs = _known_pc_slugs(str(data.get("campaign") or ""))
+                    if known_pcs and _pc_slug(name) not in known_pcs:
+                        ignored_players.append(name)
+                        print(f"[stats] '{name}' has no character sheet — not a PC, "
+                              "left out of the player list", file=sys.stderr)
+                        continue
                 # Keys prefixed with _ are mutation ops, not stored fields
                 _MUTATION_KEYS = {
                     "_inventory_add", "_inventory_remove",
@@ -2289,6 +2340,8 @@ def stats():
         players = _current_stats.get("players", [])
     _expected_count = max(1, len(players))
 
+    if ignored_players:
+        return jsonify({"ignored_players": ignored_players}), 200
     return "", 204
 
 

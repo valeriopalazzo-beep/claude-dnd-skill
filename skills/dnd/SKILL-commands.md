@@ -183,6 +183,8 @@ The display question is skipped, because `/dm:dnd load` asks it. The graph and c
 
    **Present PCs only.** Leave out every PC named in `state.md → ## Session Flags → absent:` — the sidebar shows who is at the table tonight. Their sheets stay untouched on disk.
 
+   **Never NPCs.** The player list is the party's PCs and nothing else. Never put an NPC, an ally, a prisoner or a monster in it — not in `--json` players, not with `--player <NPC> --hp ...` (a per-player push for an unknown name creates a new card). Every entry in that list gets a character-list card, an input tab and a slot the autorun waits for, so an NPC there forces the table to skip its turn. Track NPC and monster HP with `tracker.py` / `combat.py` instead, and show it in narration or in the turn order.
+
    Also push `--world-time`, `--factions`, and `--quests` in the **same** `push_stats.py` call as the player JSON to avoid race conditions where the display server receives a partial update. Combine all into one invocation:
 
    ```bash
