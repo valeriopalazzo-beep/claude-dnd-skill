@@ -185,10 +185,16 @@ def _find_char_path(campaign: str, char_name: str) -> pathlib.Path:
     exact = char_dir / f"{char_name.lower()}.md"
     if exact.exists():
         return exact
-    # Case-insensitive search
+    # Case-insensitive search, then slug match (web-created sheets are saved
+    # as e.g. "vardamir-ma-feyn.md" for "Vardamir Ma'feyn")
+    def _slug(s: str) -> str:
+        return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
     if char_dir.exists():
         for p in char_dir.glob("*.md"):
             if p.stem.lower() == char_name.lower():
+                return p
+        for p in char_dir.glob("*.md"):
+            if _slug(p.stem) == _slug(char_name):
                 return p
     raise FileNotFoundError(
         f"Character file not found for '{char_name}' in campaign '{campaign}'.\n"

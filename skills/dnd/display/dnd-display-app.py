@@ -2121,7 +2121,7 @@ def stats():
                             ]
                             # If the ended effect was concentration, also clear it
                             if removed and any(e.get("concentration") for e in removed):
-                                if match.get("concentration", "").lower() == spell_lower:
+                                if (match.get("concentration") or "").lower() == spell_lower:
                                     match["concentration"] = None
                         elif key == "_sheet_spells":
                             # Patch only the spells sub-key inside sheet
@@ -2178,7 +2178,7 @@ def stats():
                     p["effects"] = kept
                     for eff in expired:
                         was_conc = eff.get("concentration", False)
-                        if was_conc and p.get("concentration", "").lower() == eff["name"].lower():
+                        if was_conc and (p.get("concentration") or "").lower() == eff["name"].lower():
                             p["concentration"] = None
                         _effect_expire_events.append({
                             "owner": p["name"],
@@ -2318,7 +2318,7 @@ def effects_expire():
             for e in p.get("effects", []):
                 if e.get("name", "").lower() == name.lower():
                     was_conc = e.get("concentration", False)
-                    if was_conc and p.get("concentration", "").lower() == name.lower():
+                    if was_conc and (p.get("concentration") or "").lower() == name.lower():
                         p["concentration"] = None
                 else:
                     new_effects.append(e)

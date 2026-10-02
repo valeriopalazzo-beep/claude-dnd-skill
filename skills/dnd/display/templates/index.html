@@ -9475,6 +9475,10 @@ function _initDicePad() {
 
     _activeRequestId = String(req.request_id || '');
 
+    // The pad is still locked to the previous prescribed roll's die/adv;
+    // disabled buttons ignore .click(), so unlock before pre-filling.
+    if (_locked) _setLocked(false);
+
     // Spec → click the matching die button. If unknown, fall back to d20.
     const reqSpec = (req.spec || '1d20').toLowerCase();
     const dieBtn  = document.querySelector(`.dp-die[data-spec="${reqSpec}"]`)
