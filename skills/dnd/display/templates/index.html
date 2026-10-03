@@ -8345,10 +8345,13 @@ function _ttsBuildVoiceMenu() {
 
 // Open the voice menu where it fits: above the bar by default, below when the
 // block sits near the top of the narration pane (the pane clips what sticks
-// out), and scrolling when neither side has room for every voice.
+// out). When neither side is tall enough but the pane is, it sits inside the
+// pane over the bar; it scrolls only when the pane itself is too short.
 function _ttsPlaceMenu(menu, bar) {
   menu.classList.remove('tts-menu-down');
   menu.style.maxHeight = '';
+  menu.style.top = '';
+  menu.style.bottom = '';
   let top = 0, bottom = window.innerHeight;
   for (let el = bar.parentElement; el && el !== document.body; el = el.parentElement) {
     const oy = getComputedStyle(el).overflowY;
@@ -8363,10 +8366,17 @@ function _ttsPlaceMenu(menu, bar) {
   const above = b.top - top - 8;
   const below = bottom - b.bottom - 8;
   const need = menu.scrollHeight;
-  const down = need > above && below > above;
+  if (need <= above) return;                       // default: above the bar
+  if (need <= below) { menu.classList.add('tts-menu-down'); return; }
+  if (need <= bottom - top - 8) {
+    // Top of the pane, measured from the bar (the menu's positioned parent).
+    menu.style.bottom = 'auto';
+    menu.style.top = Math.round(top + 4 - b.top) + 'px';
+    return;
+  }
+  const down = below > above;
   menu.classList.toggle('tts-menu-down', down);
-  const room = down ? below : above;
-  if (need > room) menu.style.maxHeight = Math.max(120, room) + 'px';
+  menu.style.maxHeight = Math.max(120, down ? below : above) + 'px';
 }
 
 function _addTtsBar(blockEl) {
