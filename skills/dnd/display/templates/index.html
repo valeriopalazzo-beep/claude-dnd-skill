@@ -4495,8 +4495,8 @@
   <div class="audio-row" id="music-vol-row" title="Background music volume on this device" data-i18n-title="settings.musicVolume.title">
     <span class="audio-label" data-i18n="settings.musicVolume">Music volume</span>
     <span class="vb-wrap">
-      <input id="music-vol" type="range" min="0" max="100" step="5" value="35" aria-label="Music volume" data-i18n-aria="settings.musicVolume">
-      <span id="music-vol-val" class="theme-label">35%</span>
+      <input id="music-vol" type="range" min="0" max="100" step="5" value="10" aria-label="Music volume" data-i18n-aria="settings.musicVolume">
+      <span id="music-vol-val" class="theme-label">10%</span>
     </span>
   </div>
   <div class="audio-row" id="verbosity-row" title="Narration length the DM targets each turn — shorter = faster turns" data-i18n-title="settings.narration.title">
@@ -7799,7 +7799,7 @@ const _musicCat = (() => {
   catch (_) { return { scenes: {}, ambience: {} }; }
 })();
 let _musicOn = true;
-let _musicVol = 0.35;
+let _musicVol = 0.10;     // default: soft, under the narration
 try {
   _musicOn = localStorage.getItem('dnd-music') !== '0';
   const v = parseFloat(localStorage.getItem('dnd-music-vol'));
