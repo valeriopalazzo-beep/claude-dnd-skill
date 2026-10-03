@@ -1730,7 +1730,9 @@
     min-width: 120px;
     z-index: 50;
     box-shadow: 0 6px 28px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(0,0,0,0.6);
+    overflow-y: auto;          /* max-height set by _ttsPlaceMenu when short of room */
   }
+  .tts-voice-menu.tts-menu-down { bottom: auto; top: calc(100% + 4px); }
   .tts-voice-group {
     padding: 6px 13px 2px;
     font-family: 'Cinzel', serif;
@@ -8330,6 +8332,32 @@ function _ttsBuildVoiceMenu() {
   return menu;
 }
 
+// Open the voice menu where it fits: above the bar by default, below when the
+// block sits near the top of the narration pane (the pane clips what sticks
+// out), and scrolling when neither side has room for every voice.
+function _ttsPlaceMenu(menu, bar) {
+  menu.classList.remove('tts-menu-down');
+  menu.style.maxHeight = '';
+  let top = 0, bottom = window.innerHeight;
+  for (let el = bar.parentElement; el && el !== document.body; el = el.parentElement) {
+    const oy = getComputedStyle(el).overflowY;
+    if (oy === 'auto' || oy === 'scroll' || oy === 'hidden') {
+      const r = el.getBoundingClientRect();
+      top = Math.max(top, r.top);
+      bottom = Math.min(bottom, r.bottom);
+      break;
+    }
+  }
+  const b = bar.getBoundingClientRect();
+  const above = b.top - top - 8;
+  const below = bottom - b.bottom - 8;
+  const need = menu.scrollHeight;
+  const down = need > above && below > above;
+  menu.classList.toggle('tts-menu-down', down);
+  const room = down ? below : above;
+  if (need > room) menu.style.maxHeight = Math.max(120, room) + 'px';
+}
+
 function _addTtsBar(blockEl) {
   if (!_TTS_AVAILABLE || !blockEl) return;
   if (blockEl.querySelector(':scope > .tts-bar')) return;  // already added
@@ -8358,6 +8386,7 @@ function _addTtsBar(blockEl) {
     const wasHidden = menu.hidden;
     document.querySelectorAll('.tts-voice-menu').forEach(m => { m.hidden = true; });
     menu.hidden = !wasHidden;
+    if (!menu.hidden) _ttsPlaceMenu(menu, bar);
   });
 
   blockEl.appendChild(bar);
