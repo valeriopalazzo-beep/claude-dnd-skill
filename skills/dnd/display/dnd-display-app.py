@@ -1932,9 +1932,9 @@ def chunk():
             payload["scene"] = scene
             if _audio:
                 _audio.on_scene_change(scene["name"])
-        # SFX scan on all non-player text
+        # SFX scan on all non-player text (combat effects need the tracker on)
         if _audio:
-            _audio.on_text(cleaned)
+            _audio.on_text(cleaned, combat=_in_combat())
 
     # Store full typed payload so replay preserves action/player/npc/dice/tutor context
     log_entry: dict = {"text": cleaned}
@@ -2067,6 +2067,11 @@ def _known_pc_slugs(extra_campaign: str = "") -> set:
             if first.startswith("# "):
                 slugs.add(_pc_slug(first[2:].strip()))
     return slugs
+
+
+def _in_combat() -> bool:
+    """True while the initiative tracker runs (push_stats --turn-order … --turn-clear)."""
+    return bool(_current_stats.get("turn_order"))
 
 
 @app.route("/stats", methods=["POST"])
@@ -2604,7 +2609,7 @@ def tts_synthesize():
             "X-Audio-Chars": str(len(text)),
             "X-Audio-Voice": voice,
             # The page plays this effect when the voice reaches this text.
-            "X-Audio-Sfx": (_audio.detect(text) if _audio else None) or "",
+            "X-Audio-Sfx": (_audio.detect(text, combat=_in_combat()) if _audio else None) or "",
             "Cache-Control": "no-store",
         },
     )
@@ -2637,8 +2642,9 @@ def audio_sfx(name):
     wav = _audio.get_sfx_wav(name)
     if wav is None:
         return "Not found", 404
+    # no-cache: revalidate, so a replaced recording is heard at the next load
     return Response(wav, mimetype="audio/wav",
-                    headers={"Cache-Control": "public, max-age=3600"})
+                    headers={"Cache-Control": "no-cache"})
 
 
 @app.route("/clear", methods=["POST"])

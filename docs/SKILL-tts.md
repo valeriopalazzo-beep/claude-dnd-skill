@@ -118,6 +118,8 @@ sfx_languages: en,zh
 
 The skill currently ships SFX packs for all 24 Gemini-supported languages (`ar`, `bn`, `de`, `en`, `es`, `fr`, `hi`, `id`, `it`, `ja`, `ko`, `mr`, `nl`, `pl`, `pt`, `ro`, `ru`, `ta`, `te`, `th`, `tr`, `uk`, `vi`, `zh`). Community PRs to extend any pack are welcome.
 
+**Combat-only recorded effects (default).** Effects play only while the initiative tracker runs (`push_stats.py --turn-order` … `--turn-clear`) and use real CC0 recordings in `display/sfx/` (arrow, crossbow, sword, blunt, axe, shield, miss, potion, spell, fall — sources in `display/sfx/CREDITS.md`, rebuilt with `build_combat_sfx.py`). Their trigger words exist in Italian and English (`_COMBAT_TRIGGERS` in `display/audio.py`). Set `DND_SFX_COMBAT_ONLY=0` to bring back the synthesized all-scene effects above.
+
 ## Local voice on your own GPU (free, offline)
 
 Instead of Gemini, the display can narrate with Coqui XTTS-v2 running on the PC's graphics card (tested on a GTX 1660 6 GB: ~2× faster than real time). Nothing leaves the PC and there is no per-call cost. The XTTS model license (CPML) allows non-commercial use only.

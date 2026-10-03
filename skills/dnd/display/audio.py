@@ -7,8 +7,13 @@ Architecture:
   fetches synthesized WAV files from /audio/sfx/<name> and plays them via
   Web Audio API — works on any device with the browser tab open.
 
-Requires: numpy  (pip install numpy)
-If numpy is missing the module degrades silently — WAV endpoints return 404.
+Combat only (default): effects play only while the initiative tracker is
+running, and use real recordings from display/sfx/ (CC0, see CREDITS.md) —
+arrow, crossbow, sword, blunt, axe, shield, miss, potion, spell, fall.
+DND_SFX_COMBAT_ONLY=0 brings back the older all-scene synthesized effects.
+
+Requires: numpy  (pip install numpy) for the synthesized effects only.
+If numpy is missing those degrade silently — their WAV endpoints return 404.
 """
 
 import io
@@ -31,6 +36,11 @@ SR = 44100   # sample rate
 _sfx_on      = True     # each browser has its own on/off switch
 _wav_cache: dict = {}          # key → WAV bytes
 _broadcast_fn: Optional[Callable] = None
+
+# Recorded combat effects (display/sfx/<name>.wav) and the switch that keeps
+# every effect inside combat.
+_SFX_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sfx")
+_COMBAT_ONLY = os.environ.get("DND_SFX_COMBAT_ONLY", "1").strip() != "0"
 
 
 # ── Init ───────────────────────────────────────────────────────────────────────
@@ -68,22 +78,30 @@ def on_scene_change(scene_name: str) -> None:
     pass   # ambient removed — kept for API compatibility
 
 
-def detect(text: str) -> Optional[str]:
+def detect(text: str, combat: bool = False) -> Optional[str]:
     """The first SFX whose trigger words appear in text, without broadcasting.
 
-    /tts uses it to play the effect when the narrator voice reaches it.
+    In combat the recorded combat effects are checked first. Outside combat
+    nothing plays unless DND_SFX_COMBAT_ONLY=0. /tts uses this to play the
+    effect when the narrator voice reaches it.
     """
-    for pattern, sfx_name in _SFX_MAP:
-        if pattern.search(text):
-            return sfx_name
+    maps = []
+    if combat:
+        maps.append(_COMBAT_MAP)
+    if not _COMBAT_ONLY:
+        maps.append(_SFX_MAP)
+    for m in maps:
+        for pattern, sfx_name in m:
+            if pattern.search(text):
+                return sfx_name
     return None
 
 
-def on_text(text: str) -> None:
+def on_text(text: str, combat: bool = False) -> None:
     """Scan narration text for SFX triggers; broadcast at most one per call."""
     if not _sfx_on or not _broadcast_fn:
         return
-    sfx_name = detect(text)
+    sfx_name = detect(text, combat)
     if sfx_name:
         _broadcast_fn({"sfx": sfx_name})
 
@@ -91,10 +109,20 @@ def on_text(text: str) -> None:
 # ── WAV generation ─────────────────────────────────────────────────────────────
 
 def get_sfx_wav(name: str) -> Optional[bytes]:
-    """Return cached WAV bytes for the SFX, synthesising on first call."""
+    """Return cached WAV bytes for the SFX: the recording in display/sfx/ if
+    there is one, else synthesised on first call."""
+    key = f"sfx_{name}"
+    if key in _wav_cache:
+        return _wav_cache[key]
+    if name in COMBAT_SFX:
+        try:
+            with open(os.path.join(_SFX_DIR, name + ".wav"), "rb") as f:
+                _wav_cache[key] = f.read()
+            return _wav_cache[key]
+        except OSError:
+            pass
     if not _HAS_NUMPY:
         return None
-    key = f"sfx_{name}"
     if key not in _wav_cache:
         mono = _synth_sfx(name)
         if mono is None or len(mono) == 0:
@@ -647,6 +675,70 @@ _CJK_END   = "鿿"
 _AVAILABLE_LANGS = frozenset(_SFX_TRIGGERS.keys())
 
 
+# ── Combat effects (recorded, display/sfx/) ─────────────────────────────────────
+# Checked in this order, first match wins: specific actions (a miss, a parry,
+# a potion, a spell) before the weapons that may appear in the same sentence,
+# and the falling body last.
+
+COMBAT_SFX = ("miss", "shield", "potion", "spell", "crossbow", "arrow",
+              "axe", "blunt", "sword", "fall")
+
+_COMBAT_TRIGGERS: dict[str, dict[str, list[str]]] = {
+    "it": {
+        "miss":     ["manca", "mancano", "mancato", "mancata", "a vuoto",
+                     "schiva", "schivano", "schivato", "schivata", "schivi"],
+        "shield":   ["scudo", "scudi", "para", "parano", "parato", "parata",
+                     "deflette", "blocca il colpo"],
+        "potion":   ["pozione", "pozioni", "fiala", "elisir", "beve", "bevi",
+                     "tracanna", "tracanni", "sorso"],
+        "spell":    ["incantesimo", "incantesimi", "dardo incantato", "dardi incantati",
+                     "palla di fuoco", "fulmine", "fulmini", "magia"],
+        "crossbow": ["balestra", "balestre", "quadrello", "quadrelli"],
+        "arrow":    ["freccia", "frecce", "dardo", "dardi", "scocca", "scoccano",
+                     "scocchi", "scoccate", "scoccata", "arco"],
+        "axe":      ["ascia", "asce", "accetta", "bipenne", "scure"],
+        "blunt":    ["martello", "martelli", "martellata", "mazza", "mazze", "mazzata",
+                     "randello", "randellata", "maglio", "clava", "pugno", "pugni"],
+        "sword":    ["spada", "spade", "spadone", "fendente", "fendenti", "affondo",
+                     "affondi", "stoccata", "lama", "sciabola", "scimitarra",
+                     "pugnale", "pugnali", "daga", "stocco"],
+        "fall":     ["crolla", "crollano", "stramazza", "stramazzano", "cade a terra",
+                     "cadono a terra", "si accascia", "si accasciano", "esanime"],
+    },
+    "en": {
+        "miss":     ["miss", "misses", "missed", "dodge", "dodges", "dodged", "whiffs"],
+        "shield":   ["shield", "shields", "parry", "parries", "parried", "deflects",
+                     "blocks the blow"],
+        "potion":   ["potion", "potions", "vial", "elixir", "drinks", "quaffs", "gulps"],
+        "spell":    ["spell", "spells", "magic missile", "fireball", "lightning bolt",
+                     "casts"],
+        "crossbow": ["crossbow", "crossbows", "quarrel", "quarrels"],
+        "arrow":    ["arrow", "arrows", "bow", "looses", "nocks"],
+        "axe":      ["axe", "axes", "handaxe", "greataxe", "hatchet"],
+        "blunt":    ["hammer", "warhammer", "mace", "maul", "club", "flail",
+                     "punch", "punches"],
+        "sword":    ["sword", "swords", "longsword", "shortsword", "greatsword",
+                     "blade", "dagger", "rapier", "scimitar", "slash", "slashes",
+                     "stab", "stabs", "thrust"],
+        "fall":     ["collapses", "crumples", "slumps", "falls dead", "drops dead"],
+    },
+}
+
+_COMBAT_MAP: list = []
+
+
+def _rebuild_combat_map() -> None:
+    """Combat patterns for the active languages, in COMBAT_SFX order."""
+    _COMBAT_MAP.clear()
+    for sfx_name in COMBAT_SFX:
+        for lang in _SFX_LANGUAGES:
+            triggers = _COMBAT_TRIGGERS.get(lang, {}).get(sfx_name)
+            if triggers:
+                _COMBAT_MAP.append((re.compile(
+                    _compile_trigger_list(triggers, lang in _UNSPACED_LANGS),
+                    re.IGNORECASE | re.UNICODE), sfx_name))
+
+
 def _compile_trigger_list(triggers: list[str], is_unspaced: bool) -> str:
     """Build a regex alternation string from a list of trigger phrases.
 
@@ -707,6 +799,7 @@ def set_sfx_languages(langs: list[str]) -> None:
     global _SFX_LANGUAGES
     _SFX_LANGUAGES = [l.strip() for l in langs if l.strip()]
     _rebuild_sfx_map()
+    _rebuild_combat_map()
 
 
 def available_languages() -> list[str]:
@@ -730,4 +823,5 @@ def _load_languages_from_env() -> None:
 
 # Build default (English-only) on import, then apply env override if set
 _rebuild_sfx_map()
+_rebuild_combat_map()
 _load_languages_from_env()

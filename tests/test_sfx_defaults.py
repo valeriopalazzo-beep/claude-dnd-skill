@@ -3,6 +3,8 @@
 Detection is on from startup — each browser has its own on/off switch — and
 the trigger words cover every language the display ships, so Italian
 narration plays sounds without setting `sfx_languages` in state.md.
+Effects are recorded combat sounds and play only while the initiative
+tracker runs.
 """
 from __future__ import annotations
 
@@ -48,13 +50,53 @@ class SfxDefaultTests(unittest.TestCase):
         self.assertIn("it", langs)
         self.assertEqual(langs[-1], "en")
 
-    def test_italian_narration_triggers_a_sound(self):
+    def test_italian_narration_triggers_a_sound_in_combat(self):
         self.audio.set_sfx_languages(self.app._display_sfx_languages())
-        self.audio.on_text("Il goblin estrae la spada.")
+        self.audio.on_text("Il goblin estrae la spada.", combat=True)
         self.assertEqual(self.sent, [{"sfx": "sword"}])
         self.sent.clear()
-        self.audio.on_text("Silenzio. Nessuno parla.")
+        self.audio.on_text("Silenzio. Nessuno parla.", combat=True)
         self.assertEqual(self.sent, [])
+
+    def test_no_sound_outside_combat(self):
+        self.audio.set_sfx_languages(self.app._display_sfx_languages())
+        self.audio.on_text("Il goblin estrae la spada e apre la porta.")
+        self.assertEqual(self.sent, [])
+
+    def test_combat_actions_pick_the_right_recording(self):
+        self.audio.set_sfx_languages(self.app._display_sfx_languages())
+        cases = {
+            "Thalia scocca una freccia verso l'orco.": "arrow",
+            "Il bandito spara un quadrello con la balestra.": "crossbow",
+            "Il nano cala il martello sull'elmo.": "blunt",
+            "L'ascia si pianta nello scudo di legno.": "shield",
+            "Il fendente del goblin va a vuoto.": "miss",
+            "Mira beve la pozione di guarigione.": "potion",
+            "Lanci un dardo incantato.": "spell",
+            "L'orco crolla al suolo.": "fall",
+            "The rogue looses an arrow.": "arrow",
+        }
+        for text, sfx in cases.items():
+            with self.subTest(text=text):
+                self.assertEqual(self.audio.detect(text, combat=True), sfx)
+
+    def test_combat_effects_are_recordings(self):
+        for name in self.audio.COMBAT_SFX:
+            with self.subTest(name=name):
+                wav = self.audio.get_sfx_wav(name)
+                self.assertIsNotNone(wav)
+                self.assertEqual(wav[:4], b"RIFF")
+        self.assertIsNone(self.audio.get_sfx_wav("../tts"))
+
+    def test_combat_follows_the_initiative_tracker(self):
+        saved = self.app._current_stats.get("turn_order")
+        try:
+            self.app._current_stats["turn_order"] = None
+            self.assertFalse(self.app._in_combat())
+            self.app._current_stats["turn_order"] = {"order": ["Mira"], "current": "Mira", "round": 1}
+            self.assertTrue(self.app._in_combat())
+        finally:
+            self.app._current_stats["turn_order"] = saved
 
 
 if __name__ == "__main__":
