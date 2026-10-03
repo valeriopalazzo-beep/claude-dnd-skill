@@ -211,6 +211,7 @@
   "sheet.relationships": "Relationships",
   "sheet.noData": "Full sheet not loaded — run /dnd load to restore.",
   "sheet.noDataHint": "Full sheet not loaded — include \"sheet\" in the player object when pushing stats on /dnd load",
+  "sheet.full": "Full sheet",
 
   "srd.close": "Close",
   "srd.loading": "Looking up…",

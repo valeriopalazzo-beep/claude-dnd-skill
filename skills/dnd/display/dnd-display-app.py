@@ -2934,6 +2934,11 @@ def dice_request_cancel(request_id):
     return "", 204
 
 
+def _sheet_key(name: str) -> str:
+    """Letters and digits only, lowercased: "Vardamir Ma'feyn" == "vardamir-ma-feyn"."""
+    return "".join(ch for ch in (name or "").casefold() if ch.isalnum())
+
+
 @app.route("/character/<character>", methods=["GET"])
 def get_character_sheet(character):
     """Return the markdown content of a PC sheet for the active campaign.
@@ -2969,10 +2974,24 @@ def get_character_sheet(character):
     camp = re.sub(r"[^A-Za-z0-9_-]", "", camp)[:50]
 
     root = os.environ.get("DND_CAMPAIGN_ROOT", os.path.expanduser("~/.claude/dnd"))
-    candidates = []
+    folders = []
     if camp:
-        candidates.append(os.path.join(root, "campaigns", camp, "characters", f"{safe}.md"))
-    candidates.append(os.path.expanduser(f"~/.claude/dnd/characters/{safe}.md"))
+        folders.append(os.path.join(root, "campaigns", camp, "characters"))
+    folders.append(os.path.expanduser("~/.claude/dnd/characters"))
+
+    # Files are named by slug (vardamir-ma-feyn.md) while the display uses the
+    # full name ("Vardamir Ma'feyn"), so after the exact name try every sheet
+    # whose letters and digits match. The campaign copy wins over the roster.
+    key = _sheet_key(character)
+    candidates = []
+    for folder in folders:
+        candidates.append(os.path.join(folder, f"{safe}.md"))
+        try:
+            names = sorted(os.listdir(folder))
+        except OSError:
+            continue
+        candidates += [os.path.join(folder, fn) for fn in names
+                       if fn.endswith(".md") and key and _sheet_key(fn[:-3]) == key]
 
     for path in candidates:
         if os.path.isfile(path):

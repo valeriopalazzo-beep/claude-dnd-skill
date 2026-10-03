@@ -1170,6 +1170,28 @@
     font-size: 12px; color: rgba(200,185,150,0.25);
     font-style: italic; text-align: center; padding: 22px 0;
   }
+  /* Full sheet (the character's .md file) under the live sheet */
+  .sm-full-title {
+    font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 3px; text-transform: uppercase;
+    color: rgba(200,165,80,0.85); margin: 22px 0 4px; padding-top: 14px;
+    border-top: 1px solid rgba(180,140,60,0.25);
+  }
+  .sm-full h2 {
+    font-family: 'Cinzel', serif; font-size: 11px; font-weight: 400; letter-spacing: 3px;
+    text-transform: uppercase; color: rgba(180,140,60,0.65); margin: 16px 0 6px;
+  }
+  .sm-full h3 { font-size: 13px; color: rgba(200,165,80,0.8); margin: 10px 0 4px; }
+  .sm-full p, .sm-full li { font-size: 13px; color: rgba(220,205,170,0.8); line-height: 1.55; }
+  .sm-full p { margin: 4px 0; }
+  .sm-full ul { list-style: none; margin: 0; padding: 0; }
+  .sm-full li { padding: 2px 0; }
+  .sm-full strong { color: rgba(230,200,130,0.95); }
+  .sm-full table { width: 100%; border-collapse: collapse; margin: 4px 0; font-size: 13px; }
+  .sm-full th, .sm-full td {
+    padding: 4px 6px; text-align: left; color: rgba(220,205,170,0.8);
+    border-bottom: 1px solid rgba(180,140,60,0.12);
+  }
+  .sm-full th { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: rgba(180,140,60,0.65); }
 
   /* ── Inspiration badge (sidebar) ── */
   .sb-inspiration {
@@ -4189,6 +4211,17 @@
   :root[data-skin="lanterna"] #sheet-panel .sm-rel-role{ color:var(--ln-text-muted); }
   :root[data-skin="lanterna"] #sheet-panel .sm-rel-note{ color:var(--ln-text); opacity:1; }
   :root[data-skin="lanterna"] #sheet-panel .sm-no-data{ font-family:'Alegreya Sans',sans-serif; color:var(--ln-text-muted); }
+  :root[data-skin="lanterna"] #sheet-panel .sm-full-title{ font-family:'Alegreya SC',serif; font-weight:700; font-size:22px; letter-spacing:0; text-transform:none;
+    color:var(--ln-text); border-top:1px solid var(--ln-line-strong); margin-top:24px; padding-top:18px; }
+  :root[data-skin="lanterna"] #sheet-panel .sm-full h2{ font-family:'Alegreya Sans',sans-serif; font-weight:800; font-size:13px; letter-spacing:.12em; color:var(--ln-text-faint); margin:20px 0 8px; }
+  :root[data-skin="lanterna"] #sheet-panel .sm-full h3{ font-family:'Alegreya Sans',sans-serif; font-weight:800; font-size:16px; color:var(--ln-accent); }
+  :root[data-skin="lanterna"] #sheet-panel .sm-full p, :root[data-skin="lanterna"] #sheet-panel .sm-full li{ font-size:15px; font-weight:500; color:var(--ln-text); }
+  :root[data-skin="lanterna"] #sheet-panel .sm-full li{ padding:6px 0; border-bottom:1px solid var(--ln-line); }
+  :root[data-skin="lanterna"] #sheet-panel .sm-full li:last-child{ border-bottom:0; }
+  :root[data-skin="lanterna"] #sheet-panel .sm-full em{ color:var(--ln-text-muted); }
+  :root[data-skin="lanterna"] #sheet-panel .sm-full table{ font-size:15px; }
+  :root[data-skin="lanterna"] #sheet-panel .sm-full th{ font-weight:800; font-size:12px; letter-spacing:.08em; color:var(--ln-text-faint); border-bottom:2px solid var(--ln-line-strong); padding:6px; }
+  :root[data-skin="lanterna"] #sheet-panel .sm-full td{ font-weight:600; color:var(--ln-text); border-bottom:1px solid var(--ln-line); padding:7px 6px; }
 
   /* Regole — search box + the live SRD result (#srd-modal) as an overlay card */
   .ln-search{ display:flex; align-items:center; gap:10px; padding:0 12px; border-radius:10px;
@@ -6976,10 +7009,120 @@ function openSheet(name) {
     content.appendChild(noData);
   }
 
+  _appendFullSheet(content, name, sheet);
+
   document.getElementById('sheet-modal').classList.add('open');
   document.getElementById('sheet-panel').scrollTop = 0;
   // Lanterna skin shows the sheet in its side panel instead of as a modal.
   if (typeof window._lnOnSheetOpen === 'function') window._lnOnSheetOpen(name);
+}
+
+// ── Full sheet — the character's .md file under the live sheet ───────────────
+// The live sheet above only has what push_stats sends; the file also holds
+// saves, skills, proficiencies, languages, coins and backstory. openSheet()
+// runs again on every stats update, so the file is cached for a short while.
+const _fullSheetCache = {};   // name → { md, at }
+const _FULL_SHEET_TTL = 30000;
+
+function _appendFullSheet(content, name, sheet) {
+  const box = document.createElement('div');
+  box.className = 'sm-full';
+  content.appendChild(box);
+  const fill = md => {
+    if (!md) return;
+    const html = _fullSheetHtml(md, sheet);
+    if (!html) return;
+    box.innerHTML = `<div class="sm-full-title">${_esc(_t('sheet.full'))}</div>` + html;
+    content.querySelectorAll('.sm-no-data').forEach(el => {
+      const prev = el.previousElementSibling;
+      if (prev && prev.classList.contains('sm-divider')) prev.remove();
+      el.remove();
+    });
+  };
+  const hit = _fullSheetCache[name];
+  if (hit) fill(hit.md);
+  if (hit && Date.now() - hit.at < _FULL_SHEET_TTL) return;
+  _fullSheetCache[name] = { md: hit ? hit.md : '', at: Date.now() };   // one fetch at a time
+  fetch(`/character/${encodeURIComponent(name)}`, { headers: _authHeaders() })
+    .then(r => r.ok ? r.text() : '')
+    .then(md => {
+      if (!md) return;
+      _fullSheetCache[name] = { md, at: Date.now() };
+      if (box.isConnected) fill(md);
+    })
+    .catch(() => {});
+}
+
+// Headings, labels, skills and table headers of templates/character-sheet.md,
+// translated through the md.<English> keys of the display language.
+const _SHEET_PHRASES = [
+  'Identity', 'Character Pillar', 'Ability Scores', 'Combat Stats', 'Saving Throws', 'Skills',
+  'Attacks', 'Spell Slots (if applicable)', 'Spell Slots', 'Known Spells / Cantrips',
+  'Features & Traits', 'Equipment & Inventory', 'Backstory & Notes', 'Personality',
+  'Race', 'Class', 'Level', 'Background', 'Alignment', 'XP', 'Inspiration',
+  "Player's sentence", 'Derived pillar', 'HP', 'Temp HP', 'AC', 'Initiative', 'Speed',
+  'Hit Dice', 'remaining', 'Death Saves', 'Successes', 'Failures', 'Passive Perception',
+  'Tool proficiencies', 'Languages', 'Weapons', 'Armour', 'Armor', 'Adventuring Gear', 'Currency',
+  'Skill', 'Ability', 'Bonus', 'Proficient', 'Name', 'Attack Bonus', 'Damage', 'Type', 'Notes',
+  'Total', 'Used', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th',
+  'Acrobatics', 'Animal Handling', 'Athletics', 'Arcana', 'Deception', 'History', 'Insight',
+  'Intimidation', 'Investigation', 'Medicine', 'Nature', 'Perception', 'Performance',
+  'Persuasion', 'Religion', 'Sleight of Hand', 'Stealth', 'Survival',
+  'proficient', 'proficiency bonus', 'Base scores via', 'Racial bonuses applied',
+  'roll', 'point buy', 'standard array',
+].sort((a, b) => b.length - a.length);
+const _SHEET_ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+
+function _localizeSheetMd(md) {
+  md = md
+    .replace(/^### (.+?) Racial\s*$/gm, (m, n) => '### ' + _t('md.racialHeading', { name: n }, n + ' Racial'))
+    .replace(/^### (.+?) Background\s*$/gm, (m, n) => '### ' + _t('md.backgroundHeading', { name: n }, n + ' Background'))
+    .replace(/(\d)\*(?=\s*\|)/g, '$1 ✱')        // "+5*" = proficient save
+    .replace(/\\\*/g, '✱')
+    .replace(/^(\s*(?:-\s+)?\*\*.*)$/gm, l => l.replace(/\s+\|\s+/g, '  ·  '));   // "A | B" label rows
+  const map = {};
+  _SHEET_PHRASES.forEach(p => { const t = _t('md.' + p, null, p); if (t !== p) map[p] = t; });
+  _SHEET_ABILITIES.forEach(k => { const t = _t('ab.' + k, null, k.toUpperCase()); if (t !== k.toUpperCase()) map[k.toUpperCase()] = t; });
+  const keys = Object.keys(map).sort((a, b) => b.length - a.length);
+  if (keys.length) {
+    const rx = new RegExp('(^|[^A-Za-z])(' + keys.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')(?![A-Za-z])', 'g');
+    md = md.replace(rx, (m, pre, word) => pre + map[word]);
+  }
+  // 15gp → "15 mo"
+  md = md.replace(/(\d+)\s*(pp|gp|ep|sp|cp)\b/g, (m, n, c) => _t('md.coin.' + c, { n }, m));
+  // 30 ft → "9 m (30 piedi)" where the language asks for it.
+  return md.replace(/(\d+(?:[.,]\d+)?)\s*ft\b\.?/g, (m, ft) => {
+    const n = parseFloat(ft.replace(',', '.'));
+    const metres = String(Math.round(n * 0.3 * 10) / 10).replace('.', _t('md.decimal', null, '.'));
+    return _t('md.feet', { ft, m: metres }, m);
+  });
+}
+
+function _fullSheetHtml(md, sheet) {
+  // Sections the live sheet already shows are left out; so is what only the
+  // DM needs (campaign history, image prompt, how the DM uses the pillar).
+  const shown = {
+    'Ability Scores': true,
+    'Attacks': !!(sheet.attacks && sheet.attacks.length),
+    'Spell Slots': !!sheet.spells, 'Known Spells': !!sheet.spells,
+    'Features & Traits': !!(sheet.features && sheet.features.length),
+  };
+  const out = [];
+  md.replace(/\r\n/g, '\n').split(/^(?=## )/m).forEach(part => {
+    const m = /^## (.*)\n/.exec(part);
+    if (!m) return;   // "# Name" + Player/Campaign line
+    const title = m[1].trim();
+    if (/^Campaign History/.test(title)) return;
+    if (Object.keys(shown).some(k => shown[k] && title.startsWith(k))) return;
+    const body = part.slice(m[0].length).split('\n')
+      .filter(l => !/^\s*-\s+\*\*(Image look|Active hooks|Origin campaign|Previous campaigns):\*\*/.test(l))
+      .filter(l => !/^\s*\*\(Leave blank/.test(l))
+      .map(l => /^\*\*[^*]+:\*\*/.test(l) ? '\n' + l : l)   // "**Languages:** …" is its own paragraph
+      .join('\n').trim();
+    if (!body || /^[-\s|]*$/.test(body)) return;
+    out.push(`## ${title}\n${body}`);
+  });
+  return out.length ? _renderMarkdown(_localizeSheetMd(out.join('\n\n'))) : '';
 }
 
 function closeSheet() {
