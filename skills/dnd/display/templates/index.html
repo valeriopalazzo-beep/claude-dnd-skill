@@ -1737,6 +1737,8 @@
   .tts-voice-col { min-width: 120px; }
   .tts-voice-col + .tts-voice-col { border-left: 1px solid rgba(180, 140, 60, 0.18); }
   .tts-voice-menu.tts-menu-down { bottom: auto; top: calc(100% + 4px); }
+  /* The block whose menu is open paints above the blocks after it */
+  .tts-menu-open { position: relative; z-index: 60 !important; }
   .tts-voice-group {
     padding: 6px 13px 2px;
     font-family: 'Cinzel', serif;
@@ -8331,7 +8333,7 @@ function _ttsBuildVoiceMenu() {
       opt.addEventListener('click', e => {
         e.stopPropagation();
         _ttsSaveVoice(v);
-        menu.hidden = true;
+        _ttsCloseMenus();
       });
       col.appendChild(opt);
     });
@@ -8393,9 +8395,12 @@ function _addTtsBar(blockEl) {
   voiceBtn.addEventListener('click', e => {
     e.stopPropagation();
     const wasHidden = menu.hidden;
-    document.querySelectorAll('.tts-voice-menu').forEach(m => { m.hidden = true; });
+    _ttsCloseMenus();
     menu.hidden = !wasHidden;
-    if (!menu.hidden) _ttsPlaceMenu(menu, bar);
+    if (!menu.hidden) {
+      blockEl.classList.add('tts-menu-open');
+      _ttsPlaceMenu(menu, bar);
+    }
   });
 
   blockEl.appendChild(bar);
@@ -8406,9 +8411,12 @@ function _addTtsBar(blockEl) {
   }
 }
 
-document.addEventListener('click', () => {
+function _ttsCloseMenus() {
   document.querySelectorAll('.tts-voice-menu').forEach(m => { m.hidden = true; });
-}, { passive: true });
+  document.querySelectorAll('.tts-menu-open').forEach(b => b.classList.remove('tts-menu-open'));
+}
+
+document.addEventListener('click', _ttsCloseMenus, { passive: true });
 
 // Auto-narrate row — only shown if the server reports TTS available.
 if (_TTS_AVAILABLE) {
