@@ -7,6 +7,8 @@
   "settings.sfx": "Effetti sonori",
   "settings.sfx.title": "Effetti sonori (attivati dalla narrazione)",
   "settings.music": "Musica",
+  "tts.male": "Maschili",
+  "tts.female": "Femminili",
   "settings.music.title": "Musica di sottofondo del luogo, carica in combattimento",
   "settings.musicVolume": "Volume musica",
   "settings.musicVolume.title": "Volume della musica di sottofondo su questo dispositivo",

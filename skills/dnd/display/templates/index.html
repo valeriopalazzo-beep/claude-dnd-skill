@@ -1732,6 +1732,10 @@
     box-shadow: 0 6px 28px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(0,0,0,0.6);
     overflow-y: auto;          /* max-height set by _ttsPlaceMenu when short of room */
   }
+  /* Male and female voices side by side: half the height of one long list */
+  .tts-voice-menu:not([hidden]) { display: flex; align-items: flex-start; }
+  .tts-voice-col { min-width: 120px; }
+  .tts-voice-col + .tts-voice-col { border-left: 1px solid rgba(180, 140, 60, 0.18); }
   .tts-voice-menu.tts-menu-down { bottom: auto; top: calc(100% + 4px); }
   .tts-voice-group {
     padding: 6px 13px 2px;
@@ -1750,6 +1754,7 @@
     cursor: pointer;
     padding: 5px 13px;
     text-align: left;
+    white-space: nowrap;
     font-family: inherit;
     font-size: 0.77rem;
     letter-spacing: 0.05em;
@@ -8309,10 +8314,14 @@ function _ttsBuildVoiceMenu() {
   menu.hidden = true;
 
   function _addGroup(label, voices) {
+    if (!voices.length) return;
+    const col = document.createElement('div');
+    col.className = 'tts-voice-col';
+    menu.appendChild(col);
     const hdr = document.createElement('div');
     hdr.className = 'tts-voice-group';
     hdr.textContent = label;
-    menu.appendChild(hdr);
+    col.appendChild(hdr);
     voices.forEach(v => {
       const opt = document.createElement('button');
       opt.className = 'tts-voice-opt';
@@ -8324,11 +8333,11 @@ function _ttsBuildVoiceMenu() {
         _ttsSaveVoice(v);
         menu.hidden = true;
       });
-      menu.appendChild(opt);
+      col.appendChild(opt);
     });
   }
-  _addGroup('Male',   _TTS_VOICES_MALE);
-  _addGroup('Female', _TTS_VOICES_FEMALE);
+  _addGroup(_t('tts.male', null, 'Male'),     _TTS_VOICES_MALE);
+  _addGroup(_t('tts.female', null, 'Female'), _TTS_VOICES_FEMALE);
   return menu;
 }
 

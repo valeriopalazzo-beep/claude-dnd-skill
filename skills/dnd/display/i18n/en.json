@@ -7,6 +7,8 @@
   "settings.sfx": "Sound Effects",
   "settings.sfx.title": "Sound effects (triggered by narration)",
   "settings.music": "Music",
+  "tts.male": "Male",
+  "tts.female": "Female",
   "settings.music.title": "Background music for the scene, rousing in combat",
   "settings.musicVolume": "Music volume",
   "settings.musicVolume.title": "Background music volume on this device",
