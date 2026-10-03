@@ -178,8 +178,14 @@ def _synthesize_local(text: str, voice: str) -> bytes:
     req = urllib.request.Request(_local_url("/synth"), data=body, method="POST",
                                  headers={"Content-Type": "application/json"})
     try:
-        with urllib.request.urlopen(req, timeout=LOCAL_TIMEOUT) as resp:
-            pcm = resp.read()
+        try:
+            with urllib.request.urlopen(req, timeout=LOCAL_TIMEOUT) as resp:
+                pcm = resp.read()
+        except ConnectionResetError:
+            # Windows sometimes resets the socket while the audio is on its
+            # way back; the server cached it, so asking again is instant.
+            with urllib.request.urlopen(req, timeout=LOCAL_TIMEOUT) as resp:
+                pcm = resp.read()
     except urllib.error.HTTPError as e:
         raise TtsError(f"local http {e.code}") from e
     except (urllib.error.URLError, OSError) as e:
