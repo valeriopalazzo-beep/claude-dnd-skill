@@ -42,3 +42,4 @@ venv/
 
 # macOS
 .DS_Store
+**/display/tts_local.log

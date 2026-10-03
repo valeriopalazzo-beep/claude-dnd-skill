@@ -118,6 +118,25 @@ sfx_languages: en,zh
 
 The skill currently ships SFX packs for all 24 Gemini-supported languages (`ar`, `bn`, `de`, `en`, `es`, `fr`, `hi`, `id`, `it`, `ja`, `ko`, `mr`, `nl`, `pl`, `pt`, `ro`, `ru`, `ta`, `te`, `th`, `tr`, `uk`, `vi`, `zh`). Community PRs to extend any pack are welcome.
 
+## Local voice on your own GPU (free, offline)
+
+Instead of Gemini, the display can narrate with Coqui XTTS-v2 running on the PC's graphics card (tested on a GTX 1660 6 GB: ~2× faster than real time). Nothing leaves the PC and there is no per-call cost. The XTTS model license (CPML) allows non-commercial use only.
+
+1. Make a separate venv for the model (the display's own Python stays dependency-free):
+   ```
+   python -m venv tts-venv
+   tts-venv/Scripts/python -m pip install torch==2.8.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cu126
+   tts-venv/Scripts/python -m pip install coqui-tts "transformers<5" truststore
+   ```
+   torch 2.9+ makes coqui-tts require `torchcodec` (and FFmpeg); 2.8 does not.
+2. Write `~/.config/claude-dnd/tts_local.json`:
+   ```json
+   {"python": "<path to tts-venv>/Scripts/python.exe", "voice": "Damien_Black", "language": "it"}
+   ```
+3. Restart the display. It starts `display/tts_local.py` with that Python (log: `display/tts_local.log`); the model loads in ~20 s, the first run downloads it (~1.8 GB).
+
+The voice menu then lists 6 male and 6 female XTTS voices (`LOCAL_VOICES_*` in `display/tts.py`). Blocks are read a few sentences at a time so the voice starts in seconds. Delete `tts_local.json` to go back to Gemini.
+
 ## Path B — `gcloud` restricted key (advanced, optional)
 
 If you already use the `gcloud` CLI and would rather mint a key scoped to *only* the TTS API — so a leak can't reach Cloud Storage, BigQuery, or other Google services on the same project — use this path:

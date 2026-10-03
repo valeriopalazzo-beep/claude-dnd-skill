@@ -1,11 +1,18 @@
-"""Narrator TTS via Gemini Flash TTS (Google AI Studio API key).
+"""Narrator TTS: local XTTS-v2 on this PC's GPU, or Gemini Flash TTS.
 
-Server-side wrapper called by /tts in dnd-display-app.py. Reads the API key
-from DND_TTS_KEY env var → GEMINI_API_KEY env var → ~/.config/claude-dnd/tts.key
-(in that order). Returns None on any failure so the caller can silently
-degrade to text-only narration.
+Server-side wrapper called by /tts in dnd-display-app.py.
 
-stdlib only — no requests, no google-cloud-sdk, no dependencies.
+Local engine (free, nothing leaves the PC): enabled by
+~/.config/claude-dnd/tts_local.json, e.g.
+    {"python": "C:/.../venv/Scripts/python.exe", "voice": "Damien_Black", "language": "it"}
+`python` is a venv with torch + coqui-tts; the display starts tts_local.py
+with it (ensure_local_server) and talks to it on 127.0.0.1.
+
+Gemini engine: reads the API key from DND_TTS_KEY env var → GEMINI_API_KEY
+env var → ~/.config/claude-dnd/tts.key (in that order).
+
+Returns None on any failure so the caller can silently degrade to text-only
+narration. stdlib only — no requests, no google-cloud-sdk, no dependencies.
 Setup walkthrough: docs/SKILL-tts.md.
 """
 
@@ -14,6 +21,10 @@ from __future__ import annotations
 import base64
 import json
 import os
+import subprocess
+import sys
+import threading
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -49,6 +60,130 @@ MAX_TEXT_CHARS = 2000
 # Request timeout — Gemini Flash TTS typical latency is 1-3s; we give it
 # substantial headroom for cold-start or transient slowness.
 DEFAULT_TIMEOUT = 30.0
+
+
+# ── Local engine (XTTS-v2 via tts_local.py) ─────────────────────────────────
+
+LOCAL_CONFIG = Path.home() / ".config" / "claude-dnd" / "tts_local.json"
+LOCAL_PORT = 5056
+# XTTS has 58 studio voices; these read Italian well and split clearly by
+# pitch. Ids use "_" for the space in the XTTS speaker name.
+LOCAL_VOICES_MALE = ["Damien_Black", "Viktor_Menelaos", "Dionisio_Schuyler",
+                     "Baldur_Sanjin", "Kumar_Dahl", "Torcull_Diarmuid"]
+LOCAL_VOICES_FEMALE = ["Ana_Florence", "Claribel_Dervla", "Daisy_Studious",
+                       "Sofia_Hellen", "Gracie_Wise", "Tammie_Ema"]
+LOCAL_DEFAULT_VOICE = "Damien_Black"
+# One block of narration is ~2x faster than real time on a GTX 1660.
+LOCAL_TIMEOUT = 120.0
+
+_local_lock = threading.Lock()
+_local_started = 0.0
+
+
+def _local_config() -> Optional[dict]:
+    try:
+        cfg = json.loads(LOCAL_CONFIG.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return cfg if isinstance(cfg, dict) and cfg.get("python") else None
+
+
+def engine() -> str:
+    """'local' when tts_local.json is set up, else 'gemini'."""
+    return "local" if _local_config() else "gemini"
+
+
+def voices() -> dict:
+    """Voice menu for the active engine: {"male": [...], "female": [...]}."""
+    if engine() == "local":
+        return {"male": LOCAL_VOICES_MALE, "female": LOCAL_VOICES_FEMALE}
+    return {"male": ["Charon", "Enceladus", "Fenrir", "Umbriel"],
+            "female": ["Aoede", "Gacrux", "Kore", "Vindemiatrix", "Zephyr"]}
+
+
+def default_voice() -> str:
+    cfg = _local_config()
+    if cfg:
+        v = cfg.get("voice")
+        return v if v in LOCAL_VOICES_MALE + LOCAL_VOICES_FEMALE else LOCAL_DEFAULT_VOICE
+    return DEFAULT_VOICE
+
+
+def is_valid(voice: str) -> bool:
+    menu = voices()
+    return voice in menu["male"] or voice in menu["female"]
+
+
+def available() -> bool:
+    """True when /tts can be expected to work (engine configured)."""
+    return engine() == "local" or key_source() != "unset"
+
+
+def _local_url(path: str) -> str:
+    cfg = _local_config() or {}
+    return f"http://127.0.0.1:{int(cfg.get('port') or LOCAL_PORT)}{path}"
+
+
+def local_health() -> Optional[dict]:
+    try:
+        with urllib.request.urlopen(_local_url("/health"), timeout=2) as r:
+            return json.loads(r.read())
+    except Exception:
+        return None
+
+
+def ensure_local_server() -> bool:
+    """Start tts_local.py with the configured venv unless it already answers.
+
+    Returns True if the server is up or was just started. The model takes
+    ~20 s to load; /synth answers 503 "loading" until then.
+    """
+    global _local_started
+    cfg = _local_config()
+    if not cfg:
+        return False
+    if local_health() is not None:
+        return True
+    with _local_lock:
+        # Don't respawn while a previous start is still loading the model.
+        if time.time() - _local_started < 90:
+            return True
+        here = Path(__file__).resolve().parent
+        log = open(here / "tts_local.log", "wb")  # fresh log per start
+        flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
+        try:
+            subprocess.Popen(
+                [cfg["python"], str(here / "tts_local.py"),
+                 "--port", str(int(cfg.get("port") or LOCAL_PORT))],
+                stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
+                cwd=str(here), creationflags=flags,
+                env={**os.environ, "PYTHONUTF8": "1", "COQUI_TOS_AGREED": "1"},
+            )
+        except OSError:
+            return False
+        finally:
+            log.close()
+        _local_started = time.time()
+    return True
+
+
+def _synthesize_local(text: str, voice: str) -> bytes:
+    cfg = _local_config() or {}
+    body = json.dumps({"text": text, "voice": voice.replace("_", " "),
+                       "language": cfg.get("language") or "it"}).encode("utf-8")
+    req = urllib.request.Request(_local_url("/synth"), data=body, method="POST",
+                                 headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=LOCAL_TIMEOUT) as resp:
+            pcm = resp.read()
+    except urllib.error.HTTPError as e:
+        raise TtsError(f"local http {e.code}") from e
+    except (urllib.error.URLError, OSError) as e:
+        ensure_local_server()   # crashed or never started: bring it back
+        raise TtsError(f"local server down: {e}") from e
+    if not pcm:
+        raise TtsError("empty pcm payload")
+    return pcm
 
 
 # ── Key resolution ──────────────────────────────────────────────────────────
@@ -96,6 +231,12 @@ def synthesize_strict(
 
     Raises TtsError for any failure. Use synthesize() for the silent-fail path.
     """
+    if engine() == "local":
+        text = (text or "").strip()[:MAX_TEXT_CHARS]
+        if not text:
+            raise TtsError("empty text")
+        return _synthesize_local(text, voice if is_valid(voice) else default_voice())
+
     key = _get_api_key()
     if not key:
         raise TtsError("no api key configured")

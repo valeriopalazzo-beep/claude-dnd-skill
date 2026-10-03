@@ -10,6 +10,8 @@
 <meta name="dnd-char" content="{{ login_char }}">
 <meta name="narrator-voice" content="{{ narrator_voice }}">
 <meta name="tts-available" content="{{ '1' if tts_available else '0' }}">
+<meta name="tts-voices" content="{{ tts_voices | tojson | forceescape }}">
+<meta name="tts-engine" content="{{ tts_engine }}">
 
 <!-- A browser logged in with a character PIN is that player, in the phone view
      and in the full view alike: only their own chat, dice and sheet, none of the
@@ -7795,8 +7797,15 @@ document.getElementById('speed-row').addEventListener('click', () => {
 // can toggle it on without affecting player phones.
 // ═══════════════════════════════════════════════════════════════════
 
-const _TTS_VOICES_MALE   = ['Charon', 'Enceladus', 'Fenrir', 'Umbriel'];
-const _TTS_VOICES_FEMALE = ['Aoede', 'Gacrux', 'Kore', 'Vindemiatrix', 'Zephyr'];
+// Voice menu and engine come from the server (tts.py): Gemini voices, or the
+// local XTTS ones when the PC runs its own narrator (ids use "_" for spaces).
+const _ttsVoicesMeta = (() => {
+  try { return JSON.parse(document.querySelector('meta[name="tts-voices"]').getAttribute('content')); }
+  catch (_) { return { male: [], female: [] }; }
+})();
+const _TTS_VOICES_MALE   = _ttsVoicesMeta.male || [];
+const _TTS_VOICES_FEMALE = _ttsVoicesMeta.female || [];
+const _TTS_ENGINE = (document.querySelector('meta[name="tts-engine"]') || {}).content || 'gemini';
 
 const _ttsAvailableMeta = document.querySelector('meta[name="tts-available"]');
 const _TTS_AVAILABLE = _ttsAvailableMeta && _ttsAvailableMeta.getAttribute('content') === '1';
@@ -7804,12 +7813,13 @@ const _TTS_AVAILABLE = _ttsAvailableMeta && _ttsAvailableMeta.getAttribute('cont
 const _narratorVoiceMeta = document.querySelector('meta[name="narrator-voice"]');
 let _ttsVoice = (_narratorVoiceMeta && _narratorVoiceMeta.getAttribute('content'))
   || localStorage.getItem('dnd_tts_voice')
-  || 'Enceladus';
+  || _TTS_VOICES_MALE[0] || 'Enceladus';
 
 let _ttsAutoNarrate = localStorage.getItem('dnd_tts_auto') === '1';
 
 let _ttsCtx = null;
-let _ttsActiveSource = null;
+let _ttsSources = [];       // queued/playing pieces of the current block
+let _ttsRun = null;         // identity of the current playback; null = stopped
 let _ttsActivePlayBtn = null;
 
 // ── Free fallback: browser speech synthesis (no API key needed) ──────────
@@ -7897,10 +7907,9 @@ const _SVG_SPIN    = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height=
 const _SVG_CHEVRON = '<svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 10 10" fill="none" aria-hidden="true"><path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 function _ttsStopActive() {
-  if (_ttsActiveSource) {
-    try { _ttsActiveSource.stop(); } catch (_) {}
-    _ttsActiveSource = null;
-  }
+  _ttsRun = null;
+  _ttsSources.forEach(src => { try { src.stop(); } catch (_) {} });
+  _ttsSources = [];
   if (_TTS_HAS_BROWSER && (_ttsUtterance || speechSynthesis.speaking || speechSynthesis.pending)) {
     _ttsUtterance = null;
     speechSynthesis.cancel();
@@ -7920,6 +7929,26 @@ function _ttsExtractText(blockEl) {
   return (clone.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 2000);
 }
 
+function _ttsSetIdle(btn) {
+  if (_ttsActivePlayBtn !== btn) return;
+  btn.innerHTML = _SVG_SPEAKER;
+  btn.classList.remove('tts-playing', 'tts-loading');
+  btn.setAttribute('aria-label', 'Listen to narration');
+  _ttsActivePlayBtn = null;
+}
+
+async function _ttsFetchPcm(text) {
+  const resp = await fetch('/tts', {
+    method: 'POST',
+    headers: _authHeaders(),
+    body: JSON.stringify({ text, voice: _ttsVoice }),
+  });
+  if (!resp.ok) throw new Error('TTS ' + resp.status);
+  const pcm = await resp.arrayBuffer();
+  if (!pcm.byteLength) throw new Error('TTS empty');
+  return pcm;
+}
+
 async function _ttsPlayBlock(btn, blockEl) {
   if (btn.classList.contains('tts-playing')) { _ttsStopActive(); return; }
   _ttsStopActive();
@@ -7936,50 +7965,71 @@ async function _ttsPlayBlock(btn, blockEl) {
   btn.setAttribute('aria-label', 'Loading…');
   _ttsActivePlayBtn = btn;
 
+  // The local engine (XTTS on the PC's GPU) is ~2x real time: ask for a few
+  // sentences at a time and fetch the next piece while this one plays, so
+  // the voice starts in seconds. Gemini answers a whole block in 1-3 s.
+  const chunks = _TTS_ENGINE === 'local' ? _ttsChunkText(text) : [text];
+  const run = {};
+  _ttsRun = run;
+  const prefetch = t => { const p = _ttsFetchPcm(t); p.catch(() => {}); return p; };
+  let scheduled = 0;
+  let startAt = 0;
   try {
-    const resp = await fetch('/tts', {
-      method: 'POST',
-      headers: _authHeaders(),
-      body: JSON.stringify({ text, voice: _ttsVoice }),
-    });
-    if (!resp.ok) throw new Error('TTS ' + resp.status);
-    const pcm = await resp.arrayBuffer();
-    if (!pcm.byteLength) throw new Error('TTS empty');
+    let next = prefetch(chunks[0]);
+    for (let i = 0; i < chunks.length; i++) {
+      const pcm = await next;
+      if (_ttsRun !== run) return;               // stopped meanwhile
+      if (i + 1 < chunks.length) next = prefetch(chunks[i + 1]);
 
-    await resumeP;
-    if (ctx.state === 'suspended') await ctx.resume();
+      await resumeP;
+      if (ctx.state === 'suspended') await ctx.resume();
 
-    const int16 = new Int16Array(pcm);
-    const audioBuffer = ctx.createBuffer(1, int16.length, 24000);
-    const ch = audioBuffer.getChannelData(0);
-    for (let i = 0; i < int16.length; i++) ch[i] = int16[i] / 32768.0;
+      const int16 = new Int16Array(pcm);
+      const audioBuffer = ctx.createBuffer(1, int16.length, 24000);
+      const ch = audioBuffer.getChannelData(0);
+      for (let j = 0; j < int16.length; j++) ch[j] = int16[j] / 32768.0;
 
-    const source = ctx.createBufferSource();
-    source.buffer = audioBuffer;
-    source.connect(ctx.destination);
+      const source = ctx.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(ctx.destination);
+      startAt = Math.max(startAt, ctx.currentTime + 0.05);
+      source.start(startAt);
+      startAt += audioBuffer.duration;
+      _ttsSources.push(source);
+      scheduled++;
 
-    btn.innerHTML = _SVG_STOP;
-    btn.classList.remove('tts-loading');
-    btn.classList.add('tts-playing');
-    btn.setAttribute('aria-label', 'Stop narration');
-    _ttsActiveSource = source;
-
-    source.onended = () => {
-      if (_ttsActiveSource === source) {
-        _ttsActiveSource = null;
-        if (_ttsActivePlayBtn === btn) {
-          btn.innerHTML = _SVG_SPEAKER;
-          btn.classList.remove('tts-playing');
-          btn.setAttribute('aria-label', 'Listen to narration');
-          _ttsActivePlayBtn = null;
-        }
+      if (i === 0) {
+        btn.innerHTML = _SVG_STOP;
+        btn.classList.remove('tts-loading');
+        btn.classList.add('tts-playing');
+        btn.setAttribute('aria-label', 'Stop narration');
       }
-    };
-    source.start(0);
+      if (i === chunks.length - 1) {
+        source.onended = () => {
+          if (_ttsRun !== run) return;
+          _ttsRun = null;
+          _ttsSources = [];
+          _ttsSetIdle(btn);
+        };
+      }
+    }
   } catch (err) {
+    if (_ttsRun !== run) return;
+    if (scheduled) {
+      // A later piece failed: let what is already queued finish, then stop.
+      const last = _ttsSources[_ttsSources.length - 1];
+      last.onended = () => {
+        if (_ttsRun !== run) return;
+        _ttsRun = null;
+        _ttsSources = [];
+        _ttsSetIdle(btn);
+      };
+      return;
+    }
+    _ttsRun = null;
     if (_ttsActivePlayBtn === btn && _TTS_HAS_BROWSER) {
-      // 503 = no key configured: stop asking the server. Transient errors
-      // (429, 502, network) fall back for this block only.
+      // 503 = no engine configured: stop asking the server. Transient errors
+      // (429, 502, network, local model still loading) fall back for this block only.
       if (err.message === 'TTS 503') _ttsServerOk = false;
       _ttsBrowserSpeak(btn, text);
       return;
@@ -7996,7 +8046,6 @@ async function _ttsPlayBlock(btn, blockEl) {
       }, 3000);
       _ttsActivePlayBtn = null;
     }
-    _ttsActiveSource = null;
   }
 }
 
@@ -8029,7 +8078,7 @@ function _ttsBuildVoiceMenu() {
       const opt = document.createElement('button');
       opt.className = 'tts-voice-opt';
       opt.dataset.voice = v;
-      opt.textContent = v;
+      opt.textContent = v.replace(/_/g, ' ');
       if (v === _ttsVoice) opt.classList.add('tts-voice-active');
       opt.addEventListener('click', e => {
         e.stopPropagation();

@@ -1695,6 +1695,8 @@ def index():
         login_char=(g.character or "") if g.role == "player" else "",
         narrator_voice=_read_narrator_voice(),
         tts_available=(_tts is not None),
+        tts_voices=(_tts.voices() if _tts else {"male": [], "female": []}),
+        tts_engine=(_tts.engine() if _tts else ""),
         i18n=_load_i18n_json(),
     )
 
@@ -2490,7 +2492,7 @@ def roll_pref():
 # Voice selection persists per-campaign in state.md → ## Session Flags →
 # `tts_voice: <name>`. Read at /index render, written by POST /voice.
 
-_VOICE_PAT = re.compile(r"^\s*tts_voice:\s*([A-Za-z]+)\s*$", re.MULTILINE)
+_VOICE_PAT = re.compile(r"^\s*tts_voice:\s*([A-Za-z_]+)\s*$", re.MULTILINE)
 
 
 def _active_campaign_name() -> Optional[str]:
@@ -2506,24 +2508,26 @@ def _read_narrator_voice() -> str:
         return ""
     name = _active_campaign_name()
     if not name:
-        return _tts.DEFAULT_VOICE
+        return _tts.default_voice()
     try:
         state = _find_campaign(name) / "state.md"
         if not state.exists():
-            return _tts.DEFAULT_VOICE
+            return _tts.default_voice()
         text = state.read_text(encoding="utf-8", errors="replace")
     except (OSError, ValueError):
-        return _tts.DEFAULT_VOICE
+        return _tts.default_voice()
     m = _VOICE_PAT.search(text)
     if not m:
-        return _tts.DEFAULT_VOICE
+        return _tts.default_voice()
     v = m.group(1).strip()
-    return v if v in _tts.VALID_VOICES else _tts.DEFAULT_VOICE
+    # A Gemini voice saved before switching to the local engine (or back)
+    # falls back to the engine's default.
+    return v if _tts.is_valid(v) else _tts.default_voice()
 
 
 def _write_narrator_voice(voice: str) -> bool:
     """Persist tts_voice to the active campaign's state.md → ## Session Flags."""
-    if _tts is None or voice not in _tts.VALID_VOICES:
+    if _tts is None or not _tts.is_valid(voice):
         return False
     name = _active_campaign_name()
     if not name:
@@ -2574,18 +2578,20 @@ def tts_synthesize():
         return "TTS module unavailable", 503
     if not _token_ok():
         return "Forbidden", 403
-    if not _rate_ok(request.remote_addr or "?"):
+    # The local engine costs nothing per call and the page asks for one
+    # request per few sentences, so it skips the per-IP budget.
+    if _tts.engine() != "local" and not _rate_ok(request.remote_addr or "?"):
         return "Rate limited", 429
     data = request.get_json(silent=True) or {}
     text = (data.get("text") or "").strip()
-    voice = (data.get("voice") or _tts.DEFAULT_VOICE).strip()
+    voice = (data.get("voice") or _tts.default_voice()).strip()
     if not text:
         return "empty text", 400
     if len(text) > _tts.MAX_TEXT_CHARS:
         text = text[: _tts.MAX_TEXT_CHARS]
-    if voice not in _tts.VALID_VOICES:
-        voice = _tts.DEFAULT_VOICE
-    if _tts.key_source() == "unset":
+    if not _tts.is_valid(voice):
+        voice = _tts.default_voice()
+    if not _tts.available():
         return "TTS not configured (see docs/SKILL-tts.md)", 503
     try:
         pcm = _tts.synthesize_strict(text, voice)
@@ -2615,7 +2621,7 @@ def tts_voice():
         return "Forbidden", 403
     data = request.get_json(silent=True) or {}
     voice = (data.get("voice") or "").strip()
-    if voice not in _tts.VALID_VOICES:
+    if not _tts.is_valid(voice):
         return jsonify({"error": "invalid voice"}), 400
     ok = _write_narrator_voice(voice)
     return jsonify({"voice": voice, "persisted": ok}), 200
@@ -3510,6 +3516,10 @@ if __name__ == "__main__":
     # Wire audio SFX broadcast now that _broadcast is defined
     if _audio:
         _audio.set_broadcast(_broadcast)
+    # Local narrator voice (XTTS on the GPU): start its server now so the
+    # model is loaded by the time the first block is narrated.
+    if _tts and _tts.engine() == "local" and _tts.ensure_local_server():
+        print("Narrator voice: local XTTS server on 127.0.0.1 (log: display/tts_local.log)")
 
     host = "0.0.0.0" if _LAN_MODE else "localhost"
     # TLS — only enabled when --tls is explicitly passed; HTTP is the default.
