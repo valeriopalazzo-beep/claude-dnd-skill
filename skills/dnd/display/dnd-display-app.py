@@ -81,32 +81,42 @@ except Exception:
     _tts = None   # type: ignore
 
 
-def _apply_campaign_sfx_languages() -> None:
-    """Read sfx_languages from the active campaign's state.md Session Flags.
+def _display_sfx_languages() -> list:
+    """The display's own languages (display/i18n/<code>.json) that have an SFX
+    trigger pack, English last — so narration in any language the table can
+    pick in Settings triggers sounds without configuring anything."""
+    try:
+        codes = sorted(fn[:-5] for fn in os.listdir(os.path.join(_HERE, "i18n"))
+                       if fn.endswith(".json"))
+    except OSError:
+        codes = []
+    return [c for c in codes if c != "en" and c in _audio.available_languages()] + ["en"]
 
-    state.md line shape:  `sfx_languages: en,zh,es`
-    Takes precedence over the DND_SFX_LANGUAGES env var when present; both
-    fall back to English-only if neither is set.
+
+def _apply_campaign_sfx_languages() -> None:
+    """Choose the SFX trigger languages for the active campaign.
+
+    The campaign's state.md Session Flag wins (`sfx_languages: en,zh,es`),
+    then the DND_SFX_LANGUAGES env var, then the display's own languages.
+    Runs at startup and whenever the DM switches campaign.
     """
     if _audio is None:
         return
+    langs = []
     try:
-        camp = open(rt(".campaign"), encoding="utf-8").read().strip()
-        if not camp:
-            return
-        state_md = _find_campaign(camp) / "state.md"
-        if not state_md.exists():
-            return
-        text = state_md.read_text(encoding="utf-8", errors="replace")
+        camp = re.sub(r"[^A-Za-z0-9_-]", "", open(rt(".campaign"), encoding="utf-8").read().strip())
+        state_md = _find_campaign(camp) / "state.md" if camp else None
+        if state_md is not None and state_md.exists():
+            text = state_md.read_text(encoding="utf-8", errors="replace")
+            m = re.search(r"^\s*sfx_languages:\s*([\w,\s\-]+)$", text, re.MULTILINE)
+            if m:
+                langs = [l.strip() for l in m.group(1).split(",") if l.strip()]
     except (OSError, ValueError):
-        return
-    m = re.search(r"^\s*sfx_languages:\s*([\w,\s\-]+)$", text, re.MULTILINE)
-    if not m:
-        return
-    langs = [l.strip() for l in m.group(1).split(",") if l.strip()]
+        pass
+    if not langs:
+        langs = [l.strip() for l in os.environ.get("DND_SFX_LANGUAGES", "").split(",") if l.strip()]
     valid = [l for l in langs if l in _audio.available_languages()]
-    if valid:
-        _audio.set_sfx_languages(valid)
+    _audio.set_sfx_languages(valid or _display_sfx_languages())
 
 
 _apply_campaign_sfx_languages()
@@ -2305,6 +2315,7 @@ def stats():
             with open(CAMP_FILE, "w", encoding="utf-8") as f:
                 f.write(str(data["campaign"]).strip())
             _load_tail()
+            _apply_campaign_sfx_languages()
         except Exception:
             pass
         # Resolve and stash the ruleset for this campaign so the sidebar badge

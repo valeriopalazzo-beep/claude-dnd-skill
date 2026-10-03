@@ -26,7 +26,6 @@
   /* repeated id: outranks the skins' own !important placement of this button */
   :root.player-login #dm-help-btn#dm-help-btn#dm-help-btn,
   :root.player-login [data-ln-proxy="dm-help-btn"],
-  :root.player-login #sfx-row,
   :root.player-login #verbosity-row,
   :root.player-login #onscreen-dice-row,
   :root.player-login #device-approvals,
@@ -4578,6 +4577,7 @@
     <button class="ph-set-opt" id="ph-theme-opt" type="button"><span data-i18n="ph.theme">Theme</span><strong id="ph-theme-val">Dark</strong></button>
     <label class="ph-set-opt ph-set-row" id="ph-skin-opt"><span data-i18n="ph.style">Style</span><select id="ph-skin-select" class="ph-set-select" aria-label="Display style"><option value="vellum">Vellum</option><option value="editorial">Editorial</option><option value="lanterna">Lanterna</option></select></label>
     <label class="ph-set-opt ph-set-row" id="ph-lang-opt"><span data-i18n="settings.language">Language</span><select id="ph-lang-select" class="ph-set-select" aria-label="Display language" data-i18n-aria="settings.language"></select></label>
+    <button class="ph-set-opt" id="ph-sfx-opt" type="button"><span data-i18n="settings.sfx">Sound Effects</span><strong id="ph-sfx-val">On</strong></button>
     <button class="ph-set-opt" id="ph-roll-opt" type="button" hidden><span data-i18n="ph.rolls">Rolls</span><strong id="ph-roll-val">Players</strong></button>
     <button class="ph-set-opt" id="ph-logout-opt" type="button" hidden><span data-i18n="ph.logout">Log out</span><strong>⏻</strong></button>
   </div>
@@ -7593,13 +7593,18 @@ let _currentTurnOrder = null;
 // ═══════════════════════════════════════════════════════════════════
 // AUDIO — SFX only. Python detects triggers from narration text and
 // broadcasts {"sfx": name} via SSE. Browser fetches WAV from
-// /audio/sfx/<name> and plays via Web Audio API. Toggle click is the
-// user gesture that unlocks AudioContext.
+// /audio/sfx/<name> and plays via Web Audio API.
+// Each device has its own switch (on by default, remembered in
+// localStorage "dnd-sfx"); players have it too. Browsers only let audio
+// start after a user gesture, so the first tap or key anywhere on the
+// page unlocks the AudioContext.
 // ═══════════════════════════════════════════════════════════════════
 
 
 const _sfxTrack = document.getElementById('sfx-track');
-let _sfxOn = false;
+let _sfxOn = true;
+try { _sfxOn = localStorage.getItem('dnd-sfx') !== '0'; } catch (_) {}
+if (_sfxTrack) _setTrack(_sfxTrack, _sfxOn);
 
 // ── DM Help button ──────────────────────────────────────────────────
 const _dmHelpBtn = document.getElementById('dm-help-btn');
@@ -7738,14 +7743,29 @@ async function _playSfx(name) {
 document.getElementById('sfx-row').addEventListener('click', () => {
   _sfxOn = !_sfxOn;
   _setTrack(_sfxTrack, _sfxOn);
-  try {
-    fetch('/audio-toggle', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sfx: _sfxOn }),
-    });
-  } catch (_) {}
+  try { localStorage.setItem('dnd-sfx', _sfxOn ? '1' : '0'); } catch (_) {}
+  if (_sfxOn) _unlockSfx();
 });
+
+// First tap/key on the page: start the AudioContext and play a silent
+// sample (iOS needs a sound started inside the gesture).
+function _unlockSfx() {
+  try {
+    const ctx = _audioCtx();
+    const src = ctx.createBufferSource();
+    src.buffer = ctx.createBuffer(1, 1, 22050);
+    src.connect(ctx.destination);
+    src.start(0);
+  } catch (_) {}
+}
+const _SFX_GESTURES = ['pointerdown', 'keydown', 'touchend'];
+function _sfxFirstGesture() {
+  if (_sfxOn) _unlockSfx();
+  if (_actx && _actx.state === 'running') {
+    _SFX_GESTURES.forEach(e => document.removeEventListener(e, _sfxFirstGesture, true));
+  }
+}
+_SFX_GESTURES.forEach(e => document.addEventListener(e, _sfxFirstGesture, true));
 
 // ── Typing speed toggle ──────────────────────────────────────────────
 const _speedSteps = [
@@ -9238,6 +9258,14 @@ function _onscreenDiceOn() { try { return localStorage.getItem('dnd-onscreen-dic
     // the native picker doesn't close the menu via the document-click listener.
     const sOpt = document.getElementById('ph-skin-opt');
     if (sOpt) sOpt.addEventListener('click', e => e.stopPropagation());
+
+    // Sound effects — drives the hidden #sfx-row switch, so both stay in step.
+    const fxOpt = document.getElementById('ph-sfx-opt');
+    const fxVal = document.getElementById('ph-sfx-val');
+    const fxRow = document.getElementById('sfx-row');
+    const refreshFx = () => { if (fxVal) fxVal.textContent = _t(_sfxOn ? 'ph.on' : 'ph.off', null, _sfxOn ? 'On' : 'Off'); };
+    refreshFx();
+    if (fxOpt && fxRow) fxOpt.addEventListener('click', e => { e.stopPropagation(); fxRow.click(); refreshFx(); });
 
     // Log out — only for a browser that logged in with a PIN (LAN mode, not this PC).
     const loOpt = document.getElementById('ph-logout-opt');

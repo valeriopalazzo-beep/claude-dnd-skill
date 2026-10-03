@@ -88,6 +88,8 @@
 
   "ph.settings": "Impostazioni del display",
   "ph.theme": "Tema",
+  "ph.on": "Sì",
+  "ph.off": "No",
   "ph.style": "Stile",
   "ph.rolls": "Tiri",
   "ph.logout": "Esci",

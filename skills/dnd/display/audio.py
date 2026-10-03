@@ -28,7 +28,7 @@ SR = 44100   # sample rate
 
 # ── State ──────────────────────────────────────────────────────────────────────
 
-_sfx_on      = False
+_sfx_on      = True     # each browser has its own on/off switch
 _wav_cache: dict = {}          # key → WAV bytes
 _broadcast_fn: Optional[Callable] = None
 
