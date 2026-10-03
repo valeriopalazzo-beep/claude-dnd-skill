@@ -982,6 +982,13 @@
     font-family: 'Cinzel', serif; letter-spacing: 1px;
     margin-top: 4px;
   }
+  .sm-download {
+    display: inline-block; margin-top: 10px; padding: 6px 12px;
+    border: 1px solid rgba(180,140,60,0.45); border-radius: 6px;
+    font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 1px;
+    color: rgba(200,165,80,0.95); text-decoration: none;
+  }
+  .sm-download:hover { background: rgba(180,140,60,0.12); }
   .sm-ab-grid {
     display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;
   }
@@ -2906,6 +2913,7 @@
   :root[data-theme="light"] #srd-body .srd-title { color: rgb(70, 50, 18); }
   :root[data-theme="light"] .sm-identity,
   :root[data-theme="light"] #srd-body .srd-meta { color: rgba(80, 65, 40, 0.85); }
+  :root[data-theme="light"] .sm-download { color: rgb(70, 50, 18); border-color: rgba(140, 95, 20, 0.45); }
   :root[data-theme="light"] .sm-divider { background: rgba(140, 95, 20, 0.25); }
 
   /* Sheet modal stat strip + ability grid + attacks table */
@@ -3555,6 +3563,7 @@
   /* character-sheet inner sections — retype the Vellum gold to the editorial system */
   :root[data-skin="editorial"] #sheet-panel .sm-identity{ font-family:'Syne',sans-serif; color:var(--e-mut); }
   :root[data-skin="editorial"] #sheet-panel .sm-xp{ font-family:'Syne',sans-serif; color:var(--e-mut); }
+  :root[data-skin="editorial"] #sheet-panel .sm-download{ font-family:'Syne',sans-serif; color:var(--e-accent); border-color:var(--e-accent); }
   :root[data-skin="editorial"] #sheet-panel .sm-section-title{
     font-family:'Syne',sans-serif; font-weight:800; letter-spacing:.22em; color:var(--e-accent); }
   :root[data-skin="editorial"] #sheet-panel .sm-divider{ background:color-mix(in srgb, var(--e-ink), transparent 84%); }
@@ -4170,6 +4179,7 @@
   :root[data-skin="lanterna"] #sheet-panel .sm-name{ font-family:'Alegreya SC',serif; font-weight:700; font-size:30px; letter-spacing:0; text-transform:none; color:var(--ln-text); line-height:1.1; margin-right:48px; }
   :root[data-skin="lanterna"] #sheet-panel .sm-identity{ font-family:'Alegreya Sans',sans-serif; font-weight:600; font-size:16px; letter-spacing:0; text-transform:none; color:var(--ln-text-muted); margin-top:2px; }
   :root[data-skin="lanterna"] #sheet-panel .sm-xp{ font-family:'Alegreya Sans',sans-serif; font-weight:700; font-size:14px; letter-spacing:0; color:var(--ln-text-faint); }
+  :root[data-skin="lanterna"] #sheet-panel .sm-download{ font-family:'Alegreya Sans',sans-serif; font-weight:700; font-size:14px; letter-spacing:0; color:var(--ln-text); border-color:var(--ln-line); border-radius:10px; padding:8px 14px; background:var(--ln-surface-2); }
   :root[data-skin="lanterna"] #sheet-panel .sm-divider{ height:1px; background:var(--ln-line); margin:16px 0; }
   :root[data-skin="lanterna"] #sheet-panel .sm-section-title{ font-family:'Alegreya Sans',sans-serif; font-weight:800; font-size:13px; letter-spacing:.12em; text-transform:uppercase;
     color:var(--ln-text-faint); margin-bottom:10px; }
@@ -6813,6 +6823,15 @@ function openSheet(name) {
     content.appendChild(xpEl);
   }
 
+  // The whole sheet as a formatted PDF (the page itself when the server
+  // has no browser to print with).
+  const dl = document.createElement('a');
+  dl.className = 'sm-download';
+  dl.href = `/character/${encodeURIComponent(name)}/pdf?lang=${encodeURIComponent(window._LANG || 'en')}`;
+  dl.setAttribute('download', '');
+  dl.textContent = '⬇ ' + _t('sheet.download', null, 'Download sheet (PDF)');
+  content.appendChild(dl);
+
   // Ability scores (always shown in modal)
   if (p.ability_scores) {
     content.appendChild(_smDivider());
@@ -7090,12 +7109,16 @@ function _localizeSheetMd(md) {
   }
   // 15gp → "15 mo"
   md = md.replace(/(\d+)\s*(pp|gp|ep|sp|cp)\b/g, (m, n, c) => _t('md.coin.' + c, { n }, m));
-  // 30 ft → "9 m (30 piedi)" where the language asks for it.
-  return md.replace(/(\d+(?:[.,]\d+)?)\s*ft\b\.?/g, (m, ft) => {
-    const n = parseFloat(ft.replace(',', '.'));
-    const metres = String(Math.round(n * 0.3 * 10) / 10).replace('.', _t('md.decimal', null, '.'));
-    return _t('md.feet', { ft, m: metres }, m);
-  });
+  // 30 ft → "9 m (30 piedi)" where the language asks for it; also "30/120 ft"
+  // and "5×30 ft". A metric note already after it ("(9/36 m)") is dropped.
+  const conv = v => String(Math.round(parseFloat(v.replace(',', '.')) * 0.3 * 10) / 10)
+    .replace('.', _t('md.decimal', null, '.'));
+  return md.replace(/(\d+(?:[.,]\d+)?)(?:\s*([\/×x])\s*(\d+(?:[.,]\d+)?))?\s*ft\b\.?(\s*\(\d+(?:[.,]\d+)?(?:\s*[\/×x]\s*\d+(?:[.,]\d+)?)?\s*m\))?/g,
+    (m, a, op, b) => {
+      const ft = op ? a + op + b : a;
+      const metres = op ? conv(a) + op + conv(b) : conv(a);
+      return _t('md.feet', { ft, m: metres }, m);
+    });
 }
 
 function _fullSheetHtml(md, sheet) {

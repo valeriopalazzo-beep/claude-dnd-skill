@@ -212,6 +212,10 @@ class LoginGateTests(unittest.TestCase):
 
         self.assertEqual(self.client.get("/character/Mira", environ_base=PHONE).status_code, 200)
         self.assertEqual(self.client.get("/character/Bran", environ_base=PHONE).status_code, 403)
+        # The printable sheet and its PDF follow the same rule.
+        self.assertEqual(self.client.get("/character/Mira/print", environ_base=PHONE).status_code, 200)
+        self.assertEqual(self.client.get("/character/Bran/print", environ_base=PHONE).status_code, 403)
+        self.assertEqual(self.client.get("/character/Bran/pdf", environ_base=PHONE).status_code, 403)
 
     def test_player_url_for_another_character_redirects_to_own(self):
         self._login()

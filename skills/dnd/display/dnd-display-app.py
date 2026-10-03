@@ -2959,9 +2959,27 @@ def get_character_sheet(character):
 
     if _is_other_character(character):
         return "Forbidden", 403   # players read only their own sheet
-    safe = re.sub(r"[^A-Za-z0-9 _-]", "", character).strip()[:50]
+    path, safe, camp = _find_sheet_file(character)
     if not safe:
         return "Bad character name", 400
+    if not path:
+        return f"No sheet found for '{safe}' in campaign '{camp}'", 404
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            body = f.read()
+    except Exception as e:
+        return f"Read error: {e}", 500
+    return Response(body, mimetype="text/markdown; charset=utf-8")
+
+
+def _find_sheet_file(character: str):
+    """(path or None, sanitised name, campaign) of a PC's .md sheet.
+
+    The active campaign's copy wins over the global roster.
+    """
+    safe = re.sub(r"[^A-Za-z0-9 _-]", "", character).strip()[:50]
+    if not safe:
+        return None, "", ""
 
     try:
         camp = open(CAMP_FILE, encoding="utf-8").read().strip()
@@ -2992,17 +3010,90 @@ def get_character_sheet(character):
             continue
         candidates += [os.path.join(folder, fn) for fn in names
                        if fn.endswith(".md") and key and _sheet_key(fn[:-3]) == key]
+    path = next((c for c in candidates if os.path.isfile(c)), None)
+    return path, safe, camp
 
-    for path in candidates:
-        if os.path.isfile(path):
-            try:
-                with open(path, "r", encoding="utf-8") as f:
-                    body = f.read()
-            except Exception as e:
-                return f"Read error: {e}", 500
-            return Response(body, mimetype="text/markdown; charset=utf-8")
 
-    return f"No sheet found for '{safe}' in campaign '{camp}'", 404
+# ── Printable sheet / PDF download ───────────────────────────────────────────
+# The same sheet as a formatted A4 page, with the live stats the DM pushed
+# (current HP, slots, conditions) — and as a PDF printed by a headless Chrome
+# or Edge on this machine. Without a browser the PDF link opens the page,
+# which has its own Print button.
+import sheet_print as _sheet_print
+
+_pdf_cache = {}          # (path, mtime, lang, live json) → pdf bytes
+_PDF_CACHE_MAX = 16
+
+
+def _live_player(character: str) -> Optional[dict]:
+    key = _sheet_key(character)
+    with _stats_lock:
+        for p in _current_stats.get("players", []):
+            if _sheet_key(p.get("name", "")) == key:
+                return json.loads(json.dumps(p))
+    return None
+
+
+def _sheet_page(character: str, for_pdf: bool):
+    """(html, error response, cache key) for the printable sheet."""
+    if not _token_ok():
+        return None, ("Forbidden", 403), None
+    if _is_other_character(character):
+        return None, ("Forbidden", 403), None   # players print only their own sheet
+    path, safe, camp = _find_sheet_file(character)
+    if not safe:
+        return None, ("Bad character name", 400), None
+    if not path:
+        return None, (f"No sheet found for '{safe}' in campaign '{camp}'", 404), None
+    try:
+        md = open(path, encoding="utf-8").read()
+        mtime = os.path.getmtime(path)
+    except OSError as e:
+        return None, (f"Read error: {e}", 500), None
+    lang = _sheet_print.pick_language(I18N_DIR, request.args.get("lang", ""),
+                                      request.headers.get("Accept-Language", ""))
+    tr = _sheet_print.Strings(I18N_DIR, lang)
+    live = _live_player(character)
+    stamp = tr.t("print.updated", "Sheet as of {date}",
+                 date=_time.strftime("%d/%m/%Y %H:%M", _time.localtime()))
+    pdf_href = f"/character/{quote(character)}/pdf?lang={quote(lang)}"
+    page = _sheet_print.render(md, live, tr, pdf_href=pdf_href, for_pdf=for_pdf, stamp=stamp)
+    key = (path, mtime, lang, json.dumps(live, sort_keys=True, default=str))
+    return page, None, key
+
+
+@app.route("/character/<character>/print", methods=["GET"])
+def character_sheet_print(character):
+    page, err, _ = _sheet_page(character, for_pdf=False)
+    if err:
+        return err
+    return Response(page, mimetype="text/html; charset=utf-8")
+
+
+@app.route("/character/<character>/pdf", methods=["GET"])
+def character_sheet_pdf(character):
+    page, err, key = _sheet_page(character, for_pdf=True)
+    if err:
+        return err
+    pdf = _pdf_cache.get(key)
+    if pdf is None:
+        pdf = _sheet_print.to_pdf(page)
+        if pdf is None:   # no headless browser here: the page prints itself
+            return redirect(f"/character/{quote(character)}/print?lang={quote(request.args.get('lang', ''))}")
+        if len(_pdf_cache) >= _PDF_CACHE_MAX:
+            _pdf_cache.pop(next(iter(_pdf_cache)))
+        _pdf_cache[key] = pdf
+    lang = _sheet_print.pick_language(I18N_DIR, request.args.get("lang", ""),
+                                      request.headers.get("Accept-Language", ""))
+    name = (_live_player(character) or {}).get("name") or character
+    fname = _sheet_print.Strings(I18N_DIR, lang).t("print.filename", "Character sheet - {name}",
+                                                   name=name) + ".pdf"
+    ascii_name = re.sub(r"[^A-Za-z0-9 ._-]", "", fname) or "sheet.pdf"
+    return Response(pdf, mimetype="application/pdf", headers={
+        "Content-Disposition": f"attachment; filename=\"{ascii_name}\"; "
+                               f"filename*=UTF-8''{quote(fname)}",
+        "Cache-Control": "no-store",
+    })
 
 
 @app.route("/device/approve", methods=["POST"])
