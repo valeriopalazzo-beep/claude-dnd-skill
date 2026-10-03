@@ -194,6 +194,12 @@
   "quest.deadline": "Deadline",
   "quest.objectives": "Objectives",
   "quest.clues": "What we know",
+  "faction.leader": "Leader",
+  "faction.base": "Base",
+  "faction.goal": "Goal",
+  "faction.attitude": "Toward you",
+  "faction.members": "Known members",
+  "faction.known": "What we know",
   "turn.round": "Round",
   "turn.initiative": "Initiative",
 

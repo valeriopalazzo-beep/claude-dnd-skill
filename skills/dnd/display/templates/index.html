@@ -1414,19 +1414,21 @@
   .sb-quest-status.resolved { color: rgba(80,200,130,0.70); }
   .sb-quest-status.failed   { color: rgba(200,100,80,0.50); }
   .sb-quest-status.unknown  { color: rgba(200,185,150,0.25); }
-  /* Quests with details unfold on tap (_questDetail) */
-  .sb-quest-item.has-detail { flex-wrap: wrap; cursor: pointer; }
-  .sb-quest-item.has-detail .sb-quest-name::before {
+  /* Quests and factions with details unfold on tap (_makeUnfoldable) */
+  .sb-quest-item.has-detail, .sb-faction-item.has-detail { flex-wrap: wrap; cursor: pointer; }
+  .sb-quest-item.has-detail .sb-quest-name::before,
+  .sb-faction-item.has-detail .sb-faction-name::before {
     content: '▸'; display: inline-block; width: 1.1em; opacity: .6; transition: transform .15s;
   }
-  .sb-quest-item.has-detail.open .sb-quest-name::before { transform: rotate(90deg); }
-  .sb-quest-item.open .sb-quest-name { white-space: normal; }
-  .sb-quest-item:focus-visible { outline: 1px solid rgba(180,140,60,0.6); outline-offset: 2px; }
+  .sb-quest-item.has-detail.open .sb-quest-name::before,
+  .sb-faction-item.has-detail.open .sb-faction-name::before { transform: rotate(90deg); }
+  .sb-quest-item.open .sb-quest-name, .sb-faction-item.open .sb-faction-name { white-space: normal; }
+  .sb-quest-item:focus-visible, .sb-faction-item:focus-visible { outline: 1px solid rgba(180,140,60,0.6); outline-offset: 2px; }
   .sb-quest-detail {
     display: none; flex-basis: 100%; cursor: auto; user-select: text;
     margin: 4px 0 6px 1.1em; font-size: 9px; line-height: 1.45; color: rgba(200,185,150,0.75);
   }
-  .sb-quest-item.open .sb-quest-detail { display: block; }
+  .sb-quest-item.open .sb-quest-detail, .sb-faction-item.open .sb-quest-detail { display: block; }
   .sb-qd-summary { margin: 0 0 5px; }
   .sb-qd-facts { display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; margin: 0 0 5px; }
   .sb-qd-facts dt, .sb-qd-head {
@@ -4163,6 +4165,9 @@
   :root[data-skin="lanterna"] body.ln-on .sb-qd-objectives li.done::before{ color:var(--ln-good); }
   :root[data-skin="lanterna"] body.ln-on .sb-faction-item{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 4px; border-bottom:1px solid var(--ln-line); }
   :root[data-skin="lanterna"] body.ln-on .sb-faction-item:last-child{ border-bottom:0; }
+  :root[data-skin="lanterna"] body.ln-on .sb-faction-item.has-detail{ flex-wrap:wrap; }
+  :root[data-skin="lanterna"] body.ln-on .sb-faction-item.has-detail:hover .sb-faction-name{ color:var(--ln-accent); }
+  :root[data-skin="lanterna"] body.ln-on .sb-faction-item:focus-visible{ outline:2px solid var(--ln-accent); outline-offset:2px; }
   :root[data-skin="lanterna"] .sb-faction-standing.allied, :root[data-skin="lanterna"] .sb-faction-standing.friendly{ color:var(--ln-good); }
   :root[data-skin="lanterna"] .sb-faction-standing.neutral, :root[data-skin="lanterna"] .sb-faction-standing.unknown{ color:var(--ln-text-muted); }
   :root[data-skin="lanterna"] .sb-faction-standing.unfriendly, :root[data-skin="lanterna"] .sb-faction-standing.suspicious{ color:var(--ln-warn); }
@@ -7388,12 +7393,14 @@ setInterval(() => {
 
 // ── Stats update ─────────────────────────────────────────────────────────────
 
-// Quest names whose detail is unfolded — kept across stats re-renders.
+// Quest / faction names whose detail is unfolded — kept across stats re-renders.
 const _openQuests = new Set();
+const _openFactions = new Set();
 
-// The unfolded part of a quest: what the party knows. Every field is optional;
-// a quest with none of them stays a plain line. Returns null in that case.
-function _questDetail(q) {
+// The unfolded part of a quest or a faction: what the party knows. Every field
+// is optional; an entry with none of them stays a plain line (returns null).
+// facts: [[field, i18n label]]; lists: [[field, i18n label, ul class]].
+function _detailBox(q, facts, lists) {
   const box = document.createElement('div');
   box.className = 'sb-quest-detail';
   const text = v => (typeof v === 'string' ? v.trim() : '');
@@ -7404,13 +7411,11 @@ function _questDetail(q) {
     p.textContent = summary;
     box.appendChild(p);
   }
-  const facts = [['giver', 'quest.giver'], ['location', 'quest.location'],
-                 ['reward', 'quest.reward'], ['deadline', 'quest.deadline']]
-    .filter(([k]) => text(q[k]));
-  if (facts.length) {
+  const shown = facts.filter(([k]) => text(q[k]));
+  if (shown.length) {
     const dl = document.createElement('dl');
     dl.className = 'sb-qd-facts';
-    facts.forEach(([k, label]) => {
+    shown.forEach(([k, label]) => {
       const dt = document.createElement('dt');
       dt.textContent = _t(label);
       const dd = document.createElement('dd');
@@ -7439,9 +7444,48 @@ function _questDetail(q) {
     });
     box.appendChild(ul);
   };
-  list('objectives', 'quest.objectives', 'sb-qd-objectives');
-  list('clues', 'quest.clues', 'sb-qd-clues');
+  lists.forEach(([key, label, cls]) => list(key, label, cls));
   return box.childNodes.length ? box : null;
+}
+
+function _questDetail(q) {
+  return _detailBox(q,
+    [['giver', 'quest.giver'], ['location', 'quest.location'],
+     ['reward', 'quest.reward'], ['deadline', 'quest.deadline']],
+    [['objectives', 'quest.objectives', 'sb-qd-objectives'],
+     ['clues', 'quest.clues', 'sb-qd-clues']]);
+}
+
+function _factionDetail(f) {
+  return _detailBox(f,
+    [['leader', 'faction.leader'], ['base', 'faction.base'],
+     ['goal', 'faction.goal'], ['attitude', 'faction.attitude']],
+    [['members', 'faction.members', 'sb-qd-clues'],
+     ['known', 'faction.known', 'sb-qd-clues']]);
+}
+
+// Tap (or Enter/Space) unfolds a row's detail; `openSet` remembers it by name
+// across the re-render every stats push does.
+function _makeUnfoldable(item, detail, key, openSet) {
+  const setOpen = open => {
+    item.classList.toggle('open', open);
+    item.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) openSet.add(key); else openSet.delete(key);
+  };
+  item.classList.add('has-detail');
+  item.tabIndex = 0;
+  item.setAttribute('role', 'button');
+  item.appendChild(detail);
+  setOpen(openSet.has(key));
+  item.addEventListener('click', e => {
+    if (e.target.closest('.sb-quest-detail')) return;   // leave the text selectable
+    setOpen(!item.classList.contains('open'));
+  });
+  item.addEventListener('keydown', e => {
+    if (e.target !== item || (e.key !== 'Enter' && e.key !== ' ')) return;
+    e.preventDefault();
+    setOpen(!item.classList.contains('open'));
+  });
 }
 
 function updateStats(stats) {
@@ -7515,6 +7559,8 @@ function updateStats(stats) {
         st.textContent = SCLS[_fk] ? _t('faction.' + _fk, null, f.standing) : (f.standing || '—');
         item.appendChild(nm);
         item.appendChild(st);
+        const detail = _factionDetail(f);
+        if (detail) _makeUnfoldable(item, detail, f.name || '', _openFactions);
         factPanel.appendChild(item);
       });
       factPanel.style.display = '';
@@ -7542,31 +7588,9 @@ function updateStats(stats) {
         st.textContent = QCLS[_qk] ? _t('quest.status.' + _qk, null, q.status) : (q.status || '—');
         item.appendChild(nm);
         item.appendChild(st);
+        // Tap a quest to read what the party knows about it.
         const detail = _questDetail(q);
-        if (detail) {
-          // Tap a quest to read what the party knows about it. The open set
-          // survives the re-render every stats push does.
-          const key = q.name || '';
-          const setOpen = open => {
-            item.classList.toggle('open', open);
-            item.setAttribute('aria-expanded', open ? 'true' : 'false');
-            if (open) _openQuests.add(key); else _openQuests.delete(key);
-          };
-          item.classList.add('has-detail');
-          item.tabIndex = 0;
-          item.setAttribute('role', 'button');
-          item.appendChild(detail);
-          setOpen(_openQuests.has(key));
-          item.addEventListener('click', e => {
-            if (e.target.closest('.sb-quest-detail')) return;   // leave the text selectable
-            setOpen(!item.classList.contains('open'));
-          });
-          item.addEventListener('keydown', e => {
-            if (e.target !== item || (e.key !== 'Enter' && e.key !== ' ')) return;
-            e.preventDefault();
-            setOpen(!item.classList.contains('open'));
-          });
-        }
+        if (detail) _makeUnfoldable(item, detail, q.name || '', _openQuests);
         questPanel.appendChild(item);
       });
       questPanel.style.display = '';

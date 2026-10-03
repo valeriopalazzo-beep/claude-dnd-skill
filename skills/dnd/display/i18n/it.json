@@ -194,6 +194,12 @@
   "quest.deadline": "Scadenza",
   "quest.objectives": "Obiettivi",
   "quest.clues": "Cosa sappiamo",
+  "faction.leader": "Capo",
+  "faction.base": "Sede",
+  "faction.goal": "Obiettivo",
+  "faction.attitude": "Verso di voi",
+  "faction.members": "Membri noti",
+  "faction.known": "Cosa sappiamo",
   "turn.round": "Round",
   "turn.initiative": "Iniziativa",
 

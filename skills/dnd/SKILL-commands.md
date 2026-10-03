@@ -200,8 +200,15 @@ The display question is skipped, because `/dm:dnd load` asks it. The graph and c
 
    Faction JSON structure — **`standing` is required**:
    ```json
-   [{"name":"Pale Court","standing":"Allied"},{"name":"The Kept","standing":"Hostile"}]
+   [{"name":"Pale Court","standing":"Allied",
+     "summary":"Old noble houses that rule the upper city from behind velvet curtains.",
+     "leader":"Lady Ysolde Varn","base":"The Opal Palace","goal":"Keep the crown weak and the guilds weaker",
+     "attitude":"Grateful since you returned the ledger, but they expect favours",
+     "members":["Ser Calden, the Court's sword","Mirelle the archivist"],
+     "known":["They pay the Watch captain","Their crest is a white moth"]},
+    {"name":"The Kept","standing":"Hostile"}]
    ```
+   Everything after `standing` is optional and is what the party has learned: players tap a faction on the display to read it. Fill it from `state.md`/`npcs.md`, never with secrets the party hasn't uncovered.
    `standing` values: `Allied`, `Friendly`, `Neutral`, `Suspicious`, `Hostile`. If the field is omitted, `dnd-display-app.py` defaults it to `"Neutral"` and logs a warning to stderr — but always include it explicitly. Map prose from `state.md` to exact values (e.g. "deep ally" → `"Allied"`, "active hostile" → `"Hostile"`). Use `[]` to clear.
 
    The faction panel only appears when at least one faction is present — do not skip this push.
