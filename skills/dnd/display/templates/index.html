@@ -12,6 +12,7 @@
 <meta name="tts-available" content="{{ '1' if tts_available else '0' }}">
 <meta name="tts-voices" content="{{ tts_voices | tojson | forceescape }}">
 <meta name="tts-engine" content="{{ tts_engine }}">
+<meta name="music-catalog" content="{{ music_catalog | tojson | forceescape }}">
 
 <!-- A browser logged in with a character PIN is that player, in the phone view
      and in the full view alike: only their own chat, dice and sheet, none of the
@@ -3741,7 +3742,7 @@
   .ts-btn:active{ transform:scale(0.92); }
   #ts-val{ min-width:42px; text-align:center; }
   .vb-wrap{ display:inline-flex; align-items:center; gap:10px; }
-  #vb-slider{ width:120px; max-width:42vw; accent-color:var(--e-accent, #c8a040); cursor:pointer; }
+  #vb-slider, #music-vol{ width:120px; max-width:42vw; accent-color:var(--e-accent, #c8a040); cursor:pointer; }
   #vb-val{ min-width:44px; text-align:right; }
 
   /* ══ Phone turn-status strip — tells the player exactly where the turn is ══ */
@@ -4487,6 +4488,17 @@
     <span class="audio-label" data-i18n="settings.sfx">Sound Effects</span>
     <div class="toggle-track" id="sfx-track"><div class="toggle-thumb"></div></div>
   </div>
+  <div class="audio-row" id="music-row" title="Background music for the scene, rousing in combat" data-i18n-title="settings.music.title">
+    <span class="audio-label" data-i18n="settings.music">Music</span>
+    <div class="toggle-track" id="music-track"><div class="toggle-thumb"></div></div>
+  </div>
+  <div class="audio-row" id="music-vol-row" title="Background music volume on this device" data-i18n-title="settings.musicVolume.title">
+    <span class="audio-label" data-i18n="settings.musicVolume">Music volume</span>
+    <span class="vb-wrap">
+      <input id="music-vol" type="range" min="0" max="100" step="5" value="35" aria-label="Music volume" data-i18n-aria="settings.musicVolume">
+      <span id="music-vol-val" class="theme-label">35%</span>
+    </span>
+  </div>
   <div class="audio-row" id="verbosity-row" title="Narration length the DM targets each turn — shorter = faster turns" data-i18n-title="settings.narration.title">
     <span class="audio-label" data-i18n="settings.narration">Narration</span>
     <span class="vb-wrap">
@@ -4580,6 +4592,7 @@
     <label class="ph-set-opt ph-set-row" id="ph-skin-opt"><span data-i18n="ph.style">Style</span><select id="ph-skin-select" class="ph-set-select" aria-label="Display style"><option value="vellum">Vellum</option><option value="editorial">Editorial</option><option value="lanterna">Lanterna</option></select></label>
     <label class="ph-set-opt ph-set-row" id="ph-lang-opt"><span data-i18n="settings.language">Language</span><select id="ph-lang-select" class="ph-set-select" aria-label="Display language" data-i18n-aria="settings.language"></select></label>
     <button class="ph-set-opt" id="ph-sfx-opt" type="button"><span data-i18n="settings.sfx">Sound Effects</span><strong id="ph-sfx-val">On</strong></button>
+    <button class="ph-set-opt" id="ph-music-opt" type="button"><span data-i18n="settings.music">Music</span><strong id="ph-music-val">On</strong></button>
     <button class="ph-set-opt" id="ph-roll-opt" type="button" hidden><span data-i18n="ph.rolls">Rolls</span><strong id="ph-roll-val">Players</strong></button>
     <button class="ph-set-opt" id="ph-logout-opt" type="button" hidden><span data-i18n="ph.logout">Log out</span><strong>⏻</strong></button>
   </div>
@@ -4860,6 +4873,7 @@ let activeScene = { ...SCENE_DEFAULTS };
 let bgActive = 'a'; // which bg layer is currently showing
 
 function applyScene(scene) {
+  if (scene && scene.name) _musicSetScene(scene.name);
   if (!scene || scene.name === activeScene.name) return;
   activeScene = { ...SCENE_DEFAULTS, ...scene };
 
@@ -7563,6 +7577,7 @@ function updateStats(stats) {
 
   // Turn order
   if ('turn_order' in stats) {
+    _musicSetCombat(!!stats.turn_order);
     if (!stats.turn_order) {
       turnSection.style.display = 'none';
     } else {
@@ -7768,6 +7783,197 @@ function _sfxFirstGesture() {
   }
 }
 _SFX_GESTURES.forEach(e => document.addEventListener(e, _sfxFirstGesture, true));
+
+// ═══════════════════════════════════════════════════════════════════
+// MUSIC — background track for the scene, a rousing one in combat.
+// Tracks come from /music/<id>.mp3 (built by build_music.py); the catalog
+// (scene → track ids, plus ambience layers like the inn's chatter) is in
+// the page. Two music decks crossfade on scene changes and when a track
+// nears its end; volume goes through Web Audio because iOS ignores
+// media-element volume. Ducks under the narrator voice. Per device:
+// on by default, switch + volume in Settings (localStorage).
+// ═══════════════════════════════════════════════════════════════════
+
+const _musicCat = (() => {
+  try { return JSON.parse(document.querySelector('meta[name="music-catalog"]').getAttribute('content')); }
+  catch (_) { return { scenes: {}, ambience: {} }; }
+})();
+let _musicOn = true;
+let _musicVol = 0.35;
+try {
+  _musicOn = localStorage.getItem('dnd-music') !== '0';
+  const v = parseFloat(localStorage.getItem('dnd-music-vol'));
+  if (!isNaN(v)) _musicVol = Math.min(1, Math.max(0, v));
+} catch (_) {}
+let _musicScene = 'tavern';
+let _musicCombat = false;
+let _musicCtx = null, _musicMaster = null;
+let _musicDecks = [];          // two {el, g} decks for crossfades
+let _musicCur = null;          // {deck, key, list, idx}
+let _musicAmb = null;          // {el, g, id}
+let _musicFading = false;
+let _musicDucked = false;
+const _MUSIC_FADE = 3.0;       // seconds
+const _MUSIC_DUCK = 0.35;      // music level while the narrator speaks
+
+function _musicReady() {
+  if (_musicCtx) return true;
+  try {
+    _musicCtx = new (window.AudioContext || window.webkitAudioContext)();
+    _musicMaster = _musicCtx.createGain();
+    _musicMaster.gain.value = _musicVol;
+    _musicMaster.connect(_musicCtx.destination);
+    return true;
+  } catch (_) { return false; }
+}
+
+function _musicDeck() {
+  const el = new Audio();
+  el.preload = 'auto';
+  el.loop = true;              // safety net; the crossfade normally takes over first
+  const g = _musicCtx.createGain();
+  g.gain.value = 0;
+  _musicCtx.createMediaElementSource(el).connect(g);
+  g.connect(_musicMaster);
+  return { el, g };
+}
+
+function _musicRamp(g, to, secs) {
+  const t = _musicCtx.currentTime;
+  g.gain.cancelScheduledValues(t);
+  g.gain.setValueAtTime(g.gain.value, t);
+  g.gain.linearRampToValueAtTime(to, t + secs);
+}
+
+function _musicStartOn(deck, id) {
+  deck.el.src = '/music/' + id + '.mp3';
+  deck.el.currentTime = 0;
+  const p = deck.el.play();
+  if (p) p.catch(() => {});    // blocked until the first tap; _musicUnlock retries
+  _musicRamp(deck.g, 1, _MUSIC_FADE);
+}
+
+function _musicFadeOut(deck) {
+  if (!deck) return;
+  _musicRamp(deck.g, 0, _MUSIC_FADE);
+  const el = deck.el;
+  setTimeout(() => { if (deck.g.gain.value < 0.02) el.pause(); }, _MUSIC_FADE * 1000 + 200);
+}
+
+// Crossfade to the next track of `list` on the idle deck.
+function _musicPlay(key, list, idx) {
+  if (!_musicReady() || !list.length) return;
+  if (_musicDecks.length < 2) _musicDecks = [_musicDeck(), _musicDeck()];
+  const old = _musicCur;
+  const deck = (old && old.deck === _musicDecks[0]) ? _musicDecks[1] : _musicDecks[0];
+  _musicCur = { deck, key, list, idx: idx % list.length };
+  _musicStartOn(deck, list[_musicCur.idx]);
+  if (old) _musicFadeOut(old.deck);
+  _musicFading = true;
+  setTimeout(() => { _musicFading = false; }, _MUSIC_FADE * 1000);
+}
+
+function _musicSetAmbience(id) {
+  if (!_musicReady()) return;
+  if (_musicAmb && _musicAmb.id === id) return;
+  if (_musicAmb) { _musicFadeOut(_musicAmb); _musicAmb.id = null; }
+  if (!id) return;
+  if (!_musicAmb) _musicAmb = _musicDeck();   // one ambience deck, reused
+  _musicAmb.id = id;
+  _musicAmb.el.loop = true;
+  _musicAmb.el.src = '/music/' + id + '.mp3';
+  const p = _musicAmb.el.play();
+  if (p) p.catch(() => {});
+  _musicRamp(_musicAmb.g, 0.55, _MUSIC_FADE);
+}
+
+// Decide what should play now and move there.
+function _musicApply() {
+  if (!_musicOn) {
+    if (_musicCur) { _musicFadeOut(_musicCur.deck); _musicCur = null; }
+    if (_musicAmb) { _musicFadeOut(_musicAmb); _musicAmb.id = null; }
+    return;
+  }
+  const key = _musicCombat ? 'combat' : _musicScene;
+  const list = (_musicCat.scenes || {})[key] || [];
+  if (!_musicCur || _musicCur.key !== key) {
+    if (list.length) _musicPlay(key, list, Math.floor(Math.random() * list.length));
+    else if (_musicCur) { _musicFadeOut(_musicCur.deck); _musicCur = null; }
+  }
+  _musicSetAmbience(_musicCombat ? null : ((_musicCat.ambience || {})[_musicScene] || null));
+}
+
+function _musicSetScene(name) {
+  if (!name || name === _musicScene) return;
+  _musicScene = name;
+  _musicApply();
+}
+
+function _musicSetCombat(on) {
+  if (on === _musicCombat) return;
+  _musicCombat = on;
+  _musicApply();
+}
+
+// Near the end of a track: crossfade into the next one of the same list.
+setInterval(() => {
+  if (!_musicOn || !_musicCur || _musicFading) return;
+  const el = _musicCur.deck.el;
+  if (el.duration && !el.paused && el.duration - el.currentTime < _MUSIC_FADE + 0.5) {
+    _musicPlay(_musicCur.key, _musicCur.list, _musicCur.idx + 1);
+  }
+  // Duck under the narrator (XTTS/Gemini pieces or the browser voice).
+  const speaking = !!_ttsRun || (_TTS_HAS_BROWSER && speechSynthesis.speaking);
+  if (speaking !== _musicDucked && _musicMaster) {
+    _musicDucked = speaking;
+    _musicRamp(_musicMaster, _musicVol * (speaking ? _MUSIC_DUCK : 1), 0.6);
+  }
+}, 400);
+
+// Browsers start audio only after a user gesture: the first tap starts the music.
+function _musicUnlock() {
+  if (!_musicReady()) return;
+  if (_musicCtx.state === 'suspended') _musicCtx.resume().catch(() => {});
+  if (_musicCur && _musicCur.deck.el.paused && _musicOn) _musicCur.deck.el.play().catch(() => {});
+  if (_musicAmb && _musicAmb.id && _musicAmb.el.paused) _musicAmb.el.play().catch(() => {});
+  if (!_musicCur) _musicApply();
+  if (_musicCtx.state === 'running') {
+    ['pointerdown', 'keydown', 'touchend'].forEach(e => document.removeEventListener(e, _musicUnlock, true));
+  }
+}
+['pointerdown', 'keydown', 'touchend'].forEach(e => document.addEventListener(e, _musicUnlock, true));
+
+(function _initMusicControls() {
+  const row = document.getElementById('music-row');
+  const track = document.getElementById('music-track');
+  const vol = document.getElementById('music-vol');
+  const volVal = document.getElementById('music-vol-val');
+  const hasAny = Object.values(_musicCat.scenes || {}).some(l => l.length);
+  if (!hasAny) {                       // nothing built: hide the controls
+    ['music-row', 'music-vol-row', 'ph-music-opt'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.hidden = true;
+    });
+    return;
+  }
+  if (track) _setTrack(track, _musicOn);
+  if (row) row.addEventListener('click', () => {
+    _musicOn = !_musicOn;
+    _setTrack(track, _musicOn);
+    try { localStorage.setItem('dnd-music', _musicOn ? '1' : '0'); } catch (_) {}
+    if (_musicOn) _musicUnlock();
+    _musicApply();
+  });
+  if (vol) {
+    vol.value = Math.round(_musicVol * 100);
+    if (volVal) volVal.textContent = vol.value + '%';
+    vol.addEventListener('input', () => {
+      _musicVol = vol.value / 100;
+      if (volVal) volVal.textContent = vol.value + '%';
+      try { localStorage.setItem('dnd-music-vol', String(_musicVol)); } catch (_) {}
+      if (_musicMaster) _musicRamp(_musicMaster, _musicVol * (_musicDucked ? _MUSIC_DUCK : 1), 0.2);
+    });
+  }
+})();
 
 // ── Typing speed toggle ──────────────────────────────────────────────
 const _speedSteps = [
@@ -9324,6 +9530,14 @@ function _onscreenDiceOn() { try { return localStorage.getItem('dnd-onscreen-dic
     const refreshFx = () => { if (fxVal) fxVal.textContent = _t(_sfxOn ? 'ph.on' : 'ph.off', null, _sfxOn ? 'On' : 'Off'); };
     refreshFx();
     if (fxOpt && fxRow) fxOpt.addEventListener('click', e => { e.stopPropagation(); fxRow.click(); refreshFx(); });
+
+    // Music — drives the hidden #music-row switch.
+    const muOpt = document.getElementById('ph-music-opt');
+    const muVal = document.getElementById('ph-music-val');
+    const muRow = document.getElementById('music-row');
+    const refreshMu = () => { if (muVal) muVal.textContent = _t(_musicOn ? 'ph.on' : 'ph.off', null, _musicOn ? 'On' : 'Off'); };
+    refreshMu();
+    if (muOpt && muRow) muOpt.addEventListener('click', e => { e.stopPropagation(); muRow.click(); refreshMu(); });
 
     // Log out — only for a browser that logged in with a PIN (LAN mode, not this PC).
     const loOpt = document.getElementById('ph-logout-opt');

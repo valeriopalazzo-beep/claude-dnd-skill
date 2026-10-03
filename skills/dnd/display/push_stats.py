@@ -202,6 +202,10 @@ def main() -> None:
     parser.add_argument("--set-campaign", metavar="NAME",
                         help="Set the active campaign name (written to .campaign for dm_help.py). "
                              "Server auto-resolves ruleset from the campaign's state.md.")
+    parser.add_argument("--scene", metavar="NAME",
+                        help="Where the party is now — sets the display's background and music. "
+                             "One of: tavern, city, castle, temple, forest, mountain, desert, swamp, "
+                             "ocean, mine, cave, dungeon, ruins, crypt, fire, arcane, night")
     parser.add_argument("--ruleset", metavar="2014|2024",
                         help="Override the ruleset badge displayed in the sidebar. "
                              "Normally the server resolves this from the campaign on --set-campaign.")
@@ -372,6 +376,13 @@ def main() -> None:
             print(f"--ruleset must be 2014 or 2024 (got {rs!r})", file=sys.stderr)
             sys.exit(2)
         payload["ruleset"] = rs
+
+    # ── Scene (background + music) ─────────────────────────────────────────────
+    if args.scene:
+        _send(FLASK_URL.replace("/stats", "/scene"),
+              json.dumps({"scene": args.scene.strip().lower()}).encode("utf-8"), _read_token())
+        if not payload and not args.clear:
+            return
 
     # ── Clear display ─────────────────────────────────────────────────────────
     if args.clear:

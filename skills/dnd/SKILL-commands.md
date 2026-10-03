@@ -192,8 +192,11 @@ The display question is skipped, because `/dm:dnd load` asks it. The graph and c
      --json '{...players...}' \
      --world-time '{...}' \
      --factions '[...]' \
-     --quests '[...]'
+     --quests '[...]' \
+     --scene tavern
    ```
+
+   `--scene` is where the party is (tavern, city, castle, temple, forest, mountain, desert, swamp, ocean, mine, cave, dungeon, ruins, crypt, fire, arcane, night): it sets the display's background and its background music. Push it again whenever the party reaches a new place.
 
    Faction JSON structure — **`standing` is required**:
    ```json

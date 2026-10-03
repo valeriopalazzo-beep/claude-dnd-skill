@@ -218,6 +218,11 @@ python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --turn-current "Goblin 1" --tu
 # Combat ended:
 python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --turn-clear
 
+# Where the party is — background, particles and background music for everyone.
+# One of: tavern city castle temple forest mountain desert swamp ocean mine cave
+#         dungeon ruins crypt fire arcane night
+python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --scene tavern
+
 # World time clock:
 python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --world-time \
   '{"date":"19 Ashveil 1312 AR","day_name":"Moonday","time":"morning","season":"Long Hollow","weather":"calm"}'
@@ -250,7 +255,8 @@ If `check_input.py` returns output, prepend it to the player's terminal input wh
 ---
 
 **When to push stats:**
-- `/dm:dnd load` → `--replace-players --json` (full stats) + `--spell-slots` + `--world-time` + `--factions`
+- `/dm:dnd load` → `--replace-players --json` (full stats) + `--spell-slots` + `--world-time` + `--factions` + `--scene` (where the party is)
+- Party arrives somewhere new (inn, town, castle, mine, crypt, forest, ship…) → `--scene NAME`, before narrating the arrival. It sets the music too, so push it every time the place really changes — not for a room inside the same place. Combat music is automatic with `--turn-order` / `--turn-clear`.
 - HP change → `--player NAME --hp <current> <max>`
 - Temp HP gained/lost → `--player NAME --temp-hp N` (0 to clear)
 - XP awarded → `--player NAME --xp <current> <next>`

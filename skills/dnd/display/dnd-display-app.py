@@ -36,7 +36,7 @@ from collections import deque
 from pathlib import Path
 from typing import Optional
 from urllib.parse import quote, urlparse
-from flask import Flask, Response, g, redirect, request, render_template, jsonify, send_from_directory
+from flask import Flask, Response, g, redirect, request, render_template, jsonify, send_from_directory, send_file
 from flask_cors import CORS
 
 # This file lives at <code-root>/display/ — resolve dirs from its location so
@@ -79,6 +79,12 @@ try:
     import tts as _tts
 except Exception:
     _tts = None   # type: ignore
+
+# Background music catalog (files built by build_music.py into <data-root>/music)
+try:
+    import music as _music
+except Exception:
+    _music = None   # type: ignore
 
 
 def _display_sfx_languages() -> list:
@@ -480,6 +486,8 @@ _DM_ENDPOINTS = {
     "queue_consumed", "submit_now", "drain_player_input",
     # Table-wide settings and the DM hint — the DM's, not a player's.
     "help_request", "narration_pref", "audio_toggle",
+    # Where the party is — sets everyone's background and music.
+    "set_scene",
 }
 
 
@@ -952,6 +960,7 @@ SCENES: dict[str, dict] = {
             "fireplace", "ale", "mead", "barkeep", "innkeeper",
             "candle", "tallow", "flagon", "stool", "bar",
         ],
+        "keywords_it": ['taverna', 'locanda', 'oste', 'ostessa', 'boccale', 'boccali', 'birra', 'idromele', 'bancone', 'focolare', 'avventori'],
         "colors": ["#1a0800", "#2e1400"],
         "accent": "#c8601a",
         "particles": "embers",
@@ -962,6 +971,7 @@ SCENES: dict[str, dict] = {
             "dungeon", "corridor", "stone floor", "torch", "iron gate",
             "portcullis", "cell", "shackle", "pit", "dank",
         ],
+        "keywords_it": ['segrete', 'corridoio', 'corridoi', 'cella', 'celle', 'catene', 'grata', 'saracinesca', 'prigione'],
         "colors": ["#080818", "#12082e"],
         "accent": "#6a3aaa",
         "particles": "dust",
@@ -972,6 +982,7 @@ SCENES: dict[str, dict] = {
             "mine", "seam", "shaft", "tunnel", "ore", "pickaxe",
             "foreman", "deep seam", "ashstone", "cart", "vein",
         ],
+        "keywords_it": ['miniera', 'minatore', 'minatori', 'galleria', 'filone', 'piccone', 'carrello'],
         "colors": ["#0a0a0a", "#1a1008"],
         "accent": "#806040",
         "particles": "dust",
@@ -982,6 +993,7 @@ SCENES: dict[str, dict] = {
             "cave", "cavern", "stalactite", "stalagmite", "underground",
             "grotto", "dripping", "echo", "subterranean",
         ],
+        "keywords_it": ['caverna', 'caverne', 'grotta', 'grotte', 'stalattiti', 'stalagmiti', 'antro', 'sotterraneo', 'sotterranei'],
         "colors": ["#0a1520", "#0a1030"],
         "accent": "#2060a0",
         "particles": "mist",
@@ -993,6 +1005,7 @@ SCENES: dict[str, dict] = {
             "hollow wood", "canopy", "root", "bark", "moss", "fern",
             "thicket", "grove",
         ],
+        "keywords_it": ['foresta', 'bosco', 'boschi', 'alberi', 'sottobosco', 'radura', 'querce'],
         "colors": ["#041008", "#081a04"],
         "accent": "#40a040",
         "particles": "leaves",
@@ -1003,6 +1016,7 @@ SCENES: dict[str, dict] = {
             "castle", "rampart", "battlement", "keep", "parapet",
             "drawbridge", "moat", "throne", "great hall", "manor",
         ],
+        "keywords_it": ['castello', 'bastioni', 'torrione', 'mastio', 'sala del trono', 'ponte levatoio', 'merlature'],
         "colors": ["#0e0e1a", "#1a1a2e"],
         "accent": "#8080c0",
         "particles": "dust",
@@ -1013,6 +1027,7 @@ SCENES: dict[str, dict] = {
             "mountain", "snow", "peak", "blizzard", "frost", "glacier",
             "avalanche", "ridge", "cliff", "altitude", "wind",
         ],
+        "keywords_it": ['montagna', 'montagne', 'vetta', 'picco', 'neve', 'ghiacciaio', 'valico', 'tormenta'],
         "colors": ["#0a1020", "#1a2040"],
         "accent": "#a0c0e0",
         "particles": "snow",
@@ -1023,6 +1038,7 @@ SCENES: dict[str, dict] = {
             "ocean", "sea", "ship", "wave", "sailor", "port", "harbour",
             "dock", "tide", "storm", "mast", "hull", "water",
         ],
+        "keywords_it": ['mare', 'oceano', 'nave', 'onde', 'porto', 'molo', 'marinai', 'ciurma', 'vele'],
         "colors": ["#000d1a", "#001a33"],
         "accent": "#0060a0",
         "particles": "ripples",
@@ -1033,6 +1049,7 @@ SCENES: dict[str, dict] = {
             "desert", "sand", "dune", "oasis", "scorching", "arid",
             "mirage", "camel", "sphinx",
         ],
+        "keywords_it": ['deserto', 'sabbia', 'dune', 'oasi', 'arido'],
         "colors": ["#1a0f00", "#2e1a00"],
         "accent": "#c08030",
         "particles": "sand",
@@ -1043,6 +1060,7 @@ SCENES: dict[str, dict] = {
             "ruins", "ruin", "crumble", "crumbling", "rubble", "ancient",
             "overgrown", "collapsed", "forgotten", "desolate", "remnant",
         ],
+        "keywords_it": ['rovine', 'ruderi', 'macerie'],
         "colors": ["#100e04", "#1e1a08"],
         "accent": "#806830",
         "particles": "dust",
@@ -1053,6 +1071,7 @@ SCENES: dict[str, dict] = {
             "swamp", "marsh", "bog", "mud", "murky", "fetid", "reed",
             "mire", "sludge", "stagnant",
         ],
+        "keywords_it": ['palude', 'paludi', 'acquitrino', 'fango', 'melma', 'canneti', 'stagno'],
         "colors": ["#080e04", "#0e1808"],
         "accent": "#406020",
         "particles": "mist",
@@ -1064,6 +1083,7 @@ SCENES: dict[str, dict] = {
             "skeleton", "lich", "mausoleum", "burial", "sarcophagus",
             "dead", "death",
         ],
+        "keywords_it": ['cripta', 'tomba', 'tombe', 'sepolcro', 'bara', 'sarcofago', 'non morti', 'ossario'],
         "colors": ["#08000a", "#140014"],
         "accent": "#602060",
         "particles": "smoke",
@@ -1074,6 +1094,7 @@ SCENES: dict[str, dict] = {
             "fire", "flame", "burn", "blaze", "inferno", "conflagration",
             "ember", "char", "smoke", "ash cloud",
         ],
+        "keywords_it": ['incendio', 'rogo', 'inferno', 'lava'],
         "colors": ["#1a0500", "#2e0800"],
         "accent": "#ff4400",
         "particles": "embers",
@@ -1085,6 +1106,7 @@ SCENES: dict[str, dict] = {
             "mystical", "ritual", "incantation", "ward", "sigil",
             "thaumaturgy", "sorcery",
         ],
+        "keywords_it": ['arcano', 'arcana', 'rune', 'glifi', 'portale', 'cerchio magico'],
         "colors": ["#080020", "#12003a"],
         "accent": "#8040ff",
         "particles": "sparks",
@@ -1096,6 +1118,7 @@ SCENES: dict[str, dict] = {
             "square", "cobble", "district", "quarter", "merchant",
             "ashenveil",
         ],
+        "keywords_it": ['città', 'mercato', 'strade', 'vicoli', 'piazza', 'villaggio', 'folla', 'bancarelle', 'quartiere'],
         "colors": ["#0a0f1a", "#15202e"],
         "accent": "#6080a0",
         "particles": "rain",
@@ -1106,6 +1129,7 @@ SCENES: dict[str, dict] = {
             "night", "midnight", "moon", "star", "dark sky",
             "constellation", "celestial", "dusk", "twilight",
         ],
+        "keywords_it": ['notte', 'mezzanotte', 'luna', 'stelle', 'crepuscolo'],
         "colors": ["#000008", "#04000f"],
         "accent": "#4060a0",
         "particles": "stars",
@@ -1117,6 +1141,7 @@ SCENES: dict[str, dict] = {
             "prayer", "cleric", "incense", "lantern", "pew", "nave",
             "pale flame",
         ],
+        "keywords_it": ['tempio', 'santuario', 'altare', 'cappella', 'preghiera', 'sacerdote', 'incenso', 'navata'],
         "colors": ["#0e0c18", "#1a1428"],
         "accent": "#c0a060",
         "particles": "smoke",
@@ -1333,9 +1358,36 @@ _current_scene_name: str = "tavern"   # default — we start in the inn
 _scene_buffer: list[str] = []
 _BUFFER_WINDOW = 20   # analyse last N cleaned chunks together
 
+# The DM names the scene (push_stats.py --scene) — that wins over guessing
+# from keywords, which then stays off until the display restarts. Persisted
+# so a restart keeps the music of where the party is.
+_SCENE_FILE = rt("scene.txt")
+_scene_pinned = False
+try:
+    _saved_scene = open(_SCENE_FILE, encoding="utf-8").read().strip()
+    if _saved_scene in SCENES:
+        _current_scene_name, _scene_pinned = _saved_scene, True
+except OSError:
+    pass
+
+# Whole words only: substring counting matched "ore" (mine) inside "signore",
+# "port" (ocean) inside "porta" and "ale" (tavern) inside "quale".
+_SCENE_RES = {
+    name: re.compile(r"\b(?:" + "|".join(re.escape(k) for k in
+                     scene["keywords"] + scene.get("keywords_it", [])) + r")\b")
+    for name, scene in SCENES.items()
+}
+
+
+def _scene_payload(name: str) -> dict:
+    return {k: v for k, v in SCENES[name].items() if not k.startswith("keywords")} | {"name": name}
+
 
 def _detect_scene(text: str) -> Optional[dict]:
     global _current_scene_name, _scene_buffer
+
+    if _scene_pinned:
+        return None
 
     _scene_buffer.append(text.lower())
     if len(_scene_buffer) > _BUFFER_WINDOW:
@@ -1345,8 +1397,7 @@ def _detect_scene(text: str) -> Optional[dict]:
 
     scores: dict[str, int] = {}
     for scene_name in SCENE_PRIORITY:
-        scene = SCENES[scene_name]
-        score = sum(window.count(kw) for kw in scene["keywords"])
+        score = len(_SCENE_RES[scene_name].findall(window))
         if score > 0:
             scores[scene_name] = score
 
@@ -1358,7 +1409,7 @@ def _detect_scene(text: str) -> Optional[dict]:
         return None   # no change
 
     _current_scene_name = best
-    return SCENES[best] | {"name": best}
+    return _scene_payload(best)
 
 
 # ─── SSE client registry ─────────────────────────────────────────────────────
@@ -1697,6 +1748,7 @@ def index():
         tts_available=(_tts is not None),
         tts_voices=(_tts.voices() if _tts else {"male": [], "female": []}),
         tts_engine=(_tts.engine() if _tts else ""),
+        music_catalog=(_music.catalog() if _music else {"scenes": {}, "ambience": {}}),
         i18n=_load_i18n_json(),
     )
 
@@ -2067,6 +2119,38 @@ def _known_pc_slugs(extra_campaign: str = "") -> set:
             if first.startswith("# "):
                 slugs.add(_pc_slug(first[2:].strip()))
     return slugs
+
+
+@app.route("/scene", methods=["POST"])
+def set_scene():
+    """The DM sets where the party is: background, particles and music.
+
+    Body: {"scene": name}  — a key of SCENES (tavern, city, castle, crypt, …)
+    """
+    global _current_scene_name, _scene_pinned
+    if not _token_ok():
+        return "Forbidden", 403
+    name = str((request.get_json(silent=True) or {}).get("scene") or "").strip().lower()
+    if name not in SCENES:
+        return jsonify({"error": "unknown scene", "scenes": sorted(SCENES)}), 400
+    _current_scene_name, _scene_pinned = name, True
+    _scene_buffer.clear()
+    try:
+        with open(_SCENE_FILE, "w", encoding="utf-8") as f:
+            f.write(name)
+    except OSError:
+        pass
+    _broadcast({"scene": _scene_payload(name)})
+    return jsonify({"scene": name}), 200
+
+
+@app.route("/music/<track_id>.mp3")
+def music_track(track_id):
+    """Serve a background-music MP3 built by build_music.py (Range-capable)."""
+    path = _music.track_path(track_id) if _music else None
+    if path is None:
+        return "Not found", 404
+    return send_file(path, mimetype="audio/mpeg", conditional=True, max_age=86400)
 
 
 def _in_combat() -> bool:
@@ -3415,8 +3499,7 @@ def stream():
 
     # Send the current scene immediately on connect so the browser
     # starts with the right background even mid-session.
-    initial_scene = SCENES[_current_scene_name] | {"name": _current_scene_name}
-    q.put_nowait({"scene": initial_scene})
+    q.put_nowait({"scene": _scene_payload(_current_scene_name)})
 
     # Replay recent entries so late-connecting / reconnecting browsers catch up.
     # _text_log is the durable session record (maxlen=2000); replay only the
