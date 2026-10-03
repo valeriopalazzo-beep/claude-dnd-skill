@@ -65,6 +65,7 @@ DEFAULT_TIMEOUT = 30.0
 # ── Local engine (XTTS-v2 via tts_local.py) ─────────────────────────────────
 
 LOCAL_CONFIG = Path.home() / ".config" / "claude-dnd" / "tts_local.json"
+LOCAL_LOG = LOCAL_CONFIG.with_name("tts_local.log")
 LOCAL_PORT = 5056
 # XTTS has 58 studio voices; these read Italian well and split clearly by
 # pitch. Ids use "_" for the space in the XTTS speaker name.
@@ -149,14 +150,17 @@ def ensure_local_server() -> bool:
         if time.time() - _local_started < 90:
             return True
         here = Path(__file__).resolve().parent
-        log = open(here / "tts_local.log", "wb")  # fresh log per start
+        # The server outlives the display, so keep its cwd and open log out
+        # of the plugin folder: on Windows they would lock it and block
+        # `claude plugin install`.
+        log = open(LOCAL_LOG, "wb")  # fresh log per start
         flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
         try:
             subprocess.Popen(
                 [cfg["python"], str(here / "tts_local.py"),
                  "--port", str(int(cfg.get("port") or LOCAL_PORT))],
                 stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
-                cwd=str(here), creationflags=flags,
+                cwd=str(Path.home()), creationflags=flags,
                 env={**os.environ, "PYTHONUTF8": "1", "COQUI_TOS_AGREED": "1"},
             )
         except OSError:

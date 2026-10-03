@@ -3521,7 +3521,7 @@ if __name__ == "__main__":
     # Local narrator voice (XTTS on the GPU): start its server now so the
     # model is loaded by the time the first block is narrated.
     if _tts and _tts.engine() == "local" and _tts.ensure_local_server():
-        print("Narrator voice: local XTTS server on 127.0.0.1 (log: display/tts_local.log)")
+        print("Narrator voice: local XTTS server on 127.0.0.1 (log: ~/.config/claude-dnd/tts_local.log)")
 
     host = "0.0.0.0" if _LAN_MODE else "localhost"
     # TLS — only enabled when --tls is explicitly passed; HTTP is the default.

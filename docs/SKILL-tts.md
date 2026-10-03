@@ -133,7 +133,7 @@ Instead of Gemini, the display can narrate with Coqui XTTS-v2 running on the PC'
    ```json
    {"python": "<path to tts-venv>/Scripts/python.exe", "voice": "Damien_Black", "language": "it"}
    ```
-3. Restart the display. It starts `display/tts_local.py` with that Python (log: `display/tts_local.log`); the model loads in ~20 s, the first run downloads it (~1.8 GB).
+3. Restart the display. It starts `display/tts_local.py` with that Python (log: `~/.config/claude-dnd/tts_local.log`); the model loads in ~20 s, the first run downloads it (~1.8 GB).
 
 The voice menu then lists 6 male and 6 female XTTS voices (`LOCAL_VOICES_*` in `display/tts.py`). Blocks are read a few sentences at a time so the voice starts in seconds. Delete `tts_local.json` to go back to Gemini.
 
