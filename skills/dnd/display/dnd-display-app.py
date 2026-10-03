@@ -2603,6 +2603,8 @@ def tts_synthesize():
         headers={
             "X-Audio-Chars": str(len(text)),
             "X-Audio-Voice": voice,
+            # The page plays this effect when the voice reaches this text.
+            "X-Audio-Sfx": (_audio.detect(text) if _audio else None) or "",
             "Cache-Control": "no-store",
         },
     )

@@ -7946,7 +7946,7 @@ async function _ttsFetchPcm(text) {
   if (!resp.ok) throw new Error('TTS ' + resp.status);
   const pcm = await resp.arrayBuffer();
   if (!pcm.byteLength) throw new Error('TTS empty');
-  return pcm;
+  return { pcm, sfx: resp.headers.get('X-Audio-Sfx') || '' };
 }
 
 async function _ttsPlayBlock(btn, blockEl) {
@@ -7974,10 +7974,11 @@ async function _ttsPlayBlock(btn, blockEl) {
   const prefetch = t => { const p = _ttsFetchPcm(t); p.catch(() => {}); return p; };
   let scheduled = 0;
   let startAt = 0;
+  let sfxPlayed = false;   // one effect per block, like on arrival
   try {
     let next = prefetch(chunks[0]);
     for (let i = 0; i < chunks.length; i++) {
-      const pcm = await next;
+      const { pcm, sfx } = await next;
       if (_ttsRun !== run) return;               // stopped meanwhile
       if (i + 1 < chunks.length) next = prefetch(chunks[i + 1]);
 
@@ -7994,6 +7995,12 @@ async function _ttsPlayBlock(btn, blockEl) {
       source.connect(ctx.destination);
       startAt = Math.max(startAt, ctx.currentTime + 0.05);
       source.start(startAt);
+      if (sfx && !sfxPlayed) {
+        // Fire the effect as the voice starts the piece that names it.
+        sfxPlayed = true;
+        const delayMs = Math.max(0, (startAt - ctx.currentTime) * 1000);
+        setTimeout(() => { if (_ttsRun === run) _playSfx(sfx); }, delayMs);
+      }
       startAt += audioBuffer.duration;
       _ttsSources.push(source);
       scheduled++;
@@ -9104,7 +9111,9 @@ function connect() {
     if (payload.scene) {
       applyScene(payload.scene);
     }
-    if (payload.sfx) {
+    // With auto-narrate the voice plays the effect when it reaches the
+    // trigger word (X-Audio-Sfx from /tts), so don't play it twice here.
+    if (payload.sfx && !(_TTS_AVAILABLE && _ttsAutoNarrate && _ttsServerOk)) {
       _playSfx(payload.sfx);
     }
     if (payload.inspiration_award) {

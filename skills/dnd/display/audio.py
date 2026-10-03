@@ -68,14 +68,24 @@ def on_scene_change(scene_name: str) -> None:
     pass   # ambient removed — kept for API compatibility
 
 
+def detect(text: str) -> Optional[str]:
+    """The first SFX whose trigger words appear in text, without broadcasting.
+
+    /tts uses it to play the effect when the narrator voice reaches it.
+    """
+    for pattern, sfx_name in _SFX_MAP:
+        if pattern.search(text):
+            return sfx_name
+    return None
+
+
 def on_text(text: str) -> None:
     """Scan narration text for SFX triggers; broadcast at most one per call."""
     if not _sfx_on or not _broadcast_fn:
         return
-    for pattern, sfx_name in _SFX_MAP:
-        if pattern.search(text):
-            _broadcast_fn({"sfx": sfx_name})
-            return
+    sfx_name = detect(text)
+    if sfx_name:
+        _broadcast_fn({"sfx": sfx_name})
 
 
 # ── WAV generation ─────────────────────────────────────────────────────────────
