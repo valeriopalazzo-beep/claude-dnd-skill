@@ -160,6 +160,13 @@ class ServerTests(unittest.TestCase):
         self.turn({"current": "Mira"})
         self.assertIn("Charmed", self.player("Mira")["conditions"])
 
+    def test_the_other_players_see_how_long_it_lasts_too(self):
+        self.add(self.rounds(3))
+        self.player()["sheet"] = {"inventory": ["Chiave"]}
+        seen = self.mod._for_viewer({"stats": self.mod._current_stats}, "mira")["stats"]["players"][0]
+        self.assertEqual(seen["condition_timers"], {"poisoned": {"duration_type": "rounds", "duration_remaining": 3}})
+        self.assertNotIn("sheet", seen)
+
     def test_a_malformed_duration_is_just_a_condition(self):
         for bad in ({"name": "Stunned", "duration_type": "rounds", "duration_remaining": 0},
                     {"name": "Stunned", "duration_type": "rounds", "duration_remaining": "x"},

@@ -4279,7 +4279,7 @@ def whispers_list():
 # watching: enough for the party cards (HP, AC, conditions), never the sheet.
 _PARTY_CARD_KEYS = {
     "name", "race", "class", "level", "background", "hp", "ac", "speed",
-    "conditions", "concentration", "inspiration", "xp", "hit_dice",
+    "conditions", "condition_timers", "concentration", "inspiration", "xp", "hit_dice",
     "spell_slots", "effects", "initiative", "player_name",
 }
 
