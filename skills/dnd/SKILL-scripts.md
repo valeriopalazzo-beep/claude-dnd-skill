@@ -747,6 +747,32 @@ Kinds: `fire` `magic` `cold` `poison` `acid` `lightning` `dark` `light` `blood` 
 
 Re-sending a map with the same title (or `--name <id>`) marks the older copy in the feed as superseded. `--caption TEXT` overrides the caption, `--no-send` only saves, `--out file.svg` writes a plain map elsewhere.
 
+**Fog of war** — for a place the party is exploring, add `fog: on` to the header and write the **whole** map, rooms not yet entered and creatures not yet seen included:
+
+```
+title: Cripta di Vessar
+fog: on
+sight: 6
+---
+###########
+#..A#..g..#
+#...+.....#
+#...#..h..#
+###########
+---
+A: Aldric | pc
+g: Goblin arciere | foe
+h: Hobgoblin | foe
+? 7,2-9,3
+```
+
+- The script works out what the `pc` and `ally` tokens see from where they stand: up to `sight` squares (default 12), stopped by walls `#` and doors `+`. A door the party opened is drawn as floor `.`; a creature's own sight does not count.
+- What they saw on earlier sends of the same title stays on the map, dimmed; what they never saw is dark. Kept in `media/fog-<map>.json`. `fog: reset` forgets it (a new level under the same title); a map of a different size starts from nothing.
+- A `foe`, `npc` or `neutral` token standing where nobody is looking is **left out of the picture** — token, name and legend line — and the script tells you which on stderr (`fog hides 2 token(s)…`). It comes into view by itself when the party's tokens move.
+- `? col,row-col,row` (or `? col,row r2`) in the legend part lights an area whatever the tokens see: a hall lit by a *Light* spell, a courtyard seen from a window.
+- Fog does not change the terrain, so the painted art stays cached and a re-send is instant.
+- Still yours to hide by not drawing: an unspotted trap, a secret door, an invisible creature — fog is about walls, not about Perception.
+
 **Terrain art.** `art:` (English, optional) describes the look; without it the look is guessed from the symbols. How it is made depends on the backend (`map_art` in `images.json`, or `--art`):
 
 | Mode | Backend | Result |

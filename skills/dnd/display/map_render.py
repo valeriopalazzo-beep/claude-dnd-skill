@@ -44,6 +44,17 @@ cached and the re-send is instant. Coordinates are the ruler's (column,row):
     @ 12,5 light                             one square, no label
 Kinds: fire, magic, cold, poison, acid, lightning, dark, light, blood, smoke.
 
+Fog of war (header lines): the map shows only what the party can see.
+    fog: on            what pc and ally tokens see from where they stand, stopped by
+                       walls (#) and doors (+); what they saw on earlier sends stays
+                       on the map, dimmed; the rest is dark
+    sight: 6           how many squares they see (default 12)
+    fog: reset         forget what was seen before (a new level under the same title)
+In the legend section, `? 4,2-9,6` (or `? 9,8 r2`) lights an area whatever the
+tokens see: a room lit by a spell, a hall seen from a balcony. A foe, npc or
+neutral token standing where nobody is looking is not drawn at all — write
+the whole map, the script decides what shows.
+
 Usage:
     python3 map_render.py << 'DNDEND'  ...map...  DNDEND      # render + show
     python3 map_render.py --file map.txt --no-send             # render only
@@ -85,7 +96,7 @@ SIDES = {
 SIDE_ALIASES = {"enemy": "foe", "monster": "foe", "hostile": "foe",
                 "player": "pc", "friend": "ally", "friendly": "ally"}
 
-HEADER_KEYS = ("title", "scale", "titolo", "scala", "art")
+HEADER_KEYS = ("title", "scale", "titolo", "scala", "art", "fog", "nebbia", "sight", "vista")
 # effect kind → (fill, glyph)
 EFFECTS = {
     "fire": ("#ff6a1a", "✹"), "magic": ("#9b5de5", "✦"), "cold": ("#5fc4ef", "❄"),
@@ -122,6 +133,10 @@ class MapSpec:
     legend: dict = field(default_factory=dict)   # letter → (name, side)
     effects: list = field(default_factory=list)  # Effect, drawn over terrain, under tokens
     warnings: list = field(default_factory=list)
+    fog: bool = False        # fog of war: show only what pc/ally tokens see or have seen
+    fog_reset: bool = False  # forget what was seen on earlier sends
+    sight: int = 0           # squares; 0 = SIGHT_DEFAULT
+    reveal: list = field(default_factory=list)   # (x0, y0, x1, y1) lit whatever the tokens see
 
 
 @dataclass
@@ -186,6 +201,16 @@ def parse(text: str) -> MapSpec:
                     spec.scale = v.strip()
                 elif k == "art":
                     spec.art = v.strip()
+                elif k in ("fog", "nebbia"):
+                    word = v.strip().lower()
+                    spec.fog = word not in ("", "off", "no", "false", "0")
+                    spec.fog_reset = word in ("reset", "new", "nuova")
+                elif k in ("sight", "vista"):
+                    num = re.match(r"\s*(\d+)", v)
+                    if num and int(num.group(1)) > 0:
+                        spec.sight = min(int(num.group(1)), MAX_W)
+                    else:
+                        spec.warnings.append(f"sight is a number of squares, not {v.strip()!r} — using {SIGHT_DEFAULT}")
         sections = sections[1:]
 
     grid = sections[0]
@@ -210,6 +235,12 @@ def parse(text: str) -> MapSpec:
                 eff = _parse_effect(l, width, len(spec.rows), spec.warnings)
                 if eff:
                     spec.effects.append(eff)
+                continue
+            if l.strip().startswith("?"):
+                # A lit area: same coordinates as an effect, no kind.
+                area = _parse_effect("@" + l.strip()[1:], width, len(spec.rows), spec.warnings)
+                if area:
+                    spec.reveal.append((area.x0, area.y0, area.x1, area.y1))
                 continue
             if ":" not in l:
                 continue
@@ -325,6 +356,108 @@ def _draw_cell(kind: str, spec: MapSpec, x: int, y: int, art=None) -> list:
     return out
 
 
+# ── Fog of war ───────────────────────────────────────────────────────────────
+# With `fog: on` the map shows what the party's tokens (pc, ally) can see from
+# where they stand — up to `sight` squares, stopped by walls and doors — plus
+# what they saw before, dimmed. The rest is covered, and a creature standing
+# where nobody is looking is left out of the picture altogether.
+
+SIGHT_DEFAULT = 12
+FOG_BLOCKS = ("wall", "door", "void")
+FOG_DARK, FOG_DIM = "#14100b", 0.5
+
+
+def visible_cells(spec: MapSpec) -> set:
+    """Squares some pc or ally token sees right now, plus the `?` areas the DM lit."""
+    w, h = len(spec.rows[0]), len(spec.rows)
+    blocks = [[_cell_kind(spec, x, y) in FOG_BLOCKS for x in range(w)] for y in range(h)]
+    radius = spec.sight if spec.sight > 0 else SIGHT_DEFAULT
+    seen = set()
+    for vy, row in enumerate(spec.rows):
+        for vx, ch in enumerate(row):
+            if not ch.isalpha() or spec.legend.get(ch, (ch, "pc" if ch.isupper() else "foe"))[1] not in ("pc", "ally"):
+                continue
+            seen.add((vx, vy))
+            for ty in range(max(0, vy - radius), min(h, vy + radius + 1)):
+                for tx in range(max(0, vx - radius), min(w, vx + radius + 1)):
+                    if (tx, ty) in seen or (tx - vx) ** 2 + (ty - vy) ** 2 > (radius + 0.5) ** 2:
+                        continue
+                    # Walk the straight line from the viewer; a wall on the way hides what is behind it.
+                    steps = max(abs(tx - vx), abs(ty - vy))
+                    clear = True
+                    for i in range(1, steps):
+                        x = int(vx + (tx - vx) * i / steps + 0.5)
+                        y = int(vy + (ty - vy) * i / steps + 0.5)
+                        if blocks[y][x]:
+                            clear = False
+                            break
+                    if clear:
+                        seen.add((tx, ty))
+    # The walls and doors that close a seen floor square are seen too.
+    for (x, y) in [c for c in seen if not blocks[c[1]][c[0]]]:
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < w and 0 <= ny < h and blocks[ny][nx] and _cell_kind(spec, nx, ny) != "void":
+                    seen.add((nx, ny))
+    for (x0, y0, x1, y1) in spec.reveal:
+        seen.update((x, y) for y in range(y0, y1 + 1) for x in range(x0, x1 + 1))
+    return seen
+
+
+def _fog_file(d, map_id: str):
+    return d / f"fog-{map_id}.json"
+
+
+def load_explored(d, map_id: str, w: int, h: int) -> set:
+    """What the party has already seen of this map; nothing if the map changed size."""
+    import json
+    try:
+        data = json.loads(_fog_file(d, map_id).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return set()
+    if not isinstance(data, dict) or data.get("size") != [w, h]:
+        return set()
+    return {(int(x), int(y)) for x, y in data.get("seen", []) if 0 <= int(x) < w and 0 <= int(y) < h}
+
+
+def save_explored(d, map_id: str, w: int, h: int, explored: set) -> None:
+    import json
+    _fog_file(d, map_id).write_text(json.dumps({"size": [w, h], "seen": sorted(explored)}), encoding="utf-8")
+
+
+def _token_shown(spec: MapSpec, ch: str, x: int, y: int, fog) -> bool:
+    if fog is None:
+        return True
+    side = spec.legend.get(ch, (ch, "pc" if ch.isupper() else "foe"))[1]
+    return side in ("pc", "ally") or (x, y) in fog[0]
+
+
+def hidden_tokens(spec: MapSpec, fog) -> list:
+    return [ch for y, row in enumerate(spec.rows) for x, ch in enumerate(row)
+            if ch.isalpha() and not _token_shown(spec, ch, x, y, fog)]
+
+
+def _draw_fog(spec: MapSpec, fog) -> list:
+    """Dark over what was never seen, a veil over what is remembered; one rect per run of squares."""
+    visible, explored = fog
+    out = []
+    for y, row in enumerate(spec.rows):
+        x = 0
+        while x < len(row):
+            state = 0 if (x, y) in visible else 1 if (x, y) in explored else 2
+            if state == 0:
+                x += 1
+                continue
+            start = x
+            while x < len(row) and (0 if (x, y) in visible else 1 if (x, y) in explored else 2) == state:
+                x += 1
+            out.append(f'<rect class="fog{state}" x="{PAD + start * CELL}" y="{PAD + y * CELL}" '
+                       f'width="{(x - start) * CELL}" height="{CELL}" fill="{FOG_DARK}"'
+                       + (f' fill-opacity="{FOG_DIM}"' if state == 1 else "") + "/>")
+    return out
+
+
 def _draw_token(ch: str, spec: MapSpec, x: int, y: int) -> list:
     name, side = spec.legend.get(ch, (ch, "pc" if ch.isupper() else "foe"))
     cx, cy = PAD + x * CELL + CELL / 2, PAD + y * CELL + CELL / 2
@@ -373,22 +506,26 @@ def _art_defs(art) -> list:
     return out
 
 
-def render_svg(spec: MapSpec, art=None) -> str:
-    """SVG of the map; `art` (a map_art.Art) replaces the vector terrain."""
+def render_svg(spec: MapSpec, art=None, fog=None) -> str:
+    """SVG of the map; `art` (a map_art.Art) replaces the vector terrain.
+
+    `fog` is (visible, explored) — two sets of (x, y) — or None for a map with
+    no fog of war."""
     w, h = len(spec.rows[0]), len(spec.rows)
     grid_w, grid_h = w * CELL, h * CELL
     title_h = 34 if spec.title else 0
 
     # Legend: tokens that actually appear on the map, in reading order.
     seen = []
-    for row in spec.rows:
-        for ch in row:
-            if ch.isalpha() and ch not in seen:
+    for y, row in enumerate(spec.rows):
+        for x, ch in enumerate(row):
+            if ch.isalpha() and ch not in seen and _token_shown(spec, ch, x, y, fog):
                 seen.append(ch)
     order = list(SIDES)   # pc, ally, npc, foe, neutral
     seen.sort(key=lambda ch: order.index(
         spec.legend.get(ch, (ch, "pc" if ch.isupper() else "foe"))[1]))
-    labelled = [e for e in spec.effects if e.label]
+    labelled = [e for e in spec.effects if e.label and (fog is None or any(
+        (x, y) in fog[0] for y in range(e.y0, e.y1 + 1) for x in range(e.x0, e.x1 + 1)))]
     cols = max(1, min(3, (grid_w + PAD) // 190))
     n_items = len(seen) + len(labelled)
     leg_rows = (n_items + cols - 1) // cols
@@ -425,9 +562,11 @@ def render_svg(spec: MapSpec, art=None) -> str:
                            f'height="{CELL}" fill="none" {grid}/>')
     for e in spec.effects:
         out.extend(_draw_effect(e))
+    if fog is not None:
+        out.extend(_draw_fog(spec, fog))
     for y, row in enumerate(spec.rows):
         for x, ch in enumerate(row):
-            if ch.isalpha():
+            if ch.isalpha() and _token_shown(spec, ch, x, y, fog):
                 out.extend(_draw_token(ch, spec, x, y))
     # Coordinate ruler: column numbers on top, row numbers on the left, so the
     # table can say "I move to 7,3".
@@ -491,7 +630,13 @@ def main() -> int:
         return 2
     for w in spec.warnings[:10]:
         print(f"map_render: {w}", file=sys.stderr)
-    svg = render_svg(spec)
+    fog = None
+    if spec.fog:
+        now = visible_cells(spec)
+        fog = (now, set(now))          # with --out there is no campaign to remember in
+        if not now:
+            print("map_render: fog is on but no pc or ally token is on the map — everything is dark", file=sys.stderr)
+    svg = render_svg(spec, fog=fog)
 
     if args.out:
         with open(args.out, "w", encoding="utf-8") as f:
@@ -509,6 +654,15 @@ def main() -> int:
         return 2
     map_id = media.slug(args.name or spec.title or "map")
     caption = args.caption if args.caption is not None else spec.title
+    if fog is not None:
+        size = (len(spec.rows[0]), len(spec.rows))
+        before = set() if spec.fog_reset else load_explored(d, map_id, *size)
+        fog = (fog[0], before | fog[0])
+        save_explored(d, map_id, *size, fog[1])
+        svg = render_svg(spec, fog=fog)
+        unseen = hidden_tokens(spec, fog)
+        if unseen:
+            print(f"map_render: fog hides {len(unseen)} token(s) the party cannot see: {', '.join(unseen)}", file=sys.stderr)
 
     def save_and_show(svg_text: str) -> None:
         digest = hashlib.sha1(svg_text.encode("utf-8")).hexdigest()[:8]
@@ -545,7 +699,7 @@ def main() -> int:
             art = map_art.get_art(kinds, spec.art, d, cfg, mode, log=log)
         except map_art.ImageError:
             pass
-    save_and_show(render_svg(spec, art))
+    save_and_show(render_svg(spec, art, fog=fog))
     return 0
 
 
