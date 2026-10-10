@@ -436,6 +436,14 @@ When `state.md → ## Session Flags → absent:` names one or more PCs, their pl
 
 When they come back at a later load, they rejoin the scene with one line of fiction — see `/dm:dnd load` step 8.
 
+## Coins, Items & Shops
+
+Money and gear are **applied by script, never by hand**: `scripts/inventory.py` (`gain`, `pay`, `add`, `remove`, `buy`, `sell`, `give`, `split`) edits the sheet's Currency line and item lists, makes change, and refuses what cannot be paid. Use it every time coins or items change hands — loot, a toll, a potion drunk, a gift between characters — and to split treasure in equal shares.
+
+When the party enters a shop and wants to browse, open it on their screens with `display/shop.py open` and a price list: each player buys from their own phone and the purchase is applied automatically. A `[[SHOP: … bought …]]` line from `check_input.py` reports a sale that is **already paid and on the sheet** — never apply it again. Syntax: `SKILL-scripts.md` → *Inventory Script* / *Shop*.
+
+---
+
 ## XP Awards
 
 **Never calculate XP in context.** Use `scripts/xp.py` — it holds all tables and handles character file updates and display pushes. The DM's only decision is the difficulty tier and encounter type.

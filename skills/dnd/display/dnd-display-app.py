@@ -489,6 +489,8 @@ _DM_ENDPOINTS = {
     "queue_consumed", "submit_now", "drain_player_input",
     # Table-wide settings and the DM hint — the DM's, not a player's.
     "help_request", "narration_pref", "audio_toggle",
+    # Opening and closing a shop; buying from it is the players'.
+    "shop_set",
     # Where the party is — sets everyone's background and music.
     "set_scene",
     # Documents the party finds: the DM hands them out, everyone may read them.
@@ -2319,6 +2321,212 @@ def _known_pc_slugs(extra_campaign: str = "") -> set:
     return slugs
 
 
+# ─── Shop (shop.py) ──────────────────────────────────────────────────────────
+# The DM opens a shop with a price list; it shows on every screen. A player
+# buys from their own phone and the purchase is applied here, at once, with
+# scripts/inventory.py: coins off the character sheet (with change), the item
+# on it, one less in stock. shop.py hands the DM what was sold.
+
+import inventory as _inventory
+import shop as _shop_cli
+
+SHOP_FILE = rt("shop.json")
+_shop: Optional[dict] = None
+_shop_lock = threading.Lock()
+_SHOP_MAX_ITEMS = 80
+
+
+def _load_shop() -> None:
+    global _shop
+    try:
+        with open(SHOP_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return
+    if isinstance(data, dict) and isinstance(data.get("items"), list):
+        _shop = data
+
+
+def _persist_shop() -> None:
+    try:
+        if _shop is None:
+            if os.path.exists(SHOP_FILE):
+                os.remove(SHOP_FILE)
+            return
+        tmp = SHOP_FILE + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(_shop, f, ensure_ascii=False)
+        os.replace(tmp, SHOP_FILE)
+    except OSError:
+        pass
+
+
+_load_shop()
+
+
+def _open_shop_now() -> Optional[dict]:
+    """The open shop, if it belongs to the campaign being played."""
+    if _shop is None or _shop.get("campaign", "") != _active_campaign():
+        return None
+    return _shop
+
+
+def _shop_purse(character: str) -> Optional[dict]:
+    """Coins on the character's sheet, or None when there is no sheet to read."""
+    if not character:
+        return None
+    try:
+        purse = _inventory.purse_of(character, _active_campaign())
+    except _inventory.InventoryError:
+        return None
+    return {"coins": purse, "cp": _inventory.coins_cp(purse)}
+
+
+@app.route("/shop", methods=["GET"])
+def shop_get():
+    """The open shop, and the asker's purse.
+
+    A logged-in player gets their own purse; this PC names a character with
+    ?character= (its phone view) or gets the price list alone.
+    """
+    if not _token_ok():
+        return "Forbidden", 403
+    if getattr(g, "role", None) == "player":
+        who = g.character or ""
+    else:
+        who = request.args.get("character", "").strip()[:50]
+    with _shop_lock:
+        shop = _open_shop_now()
+        return jsonify({"shop": shop, "purse": _shop_purse(who) if shop else None}), 200
+
+
+@app.route("/shop", methods=["POST"])
+def shop_set():
+    """Open a shop (replacing the one open) or close it.
+
+    {"name": "...", "keeper": "...", "note": "...",
+     "items": [{"name": "...", "price": "5gp", "stock": 3, "note": "...", "section": "gear"}]}
+    {"close": true}
+    """
+    global _shop
+    if not _token_ok():
+        return "Forbidden", 403
+    data = request.get_json(force=True, silent=True) or {}
+    if data.get("close"):
+        with _shop_lock:
+            _shop = None
+            _persist_shop()
+        _broadcast({"shop": None})
+        return jsonify({"shop": None}), 200
+
+    name = " ".join(str(data.get("name", "")).split())[:80]
+    raw_items = data.get("items")
+    if not name or not isinstance(raw_items, list) or not raw_items:
+        return jsonify({"error": "a shop needs a name and at least one item"}), 400
+    items = []
+    for i, raw in enumerate(raw_items[:_SHOP_MAX_ITEMS]):
+        if not isinstance(raw, dict):
+            return jsonify({"error": f"item {i + 1} is not an object"}), 400
+        item_name = " ".join(str(raw.get("name", "")).split())[:120]
+        try:
+            price_cp = _inventory.coins_cp(_inventory.parse_coins(str(raw.get("price", ""))))
+            section = _inventory._section_key(str(raw.get("section", "") or "gear"))
+        except _inventory.InventoryError as e:
+            return jsonify({"error": f"item {i + 1} ({item_name or '?'}): {e}"}), 400
+        stock = raw.get("stock")
+        if stock is not None and (isinstance(stock, bool) or not isinstance(stock, int) or stock < 0):
+            return jsonify({"error": f"item {i + 1} ({item_name}): stock must be a whole number"}), 400
+        if not item_name:
+            return jsonify({"error": f"item {i + 1} has no name"}), 400
+        items.append({
+            "id": f"i{i + 1}",
+            "name": item_name,
+            "price_cp": price_cp,
+            "price": _inventory.format_cp(price_cp),
+            "stock": stock,
+            "note": " ".join(str(raw.get("note", "")).split())[:160],
+            "section": section,
+        })
+    shop = {
+        "name": name,
+        "keeper": " ".join(str(data.get("keeper", "")).split())[:60],
+        "note": " ".join(str(data.get("note", "")).split())[:200],
+        "campaign": _active_campaign(),
+        "opened": _time.time(),
+        "items": items,
+    }
+    with _shop_lock:
+        _shop = shop
+        _persist_shop()
+    _broadcast({"shop": shop, "shop_opened": True})
+    return jsonify({"shop": shop}), 200
+
+
+@app.route("/shop/buy", methods=["POST"])
+def shop_buy():
+    """A player buys from the open shop: {"character": "Aldric", "item": "i2", "qty": 1}.
+
+    The purchase is applied to the character sheet before this returns, or not
+    at all: 409 says why (not enough coins, sold out, no sheet).
+    """
+    if not _token_ok():
+        return "Forbidden", 403
+    if not _rate_ok(request.remote_addr):
+        return "Too Many Requests", 429
+    data = request.get_json(force=True, silent=True) or {}
+    character = _acting_character(str(data.get("character", ""))[:50].strip())
+    with _stats_lock:
+        known = {p.get("name", "") for p in _current_stats.get("players", [])}
+    character = next((n for n in known if n.lower() == character.lower()), character)   # the party's spelling
+    if not character or character == "Everybody" or not _char_ok(character, known):
+        return jsonify({"error": "unknown character", "code": "character"}), 403
+    try:
+        qty = int(data.get("qty", 1))
+    except (TypeError, ValueError):
+        qty = 0
+    if not 1 <= qty <= 99:
+        return jsonify({"error": "quantity must be between 1 and 99", "code": "qty"}), 400
+
+    with _shop_lock:
+        shop = _open_shop_now()
+        if shop is None:
+            return jsonify({"error": "the shop is closed", "code": "closed"}), 409
+        item = next((it for it in shop["items"] if it["id"] == str(data.get("item", ""))), None)
+        if item is None:
+            return jsonify({"error": "the shop does not sell that", "code": "item"}), 404
+        if item["stock"] is not None and item["stock"] < qty:
+            return jsonify({"error": "not enough in stock", "code": "stock", "shop": shop}), 409
+        try:
+            purse = _inventory.op_buy(character, item["name"], item["price_cp"], qty,
+                                      item["section"], _active_campaign(), push=False)
+        except _inventory.InventoryError as e:
+            code = "funds" if "not enough coins" in str(e) else "sheet"
+            return jsonify({"error": str(e), "code": code}), 409
+        if item["stock"] is not None:
+            item["stock"] -= qty
+        _persist_shop()
+        shop = json.loads(json.dumps(shop))      # a snapshot to send outside the lock
+
+    label = item["name"] if qty == 1 else f'{item["name"]} ×{qty}'
+    total = _inventory.format_cp(item["price_cp"] * qty)
+    # The display's own copy of the sheet, so the bag is right without a reload.
+    snapshot = None
+    with _stats_lock:
+        for p in _current_stats.get("players", []):
+            if p.get("name", "").lower() == character.lower():
+                p.setdefault("sheet", {}).setdefault("inventory", []).append(label)
+                snapshot = dict(_current_stats)
+    if snapshot is not None:
+        _persist_stats()
+        _broadcast({"stats": snapshot})
+    sale = {"character": character, "item": item["name"], "qty": qty, "total": total,
+            "shop": shop["name"], "left": _inventory.format_coins(purse)}
+    _shop_cli.sales_add(sale)
+    _broadcast({"shop": shop, "shop_sale": {"character": character, "item": label, "total": total}})
+    return jsonify({"shop": shop, "bought": label, "total": total,
+                    "purse": {"coins": purse, "cp": _inventory.coins_cp(purse)}}), 200
+
+
 @app.route("/scene", methods=["POST"])
 def set_scene():
     """The DM sets where the party is: background, particles and music.
@@ -3857,6 +4065,11 @@ def stream():
     with _stats_lock:
         if _current_stats:
             q.put_nowait({"stats": dict(_current_stats)})
+
+    # A shop that is open stays open for whoever connects now.
+    with _shop_lock:
+        if _open_shop_now():
+            q.put_nowait({"shop": json.loads(json.dumps(_open_shop_now()))})
 
     # Send current input queue so the pending indicator is accurate on reconnect.
     with _input_lock:

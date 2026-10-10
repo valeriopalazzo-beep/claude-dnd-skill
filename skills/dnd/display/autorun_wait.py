@@ -108,4 +108,14 @@ notes = _whisper.drain_inbox() if _whisper else []
 if notes:
     content = "\n".join(notes + ([content] if content else []))
 
+# Purchases made at an open shop while waiting (shop.py): information for the DM.
+try:
+    sys.path.insert(0, DISPLAY_DIR)
+    from shop import drain_sales
+    _sales = drain_sales() if content else []
+except Exception:
+    _sales = []
+if _sales:
+    content = "\n".join(_sales + [content])
+
 sys.stdout.write(content)

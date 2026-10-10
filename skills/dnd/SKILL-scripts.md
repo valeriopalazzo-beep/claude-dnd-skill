@@ -306,6 +306,32 @@ If `check_input.py` returns output, prepend it to the player's terminal input wh
 
 ---
 
+## Shop — `display/shop.py`
+
+Put a shop's price list on the players' screens. Each player buys from their own phone (tap **Buy**, then **Confirm**) and the display applies the purchase at once with `inventory.py`: coins off the sheet with change, item on it, stock down. Nothing to add up, nothing to remember.
+
+```bash
+# One item per line:  name | price | stock | note      (stock and note optional)
+python3 ${CLAUDE_SKILL_DIR}/display/shop.py open "Emporio di Brakka" --keeper "Brakka" --note "Odore di spezie" << 'DNDEND'
+Corda di canapa (15 m) | 1gp
+Pozione di guarigione | 50gp | 3 | sigillo di cera rossa
+Razioni (1 giorno) | 5sp
+[weapons] Spada corta | 10gp | 1
+[armour] Scudo | 10gp
+DNDEND
+
+python3 ${CLAUDE_SKILL_DIR}/display/shop.py show     # what is on sale now, with the stock left
+python3 ${CLAUDE_SKILL_DIR}/display/shop.py close    # when the party leaves
+```
+
+- Prices in `pp gp ep sp cp` (Italian `mp mo me ma mr` too). No stock = it never runs out. `[weapons]` / `[armour]` in front of a name files the item in that list of the buyer's sheet.
+- Use SRD prices as the baseline and move them for the place (frontier markup, a grateful merchant's discount). To change a price or restock, `open` the shop again with the new list — it replaces the old one.
+- **What was sold** reaches you with the next `check_input.py` / `autorun_wait.py` as `[[SHOP: Aldric bought Corda di canapa (15 m) for 1gp at "Emporio di Brakka" — already paid and added to the sheet …]]`. It is information, not an action: **do not charge or add it again**; mention it in the narration only if it matters.
+- Haggling, selling to the merchant, and anything not on the list are ordinary actions: play them out, then apply the result with `inventory.py buy --price … / sell --price …`.
+- Open a shop when the party walks into one and wants to look at the goods; close it when they leave. Keep the list to what this shop would really stock (10–20 lines), not the whole equipment chapter.
+
+---
+
 ## Tracker Script — `scripts/tracker.py`
 Tracks conditions, concentration, timed effects, and death saves. State persists at `~/.claude/dnd/campaigns/<name>/tracker.json`.
 

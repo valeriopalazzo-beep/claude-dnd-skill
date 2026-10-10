@@ -150,6 +150,7 @@ The right sidebar tracks each party member in real time:
 - **Combat turn order** — initiative tracker with current actor highlighted
 - **"Your turn" alert** — a phone bound to a character (PIN login or `?char=`) vibrates, chimes and shows a banner when the tracker reaches that character, and gets a heads-up one turn earlier. The chime follows the Sound Effects switch; the screen is kept awake while a fight runs so the alert is not lost to a sleeping phone
 - **Factions** — party standings (Allied → Hostile)
+- **Shop** — the DM opens a price list with `shop.py open`; each player sees their purse and buys from their own phone in two taps. Coins, change, the item on the sheet and the stock are handled by the display; the DM is told what was sold
 - **Handouts** — letters, notices, journal pages, scrolls and notes the party finds (`handout.py`) appear in the story as sheets of paper; every screen has a **Documents** list to read them again, with a badge for the unread ones
 - **Secret notes** — the DM sends a note to one player with `whisper.py --to NAME "…"`; it opens on that player's phone only, and the player can write back in secret. Other screens show at most "the DM passes a note to NAME"
 
