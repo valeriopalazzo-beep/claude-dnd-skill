@@ -647,6 +647,38 @@ python3 ${CLAUDE_SKILL_DIR}/display/image_gen.py --status    # backend + keys (m
 
 ---
 
+## Handouts — `display/handout.py`
+
+A document the party finds, shown as a sheet of paper in the story and kept in the players' **Documents** list (saved in `<campaign>/handouts.json`, so it is still there next session).
+
+```bash
+# Text from stdin (a heredoc keeps the line breaks), or --body for one line:
+python3 ${CLAUDE_SKILL_DIR}/display/handout.py --title "Lettera trovata sul corriere" --kind letter --from "V." << 'DNDEND'
+Ilde,
+il carico parte alla terza luna. Nessuno deve sapere della cripta.
+Brucia questa lettera.
+DNDEND
+
+# A picture already in <campaign>/media/ (image_gen.py --kind item, or a map rendered with --no-send):
+python3 ${CLAUDE_SKILL_DIR}/display/handout.py --title "Mappa del contrabbandiere" --image mappa.png
+
+python3 ${CLAUDE_SKILL_DIR}/display/handout.py --list            # id, kind, title
+python3 ${CLAUDE_SKILL_DIR}/display/handout.py --show a1b2c3d4   # put an old one back on every screen
+python3 ${CLAUDE_SKILL_DIR}/display/handout.py --remove a1b2c3d4 # the party lost it, or it burned
+```
+
+| `--kind` | Looks like | Use for |
+|---|---|---|
+| `letter` (default) | handwriting, signature bottom right | letters, messages, confessions |
+| `notice` | centred capitals in a double frame | wanted posters, edicts, shop signs, contracts |
+| `journal` | italic on ruled paper | diaries, logbooks, ledgers, research notes |
+| `scroll` | centred text on dark parchment | prophecies, rituals, inscriptions, riddles |
+| `note` | a small tilted scrap | hurried notes, passwords, a name on a napkin |
+
+**When to use it:** whenever the characters hold a text in their hands and its exact wording matters — a clue to re-read, a riddle, a contract to sign, a list of names. Write the document itself, in the voice of whoever wrote it (title = what the players would call it; `--from` = the signature, if it has one); narrate the finding with `send.py` as usual and do not repeat the text in the narration. For a text only one character reads in secret, use `whisper.py` instead.
+
+---
+
 ## Continuity Autosave — `scripts/autosave_checkpoint.py`, `scripts/install_autosave_hook.py`
 
 Behind-the-scenes continuity checkpoint for long sessions, so a context compaction never loses the player's place. Two layers; see the *Continuity micro-save* rule in SKILL.md and the `/dm:dnd autosave` command.

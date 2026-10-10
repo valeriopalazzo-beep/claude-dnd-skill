@@ -529,6 +529,8 @@ You write the layout and the tokens; the image backend paints the terrain's look
 
 Generation takes 5–60 s each: run every `image_gen.py` call as its **own Bash call with `run_in_background: true`**, then carry on narrating — the image lands in the feed when ready. Several can be queued at once. If `image_gen.py` fails or reports images are off, stop calling it for the rest of the session and never mention it in the fiction.
 
+**Handouts (`handout.py`).** When the characters hold a written text and its wording matters — a letter, a wanted poster, a diary page, a riddle, a contract — hand it out instead of reading it in the narration: it appears as a sheet of paper and stays in the players' Documents list to be re-read. Write the document itself, in its author's voice. No image backend needed. Syntax: `SKILL-scripts.md` → *Handouts*.
+
 ---
 
 ## Tutor Mode

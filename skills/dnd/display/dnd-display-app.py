@@ -491,6 +491,8 @@ _DM_ENDPOINTS = {
     "help_request", "narration_pref", "audio_toggle",
     # Where the party is — sets everyone's background and music.
     "set_scene",
+    # Documents the party finds: the DM hands them out, everyone may read them.
+    "handout", "handout_delete",
 }
 
 
@@ -2138,6 +2140,144 @@ def image():
     _persist_tail()
     _broadcast({"image": img})
     return "", 204
+
+
+# ─── Handouts (handout.py) ───────────────────────────────────────────────────
+# Documents the party finds — a letter, a notice, a journal page, a scroll, a
+# scrap of paper, or an image from <campaign>/media/. Shown in the story as a
+# sheet of paper and kept in <campaign>/handouts.json so the players can read
+# them again from the Documents list, this session and the next.
+
+_HANDOUT_KINDS = ("letter", "notice", "journal", "scroll", "note")
+_HANDOUT_TITLE_MAX, _HANDOUT_BODY_MAX, _HANDOUT_KEEP = 120, 6000, 300
+_handouts_lock = threading.Lock()
+
+
+def _handouts_file() -> str:
+    """The active campaign's handouts.json; the runtime dir when no campaign is loaded."""
+    camp = re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]
+    if camp:
+        try:
+            return str(_find_campaign(camp) / "handouts.json")
+        except Exception:
+            pass
+    return rt("handouts.json")
+
+
+def _read_handouts() -> list:
+    try:
+        with open(_handouts_file(), encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return []
+    return [h for h in data if isinstance(h, dict) and h.get("id")] if isinstance(data, list) else []
+
+
+def _write_handouts(items: list) -> None:
+    path = _handouts_file()
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(items[-_HANDOUT_KEEP:], f, ensure_ascii=False, indent=1)
+    os.replace(tmp, path)
+
+
+def _show_handout(entry: dict) -> None:
+    """Put a handout in the story (and its replay) and on every screen."""
+    log_entry: dict = {"handout": entry}
+    if _active_campaign():
+        log_entry["_camp"] = _active_campaign()
+    with _text_log_lock:
+        _text_log.append(log_entry)
+    with _tail_lock:
+        _tail_buffer.append(log_entry)
+    _persist_log()
+    _persist_tail()
+    _broadcast({"handout": entry})
+
+
+def _clean_handout_text(value, limit: int) -> str:
+    # The DM's own words: keep punctuation and line breaks, drop control characters.
+    return re.sub(r"[\x00-\x09\x0b-\x1f\x7f]", "", str(value or ""))[:limit].strip()
+
+
+@app.route("/handout", methods=["POST"])
+def handout():
+    """Hand the party a document, or show an old one again.
+
+    New:     {"title": "...", "body": "...", "kind": "letter", "from": "...", "image": "file.png"}
+    Again:   {"id": "a1b2c3d4"}
+    """
+    if not _token_ok():
+        return "Forbidden", 403
+    data = request.get_json(force=True, silent=True) or {}
+
+    again = str(data.get("id", "")).strip()
+    if again:
+        with _handouts_lock:
+            entry = next((h for h in _read_handouts() if h["id"] == again), None)
+        if entry is None:
+            return jsonify({"error": "unknown handout"}), 404
+        _show_handout(entry)
+        return jsonify(entry), 200
+
+    title = " ".join(_clean_handout_text(data.get("title"), _HANDOUT_TITLE_MAX).split())
+    body = _clean_handout_text(data.get("body"), _HANDOUT_BODY_MAX)
+    image = str(data.get("image", "")).strip()
+    kind = str(data.get("kind", "")).strip().lower() or "letter"
+    if kind not in _HANDOUT_KINDS:
+        return jsonify({"error": "unknown kind", "kinds": list(_HANDOUT_KINDS)}), 400
+    if not title or not (body or image):
+        return jsonify({"error": "a handout needs a title and a body or an image"}), 400
+    if image:
+        d = _media_dir()
+        if not d or not _MEDIA_NAME_RE.match(image) or not os.path.isfile(os.path.join(d, image)):
+            return jsonify({"error": "unknown media file"}), 400
+
+    entry = {
+        "id": secrets.token_hex(4),
+        "title": title,
+        "kind": kind,
+        "body": body,
+        "from": " ".join(_clean_handout_text(data.get("from"), 80).split()),
+        "image": image,
+        "ts": _time.time(),
+    }
+    with _handouts_lock:
+        items = _read_handouts()
+        items.append(entry)
+        try:
+            _write_handouts(items)
+        except OSError as e:
+            return jsonify({"error": f"could not save the handout: {e}"}), 500
+    _show_handout(entry)
+    return jsonify(entry), 200
+
+
+@app.route("/handout/<handout_id>", methods=["DELETE"])
+def handout_delete(handout_id):
+    """Take a handout out of the Documents list (the story keeps what was shown)."""
+    if not _token_ok():
+        return "Forbidden", 403
+    with _handouts_lock:
+        items = _read_handouts()
+        kept = [h for h in items if h["id"] != handout_id]
+        if len(kept) == len(items):
+            return jsonify({"error": "unknown handout"}), 404
+        try:
+            _write_handouts(kept)
+        except OSError as e:
+            return jsonify({"error": f"could not save: {e}"}), 500
+    _broadcast({"handout_removed": handout_id})
+    return "", 204
+
+
+@app.route("/handouts")
+def handouts_list():
+    """Every handout of the active campaign, oldest first. Players may read them."""
+    if not _token_ok():
+        return "Forbidden", 403
+    with _handouts_lock:
+        return jsonify(_read_handouts()), 200
 
 
 def _pc_slug(name: str) -> str:
