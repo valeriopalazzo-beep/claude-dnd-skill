@@ -758,6 +758,32 @@ Re-sending a map with the same title (or `--name <id>`) marks the older copy in 
 
 Doors, known traps and stairs stay marked on top of painted art; tokens always do. Art is cached per terrain + `art:` line, so re-sends with moved tokens are instant — keep `art:` identical for the same place. New terrain: the plain map is shown immediately, the art version supersedes it when ready (run it with `run_in_background: true`). Any art failure leaves the plain map (stderr line, exit 0).
 
+## Progress Clocks — `display/clock.py`
+
+A circle cut in segments that fills as something gets closer: a ritual, the guards' patience, a collapsing bridge, the party's own progress on a long task. Every screen shows the public ones — small in the top bar, large in the **Clocks** panel — and a toast says when one moves.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/display/clock.py add "Il rito della Confraternita" 6 --kind danger --note "alla luna piena"
+python3 ${CLAUDE_SKILL_DIR}/display/clock.py add "Scassinare il caveau" 4 --kind goal
+python3 ${CLAUDE_SKILL_DIR}/display/clock.py add "I rinforzi arrivano" 8 --secret     # yours alone
+python3 ${CLAUDE_SKILL_DIR}/display/clock.py tick "rito"          # one more segment; tick "rito" 2 for two
+python3 ${CLAUDE_SKILL_DIR}/display/clock.py back "rito"          # the party bought time
+python3 ${CLAUDE_SKILL_DIR}/display/clock.py set "rito" 5
+python3 ${CLAUDE_SKILL_DIR}/display/clock.py reveal "rinforzi"    # the players see it from now on (hide: back to secret)
+python3 ${CLAUDE_SKILL_DIR}/display/clock.py remove "caveau"
+python3 ${CLAUDE_SKILL_DIR}/display/clock.py list                 # all of them, the secret ones too
+python3 ${CLAUDE_SKILL_DIR}/display/clock.py clear
+```
+
+- 2 to 12 segments. Kinds: `danger` (red — something bad is coming), `goal` (green — the party's progress), `time` (a plain countdown; the default). Italian words work (`pericolo`, `obiettivo`, `tempo`).
+- A name can be cut to any part that means one clock only. A wrong name or number changes nothing.
+- Clocks live in `<campaign>/clocks.json` and are still there next session. `--campaign NAME` (before the subcommand) works on another campaign.
+- When the last segment fills the script prints `★ FULL`: **what the clock was counting down to happens now** — narrate it, then `remove` the clock.
+
+**When to use one:** whenever the fiction has "how long before…?" or "how close are we to…?" and the answer is not a date on the calendar. Size it by how many setbacks or steps it should take: 4 for something close, 6 for a scene-long pressure, 8 for a session-long one. Tick a danger clock when the party fails a roll, wastes time or makes noise — say why as you narrate — and a goal clock when they make real progress. Keep a clock `--secret` while the characters have no way to know it is running; reveal it the moment they do. Two or three running at once is plenty.
+
+---
+
 ## Region Map — `display/region_map.py`
 
 The map of the region, drawn on parchment as the party discovers it: places visited or heard of, roads with the days of travel, and a flag where the party is. Saved in `<campaign>/region.json`; every screen has it one tap away, and tapping a place shows what the party knows about it and how many days away it is. No image backend needed.

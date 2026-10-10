@@ -496,6 +496,8 @@ _DM_ENDPOINTS = {
     "set_scene",
     # Documents the party finds: the DM hands them out, everyone may read them.
     "handout", "handout_delete",
+    # Progress clocks: clock.py moves them, everyone watches.
+    "clocks_changed",
     # Opening an initiative roll; rolling in it is the players'.
     "initiative_open", "initiative_cancel",
 }
@@ -2582,6 +2584,39 @@ def region_changed():
     if not _token_ok():
         return "Forbidden", 403
     _broadcast({"region_changed": _time.time()})
+    return "", 204
+
+
+# ─── Progress clocks (clock.py) ──────────────────────────────────────────────
+# clock.py keeps the clocks in <campaign>/clocks.json. Every screen shows the
+# ones that are not secret; POST /clocks says they changed.
+import clock as _clocks
+
+
+def _public_clocks() -> list:
+    camp = re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]
+    if not camp:
+        return []
+    try:
+        return _clocks.public_view(_clocks.load(str(_find_campaign(camp) / "clocks.json")))
+    except Exception:
+        return []
+
+
+@app.route("/clocks", methods=["GET"])
+def clocks_get():
+    return jsonify(_public_clocks()), 200
+
+
+@app.route("/clocks", methods=["POST"])
+def clocks_changed():
+    """clock.py moved a clock: send every screen the new list, and what moved."""
+    data = request.get_json(silent=True) or {}
+    payload = {"clocks": _public_clocks()}
+    event = data.get("event")
+    if isinstance(event, dict) and event.get("name"):
+        payload["clock_event"] = {k: event.get(k) for k in ("id", "name", "filled", "segments", "delta", "full", "new")}
+    _broadcast(payload)
     return "", 204
 
 

@@ -533,6 +533,12 @@ This fires a green-bordered block in the companion feed showing each character's
 
 ---
 
+## Clocks
+
+When the fiction has a countdown — a ritual, an alarm about to be raised, a flood, a long job the party is working through — put it on the table with `display/clock.py add "Name" <segments> --kind danger|goal|time` and `tick` it as the scene moves: everyone sees how close it is, and that is where the tension comes from. A full clock means it happens **now**. Keep it `--secret` until the characters could know. Syntax and how to size one: `SKILL-scripts.md` → *Progress Clocks*.
+
+---
+
 ## Images & Maps
 
 Only when the display is running. Syntax: `SKILL-scripts.md` → *Battle Maps* / *Region Map* / *Generated Images*.

@@ -1346,6 +1346,41 @@
   #region-detail .region-meta{ display:block; font-size:14.5px; font-weight:700; color:var(--ln-accent, #f2b544); }
   #region-detail p{ margin:5px 0 0; color:var(--ln-text-muted, #cdbfa6); }
 
+  /* ══ Progress clocks (clock.py) — a ritual nearing its end, the guards closing in ══ */
+  .clock-pie{ display:block; flex:none; }
+  .clock-pie path{ stroke:var(--ln-surface, #1d1813); stroke-width:3; }
+  .clock-pie .off{ fill:rgba(255,255,255,.12); }
+  .clock-pie .on{ fill:var(--ln-accent, #f2b544); }
+  .clock-kind-danger .clock-pie .on{ fill:#e2574c; }
+  .clock-kind-goal .clock-pie .on{ fill:#6cc070; }
+  :root[data-theme="light"] .clock-pie .off{ fill:rgba(0,0,0,.14); }
+  #clock-chip{ position:fixed; top:78px; right:32px; z-index:6; display:flex; align-items:center; gap:6px; padding:5px 10px;
+    border-radius:999px; cursor:pointer; background:rgba(0,0,0,.35); border:1px solid rgba(180,140,60,.35); color:inherit; font:inherit; }
+  #clock-chip[hidden]{ display:none; }
+  #clock-chip.moved{ animation:clock-moved 1.1s ease-in-out 3; }
+  @keyframes clock-moved{ 50%{ transform:scale(1.14); box-shadow:0 0 0 8px rgba(242,181,68,.25); } }
+  @media (prefers-reduced-motion: reduce){ #clock-chip.moved{ animation:none; } }
+  body.input-only #clock-chip{ display:none; }
+  :root[data-skin="lanterna"] body.ln-on #ln-top #clock-chip{ position:static; padding:7px 12px; background:var(--ln-surface);
+    border:1px solid var(--ln-line); color:var(--ln-text); }
+  #ln-clocks-slot{ display:contents; }
+  #clock-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
+    align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  #clock-modal.open{ display:flex; }
+  #clock-panel{ width:min(520px, 100%); margin:auto 0; color:var(--ln-text, #ECE4D2); font-family:'Alegreya Sans','Syne',sans-serif; }
+  #clock-head{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  #clock-head h2{ flex:1; min-width:0; margin:0; font-size:22px; line-height:1.15; }
+  #clock-close{ flex:none; width:40px; height:40px; border-radius:999px; cursor:pointer; font-size:16px;
+    background:rgba(0,0,0,.35); color:inherit; border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #clock-list{ display:flex; flex-direction:column; gap:10px; }
+  .clock-item{ display:flex; align-items:center; gap:16px; padding:13px 16px; border-radius:12px;
+    background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
+  .clock-item.full{ border-color:var(--ln-accent, #f2b544); }
+  .clock-item b{ display:block; font-size:19px; line-height:1.2; }
+  .clock-item span{ display:block; font-size:15px; font-weight:700; color:var(--ln-accent, #f2b544); }
+  .clock-item p{ margin:4px 0 0; font-size:15.5px; color:var(--ln-text-muted, #cdbfa6); }
+  .clock-empty{ margin:30px 8px; text-align:center; font-size:16px; color:var(--ln-text-muted, #b9ab92); }
+
   /* ── Calendar (calendar.py) — the month, the moon, the weather, what is coming ── */
   #world-clock.has-cal{ pointer-events:auto; cursor:pointer; }
   :root[data-skin="lanterna"] body.ln-on #ln-top #world-clock.has-cal{ cursor:pointer; }
@@ -4891,6 +4926,7 @@
     <button class="ph-set-opt" id="ph-theme-opt" type="button"><span data-i18n="ph.theme">Theme</span><strong id="ph-theme-val">Dark</strong></button>
     <button class="ph-set-opt" id="ph-region-opt" type="button" hidden><span data-i18n="region.title">Region map</span><strong>🧭</strong></button>
     <button class="ph-set-opt" id="ph-cal-opt" type="button" hidden><span data-i18n="cal.title">Calendar</span><strong>📅</strong></button>
+    <button class="ph-set-opt" id="ph-clock-opt" type="button" hidden><span data-i18n="clock.title">Clocks</span><strong>◔</strong></button>
     <label class="ph-set-opt ph-set-row" id="ph-skin-opt"><span data-i18n="ph.style">Style</span><select id="ph-skin-select" class="ph-set-select" aria-label="Display style"><option value="vellum">Vellum</option><option value="editorial">Editorial</option><option value="lanterna">Lanterna</option></select></label>
     <label class="ph-set-opt ph-set-row" id="ph-lang-opt"><span data-i18n="settings.language">Language</span><select id="ph-lang-select" class="ph-set-select" aria-label="Display language" data-i18n-aria="settings.language"></select></label>
     <button class="ph-set-opt" id="ph-sfx-opt" type="button"><span data-i18n="settings.sfx">Sound Effects</span><strong id="ph-sfx-val">On</strong></button>
@@ -5058,6 +5094,18 @@
   </div>
 </div>
 
+<!-- Progress clocks: the ones the players may see, from clock.py -->
+<button id="clock-chip" type="button" title="Clocks" aria-label="Clocks" data-i18n-title="clock.title" data-i18n-aria="clock.title" hidden></button>
+<div id="clock-modal">
+  <div id="clock-panel" role="dialog" aria-labelledby="clock-title">
+    <div id="clock-head">
+      <h2 id="clock-title" data-i18n="clock.title">Clocks</h2>
+      <button id="clock-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
+    </div>
+    <div id="clock-list"></div>
+  </div>
+</div>
+
 <!-- Calendar: the month the party is living, from calendar.py -->
 <div id="cal-modal">
   <div id="cal-panel" role="dialog" aria-labelledby="cal-title">
@@ -5114,6 +5162,7 @@
   <symbol id="ln-i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
   <symbol id="ln-i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></symbol>
   <symbol id="ln-i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="ln-i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2v10l7 7"/></symbol>
   <symbol id="ln-i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
   <symbol id="ln-i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36z"/></symbol>
   <symbol id="ln-i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
@@ -5148,6 +5197,7 @@
       <div class="ln-h" data-i18n="ln.group.world">World</div>
       <button class="ln-item" type="button" data-ln-go="missioni" data-phone title="Quests" data-i18n-title="ln.view.missioni"><svg class="ln-i"><use href="#ln-i-quest"/></svg><span class="ln-lbl" data-i18n="ln.view.missioni">Quests</span><span class="ln-badge" id="ln-badge-quests" hidden></span></button>
       <button class="ln-item" type="button" id="ln-region" title="Region map" data-i18n-title="region.title" hidden><svg class="ln-i"><use href="#ln-i-compass"/></svg><span class="ln-lbl" data-i18n="region.title">Region map</span><span class="ln-badge" id="ln-badge-region" data-i18n="region.new" hidden>New</span></button>
+      <button class="ln-item" type="button" id="ln-clocks" title="Clocks" data-i18n-title="clock.title" hidden><svg class="ln-i"><use href="#ln-i-clock"/></svg><span class="ln-lbl" data-i18n="clock.title">Clocks</span></button>
       <button class="ln-item" type="button" id="ln-cal" title="Calendar" data-i18n-title="cal.title" hidden><svg class="ln-i"><use href="#ln-i-calendar"/></svg><span class="ln-lbl" data-i18n="cal.title">Calendar</span></button>
       <button class="ln-item" type="button" data-ln-go="fazioni" title="Factions" data-i18n-title="ln.view.fazioni"><svg class="ln-i"><use href="#ln-i-flag"/></svg><span class="ln-lbl" data-i18n="ln.view.fazioni">Factions</span></button>
       <button class="ln-item" type="button" id="ln-handouts" title="Documents" data-i18n-title="handout.title"><svg class="ln-i"><use href="#ln-i-mail"/></svg><span class="ln-lbl" data-i18n="handout.title">Documents</span><span class="ln-badge" id="ln-badge-handouts" hidden></span></button>
@@ -5168,6 +5218,7 @@
   <span class="ln-spacer"></span>
   <button id="ln-combat" class="ln-pill ln-combat" type="button" data-ln-go="personaggi" hidden><svg class="ln-i"><use href="#ln-i-swords"/></svg><span id="ln-combat-txt"></span></button>
   <button id="ln-whisper" class="ln-icon-btn" type="button" title="Secret notes" aria-label="Secret notes" data-i18n-title="whisper.title" data-i18n-aria="whisper.title" hidden>🤫<span class="whisper-count" hidden></span></button>
+  <div id="ln-clocks-slot"></div>
   <div id="ln-clock-slot"></div>
   <button id="ln-theme" class="ln-icon-btn" type="button" aria-label="Change theme" data-i18n-aria="ln.theme"><svg class="ln-i"><use href="#ln-i-sun"/></svg></button>
   <button id="ln-me-chip" class="ln-pill" type="button" data-ln-go="scheda" hidden></button>
@@ -5215,6 +5266,7 @@
         <button class="ln-item" type="button" data-ln-go="fazioni"><svg class="ln-i"><use href="#ln-i-flag"/></svg><span class="ln-lbl" data-i18n="ln.view.fazioni">Factions</span></button>
         <button class="ln-item" type="button" data-ln-proxy="ln-handouts"><svg class="ln-i"><use href="#ln-i-mail"/></svg><span class="ln-lbl" data-i18n="handout.title">Documents</span></button>
         <button class="ln-item" type="button" id="ln-region-more" data-ln-proxy="ln-region" hidden><svg class="ln-i"><use href="#ln-i-compass"/></svg><span class="ln-lbl" data-i18n="region.title">Region map</span></button>
+        <button class="ln-item" type="button" id="ln-clocks-more" data-ln-proxy="ln-clocks" hidden><svg class="ln-i"><use href="#ln-i-clock"/></svg><span class="ln-lbl" data-i18n="clock.title">Clocks</span></button>
         <button class="ln-item" type="button" id="ln-cal-more" data-ln-proxy="ln-cal" hidden><svg class="ln-i"><use href="#ln-i-calendar"/></svg><span class="ln-lbl" data-i18n="cal.title">Calendar</span></button>
         <button class="ln-item" type="button" data-ln-go="regole"><svg class="ln-i"><use href="#ln-i-rules"/></svg><span class="ln-lbl" data-i18n="ln.view.regole">Rules</span></button>
         <button class="ln-item" type="button" data-ln-go="impostazioni"><svg class="ln-i"><use href="#ln-i-settings"/></svg><span class="ln-lbl" data-i18n="ln.view.impostazioni">Settings</span></button>
@@ -10337,6 +10389,7 @@ function connect() {
       }
     }
     if ('initiative' in payload && typeof window._onInitiative === 'function') window._onInitiative(payload.initiative);
+    if ((payload.clocks || payload.clock_event) && typeof window._onClocks === 'function') window._onClocks(payload.clocks, payload.clock_event);
     if (payload.death_save && typeof window._onDeathSaveResult === 'function') window._onDeathSaveResult(payload.death_save);
     if (payload.effect_expired) {
       const ev = payload.effect_expired;
@@ -10536,6 +10589,84 @@ connect();
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   refresh();
+})();
+
+// ── Progress clocks (clock.py) ────────────────────────────────────────
+// A clock is a circle of `segments` wedges with the first `filled` painted.
+// _clockPie only draws; the IIFE below keeps the chip in the top bar and the
+// Clocks panel in step with what the server sends.
+function _clockPie(segments, filled, size) {
+  const n = Math.max(2, Math.min(24, segments | 0));
+  const f = Math.max(0, Math.min(n, filled | 0));
+  const c = 50, r = 46, at = i => (i / n) * 2 * Math.PI - Math.PI / 2;
+  const pt = a => (c + r * Math.cos(a)).toFixed(2) + ',' + (c + r * Math.sin(a)).toFixed(2);
+  let out = `<svg class="clock-pie" viewBox="0 0 100 100" width="${size}" height="${size}" aria-hidden="true">`;
+  for (let i = 0; i < n; i++) {
+    out += `<path class="${i < f ? 'on' : 'off'}" d="M${c},${c} L${pt(at(i))} A${r},${r} 0 0 1 ${pt(at(i + 1))} Z"/>`;
+  }
+  return out + '</svg>';
+}
+// ── end clock drawing ──
+
+(function _initClocks() {
+  const modal = document.getElementById('clock-modal');
+  const chip = document.getElementById('clock-chip');
+  if (!modal || !chip) return;
+  const list = document.getElementById('clock-list');
+  let clocks = [];
+
+  function render() {
+    const has = clocks.length > 0;
+    ['ln-clocks', 'ln-clocks-more', 'ph-clock-opt'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = !has; });
+    chip.hidden = !has;
+    chip.innerHTML = clocks.slice(0, 4).map(k => `<span class="clock-kind-${_esc(k.kind)}" title="${_esc(k.name)}">${_clockPie(k.segments, k.filled, 22)}</span>`).join('')
+      + (clocks.length > 4 ? `<span>+${clocks.length - 4}</span>` : '');
+    list.textContent = '';
+    if (!has) {
+      const p = document.createElement('p');
+      p.className = 'clock-empty';
+      p.textContent = _t('clock.empty', null, 'No clocks running.');
+      list.appendChild(p);
+      return;
+    }
+    clocks.forEach(k => {
+      const item = document.createElement('div');
+      item.className = 'clock-item clock-kind-' + k.kind + (k.full ? ' full' : '');
+      item.innerHTML = _clockPie(k.segments, k.filled, 84);
+      const text = document.createElement('div');
+      const name = document.createElement('b');
+      name.textContent = k.name;
+      const meta = document.createElement('span');
+      meta.textContent = _t('clock.kind.' + k.kind, null, k.kind) + ' · '
+        + (k.full ? _t('clock.fullWord', null, 'it is time') : _t('clock.count', { n: k.filled, total: k.segments }, k.filled + ' of ' + k.segments));
+      text.append(name, meta);
+      if (k.note) { const p = document.createElement('p'); p.textContent = k.note; text.appendChild(p); }
+      item.appendChild(text);
+      list.appendChild(item);
+    });
+  }
+
+  window._onClocks = function (next, event) {
+    if (Array.isArray(next)) { clocks = next; render(); }
+    if (!event || !event.name) return;
+    const text = event.full ? _t('clock.full', { name: event.name }, event.name + ': it is time!')
+      : event.new ? _t('clock.new', { name: event.name }, 'New clock: ' + event.name)
+      : _t('clock.tick', { name: event.name, n: event.filled, total: event.segments },
+           event.name + ': ' + event.filled + ' of ' + event.segments);
+    _showToast((event.full ? '⏰ ' : '◔ ') + text, event.full ? 7000 : 4500);
+    chip.classList.remove('moved');
+    void chip.offsetWidth;                      // restart the animation
+    chip.classList.add('moved');
+    if (event.full && navigator.vibrate) navigator.vibrate([120, 80, 120]);
+  };
+
+  const open = () => { modal.classList.add('open'); render(); };
+  const close = () => modal.classList.remove('open');
+  ['clock-chip', 'ln-clocks', 'ph-clock-opt'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('click', open); });
+  document.getElementById('clock-close').addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  fetch('/clocks').then(r => r.ok ? r.json() : []).then(d => window._onClocks(d)).catch(() => {});
 })();
 
 // ── Calendar (calendar.py) ────────────────────────────────────────────
@@ -11754,7 +11885,7 @@ function _initDicePad() {
   const ADOPT = [
     ['sidebar', panelBody], ['sheet-modal', panelBody], ['srd-modal', panelBody],
     ['dice-drawer', panelBody], ['audio-controls', panelBody],
-    ['world-clock', $id('ln-clock-slot')],
+    ['world-clock', $id('ln-clock-slot')], ['clock-chip', $id('ln-clocks-slot')],
     ['dm-help-btn', $id('ln-help-slot')], ['phone-mode-btn', $id('ln-phone-slot')],
   ];
   const AV_COLORS = ['#3f8fd6', '#c9832e', '#8d5bc4', '#2f9e7a', '#c2465a', '#6d8a2b'];
