@@ -204,6 +204,8 @@
   "faction.known": "Cosa sappiamo",
   "turn.round": "Round",
   "turn.initiative": "Iniziativa",
+  "turn.yours": "Tocca a te!",
+  "turn.next": "Preparati: sei il prossimo",
 
   "sheet.close": "Chiudi (Esc)",
   "sheet.xp": "PE  {cur} / {next}",

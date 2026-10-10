@@ -3741,6 +3741,25 @@
     transition:opacity .22s ease, transform .22s ease; }
   #toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
+  /* ══ "Your turn" banner — a few seconds, and taps pass through to the tabs under it ══ */
+  #turn-banner{
+    position:fixed; left:50%; top:calc(10px + env(safe-area-inset-top, 0px));
+    transform:translateX(-50%) translateY(-160%);
+    z-index:210; max-width:86vw; white-space:nowrap;
+    background:var(--e-accent, #FF7A2D); color:#17110a;
+    border:0; border-radius:999px; box-shadow:0 10px 32px rgba(0,0,0,.45);
+    font-family:'Syne',sans-serif; font-weight:800; font-size:16px; letter-spacing:.02em;
+    padding:11px 22px; opacity:0; pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease; }
+  #turn-banner.show{ opacity:1; transform:translateX(-50%) translateY(0);
+    animation:turn-banner-pulse 1.3s ease-in-out 4; }
+  @keyframes turn-banner-pulse{
+    0%,100%{ box-shadow:0 10px 32px rgba(0,0,0,.45), 0 0 0 0 rgba(255,122,45,.55); }
+    50%{ box-shadow:0 10px 32px rgba(0,0,0,.45), 0 0 0 14px rgba(255,122,45,0); } }
+  :root[data-skin="lanterna"] #turn-banner{ font-family:'Alegreya Sans',sans-serif; font-size:18px;
+    background:var(--ln-accent, #FF7A2D); }
+  @media (prefers-reduced-motion: reduce){ #turn-banner.show{ animation:none; } }
+
   /* ══ Settings: Text Size stepper + Narration slider (both skins) ══ */
   .ts-stepper{ display:inline-flex; align-items:center; gap:8px; }
   .ts-btn{
@@ -4597,6 +4616,7 @@
 
 <!-- Transient toast (DM Help status, etc.) -->
 <div id="toast" role="status" aria-live="polite"></div>
+<div id="turn-banner" role="alert"></div>
 
 <!-- Phone-only display-settings popover — lets each phone pick its own Theme / Style -->
 <div id="phone-settings">
@@ -7613,11 +7633,14 @@ function updateStats(stats) {
     _musicSetCombat(!!stats.turn_order);
     if (!stats.turn_order) {
       turnSection.style.display = 'none';
+      _currentTurnOrder = null;
+      _turnUpdate(null, null);
     } else {
       const to = stats.turn_order;
       // Merge with existing if partial (only current or only round supplied)
       const existingTo = _currentTurnOrder || {};
       const merged = Object.assign({}, existingTo, to);
+      _turnUpdate(_currentTurnOrder, merged);
       _currentTurnOrder = merged;
 
       turnSection.style.display = '';
@@ -7639,6 +7662,84 @@ function updateStats(stats) {
 }
 
 let _currentTurnOrder = null;
+
+// ── "Your turn" alert ───────────────────────────────────────────────
+// A browser bound to one character (PIN login, or the phone view's ?char=)
+// is told when the initiative tracker reaches that character, and one step
+// earlier that it is next. _turnAlertFor only decides; _turnUpdate does the
+// buzzing, the chime (follows the Sound Effects switch) and the banner.
+function _turnSame(a, b) {
+  return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+}
+function _turnAlertFor(me, prev, cur) {
+  if (!me || !cur || !cur.current) return '';
+  const moved = !prev || !_turnSame(prev.current, cur.current) || (prev.round ?? 1) !== (cur.round ?? 1);
+  if (!moved) return '';                        // a re-send of the same turn is not news
+  if (_turnSame(cur.current, me)) return 'now';
+  const order = cur.order || [];
+  const i = order.findIndex(n => _turnSame(n, cur.current));
+  // With two combatants "you're next" would fire on every enemy turn.
+  if (i >= 0 && order.length > 2 && _turnSame(order[(i + 1) % order.length], me)) return 'next';
+  return '';
+}
+// ── end "Your turn" decision ──
+
+function _turnMine() {
+  const q = new URLSearchParams(location.search);
+  return (window._LOGIN_CHAR || q.get('char') || q.get('character') || '').trim();
+}
+function _turnChime() {
+  if (!_sfxOn) return;
+  try {
+    const ctx = _audioCtx(), t0 = ctx.currentTime;
+    [[659.25, 0], [987.77, 0.16]].forEach(([freq, at]) => {
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.type = 'sine'; osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, t0 + at);
+      gain.gain.exponentialRampToValueAtTime(0.22, t0 + at + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + at + 0.5);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(t0 + at); osc.stop(t0 + at + 0.55);
+    });
+  } catch (_) {}
+}
+// A sleeping phone gets no alert: keep the screen on while a fight runs.
+let _turnWake = null;
+async function _turnKeepAwake(on) {
+  try {
+    if (on && !_turnWake && navigator.wakeLock && document.visibilityState === 'visible') {
+      _turnWake = await navigator.wakeLock.request('screen');
+      _turnWake.addEventListener('release', () => { _turnWake = null; });
+    } else if (!on && _turnWake) {
+      const lock = _turnWake; _turnWake = null; await lock.release();
+    }
+  } catch (_) { _turnWake = null; }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && _currentTurnOrder && _turnMine()) _turnKeepAwake(true);
+});
+let _turnBannerTimer = null;
+function _turnUpdate(prev, cur) {
+  const me = _turnMine();
+  if (!me) return;                              // the shared table screen is nobody's turn
+  const banner = document.getElementById('turn-banner');
+  _turnKeepAwake(!!cur);
+  const kind = _turnAlertFor(me, prev, cur);
+  if (kind === 'now') {
+    if (navigator.vibrate) navigator.vibrate([120, 70, 120, 70, 260]);
+    _turnChime();
+    if (banner) {
+      banner.textContent = _t('turn.yours', null, 'Your turn!');
+      banner.classList.add('show');
+      clearTimeout(_turnBannerTimer);
+      _turnBannerTimer = setTimeout(() => banner.classList.remove('show'), 6000);
+    }
+  } else if (kind === 'next') {
+    if (navigator.vibrate) navigator.vibrate(60);
+    _showToast(_t('turn.next', null, "Get ready — you're up next"), 4500);
+  }
+  if (banner && !(cur && _turnSame(cur.current, me))) banner.classList.remove('show');
+}
 
 // ═══════════════════════════════════════════════════════════════════
 // AUDIO — SFX only. Python detects triggers from narration text and

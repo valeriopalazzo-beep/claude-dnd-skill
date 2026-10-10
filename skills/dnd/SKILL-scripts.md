@@ -269,7 +269,7 @@ If `check_input.py` returns output, prepend it to the player's terminal input wh
 - Timed effect starts → `--effect-start "NAME:SPELL:DURATION[:conc]"` bundled with narration send
 - Timed effect ends → `--effect-end "NAME:SPELL"` bundled with narration send
 - Faction standing changes → `--factions '[...]'` (full replace)
-- Combat start → `--turn-order`; each turn → `--turn-current`; end → `--turn-clear`
+- Combat start → `--turn-order`; each turn → `--turn-current`; end → `--turn-clear`. Push `--turn-current` the moment a turn starts, not after narrating it: it is what buzzes that player's phone ("your turn") and warns the next one.
 - Level up → push updated full stats
 - Long rest → restore HP, hit dice, spell slots, second wind; push `--world-time` with updated time
 - Any rest or time advance → push `--world-time`
