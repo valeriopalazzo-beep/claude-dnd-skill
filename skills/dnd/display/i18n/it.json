@@ -222,6 +222,8 @@
   "region.days": "{n} giorni da qui",
   "region.day1": "1 giorno da qui",
   "region.noroute": "Nessuna strada nota da qui",
+  "book.title": "Libro della campagna",
+  "book.ready": "Il libro della campagna è pronto da scaricare",
   "comp.title": "Compagni",
   "comp.all": "Tutti i compagni",
   "comp.empty": "Nessuno viaggia con voi.",

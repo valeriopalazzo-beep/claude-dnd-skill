@@ -4998,6 +4998,7 @@
     <button class="ph-set-opt" id="ph-theme-opt" type="button"><span data-i18n="ph.theme">Theme</span><strong id="ph-theme-val">Dark</strong></button>
     <button class="ph-set-opt" id="ph-region-opt" type="button" hidden><span data-i18n="region.title">Region map</span><strong>🧭</strong></button>
     <button class="ph-set-opt" id="ph-cal-opt" type="button" hidden><span data-i18n="cal.title">Calendar</span><strong>📅</strong></button>
+    <button class="ph-set-opt" id="ph-book-opt" type="button" hidden><span data-i18n="book.title">Campaign book</span><strong>📕</strong></button>
     <button class="ph-set-opt" id="ph-comp-opt" type="button" hidden><span data-i18n="comp.title">Companions</span><strong>🐾</strong></button>
     <button class="ph-set-opt" id="ph-beast-opt" type="button" hidden><span data-i18n="beast.title">Bestiary</span><strong>📖</strong></button>
     <button class="ph-set-opt" id="ph-clock-opt" type="button" hidden><span data-i18n="clock.title">Clocks</span><strong>◔</strong></button>
@@ -5265,6 +5266,7 @@
   <symbol id="ln-i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2v10l7 7"/></symbol>
   <symbol id="ln-i-beast" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M9 8l1.5 2L12 8l1.5 2L15 8"/></symbol>
   <symbol id="ln-i-paw" viewBox="0 0 24 24"><circle cx="6.5" cy="10" r="2"/><circle cx="10" cy="5.5" r="2"/><circle cx="14" cy="5.5" r="2"/><circle cx="17.5" cy="10" r="2"/><path d="M12 12c-3 0-5.5 2.6-5.5 5.2 0 1.7 1.3 2.8 2.9 2.8 1 0 1.7-.5 2.6-.5s1.6.5 2.6.5c1.6 0 2.9-1.1 2.9-2.8C17.500 14.6 15 12 12 12z"/></symbol>
+  <symbol id="ln-i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M12 7v6m0 0-2.5-2.5M12 13l2.5-2.5"/></symbol>
   <symbol id="ln-i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
   <symbol id="ln-i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36z"/></symbol>
   <symbol id="ln-i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
@@ -5305,6 +5307,7 @@
       <button class="ln-item" type="button" id="ln-cal" title="Calendar" data-i18n-title="cal.title" hidden><svg class="ln-i"><use href="#ln-i-calendar"/></svg><span class="ln-lbl" data-i18n="cal.title">Calendar</span></button>
       <button class="ln-item" type="button" data-ln-go="fazioni" title="Factions" data-i18n-title="ln.view.fazioni"><svg class="ln-i"><use href="#ln-i-flag"/></svg><span class="ln-lbl" data-i18n="ln.view.fazioni">Factions</span></button>
       <button class="ln-item" type="button" id="ln-handouts" title="Documents" data-i18n-title="handout.title"><svg class="ln-i"><use href="#ln-i-mail"/></svg><span class="ln-lbl" data-i18n="handout.title">Documents</span><span class="ln-badge" id="ln-badge-handouts" hidden></span></button>
+      <button class="ln-item" type="button" id="ln-book" title="Campaign book" data-i18n-title="book.title" hidden><svg class="ln-i"><use href="#ln-i-book"/></svg><span class="ln-lbl" data-i18n="book.title">Campaign book</span></button>
       <button class="ln-item" type="button" data-ln-go="regole" title="Rules" data-i18n-title="ln.view.regole"><svg class="ln-i"><use href="#ln-i-rules"/></svg><span class="ln-lbl" data-i18n="ln.view.regole">Rules</span></button>
     </div>
     <div class="ln-group">
@@ -5373,6 +5376,7 @@
         <button class="ln-item" type="button" id="ln-clocks-more" data-ln-proxy="ln-clocks" hidden><svg class="ln-i"><use href="#ln-i-clock"/></svg><span class="ln-lbl" data-i18n="clock.title">Clocks</span></button>
         <button class="ln-item" type="button" id="ln-beast-more" data-ln-proxy="ln-beast" hidden><svg class="ln-i"><use href="#ln-i-beast"/></svg><span class="ln-lbl" data-i18n="beast.title">Bestiary</span></button>
         <button class="ln-item" type="button" id="ln-comp-more" data-ln-proxy="ln-comp" hidden><svg class="ln-i"><use href="#ln-i-paw"/></svg><span class="ln-lbl" data-i18n="comp.title">Companions</span></button>
+        <button class="ln-item" type="button" id="ln-book-more" data-ln-proxy="ln-book" hidden><svg class="ln-i"><use href="#ln-i-book"/></svg><span class="ln-lbl" data-i18n="book.title">Campaign book</span></button>
         <button class="ln-item" type="button" id="ln-cal-more" data-ln-proxy="ln-cal" hidden><svg class="ln-i"><use href="#ln-i-calendar"/></svg><span class="ln-lbl" data-i18n="cal.title">Calendar</span></button>
         <button class="ln-item" type="button" data-ln-go="regole"><svg class="ln-i"><use href="#ln-i-rules"/></svg><span class="ln-lbl" data-i18n="ln.view.regole">Rules</span></button>
         <button class="ln-item" type="button" data-ln-go="impostazioni"><svg class="ln-i"><use href="#ln-i-settings"/></svg><span class="ln-lbl" data-i18n="ln.view.impostazioni">Settings</span></button>
@@ -10496,6 +10500,7 @@ function connect() {
       }
     }
     if ('initiative' in payload && typeof window._onInitiative === 'function') window._onInitiative(payload.initiative);
+    if (payload.book && typeof window._onBook === 'function') window._onBook(payload.book, true);
     if ((payload.companions || payload.companion_event) && typeof window._onCompanions === 'function') window._onCompanions(payload.companions, payload.companion_event);
     if ((payload.bestiary || payload.bestiary_event) && typeof window._onBestiary === 'function') window._onBestiary(payload.bestiary, payload.bestiary_event);
     if ((payload.clocks || payload.clock_event) && typeof window._onClocks === 'function') window._onClocks(payload.clocks, payload.clock_event);
@@ -11004,6 +11009,26 @@ function _compChips(companions, ownerName) {
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   fetch('/companions').then(r => r.ok ? r.json() : []).then(d => window._onCompanions(d)).catch(() => {});
+})();
+
+// ── Campaign book (campaign_book.py) ──────────────────────────────────
+// The chronicle of the campaign as a PDF. The entries appear once a book has
+// been made, and download the last one.
+(function _initBook() {
+  const ids = ['ln-book', 'ln-book-more', 'ph-book-opt'];
+  if (!ids.some(id => document.getElementById(id))) return;
+  let known = 0;
+  window._onBook = function (info, announce) {
+    const has = !!(info && info.available);
+    ids.forEach(id => { const el = document.getElementById(id); if (el) el.hidden = !has; });
+    if (has && announce && info.updated !== known) _showToast('📕 ' + _t('book.ready', null, 'The campaign book is ready to download'), 6000);
+    if (has) known = info.updated;
+  };
+  ['ln-book', 'ph-book-opt'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', () => { window.open('/book', '_blank'); });
+  });
+  fetch('/book/info').then(r => r.ok ? r.json() : null).then(d => window._onBook(d, false)).catch(() => {});
 })();
 
 // ── Calendar (calendar.py) ────────────────────────────────────────────

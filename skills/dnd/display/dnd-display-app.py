@@ -502,6 +502,8 @@ _DM_ENDPOINTS = {
     "bestiary_changed",
     # Companions: companion.py keeps them, everyone sees them.
     "companions_changed",
+    # The campaign book: campaign_book.py makes it, everyone may download it.
+    "book_changed",
     # Opening an initiative roll; rolling in it is the players'.
     "initiative_open", "initiative_cancel",
 }
@@ -2688,6 +2690,47 @@ def companions_changed():
     if isinstance(event, dict) and event.get("name"):
         payload["companion_event"] = {k: event.get(k) for k in ("name", "what", "delta", "current", "max")}
     _broadcast(payload)
+    return "", 204
+
+
+# ─── Campaign book (scripts/campaign_book.py) ────────────────────────────────
+# The chronicle of the campaign as a PDF, made by campaign_book.py into
+# <campaign>/book/. Every player can download the last one made.
+
+def _book_path():
+    camp = re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]
+    if not camp:
+        return None
+    path = _find_campaign(camp) / "book" / f"{camp}.pdf"
+    return path if path.is_file() else None
+
+
+def _book_info() -> dict:
+    path = _book_path()
+    if not path:
+        return {"available": False}
+    st = path.stat()
+    return {"available": True, "updated": st.st_mtime, "size": st.st_size}
+
+
+@app.route("/book/info", methods=["GET"])
+def book_info():
+    return jsonify(_book_info()), 200
+
+
+@app.route("/book", methods=["GET"])
+def book_download():
+    path = _book_path()
+    if not path:
+        return "No book yet", 404
+    return send_file(str(path), mimetype="application/pdf", as_attachment=True,
+                     download_name=path.name, max_age=0)
+
+
+@app.route("/book", methods=["POST"])
+def book_changed():
+    """campaign_book.py wrote a new book: tell every screen it can be downloaded."""
+    _broadcast({"book": _book_info()})
     return "", 204
 
 

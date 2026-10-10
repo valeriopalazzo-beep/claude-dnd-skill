@@ -956,6 +956,25 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/autosave_checkpoint.py --campaign <name> --s
 
 **When to use:** offer `install_autosave_hook.py` to players running long imported modules who hit compaction mid-session. The flag toggle (`/dm:dnd autosave on|off`) is the in-session control.
 
+## Campaign Book — `scripts/campaign_book.py`
+
+The chronicle of the campaign as a book to read, print or send: HTML and PDF.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/scripts/campaign_book.py --campaign <name>
+python3 ${CLAUDE_SKILL_DIR}/scripts/campaign_book.py --campaign <name> --title "La Corona di Cenere" --sessions 1-4
+python3 ${CLAUDE_SKILL_DIR}/scripts/campaign_book.py --campaign <name> --loot --portraits --out ~/Desktop
+```
+
+- **What goes in:** a cover, the party (from the character sheets), the region map, one chapter per session — from `session-log.md` and `session-log-archive.md`: the `### Recap`, `### Key Events`, `### Decisions Made` and the closing `### Session Recap` — with the place scenes and the last state of each battle map of that evening, and the handouts as an appendix.
+- **What never goes in:** `### DM Calibration`, `### Open Threads`, `### XP Awarded`, DM notes, anything from `state.md` or `world.md`. `--loot` adds `### Loot & Changes`; `--portraits` adds the characters' portraits when the campaign has them.
+- Written to `<campaign>/book/<name>.html` and `.pdf`; the display then shows every player a **Campaign book** entry that downloads the PDF (`--out DIR` writes elsewhere and is not offered). The PDF needs Chrome, Edge or Chromium, like the character sheet's; without one the HTML is still written.
+- Headings are in the campaign's language (`language:` flag, or `--lang it`).
+
+**When to run:** at `/dm:dnd end`, after the save, when the DM wants it — and whenever a player asks for "the story so far". Because the chapters are printed from the session log as it is, **write Recap, Key Events and Decisions as the players lived them**: what only you know (a false lead, an NPC's real motive) belongs in Open Threads or the DM notes, never there.
+
+---
+
 ## Campaign Backup — `scripts/backup.py`
 
 A dated zip of the campaign folder in `<DATA root>/backups/<campaign>/`, so a bad save or a wrong edit is never the only copy.

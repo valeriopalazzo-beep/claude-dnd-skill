@@ -396,7 +396,7 @@ Campaign "<name>" created from <source title>.
 ---
 
 ## `/dm:dnd save`
-Write session events to session-log.md, update state.md (location, active quests, party HP/resources, recent events), update any characters/*.md that changed. Mirror each updated character to global roster (`~/.claude/dnd/characters/<name>.md`).
+Write session events to session-log.md (Recap, Key Events and Decisions as the players lived them — the campaign book prints those sections; what only the DM knows goes in Open Threads), update state.md (location, active quests, party HP/resources, recent events), update any characters/*.md that changed. Mirror each updated character to global roster (`~/.claude/dnd/characters/<name>.md`).
 
 **Absent players:** if `## Session Flags → absent:` names anyone, open this session's session-log entry with `Absent: <names> — <one-line in-fiction reason>` and add the same line to `## Recent Events`, so the next load can write them back in. Absent PCs' sheets change only by the XP they were awarded — never touch their HP, slots, inventory or conditions.
 
@@ -499,6 +499,7 @@ If `graph.json` doesn't exist yet for this campaign, skip the sweep entirely (no
       python3 ${CLAUDE_SKILL_DIR}/scripts/backup.py save --campaign <campaign-name> --label end
       ```
       Say in one line where it went. If it fails, say so and carry on — the session is saved either way.
+   h. **Campaign book (when the DM wants it):** `python3 ${CLAUDE_SKILL_DIR}/scripts/campaign_book.py --campaign <campaign-name>` reprints the chronicle with tonight's chapter; with the display still up the players can download it from their menus. Run it before stopping the display.
 2. Stop the display (always — even if `_display_running` was unclear):
    ```bash
    kill $(cat ${CLAUDE_SKILL_DIR}/display/app.pid 2>/dev/null) 2>/dev/null
