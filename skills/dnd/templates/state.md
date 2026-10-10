@@ -152,6 +152,7 @@ revision_log: []
 
 ## Session Flags
 *(tutor_mode, autorun, autorun_interval, tts_voice, sfx_languages, autosave, absent — session-scoped flags set via /dnd commands or by the display companion)*
+*(language: two-letter code of the table's language, e.g. `language: it` — scripts that print names to read out (loot.py…) use it. Unset = English.)*
 *(absent: PCs whose player isn't at the table this session, or `none` — asked fresh at every /dm:dnd load. Benched PCs are left off the sidebar and out of scenes, but still receive XP.)*
 *(autosave: on|off — default on. Governs the behind-the-scenes continuity checkpoint (Live State Flags + graph + session tail). Toggle with /dm:dnd autosave on|off.)*
 

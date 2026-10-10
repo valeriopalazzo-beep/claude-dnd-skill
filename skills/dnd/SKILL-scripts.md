@@ -153,6 +153,31 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/inventory.py split 137gp 4sp --among "Aldric
 
 ---
 
+## Treasure — `scripts/loot.py`
+
+Random treasure by challenge rating, handed out through `inventory.py` so it lands on the sheets.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/scripts/loot.py roll --cr 1/4 --monsters 4          # what four goblins carried
+python3 ${CLAUDE_SKILL_DIR}/scripts/loot.py roll --cr 3 --hoard                 # a lair, a vault, a real chest
+python3 ${CLAUDE_SKILL_DIR}/scripts/loot.py roll --level 5 --hoard              # by party level, with no CR to go by
+python3 ${CLAUDE_SKILL_DIR}/scripts/loot.py set --coins 340gp 20sp --item "Chiave d'argento" --item "Granato (100 mo) x2"
+python3 ${CLAUDE_SKILL_DIR}/scripts/loot.py show
+python3 ${CLAUDE_SKILL_DIR}/scripts/loot.py take --among "Aldric,Mira,Lio" --item "2:Mira" --item "3:Lio"
+python3 ${CLAUDE_SKILL_DIR}/scripts/loot.py take --to "Aldric"                  # everything left, to one character
+python3 ${CLAUDE_SKILL_DIR}/scripts/loot.py drop                                # the party leaves it there
+```
+
+- `roll` prints the pile numbered and keeps it in `<campaign>/loot.json`; nothing is on a sheet until `take`. `set` does the same for a treasure the adventure prescribes.
+- `take`: `--among` splits the coins in equal shares (the odd copper goes to the first name); `--item N:NAME` gives numbered item N (`N:NAME:2` = two of a stack); `--items-to NAME` gives every item left; `--to NAME` gives everything. What nobody took stays for a later `take`. The same options on `roll` / `set` hand it out at once.
+- Individual treasure is coins only; a hoard adds gems or art objects (written with their value, to be sold with `inventory.py sell`) and magic items drawn from the SRD by rarity — a spell scroll comes with its spell. Four tiers: CR 0–4, 5–10, 11–16, 17+.
+- Names are written in the campaign's language: the `language:` Session Flag in `state.md` (e.g. `- language: it`), or `--lang it`. `--seed` repeats a roll. `--campaign NAME` (before the subcommand) works on a campaign other than the active one.
+- A wrong name or number changes nothing and says why.
+
+**How to use it:** roll, narrate what the characters find (look a magic item up with `lookup.py` before describing it — unidentified items are described, not named), let the players say who takes what, then `take`. Do not roll for every kill: individual treasure for creatures that would carry coins, a hoard at the end of a lair or an adventure node. If a rolled item does not fit the place or would unbalance the party, `drop` and `set` what does.
+
+---
+
 ## Stats Display Script — `display/push_stats.py`
 Pushes character and combat stats to the sidebar. Players merged by name; partial updates work.
 

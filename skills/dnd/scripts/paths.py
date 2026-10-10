@@ -192,6 +192,32 @@ def campaign_ruleset(name: str) -> str:
     return val if val in VALID_RULESETS else DEFAULT_RULESET
 
 
+# ── Table language ────────────────────────────────────────────────────────
+# Scripts that print names the DM reads out (loot, encounters, the bestiary)
+# use the campaign's `language:` Session Flag in state.md — a two-letter code
+# with a translation overlay under data/i18n. Unset means English.
+
+_LANGUAGE_PAT = _re.compile(r"^[ \t]*(?:[-*][ \t]*)?language:[ \t]*([A-Za-z]{2})\b", _re.MULTILINE)
+
+
+def campaign_language(name: str = "") -> str:
+    """The table's language for a campaign ('it', 'en', …); 'en' when unset.
+
+    DND_LANG overrides the flag. With no campaign name, only the env var counts.
+    """
+    env = os.environ.get("DND_LANG", "").strip().lower()[:2]
+    if env.isalpha() and len(env) == 2:
+        return env
+    if not name:
+        return "en"
+    try:
+        text = (find_campaign(name) / "state.md").read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return "en"
+    m = _LANGUAGE_PAT.search(text)
+    return m.group(1).lower() if m else "en"
+
+
 def srd_path(ruleset=None):
     """Return path to the SRD JSON for the given ruleset.
 

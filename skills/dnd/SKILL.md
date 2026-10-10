@@ -159,7 +159,7 @@ ${CLAUDE_SKILL_DIR}/                 ← the skill dir (plugin: <plugin>/skills/
   SKILL.md           ← core DM rules (this file)
   SKILL-scripts.md   ← all Python script syntax (load at session start)
   SKILL-commands.md  ← all /dm:dnd command procedures (load at session start)
-  scripts/           ← dice.py, combat.py, character.py, tracker.py, calendar.py, lookup.py
+  scripts/           ← dice.py, combat.py, character.py, tracker.py, calendar.py, lookup.py, inventory.py, loot.py, backup.py
   data/              ← bundled 5e SRD dataset (dnd5e_srd.json — no download needed; sync via /dm:dnd data sync)
   templates/         ← blank character-sheet.md, state.md, world.md, npcs.md, session-log.md
   display/           ← Flask SSE display companion (dnd-display-app.py, send.py, push_stats.py, wrapper.py, tts.py, map_render.py, map_art.py, image_gen.py)
@@ -439,6 +439,8 @@ When they come back at a later load, they rejoin the scene with one line of fict
 ## Coins, Items & Shops
 
 Money and gear are **applied by script, never by hand**: `scripts/inventory.py` (`gain`, `pay`, `add`, `remove`, `buy`, `sell`, `give`, `split`) edits the sheet's Currency line and item lists, makes change, and refuses what cannot be paid. Use it every time coins or items change hands — loot, a toll, a potion drunk, a gift between characters — and to split treasure in equal shares.
+
+Treasure is rolled, not improvised: `scripts/loot.py roll --cr N [--monsters N | --hoard]` draws coins, valuables and magic items for the challenge, and `loot.py take` splits the coins and puts each item on the sheet of whoever takes it. Syntax: `SKILL-scripts.md` → *Treasure*.
 
 When the party enters a shop and wants to browse, open it on their screens with `display/shop.py open` and a price list: each player buys from their own phone and the purchase is applied automatically. A `[[SHOP: … bought …]]` line from `check_input.py` reports a sale that is **already paid and on the sheet** — never apply it again. Syntax: `SKILL-scripts.md` → *Inventory Script* / *Shop*.
 
