@@ -12,6 +12,7 @@ import datetime
 import importlib.util
 import os
 import pathlib
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -124,6 +125,16 @@ class BackupTests(unittest.TestCase):
         self.assertFalse((self.root / "backups").exists())
         self.bk.save("prova", now=self._at(0))
         self.assertEqual(self.bk.main(["restore", "--campaign", "prova", "7", "--yes"]), 1)
+
+    def test_list_works_when_run_as_a_script(self):
+        # Run as a script, scripts/ comes first on the path and its calendar.py
+        # hides the standard one: nothing here may need the standard `calendar`.
+        self.bk.save("prova", label="end", now=self._at(0))
+        r = subprocess.run([sys.executable, str(SKILL / "scripts" / "backup.py"), "list", "--campaign", "prova"],
+                           capture_output=True, text=True, encoding="utf-8", env=dict(os.environ, PYTHONUTF8="1"))
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("2026-10-10 21:00", r.stdout)
+        self.assertIn("prova-20261010-210000-end.zip", r.stdout)
 
     def test_an_archive_with_a_path_outside_the_campaign_is_refused(self):
         folder = self.root / "backups" / "prova"

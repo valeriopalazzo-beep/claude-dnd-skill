@@ -182,7 +182,10 @@ def restore(campaign: str, which: str, dest: str = "", roster: bool = False) -> 
 
 def _describe(path: pathlib.Path) -> str:
     m = _STAMP_RE.search(path.name)
-    when = datetime.datetime.strptime(m.group(1), "%Y%m%d-%H%M%S").strftime("%Y-%m-%d %H:%M")
+    # Sliced, not strptime: that imports the standard `calendar`, and run as a
+    # script this folder's own calendar.py is found in its place.
+    s = m.group(1)
+    when = f"{s[0:4]}-{s[4:6]}-{s[6:8]} {s[9:11]}:{s[11:13]}"
     size = path.stat().st_size
     human = f"{size / 1048576:.1f} MB" if size >= 1048576 else f"{max(1, size // 1024)} KB"
     return f"{when}  {human:>9}  {m.group(2) or '':<12} {path.name}"
