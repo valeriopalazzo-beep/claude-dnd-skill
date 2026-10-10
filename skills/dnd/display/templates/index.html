@@ -1343,6 +1343,43 @@
   #region-detail .region-meta{ display:block; font-size:14.5px; font-weight:700; color:var(--ln-accent, #f2b544); }
   #region-detail p{ margin:5px 0 0; color:var(--ln-text-muted, #cdbfa6); }
 
+  /* ── Calendar (calendar.py) — the month, the moon, the weather, what is coming ── */
+  #world-clock.has-cal{ pointer-events:auto; cursor:pointer; }
+  :root[data-skin="lanterna"] body.ln-on #ln-top #world-clock.has-cal{ cursor:pointer; }
+  #cal-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
+    align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  #cal-modal.open{ display:flex; }
+  #cal-panel{ display:flex; flex-direction:column; gap:10px; width:min(560px, 100%); margin:auto 0;
+    color:var(--ln-text, #ECE4D2); font-family:'Alegreya Sans','Syne',sans-serif; }
+  #cal-head{ display:flex; align-items:center; gap:8px; }
+  #cal-head h2{ flex:1; min-width:0; margin:0; font-size:22px; line-height:1.15; text-align:center; }
+  #cal-head button{ flex:none; width:40px; height:40px; border-radius:999px; cursor:pointer; font-size:16px;
+    background:rgba(0,0,0,.35); color:inherit; border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #cal-now, #cal-detail, #cal-coming{ padding:11px 14px; border-radius:10px; font-size:16px; line-height:1.4;
+    background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
+  #cal-now{ cursor:pointer; }
+  #cal-now b{ display:block; font-size:19px; }
+  #cal-now span, #cal-detail span{ display:block; color:var(--ln-text-muted, #cdbfa6); }
+  #cal-grid{ display:grid; gap:5px; }
+  #cal-grid .cal-dow{ font-size:12.5px; font-weight:700; text-align:center; text-transform:uppercase; letter-spacing:.04em;
+    color:var(--ln-text-muted, #cdbfa6); overflow:hidden; white-space:nowrap; }
+  .cal-day{ position:relative; min-height:46px; padding:5px 2px 3px; border-radius:8px; cursor:pointer; font:inherit; font-size:16px;
+    font-weight:700; color:inherit; background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14));
+    display:flex; flex-direction:column; align-items:center; gap:1px; -webkit-tap-highlight-color:transparent; }
+  .cal-day small{ font-size:11px; line-height:1; min-height:11px; letter-spacing:1px; }
+  .cal-day.past{ opacity:.5; }
+  .cal-day.today{ background:var(--ln-accent, #f2b544); color:#1a140c; border-color:transparent; }
+  .cal-day.sel{ outline:2px solid var(--ln-accent, #f2b544); outline-offset:1px; }
+  .cal-day .cal-dot{ color:#e2574c; }
+  .cal-day.today .cal-dot{ color:#7a1d15; }
+  #cal-detail b, #cal-coming b{ font-size:17px; }
+  #cal-detail p{ margin:4px 0 0; }
+  #cal-coming h3{ margin:0 0 4px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--ln-text-muted, #cdbfa6); }
+  #cal-coming div{ display:flex; gap:10px; justify-content:space-between; align-items:baseline; padding:4px 0;
+    border-top:1px solid var(--ln-line, rgba(255,255,255,.1)); cursor:pointer; }
+  #cal-coming div:first-of-type{ border-top:0; }
+  #cal-coming em{ flex:none; font-style:normal; font-size:14.5px; font-weight:700; color:var(--ln-accent, #f2b544); }
+
   /* ── Milestones (sidebar — Bardic Inspiration / Hero Coin / Fate Token / etc.) ── */
   .sb-milestones { margin-top: 6px; }
   .sb-milestone-row {
@@ -4769,6 +4806,7 @@
     <button class="ph-set-opt" id="ph-shop-opt" type="button" hidden><span data-i18n="shop.title">Shop</span><strong>🛒</strong></button>
     <button class="ph-set-opt" id="ph-theme-opt" type="button"><span data-i18n="ph.theme">Theme</span><strong id="ph-theme-val">Dark</strong></button>
     <button class="ph-set-opt" id="ph-region-opt" type="button" hidden><span data-i18n="region.title">Region map</span><strong>🧭</strong></button>
+    <button class="ph-set-opt" id="ph-cal-opt" type="button" hidden><span data-i18n="cal.title">Calendar</span><strong>📅</strong></button>
     <label class="ph-set-opt ph-set-row" id="ph-skin-opt"><span data-i18n="ph.style">Style</span><select id="ph-skin-select" class="ph-set-select" aria-label="Display style"><option value="vellum">Vellum</option><option value="editorial">Editorial</option><option value="lanterna">Lanterna</option></select></label>
     <label class="ph-set-opt ph-set-row" id="ph-lang-opt"><span data-i18n="settings.language">Language</span><select id="ph-lang-select" class="ph-set-select" aria-label="Display language" data-i18n-aria="settings.language"></select></label>
     <button class="ph-set-opt" id="ph-sfx-opt" type="button"><span data-i18n="settings.sfx">Sound Effects</span><strong id="ph-sfx-val">On</strong></button>
@@ -4936,6 +4974,22 @@
   </div>
 </div>
 
+<!-- Calendar: the month the party is living, from calendar.py -->
+<div id="cal-modal">
+  <div id="cal-panel" role="dialog" aria-labelledby="cal-title">
+    <div id="cal-head">
+      <button id="cal-prev" type="button" title="Previous month" aria-label="Previous month" data-i18n-title="cal.prev" data-i18n-aria="cal.prev">‹</button>
+      <h2 id="cal-title" data-i18n="cal.title">Calendar</h2>
+      <button id="cal-next" type="button" title="Next month" aria-label="Next month" data-i18n-title="cal.next" data-i18n-aria="cal.next">›</button>
+      <button id="cal-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
+    </div>
+    <div id="cal-now" title="Back to today" data-i18n-title="cal.backToday"></div>
+    <div id="cal-grid"></div>
+    <div id="cal-detail"></div>
+    <div id="cal-coming"></div>
+  </div>
+</div>
+
 <!-- Character sidebar -->
 <div id="sidebar">
   <!-- Player cards are injected here by updateStats() -->
@@ -4976,6 +5030,7 @@
   <symbol id="ln-i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
   <symbol id="ln-i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></symbol>
   <symbol id="ln-i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="ln-i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
   <symbol id="ln-i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36z"/></symbol>
   <symbol id="ln-i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
   <symbol id="ln-i-collapse" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M16 15l-3-3 3-3"/></symbol>
@@ -5009,6 +5064,7 @@
       <div class="ln-h" data-i18n="ln.group.world">World</div>
       <button class="ln-item" type="button" data-ln-go="missioni" data-phone title="Quests" data-i18n-title="ln.view.missioni"><svg class="ln-i"><use href="#ln-i-quest"/></svg><span class="ln-lbl" data-i18n="ln.view.missioni">Quests</span><span class="ln-badge" id="ln-badge-quests" hidden></span></button>
       <button class="ln-item" type="button" id="ln-region" title="Region map" data-i18n-title="region.title" hidden><svg class="ln-i"><use href="#ln-i-compass"/></svg><span class="ln-lbl" data-i18n="region.title">Region map</span><span class="ln-badge" id="ln-badge-region" data-i18n="region.new" hidden>New</span></button>
+      <button class="ln-item" type="button" id="ln-cal" title="Calendar" data-i18n-title="cal.title" hidden><svg class="ln-i"><use href="#ln-i-calendar"/></svg><span class="ln-lbl" data-i18n="cal.title">Calendar</span></button>
       <button class="ln-item" type="button" data-ln-go="fazioni" title="Factions" data-i18n-title="ln.view.fazioni"><svg class="ln-i"><use href="#ln-i-flag"/></svg><span class="ln-lbl" data-i18n="ln.view.fazioni">Factions</span></button>
       <button class="ln-item" type="button" id="ln-handouts" title="Documents" data-i18n-title="handout.title"><svg class="ln-i"><use href="#ln-i-mail"/></svg><span class="ln-lbl" data-i18n="handout.title">Documents</span><span class="ln-badge" id="ln-badge-handouts" hidden></span></button>
       <button class="ln-item" type="button" data-ln-go="regole" title="Rules" data-i18n-title="ln.view.regole"><svg class="ln-i"><use href="#ln-i-rules"/></svg><span class="ln-lbl" data-i18n="ln.view.regole">Rules</span></button>
@@ -5075,6 +5131,7 @@
         <button class="ln-item" type="button" data-ln-go="fazioni"><svg class="ln-i"><use href="#ln-i-flag"/></svg><span class="ln-lbl" data-i18n="ln.view.fazioni">Factions</span></button>
         <button class="ln-item" type="button" data-ln-proxy="ln-handouts"><svg class="ln-i"><use href="#ln-i-mail"/></svg><span class="ln-lbl" data-i18n="handout.title">Documents</span></button>
         <button class="ln-item" type="button" id="ln-region-more" data-ln-proxy="ln-region" hidden><svg class="ln-i"><use href="#ln-i-compass"/></svg><span class="ln-lbl" data-i18n="region.title">Region map</span></button>
+        <button class="ln-item" type="button" id="ln-cal-more" data-ln-proxy="ln-cal" hidden><svg class="ln-i"><use href="#ln-i-calendar"/></svg><span class="ln-lbl" data-i18n="cal.title">Calendar</span></button>
         <button class="ln-item" type="button" data-ln-go="regole"><svg class="ln-i"><use href="#ln-i-rules"/></svg><span class="ln-lbl" data-i18n="ln.view.regole">Rules</span></button>
         <button class="ln-item" type="button" data-ln-go="impostazioni"><svg class="ln-i"><use href="#ln-i-settings"/></svg><span class="ln-lbl" data-i18n="ln.view.impostazioni">Settings</span></button>
         <button class="ln-item" type="button" data-ln-proxy="dm-help-btn"><svg class="ln-i"><use href="#ln-i-help"/></svg><span class="ln-lbl" data-i18n="ln.help">DM help</span></button>
@@ -9707,20 +9764,37 @@ const WEATHER_ICONS = {
   calm:    '',
 };
 
+// The weather in words. calendar.py sends keys (translated here) or the DM's
+// own sentence; a hand-made --world-time push only has the sentence.
+function _weatherLabel(wt) {
+  if (!wt) return '';
+  if (wt.weather_text) return wt.weather_text;
+  if (!wt.weather_key) return wt.weather || '';
+  const sky = _t('weather.' + wt.weather_key, null, wt.weather_key);
+  return wt.temp_key ? sky + ', ' + _t('temp.' + wt.temp_key, null, wt.temp_key) : sky;
+}
+
+function _weatherIcon(wt) {
+  const said = ((wt && (wt.weather_key || wt.weather)) || '').toLowerCase();
+  const key = Object.keys(WEATHER_ICONS).find(k => said.includes(k)) || '';
+  return WEATHER_ICONS[key] || '';
+}
+
 function updateWorldClock(wt) {
   if (!wt) return;
-  const timeKey    = (wt.time || '').toLowerCase();
-  const weatherKey = Object.keys(WEATHER_ICONS).find(k => (wt.weather||'').toLowerCase().includes(k)) || '';
+  const timeKey  = (wt.time || '').toLowerCase();
+  const timeIcon = TIME_ICONS[timeKey] || '☀';
+  const weather  = _weatherLabel(wt);
 
-  const timeIcon    = TIME_ICONS[timeKey]    || '☀';
-  const weatherIcon = WEATHER_ICONS[weatherKey] || '';
-
-  _wcIcon.textContent = (weatherIcon || timeIcon);
+  _wcIcon.textContent = (_weatherIcon(wt) || timeIcon);
   _wcDate.textContent = wt.date    || '';
-  _wcSub.textContent  = [wt.season, wt.day_name].filter(Boolean).join(' · ');
+  _wcSub.textContent  = [wt.season, wt.day_name, wt.weather_key ? weather : ''].filter(Boolean).join(' · ');
+  _wcEl.title = [_t('time.' + timeKey, null, wt.time || ''), weather].filter(Boolean).join(' · ');
 
   _wcEl.classList.add('has-data');
   skyRenderer.setState(wt);
+  window._worldTime = wt;
+  if (typeof window._onWorldTime === 'function') window._onWorldTime(wt);
 }
 
 // Ruleset badge — '5e 2014' (subdued) or '5e 2024' (amber/gold accent)
@@ -10076,6 +10150,188 @@ connect();
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   refresh();
+})();
+
+// ── Calendar (calendar.py) ────────────────────────────────────────────
+// The world clock carries the calendar itself (months, moon, events), so the
+// month can be drawn and browsed here with no request to the server.
+// _calMoon and _calEventsOn only compute; the IIFE below draws.
+function _calAbs(c, day, month, year) {
+  return (year * (c.months.length || 12) + (month - 1)) * c.month_length + (day - 1);
+}
+function _calMoon(c, abs) {
+  const m = c.moon;
+  if (!m || !(m.cycle >= 2)) return null;
+  const pos = (((abs - m.full) % m.cycle) + m.cycle) % m.cycle;
+  const half = Math.floor(m.cycle / 2);
+  const names = ['full', 'waning_gibbous', 'last_quarter', 'waning_crescent',
+                 'new', 'waxing_crescent', 'first_quarter', 'waxing_gibbous'];
+  let phase = pos === 0 ? 'full' : pos === half ? 'new' : names[Math.round(pos / m.cycle * 8) % 8];
+  if (pos !== 0 && phase === 'full') phase = pos < m.cycle / 2 ? 'waning_gibbous' : 'waxing_gibbous';
+  if (pos !== half && phase === 'new') phase = pos < m.cycle / 2 ? 'waning_crescent' : 'waxing_crescent';
+  return { name: m.name || '', phase, toFull: (m.cycle - pos) % m.cycle };
+}
+function _calEventsOn(c, day, month, year) {
+  return (c.events || []).filter(e => e.day === day && e.month === month && (e.year == null || e.year === year));
+}
+// ── end calendar maths ──
+
+(function _initCalendar() {
+  const modal = document.getElementById('cal-modal');
+  if (!modal) return;
+  const MOON_GLYPH = { full: '🌕', waning_gibbous: '🌖', last_quarter: '🌗', waning_crescent: '🌘',
+                       new: '🌑', waxing_crescent: '🌒', first_quarter: '🌓', waxing_gibbous: '🌔' };
+  const $ = id => document.getElementById(id);
+  let wt = null, view = null, sel = null;
+
+  const cal = () => (wt && wt.calendar && wt.calendar.month_length > 0 ? wt.calendar : null);
+  const monthName = (c, m) => (c.months && c.months[m - 1]) || String(m);
+  const dateText = (c, d, m, y) => `${d} ${monthName(c, m)} ${y}` + (c.era ? ' ' + c.era : '');
+
+  function moonText(moon) {
+    if (!moon) return '';
+    const phase = _t('moon.' + moon.phase, null, moon.phase.replace(/_/g, ' '));
+    const head = MOON_GLYPH[moon.phase] + ' ' + (moon.name ? moon.name + ' — ' : '') + phase;
+    if (moon.toFull === 0) return head;
+    return head + ' · ' + (moon.toFull === 1 ? _t('cal.fullIn1', null, 'full tomorrow')
+                                              : _t('cal.fullIn', { n: moon.toFull }, 'full in ' + moon.toFull + ' days'));
+  }
+  function whenText(n) {
+    return n === 0 ? _t('cal.todayWord', null, 'today') : n === 1 ? _t('cal.tomorrow', null, 'tomorrow')
+      : _t('cal.inDays', { n }, 'in ' + n + ' days');
+  }
+  function line(parent, tag, text) {
+    const el = document.createElement(tag);
+    el.textContent = text;
+    parent.appendChild(el);
+    return el;
+  }
+
+  function showDay(c, day) {
+    sel = day;
+    const box = $('cal-detail');
+    box.textContent = '';
+    const abs = _calAbs(c, day, view.month, view.year);
+    const today = _calAbs(c, c.day, c.month, c.year);
+    line(box, 'b', dateText(c, day, view.month, view.year));
+    const names = c.day_names || [];
+    const meta = [names.length ? names[(day - 1) % names.length] : '',
+                  abs === today ? _t('cal.todayWord', null, 'today') : abs > today ? whenText(abs - today) : ''];
+    if (meta.some(Boolean)) line(box, 'span', meta.filter(Boolean).join(' · '));
+    const moon = _calMoon(c, abs);
+    if (moon) line(box, 'span', moonText(moon));
+    _calEventsOn(c, day, view.month, view.year).forEach(e => {
+      const p = line(box, 'p', '');
+      line(p, 'b', '★ ' + e.name);
+      if (e.note) p.appendChild(document.createTextNode(' — ' + e.note));
+    });
+    document.querySelectorAll('#cal-grid .cal-day').forEach(b => b.classList.toggle('sel', +b.dataset.day === day));
+  }
+
+  function render() {
+    const c = cal();
+    if (!c) return;
+    $('cal-title').textContent = monthName(c, view.month) + ' ' + view.year;
+    const today = _calAbs(c, c.day, c.month, c.year);
+
+    const now = $('cal-now');
+    now.textContent = '';
+    line(now, 'b', dateText(c, c.day, c.month, c.year));
+    const head = [_t('time.' + (wt.time || ''), null, wt.time || ''), wt.season, wt.day_name].filter(Boolean).join(' · ');
+    if (head) line(now, 'span', head);
+    const weather = _weatherLabel(wt);
+    if (weather) line(now, 'span', (_weatherIcon(wt) + ' ' + weather).trim());
+    const moonNow = _calMoon(c, today);
+    if (moonNow) line(now, 'span', moonText(moonNow));
+
+    const grid = $('cal-grid');
+    grid.textContent = '';
+    const names = c.day_names || [];
+    const cols = names.length >= 2 && names.length <= 10 ? names.length : 7;
+    grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+    if (names.length === cols) names.forEach(n => { line(grid, 'div', n.slice(0, 3)).className = 'cal-dow'; });
+    for (let day = 1; day <= c.month_length; day++) {
+      const abs = _calAbs(c, day, view.month, view.year);
+      const cell = document.createElement('button');
+      cell.type = 'button';
+      cell.dataset.day = day;
+      cell.className = 'cal-day' + (abs === today ? ' today' : abs < today ? ' past' : '');
+      cell.appendChild(document.createTextNode(day));
+      const marks = document.createElement('small');
+      const moon = _calMoon(c, abs);
+      if (moon && (moon.phase === 'full' || moon.phase === 'new')) marks.appendChild(document.createTextNode(MOON_GLYPH[moon.phase]));
+      if (_calEventsOn(c, day, view.month, view.year).length) {
+        const dot = document.createElement('span');
+        dot.className = 'cal-dot';
+        dot.textContent = '★';
+        marks.appendChild(dot);
+      }
+      cell.appendChild(marks);
+      cell.addEventListener('click', () => showDay(c, day));
+      grid.appendChild(cell);
+    }
+    const sameMonth = view.month === c.month && view.year === c.year;
+    showDay(c, sel && sel <= c.month_length ? sel : sameMonth ? c.day : 1);
+
+    const coming = $('cal-coming');
+    coming.textContent = '';
+    const list = (c.events || []).filter(e => e.in_days >= 0).slice(0, 6);
+    coming.hidden = !list.length;
+    if (list.length) line(coming, 'h3', _t('cal.upcoming', null, 'Coming up'));
+    list.forEach(e => {
+      const row = document.createElement('div');
+      line(row, 'span', e.name);
+      line(row, 'em', whenText(e.in_days));
+      row.addEventListener('click', () => {
+        const abs = today + e.in_days, per = c.month_length, months = c.months.length || 12;
+        view = { year: Math.floor(abs / (per * months)), month: Math.floor(abs / per) % months + 1 };
+        sel = abs % per + 1;
+        render();
+      });
+      coming.appendChild(row);
+    });
+  }
+
+  function step(by) {
+    const c = cal();
+    if (!c) return;
+    const months = c.months.length || 12;
+    let m = view.month + by, y = view.year;
+    if (m < 1) { m = months; y--; } else if (m > months) { m = 1; y++; }
+    view = { month: m, year: y };
+    sel = null;
+    render();
+  }
+  function toToday() {
+    const c = cal();
+    if (!c) return;
+    view = { month: c.month, year: c.year };
+    sel = c.day;
+    render();
+  }
+  function open() {
+    if (!cal()) return;
+    modal.classList.add('open');
+    toToday();
+  }
+  const close = () => modal.classList.remove('open');
+
+  window._onWorldTime = function (next) {
+    wt = next;
+    const has = !!cal();
+    ['ln-cal', 'ln-cal-more', 'ph-cal-opt'].forEach(id => { const el = $(id); if (el) el.hidden = !has; });
+    _wcEl.classList.toggle('has-cal', has);
+    if (!has) close();
+    else if (modal.classList.contains('open')) { if (!view) toToday(); else render(); }
+  };
+  ['ln-cal', 'ph-cal-opt', 'world-clock'].forEach(id => { const el = $(id); if (el) el.addEventListener('click', open); });
+  $('cal-prev').addEventListener('click', () => step(-1));
+  $('cal-next').addEventListener('click', () => step(1));
+  $('cal-now').addEventListener('click', toToday);
+  $('cal-close').addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  if (window._worldTime) window._onWorldTime(window._worldTime);
 })();
 
 // ── Input-only mode for mobile players ───────────────────────────────────

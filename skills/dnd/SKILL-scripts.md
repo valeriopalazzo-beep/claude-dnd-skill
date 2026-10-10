@@ -301,7 +301,7 @@ python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --turn-clear
 #         dungeon ruins crypt fire arcane night
 python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --scene tavern
 
-# World time clock:
+# World time clock — only for a campaign with no calendar.json; otherwise calendar.py sends it (see Calendar Script):
 python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --world-time \
   '{"date":"19 Ashveil 1312 AR","day_name":"Moonday","time":"morning","season":"Long Hollow","weather":"calm"}'
 
@@ -333,7 +333,7 @@ If `check_input.py` returns output, prepend it to the player's terminal input wh
 ---
 
 **When to push stats:**
-- `/dm:dnd load` → `--replace-players --json` (full stats) + `--spell-slots` + `--world-time` + `--factions` + `--scene` (where the party is)
+- `/dm:dnd load` → `--replace-players --json` (full stats) + `--spell-slots` + `--factions` + `--scene` (where the party is), then `calendar.py -c <campaign> push` for the clock and the calendar (`--world-time` by hand only when the campaign has no calendar)
 - Party arrives somewhere new (inn, town, castle, mine, crypt, forest, ship…) → `--scene NAME`, before narrating the arrival. It sets the music too, so push it every time the place really changes — not for a room inside the same place. Combat music is automatic with `--turn-order` / `--turn-clear`.
 - HP change → `--player NAME --hp <current> <max>`
 - Temp HP gained/lost → `--player NAME --temp-hp N` (0 to clear)
@@ -350,10 +350,10 @@ If `check_input.py` returns output, prepend it to the player's terminal input wh
 - Faction standing changes → `--factions '[...]'` (full replace)
 - Combat start → `--turn-order`; each turn → `--turn-current`; end → `--turn-clear`. Push `--turn-current` the moment a turn starts, not after narrating it: it is what buzzes that player's phone ("your turn") and warns the next one.
 - Level up → push updated full stats
-- Long rest → restore HP, hit dice, spell slots, second wind; push `--world-time` with updated time
-- Any rest or time advance → push `--world-time`
+- Long rest → restore HP, hit dice, spell slots, second wind; `calendar.py rest long` moves the clock
+- Any rest or time advance → `calendar.py advance / rest / time` — it updates the display's clock and calendar itself
 
-**Keep the clock honest.** The world clock is continuity, not decoration. Narrate consistently with the time you last pushed, and advance it *deliberately* when an action costs time — a brief exchange is a few minutes, a search or a shopping trip is longer, a rest or a journey longer still. Never let the time of day drift on its own or silently reset between scenes. If the clock and the fiction ever disagree, reconcile it to the truth with a fresh `--world-time` push rather than compounding the error; setting it *backward* to the correct time is fine and undoes nothing, since timed effects run on their own round/minute/hour durations in `tracker.py`, independent of the wall clock.
+**Keep the clock honest.** The world clock is continuity, not decoration. Narrate consistently with the time you last pushed, and advance it *deliberately* when an action costs time — a brief exchange is a few minutes, a search or a shopping trip is longer, a rest or a journey longer still. Never let the time of day drift on its own or silently reset between scenes. If the clock and the fiction ever disagree, reconcile it to the truth with `calendar.py set` / `time` rather than compounding the error; setting it *backward* to the correct time is fine and undoes nothing, since timed effects run on their own round/minute/hour durations in `tracker.py`, independent of the wall clock.
 
 ---
 
@@ -424,14 +424,22 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/tracker.py -c $CAMP clear --all     # also c
 ---
 
 ## Calendar Script — `scripts/calendar.py`
+
+The in-world date and time, and with them the season, the moon, the weather and what is coming. **Every command that changes something also updates the display** — the world clock and the players' Calendar panel — so there is no separate `--world-time` push to remember.
+
 ```bash
-# One-time setup (run during /dm:dnd new):
+# One-time setup, from the Calendar block of world.md (run during /dm:dnd new, or at the first load):
 python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP init \
-    --date "15 Harvestmoon 1247" \
-    --time "morning" \
+    --date "15 Harvestmoon 1247" --time "morning" --era "AR" \
     --months "Frostfall,Deepwinter,Thawmonth,Seedtime,Bloomtide,Highsun,Harvestmoon,Duskfall" \
     --month-length 30 \
-    --day-names "Sunday,Moonday,Ironday,Windday,Earthday,Fireday,Starday"
+    --day-names "Sunday,Moonday,Ironday,Windday,Earthday,Fireday,Starday" \
+    --seasons "Winter:Frostfall,Deepwinter;Spring:Thawmonth,Seedtime;Summer:Bloomtide,Highsun;Autumn:Harvestmoon,Duskfall" \
+    --moon "Selune:28" --full-moon "20 Harvestmoon 1247" \
+    --climate temperate                      # cold | temperate | warm | arid
+
+# Add or change era / seasons / moon / climate later — only what you pass changes:
+python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP setup --moon "Vela:29" --full-moon "16 Brumosa 1147"
 
 # Time advancement
 python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP advance 8 hours
@@ -440,13 +448,33 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP rest short   # +1 hour
 python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP rest long    # +8 hours
 
 # Query / manual set
-python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP now
+python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP now          # date, season, weather, moon, next events
 python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP set "22 Harvestmoon 1247" evening
-python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP time night
+python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP time night   # dawn morning midday afternoon dusk evening night midnight
+
+# Weather — keys: clear cloudy overcast fog rain storm snow windy · freezing cold mild warm hot
+python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP weather roll                 # from season and climate
+python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP weather set fog cold --text "nebbia che non si alza"
+python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP weather auto on              # every new day rolls its own
+
+# Coming events
+python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP event add "Notte delle Lanterne Basse" "30 Brumosa" --yearly --note "festa di Morwen"
+python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP event add "Dieta d'Inverno" "21 Lungabuio 1147"
+python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP event add "Il rito della Confraternita" "16 Brumosa 1147" --secret
+python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP event remove "Dieta d'Inverno"
 python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP events
+
+# Send the clock and the calendar to the display again (after /dm:dnd load or a --clear)
+python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP push
 ```
 
-**When to run:** after every rest; after significant travel or time skip; when manually updating `state.md` date — use `calendar.py set` to keep them in sync.
+- **Seasons** say which months they hold. The weather roll needs to know which is the winter: names like Winter / Inverno / Hiver are recognised, anything else takes `Name=winter:Month,…` (`winter`, `spring`, `summer`, `autumn`).
+- **Moon:** a cycle length and the date of one full moon; the script and the players' calendar work out every phase from that.
+- **Weather** is stored as keys the display translates into each player's language; `--text` replaces them with your own words (keep the key right — it picks the icon and the sky). With `weather auto on` the script rolls when a day begins and prints the result: **narrate it**. Yesterday's weather often lingers. Without it, the script reminds you at each new day that the weather is still what you last set.
+- **Events** the players know about go on their calendar with the days to go; `--secret` ones are yours alone and are never sent. `--yearly` for a recurring feast (a date with no year). When time advances the script prints `★ TODAY: …` for an event that has come and `★ PASSED …` for one skipped over, and `☾ … is full tonight` — act on them.
+- A campaign with an old `calendar.json` keeps working; `setup` adds what it lacks.
+
+**When to run:** after every rest; after significant travel or time skip; when the time of day changes in the fiction (`time`); when the weather changes (`weather set`, or leave it to `weather auto on`); when the party learns of a dated event (`event add`); when manually updating `state.md` date — use `calendar.py set` to keep them in sync.
 
 ---
 

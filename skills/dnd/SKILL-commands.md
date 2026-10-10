@@ -196,6 +196,8 @@ The display question is skipped, because `/dm:dnd load` asks it. The graph and c
      --scene tavern
    ```
 
+   **Calendar.** If the campaign has a `calendar.json`, leave `--world-time` out of that call and run `python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c <campaign-name> push` right after it: it sends the date, the time of day, the season, the weather, the moon and the events the players know of, and gives them the Calendar panel. If it has none, create it now from `world.md → ### Calendar` with `calendar.py init` (months, month length, day names, era, seasons, moon and one full-moon date, climate), set the date and time from `state.md`, and add the observances the characters know as `event add` (the ones only you know with `--secret`). After any mid-session `--clear`, run `calendar.py push` again.
+
    `--scene` is where the party is (tavern, city, castle, temple, forest, mountain, desert, swamp, ocean, mine, cave, dungeon, ruins, crypt, fire, arcane, night): it sets the display's background and its background music. Push it again whenever the party reaches a new place.
 
    Faction JSON structure — **`standing` is required**:
@@ -800,7 +802,7 @@ DNDEND
 2. Push: `push_stats.py --player NAME --hp <max> <max>` and `--second-wind true`.
 3. Advance time: `calendar.py -c <campaign> rest long`
 4. Clear all tracker state: `tracker.py -c <campaign> clear --all`
-5. Update `state.md` in-world date to match calendar output.
+5. Update `state.md` in-world date to match calendar output. If the calendar printed new weather, an event or a moon phase for the new day, bring it into the narration of the waking.
 
 ---
 
