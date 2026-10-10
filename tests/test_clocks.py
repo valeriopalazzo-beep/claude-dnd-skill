@@ -215,6 +215,25 @@ class ServerTests(unittest.TestCase):
         self.mod._active_campaign = lambda: ""
         self.assertEqual(self.client.get("/clocks").get_json(), [])
 
+    def test_loading_another_campaign_sends_its_panels_to_the_pages_already_open(self):
+        """A page asks for clocks, bestiary, companions and the region map once, when it
+        loads. push_stats.py --set-campaign comes later, at /dm:dnd load: without a
+        broadcast those panels kept showing the previous campaign's (usually nothing)."""
+        m = self.mod
+        saved = (m.CAMP_FILE, m.STATS_FILE, m._load_tail, m._apply_campaign_sfx_languages)
+        m.CAMP_FILE = str(pathlib.Path(self._tmp.name) / ".campaign")
+        m.STATS_FILE = str(pathlib.Path(self._tmp.name) / "stats.json")
+        m._load_tail = m._apply_campaign_sfx_languages = lambda: None
+        try:
+            self.assertEqual(self.client.post("/stats", json={"campaign": "prova"}).status_code, 204)
+        finally:
+            m.CAMP_FILE, m.STATS_FILE, m._load_tail, m._apply_campaign_sfx_languages = saved
+        panels = next(p for p in self.sent if "clocks" in p)
+        self.assertEqual([c["name"] for c in panels["clocks"]], ["Il rito della Confraternita", "Scassinare il caveau"])
+        self.assertEqual(panels["bestiary"], [])
+        self.assertEqual(panels["companions"], [])
+        self.assertIn("region_changed", panels)
+
     def test_only_the_dm_moves_them(self):
         self.assertIn("clocks_changed", self.mod._DM_ENDPOINTS)
         self.assertNotIn("clocks_get", self.mod._DM_ENDPOINTS)

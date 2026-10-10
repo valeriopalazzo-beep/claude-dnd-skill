@@ -3192,6 +3192,14 @@ def stats():
             _apply_campaign_sfx_languages()
         except Exception:
             pass
+        # A page that was open before the switch read the old campaign's
+        # clocks, bestiary, companions and region map once, at load: send it
+        # the new campaign's, or those panels stay empty until a reload.
+        try:
+            _broadcast({"clocks": _public_clocks(), "bestiary": _public_bestiary(),
+                        "companions": _public_companions(), "region_changed": _time.time()})
+        except Exception:
+            pass
         # Resolve and stash the ruleset for this campaign so the sidebar badge
         # can render. Defaults to '2014' for legacy campaigns predating the
         # ruleset field. Wrapped in try/except so a missing paths import or
