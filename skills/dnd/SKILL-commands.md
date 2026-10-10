@@ -492,6 +492,11 @@ If `graph.json` doesn't exist yet for this campaign, skip the sweep entirely (no
       bash ${CLAUDE_SKILL_DIR}/display/verify_tail.sh <campaign-name>
       ```
       Exit 0 = healthy. Exit 1 = missing/empty/corrupt → write a canonical replacement to `~/.claude/dnd/campaigns/<name>/session_tail.json` from session context (5–8 entries, each `{"text": "...", "_camp": "<name>"}`) BEFORE the display kill — once the display is dead, only the file matters. The display's own `_persist_tail` has skip-on-empty + atomic-write guards, but the backstop ensures a worst-case file state is impossible.
+   g. **Backup:** with everything written, keep a dated copy of the campaign:
+      ```bash
+      python3 ${CLAUDE_SKILL_DIR}/scripts/backup.py save --campaign <campaign-name> --label end
+      ```
+      Say in one line where it went. If it fails, say so and carry on — the session is saved either way.
 2. Stop the display (always — even if `_display_running` was unclear):
    ```bash
    kill $(cat ${CLAUDE_SKILL_DIR}/display/app.pid 2>/dev/null) 2>/dev/null

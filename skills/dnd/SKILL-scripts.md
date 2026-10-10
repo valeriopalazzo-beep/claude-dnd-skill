@@ -780,6 +780,24 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/autosave_checkpoint.py --campaign <name> --s
 
 **When to use:** offer `install_autosave_hook.py` to players running long imported modules who hit compaction mid-session. The flag toggle (`/dm:dnd autosave on|off`) is the in-session control.
 
+## Campaign Backup — `scripts/backup.py`
+
+A dated zip of the campaign folder in `<DATA root>/backups/<campaign>/`, so a bad save or a wrong edit is never the only copy.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/scripts/backup.py save    --campaign <name> --label end   # every /dm:dnd end
+python3 ${CLAUDE_SKILL_DIR}/scripts/backup.py list    --campaign <name>
+python3 ${CLAUDE_SKILL_DIR}/scripts/backup.py restore --campaign <name> 1 --yes       # 1 = the newest
+```
+
+- It holds every file of the campaign except `media/` (pictures and maps are never edited and are most of the weight; `--media` for a complete copy) and the global roster sheets.
+- The newest 20 are kept (`--keep N`, `0` = all). `--dest DIR` or `DND_BACKUP_DIR` puts them on another disk or in a synced folder.
+- `restore` saves what is there now as `…-pre-restore.zip`, then puts the campaign back exactly as it was in the archive — files created since are removed, `media/` is left alone. It only runs with `--yes`: **ask the DM first, and stop the display before restoring** (it keeps writing `session_tail.json`). `--roster` also puts back the roster sheets.
+
+**When to run:** at `/dm:dnd end` (step 1g); before anything that rewrites many files at once (a level-up of the whole party, a migration, an `npc rename`); whenever the DM asks. Not on every save — the point is a copy from *before* the session's edits went wrong.
+
+---
+
 ## Lazy Corpus — `scripts/corpus_check.py`
 
 Imported (structured) campaigns keep the full module text as a lazily-loaded reference layer instead of inlining it. Layout:
