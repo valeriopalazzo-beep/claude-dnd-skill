@@ -485,6 +485,7 @@ _PUBLIC_ENDPOINTS = {"ping", "serve_icon", "favicon", "login", "login_options", 
 _DM_ENDPOINTS = {
     "chunk", "image", "stats", "clear", "health", "tts_voice",
     "dice_request", "dice_request_status", "dice_request_cancel",
+    "region_changed",   # region_map.py redrew the region map
     "device_approve", "device_deny",
     "queue_consumed", "submit_now", "drain_player_input",
     # Table-wide settings and the DM hint — the DM's, not a player's.
@@ -2086,7 +2087,7 @@ def chunk():
 # Files live in <campaign>/media/. Only the ACTIVE campaign's folder is served,
 # and names must match the same allowlist media.py writes with.
 _MEDIA_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,120}\.(?:png|jpe?g|webp|svg)$")
-_IMAGE_KINDS = {"portrait", "monster", "scene", "action", "item", "map"}
+_IMAGE_KINDS = {"portrait", "monster", "scene", "action", "item", "map", "region"}
 
 
 def _active_campaign() -> str:
@@ -2548,6 +2549,38 @@ def set_scene():
         pass
     _broadcast({"scene": _scene_payload(name)})
     return jsonify({"scene": name}), 200
+
+
+# ─── Region map (region_map.py) ──────────────────────────────────────────────
+# The places the party knows and the roads between them live in
+# <campaign>/region.json; region_map.py edits it and draws the picture into
+# media/. The display only reads: where each place sits on the picture and how
+# many days it is from the party, for the map every screen can open.
+
+import region_map as _region
+
+
+@app.route("/region", methods=["GET"])
+def region_get():
+    if not _token_ok():
+        return "Forbidden", 403
+    data = _region.empty()
+    camp = re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]
+    if camp:
+        try:
+            data = _region.load(str(_find_campaign(camp) / "region.json"))
+        except Exception:
+            data = _region.empty()
+    return jsonify(_region.public_view(data)), 200
+
+
+@app.route("/region", methods=["POST"])
+def region_changed():
+    """region_map.py redrew the map: tell every screen to fetch it again."""
+    if not _token_ok():
+        return "Forbidden", 403
+    _broadcast({"region_changed": _time.time()})
+    return "", 204
 
 
 @app.route("/music/<track_id>.mp3")

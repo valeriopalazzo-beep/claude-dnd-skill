@@ -523,7 +523,7 @@ This fires a green-bordered block in the companion feed showing each character's
 
 ## Images & Maps
 
-Only when the display is running. Syntax: `SKILL-scripts.md` → *Battle Maps* / *Generated Images*.
+Only when the display is running. Syntax: `SKILL-scripts.md` → *Battle Maps* / *Region Map* / *Generated Images*.
 
 **Maps and places only.** Generate exactly two kinds of picture: **battle maps**, and a **scene** of a place when the party reaches it and you describe it. Do **not** generate action beats, portraits, monsters or items unless a player explicitly asks for one. The image backend can't reliably render a specific action, two figures touching, or an unusual detail, and a picture that contradicts the narration breaks the scene worse than no picture at all.
 
@@ -532,6 +532,8 @@ Only when the display is running. Syntax: `SKILL-scripts.md` → *Battle Maps* /
 You write the layout and the tokens; the image backend paints the terrain's look, and the script puts grid, coordinates, tokens and effects on top in the exact squares. Add an `art:` header line — **English**, what the place looks like (materials, mood, light), no names or game terms — and keep it identical on every re-send of that place. A new place, or changed walls/water/terrain (a collapse is a terrain change; a fireball is an effect), takes 5–90 s: run that call as its **own Bash call with `run_in_background: true`** — a plain map appears at once and the painted one replaces it. If the art fails, the plain map stays; carry on and never mention it in the fiction.
 
 **Place scenes (`image_gen.py --kind scene`).** Generate one when the party first reaches a place and you describe it: a town, a tavern, a ruin, a dungeon mouth, a clearing. It's a wide establishing shot of the place itself, with no characters in it. Use `--subject` = the place's canonical name, so a return visit re-shows the cached picture instead of making a new one. Other kinds (`portrait`, `monster`, `action`, `item`) only when a player asks to see something specific.
+
+**Region map (`region_map.py`).** Keep the map of the region up to date as the party discovers it: add a place when the characters first reach it or hear of it (`--rumor`), link it with the days of travel, and move the party with `travel` / `here` when they go somewhere. It is drawn by the script (no image backend), every player can open it, and it answers "how far is…?" for them. Syntax and rules: `SKILL-scripts.md` → *Region Map*.
 
 **Prompts.** Write them in **English**: physical description only, with no names, game terms or text in the image. Describe **only the place**: materials, light, weather, mood (*low-beamed stone tavern, soot-black hearth, rain at the open door, candlelight*). Keep it to 12–30 words. Leave out animals, people, props and anything else a model could turn into the subject. A "stuffed wolf above the hearth" came back as a live wolf standing in the room. Pass `--negative "people, animals"` when the place is known for its creatures or crowds. Captions go in the campaign language.
 

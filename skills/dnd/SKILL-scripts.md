@@ -661,6 +661,34 @@ Re-sending a map with the same title (or `--name <id>`) marks the older copy in 
 
 Doors, known traps and stairs stay marked on top of painted art; tokens always do. Art is cached per terrain + `art:` line, so re-sends with moved tokens are instant — keep `art:` identical for the same place. New terrain: the plain map is shown immediately, the art version supersedes it when ready (run it with `run_in_background: true`). Any art failure leaves the plain map (stderr line, exit 0).
 
+## Region Map — `display/region_map.py`
+
+The map of the region, drawn on parchment as the party discovers it: places visited or heard of, roads with the days of travel, and a flag where the party is. Saved in `<campaign>/region.json`; every screen has it one tap away, and tapping a place shows what the party knows about it and how many days away it is. No image backend needed.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/display/region_map.py init "Valle di Cenere" --legend "I numeri sulle strade sono giorni di cammino"
+
+# The first place needs a position on a 0–100 grid (x → east, y → south); start near the middle:
+python3 ${CLAUDE_SKILL_DIR}/display/region_map.py add "Sarvenna" --kind city --at 40,55 --note "Capitale del ducato"
+# Every other place: where it is from one already on the map. It is placed and the road is drawn:
+python3 ${CLAUDE_SKILL_DIR}/display/region_map.py add "Cripta di Vessar" --kind dungeon --near "Sarvenna" --dir NE --days 2 --road trail
+python3 ${CLAUDE_SKILL_DIR}/display/region_map.py add "Porto Grigio" --kind port --near "Sarvenna" --dir W --days 3 --rumor
+
+python3 ${CLAUDE_SKILL_DIR}/display/region_map.py road "Cripta di Vessar" "Porto Grigio" --days 4 --kind trail
+python3 ${CLAUDE_SKILL_DIR}/display/region_map.py here "Sarvenna"            # the party is here; shows the map
+python3 ${CLAUDE_SKILL_DIR}/display/region_map.py travel "Cripta di Vessar"  # shortest known route; moves the party
+python3 ${CLAUDE_SKILL_DIR}/display/region_map.py note "Sarvenna" "Il duca è morto; regge il siniscalco"
+python3 ${CLAUDE_SKILL_DIR}/display/region_map.py list                       # places, coordinates, roads
+python3 ${CLAUDE_SKILL_DIR}/display/region_map.py remove "Porto Grigio"
+python3 ${CLAUDE_SKILL_DIR}/display/region_map.py show                       # put the map in the story now
+```
+
+- **Kinds:** `city town village castle tower ruin dungeon forest mountain lake port temple camp landmark` (Italian words — città, villaggio, rovine, cripta, bosco… — are understood). **Roads:** `road` (default), `trail`, `river`, `sea`. **Directions:** `N NE E SE S SW W NW`.
+- **Add a place only when the characters learn it exists** — they arrive, read it on a handout, or an NPC names it. `--rumor` = heard of but never seen: drawn faint with a question mark; reaching it with `travel` or `here` makes it visited. Never put secrets on the map.
+- **Keep it consistent with `world.md`**: same names, same directions and distances. Run `list` before adding if unsure where things are. Half days are fine (`--days 1.5`).
+- `travel` follows the shortest route along the roads on the map, marks every place on the way as visited and prints the legs and the total days. **It does not move the calendar**: when the journey has been played (encounters, camps), advance it with `calendar.py -c <campaign> advance N days`. If no known road leads there, add one with `road` — or use `here` when the party gets there some other way (teleport, ship, captured).
+- The map zooms out by itself when the known world outgrows the sheet. `note` text is shown to the players: write only what the party knows.
+
 ## Generated Images — `display/image_gen.py`
 
 **In play, generate only `scene` images of places (plus battle maps via `map_render.py`)** — see SKILL.md → *Images & Maps*. The other kinds below are for explicit player requests only.

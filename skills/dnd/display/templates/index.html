@@ -1316,6 +1316,33 @@
   .shop-buy:disabled{ opacity:.38; cursor:default; }
   .shop-item.soldout .shop-item-main, .shop-item.soldout .shop-price{ opacity:.5; }
 
+  /* ── Region map (region_map.py) — places, roads, days of travel ── */
+  .image-block.kind-region img { max-height: 75vh; border-radius: 2px; }
+  #region-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
+    align-items:center; justify-content:center; padding:12px; }
+  #region-modal.open{ display:flex; }
+  #region-panel{ display:flex; flex-direction:column; gap:10px; max-height:96vh;
+    width:min(1100px, 100%, calc((96vh - 176px) * 1.3333));   /* a wide screen shows the whole sheet, no scrolling */
+    min-width:min(100%, 340px);
+    color:var(--ln-text, #ECE4D2); font-family:'Alegreya Sans','Syne',sans-serif; }
+  #region-head{ display:flex; align-items:center; gap:10px; }
+  #region-head h2{ flex:1; min-width:0; margin:0; font-size:22px; line-height:1.15; }
+  #region-close{ flex:none; width:40px; height:40px; border-radius:999px; cursor:pointer; font-size:16px;
+    background:rgba(0,0,0,.35); color:inherit; border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #region-scroll{ flex:0 1 auto; max-height:calc(96vh - 176px); overflow:auto; border-radius:6px; background:#efe4c8;
+    -webkit-overflow-scrolling:touch; }
+  #region-map{ position:relative; width:max(100%, 880px); }
+  #region-map img{ display:block; width:100%; height:auto; }
+  .region-spot{ position:absolute; width:56px; height:56px; margin:-30px 0 0 -28px; padding:0; border-radius:50%;
+    background:transparent; border:3px solid transparent; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .region-spot:hover{ border-color:rgba(176,58,46,.35); }
+  .region-spot.sel{ border-color:#b03a2e; background:rgba(176,58,46,.12); }
+  #region-detail{ flex:none; min-height:84px; padding:11px 14px; border-radius:10px; font-size:16px; line-height:1.35;
+    background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
+  #region-detail b{ font-size:18px; }
+  #region-detail .region-meta{ display:block; font-size:14.5px; font-weight:700; color:var(--ln-accent, #f2b544); }
+  #region-detail p{ margin:5px 0 0; color:var(--ln-text-muted, #cdbfa6); }
+
   /* ── Milestones (sidebar — Bardic Inspiration / Hero Coin / Fate Token / etc.) ── */
   .sb-milestones { margin-top: 6px; }
   .sb-milestone-row {
@@ -4741,6 +4768,7 @@
   <div id="ph-set-menu" role="menu">
     <button class="ph-set-opt" id="ph-shop-opt" type="button" hidden><span data-i18n="shop.title">Shop</span><strong>🛒</strong></button>
     <button class="ph-set-opt" id="ph-theme-opt" type="button"><span data-i18n="ph.theme">Theme</span><strong id="ph-theme-val">Dark</strong></button>
+    <button class="ph-set-opt" id="ph-region-opt" type="button" hidden><span data-i18n="region.title">Region map</span><strong>🧭</strong></button>
     <label class="ph-set-opt ph-set-row" id="ph-skin-opt"><span data-i18n="ph.style">Style</span><select id="ph-skin-select" class="ph-set-select" aria-label="Display style"><option value="vellum">Vellum</option><option value="editorial">Editorial</option><option value="lanterna">Lanterna</option></select></label>
     <label class="ph-set-opt ph-set-row" id="ph-lang-opt"><span data-i18n="settings.language">Language</span><select id="ph-lang-select" class="ph-set-select" aria-label="Display language" data-i18n-aria="settings.language"></select></label>
     <button class="ph-set-opt" id="ph-sfx-opt" type="button"><span data-i18n="settings.sfx">Sound Effects</span><strong id="ph-sfx-val">On</strong></button>
@@ -4896,6 +4924,18 @@
   </div>
 </div>
 
+<!-- Region map: the places the party knows, drawn by region_map.py -->
+<div id="region-modal">
+  <div id="region-panel" role="dialog" aria-labelledby="region-title">
+    <div id="region-head">
+      <h2 id="region-title" data-i18n="region.title">Region map</h2>
+      <button id="region-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
+    </div>
+    <div id="region-scroll"><div id="region-map"></div></div>
+    <div id="region-detail"></div>
+  </div>
+</div>
+
 <!-- Character sidebar -->
 <div id="sidebar">
   <!-- Player cards are injected here by updateStats() -->
@@ -4936,6 +4976,7 @@
   <symbol id="ln-i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
   <symbol id="ln-i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></symbol>
   <symbol id="ln-i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="ln-i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36z"/></symbol>
   <symbol id="ln-i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
   <symbol id="ln-i-collapse" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M16 15l-3-3 3-3"/></symbol>
   <symbol id="ln-i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
@@ -4967,6 +5008,7 @@
     <div class="ln-group">
       <div class="ln-h" data-i18n="ln.group.world">World</div>
       <button class="ln-item" type="button" data-ln-go="missioni" data-phone title="Quests" data-i18n-title="ln.view.missioni"><svg class="ln-i"><use href="#ln-i-quest"/></svg><span class="ln-lbl" data-i18n="ln.view.missioni">Quests</span><span class="ln-badge" id="ln-badge-quests" hidden></span></button>
+      <button class="ln-item" type="button" id="ln-region" title="Region map" data-i18n-title="region.title" hidden><svg class="ln-i"><use href="#ln-i-compass"/></svg><span class="ln-lbl" data-i18n="region.title">Region map</span><span class="ln-badge" id="ln-badge-region" data-i18n="region.new" hidden>New</span></button>
       <button class="ln-item" type="button" data-ln-go="fazioni" title="Factions" data-i18n-title="ln.view.fazioni"><svg class="ln-i"><use href="#ln-i-flag"/></svg><span class="ln-lbl" data-i18n="ln.view.fazioni">Factions</span></button>
       <button class="ln-item" type="button" id="ln-handouts" title="Documents" data-i18n-title="handout.title"><svg class="ln-i"><use href="#ln-i-mail"/></svg><span class="ln-lbl" data-i18n="handout.title">Documents</span><span class="ln-badge" id="ln-badge-handouts" hidden></span></button>
       <button class="ln-item" type="button" data-ln-go="regole" title="Rules" data-i18n-title="ln.view.regole"><svg class="ln-i"><use href="#ln-i-rules"/></svg><span class="ln-lbl" data-i18n="ln.view.regole">Rules</span></button>
@@ -5032,6 +5074,7 @@
         <button class="ln-item" type="button" id="ln-shop-more" data-ln-proxy="ln-shop" hidden><svg class="ln-i"><use href="#ln-i-coins"/></svg><span class="ln-lbl" data-i18n="shop.title">Shop</span></button>
         <button class="ln-item" type="button" data-ln-go="fazioni"><svg class="ln-i"><use href="#ln-i-flag"/></svg><span class="ln-lbl" data-i18n="ln.view.fazioni">Factions</span></button>
         <button class="ln-item" type="button" data-ln-proxy="ln-handouts"><svg class="ln-i"><use href="#ln-i-mail"/></svg><span class="ln-lbl" data-i18n="handout.title">Documents</span></button>
+        <button class="ln-item" type="button" id="ln-region-more" data-ln-proxy="ln-region" hidden><svg class="ln-i"><use href="#ln-i-compass"/></svg><span class="ln-lbl" data-i18n="region.title">Region map</span></button>
         <button class="ln-item" type="button" data-ln-go="regole"><svg class="ln-i"><use href="#ln-i-rules"/></svg><span class="ln-lbl" data-i18n="ln.view.regole">Rules</span></button>
         <button class="ln-item" type="button" data-ln-go="impostazioni"><svg class="ln-i"><use href="#ln-i-settings"/></svg><span class="ln-lbl" data-i18n="ln.view.impostazioni">Settings</span></button>
         <button class="ln-item" type="button" data-ln-proxy="dm-help-btn"><svg class="ln-i"><use href="#ln-i-help"/></svg><span class="ln-lbl" data-i18n="ln.help">DM help</span></button>
@@ -6483,8 +6526,8 @@ function _renderImageBlockNow(image, isReplay) {
   const kind = String(image.kind || 'scene').replace(/[^a-z]/g, '');
 
   // A re-sent map (same subject) supersedes the earlier copies in the feed.
-  if (kind === 'map' && image.subject) {
-    textContent.querySelectorAll('.image-block.kind-map').forEach(el => {
+  if ((kind === 'map' || kind === 'region') && image.subject) {
+    textContent.querySelectorAll('.image-block.kind-' + kind).forEach(el => {
       if (el.dataset.subject === image.subject) el.classList.add('superseded');
     });
   }
@@ -9862,6 +9905,7 @@ function connect() {
       clearDisplay();
       if (typeof window._lnAfterStats === 'function') window._lnAfterStats({});
     }
+    if (payload.region_changed && typeof window._onRegionChanged === 'function') window._onRegionChanged();
     if (payload.replay_batch) {
       renderReplayBatch(payload.replay_batch);
     }
@@ -9926,6 +9970,113 @@ function connect() {
 }
 
 connect();
+
+// ── Region map (region_map.py) ────────────────────────────────────────
+// The picture is drawn by the script; GET /region says where each place sits
+// on it (in percent) and how many days it is from the party. Tapping a place
+// shows what the party knows about it.
+(function _initRegion() {
+  const modal = document.getElementById('region-modal');
+  if (!modal) return;
+  const mapEl = document.getElementById('region-map');
+  const detail = document.getElementById('region-detail');
+  const scroll = document.getElementById('region-scroll');
+  let region = null, seenFile = '';
+  try { seenFile = localStorage.getItem('dnd-region-seen') || ''; } catch (_) {}
+
+  function triggers() {
+    const has = !!(region && region.file);
+    ['ln-region', 'ln-region-more', 'ph-region-opt'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.hidden = !has;
+    });
+    const badge = document.getElementById('ln-badge-region');
+    if (badge) badge.hidden = !has || region.file === seenFile;
+    if (!has) modal.classList.remove('open');
+  }
+
+  function describe(place) {
+    detail.textContent = '';
+    if (!place) { detail.textContent = _t('region.hint', null, 'Tap a place to see what you know about it.'); return; }
+    const name = document.createElement('b');
+    name.textContent = place.name;
+    const meta = document.createElement('span');
+    meta.className = 'region-meta';
+    const parts = [];
+    if (place.here) parts.push(_t('region.here', null, 'You are here'));
+    else {
+      parts.push(place.status === 'visited' ? _t('region.visited', null, 'Visited') : _t('region.known', null, 'Heard of, never seen'));
+      if (region.party) {
+        parts.push(place.days === null ? _t('region.noroute', null, 'No known road from here')
+          : place.days === '1' ? _t('region.day1', null, '1 day from here')
+          : _t('region.days', { n: place.days }, place.days + ' days from here'));
+      }
+    }
+    meta.textContent = parts.join(' · ');
+    detail.append(name, meta);
+    if (place.note) { const p = document.createElement('p'); p.textContent = place.note; detail.appendChild(p); }
+  }
+
+  function render() {
+    mapEl.textContent = '';
+    if (!region || !region.file) return;
+    document.getElementById('region-title').textContent = region.title || _t('region.title', null, 'Region map');
+    const img = document.createElement('img');
+    img.src = _mediaUrl(region.file);
+    img.alt = region.title || '';
+    mapEl.appendChild(img);
+    region.places.forEach(place => {
+      const spot = document.createElement('button');
+      spot.type = 'button';
+      spot.className = 'region-spot';
+      spot.style.left = place.px + '%';
+      spot.style.top = place.py + '%';
+      spot.title = place.name;
+      spot.setAttribute('aria-label', place.name);
+      spot.addEventListener('click', () => {
+        mapEl.querySelectorAll('.region-spot.sel').forEach(s => s.classList.remove('sel'));
+        spot.classList.add('sel');
+        describe(place);
+      });
+      mapEl.appendChild(spot);
+    });
+    const here = region.places.find(p => p.here);
+    describe(here || null);
+    // A phone shows the map larger than the screen: start centred on the party.
+    img.addEventListener('load', () => {
+      const p = here || { px: 50, py: 50 };
+      scroll.scrollLeft = p.px / 100 * mapEl.offsetWidth - scroll.clientWidth / 2;
+      scroll.scrollTop = p.py / 100 * mapEl.offsetHeight - scroll.clientHeight / 2;
+    });
+  }
+
+  function refresh() {
+    return fetch('/region')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) { region = d; triggers(); if (modal.classList.contains('open')) open(); } })
+      .catch(() => {});
+  }
+
+  function open() {
+    if (!region || !region.file) return;
+    modal.classList.add('open');
+    render();
+    seenFile = region.file;
+    try { localStorage.setItem('dnd-region-seen', seenFile); } catch (_) {}
+    triggers();
+  }
+
+  window._onRegionChanged = refresh;
+  ['ln-region', 'ph-region-opt'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', open);
+  });
+  const close = () => modal.classList.remove('open');
+  document.getElementById('region-close').addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  refresh();
+})();
 
 // ── Input-only mode for mobile players ───────────────────────────────────
 // Triggered by either:
