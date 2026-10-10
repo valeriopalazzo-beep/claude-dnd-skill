@@ -3905,6 +3905,38 @@
   .init-row button{ flex:none; padding:6px 13px; border-radius:999px; cursor:pointer; font:inherit; font-size:15px; font-weight:700;
     color:inherit; background:rgba(0,0,0,.3); border:1px solid var(--ln-line-strong, rgba(255,255,255,.3)); }
 
+  /* ══ Death saving throws — the track on the card, the roll on the dying player's phone ══ */
+  .sb-death{ display:flex; align-items:center; gap:8px; margin-top:6px; font-size:12px; font-weight:700; letter-spacing:.04em;
+    color:rgba(232,120,110,.95); }
+  .sb-death .sb-death-pips{ letter-spacing:2px; font-variant-numeric:tabular-nums; }
+  .sb-death .ok{ color:rgba(140,205,140,.95); }
+  .sb-death.stable{ color:rgba(140,205,140,.95); }
+  .sb-death.dead{ color:rgba(200,190,180,.7); }
+  :root[data-skin="lanterna"] .sb-death{ font-family:'Alegreya Sans',sans-serif; font-size:15.5px; margin-top:8px; }
+  #death-card{ display:none; position:fixed; inset:0; z-index:10555; align-items:flex-start; justify-content:center;
+    padding:calc(64px + env(safe-area-inset-top, 0px)) 12px 12px; pointer-events:none; }
+  #death-card.open{ display:flex; }
+  #death-card.mine{ background:rgba(20,4,4,.82); pointer-events:auto; align-items:center; padding-top:12px; }
+  #death-box{ pointer-events:auto; width:min(400px, 100%); padding:16px 18px; border-radius:16px;
+    color:var(--ln-text, #ECE4D2); font-family:'Alegreya Sans','Syne',sans-serif;
+    background:var(--ln-surface, #1d1813); border:1px solid rgba(226,87,76,.55); box-shadow:0 18px 50px rgba(0,0,0,.6); }
+  #death-box h3{ margin:0 0 10px; font-size:21px; line-height:1.15; }
+  #death-mine{ display:block; width:100%; margin:0 0 12px; padding:18px 12px; border:0; border-radius:14px; cursor:pointer;
+    font:inherit; font-size:24px; font-weight:800; color:#fff; background:#b03a2e; animation:death-pulse 1.3s ease-in-out infinite; }
+  #death-mine[hidden]{ display:none; }
+  @keyframes death-pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(176,58,46,.6); } 50%{ box-shadow:0 0 0 14px rgba(176,58,46,0); } }
+  @media (prefers-reduced-motion: reduce){ #death-mine{ animation:none; } }
+  #death-result{ margin:0 0 10px; font-size:19px; font-weight:800; color:var(--ln-accent, #f2b544); }
+  #death-result:empty{ display:none; }
+  .death-row{ display:flex; align-items:center; gap:10px; padding:7px 0; font-size:17px;
+    border-top:1px solid var(--ln-line, rgba(255,255,255,.12)); }
+  .death-row:first-child{ border-top:0; }
+  .death-row .death-name{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700; }
+  .death-row .death-pips{ flex:none; letter-spacing:2px; color:rgba(232,120,110,.95); }
+  .death-row .death-pips .ok{ color:rgba(140,205,140,.95); }
+  .death-row button{ flex:none; padding:6px 13px; border-radius:999px; cursor:pointer; font:inherit; font-size:15px; font-weight:700;
+    color:inherit; background:rgba(0,0,0,.3); border:1px solid var(--ln-line-strong, rgba(255,255,255,.3)); }
+
   /* ══ "Your turn" banner — a few seconds, and taps pass through to the tabs under it ══ */
   #turn-banner{
     position:fixed; left:50%; top:calc(10px + env(safe-area-inset-top, 0px));
@@ -4831,6 +4863,16 @@
 <!-- Transient toast (DM Help status, etc.) -->
 <div id="toast" role="status" aria-live="polite"></div>
 <div id="turn-banner" role="alert"></div>
+
+<!-- Death saving throws: the dying player rolls here on their turn; the table screen can roll for them -->
+<div id="death-card">
+  <div id="death-box" role="dialog" aria-labelledby="death-title">
+    <h3 id="death-title" data-i18n="death.title">Death saving throw</h3>
+    <p id="death-result"></p>
+    <button id="death-mine" type="button" data-i18n="death.roll" hidden>Roll the d20</button>
+    <div id="death-list"></div>
+  </div>
+</div>
 
 <!-- Initiative roll: every player rolls their own; the table screen rolls for who has no phone -->
 <div id="init-card">
@@ -7167,6 +7209,18 @@ function _buildPlayerCard(p, solo) {
     card.appendChild(condEl);
   }
 
+  // Death saves — the whole table watches these
+  if (p.death_saves) {
+    const d = _deathState(p, '', null);
+    const row = document.createElement('div');
+    row.className = 'sb-death' + (d.dead ? ' dead' : d.stable ? ' stable' : '');
+    row.dataset.role = 'death-saves';
+    if (d.dead) row.textContent = '☠ ' + _t('death.dead', null, 'Dead');
+    else if (d.stable) row.textContent = '⚕ ' + _t('death.stable', null, 'Stable');
+    else row.append(document.createTextNode('☠'), _deathPipsEl(d, 'sb-death-pips'));
+    card.appendChild(row);
+  }
+
   // Concentration
   if (p.concentration) {
     const concEl = document.createElement('div');
@@ -8046,7 +8100,7 @@ function _makeUnfoldable(item, detail, key, openSet) {
 // like are merged field by field; the keys in _WHOLE_KEYS travel whole with
 // every snapshot, so what the server no longer sends is over (a timer that
 // ran out must not come back with the next plain "Poisoned").
-const _WHOLE_KEYS = ['condition_timers'];
+const _WHOLE_KEYS = ['condition_timers', 'death_saves'];
 function _mergePlayer(existing, p) {
   // Deep merge hp, xp, ability_scores; replace scalars
   for (const [k, v] of Object.entries(p)) {
@@ -8195,6 +8249,7 @@ function updateStats(stats) {
   }
   // Lanterna skin: refresh its menu badges / "me" card from the merged data.
   if (typeof window._lnAfterStats === 'function') window._lnAfterStats(stats);
+  if (typeof window._onDeathSaves === 'function') window._onDeathSaves();
 }
 
 let _currentTurnOrder = null;
@@ -8393,6 +8448,108 @@ function _initRows(state, me) {
     }
   };
   card.addEventListener('click', e => { if (e.target === card && state && state.done) card.classList.remove('open', 'mine'); });
+})();
+
+// ── Death saving throws ───────────────────────────────────────────────
+// A character at 0 HP has a death_saves track in the stats. _deathState only
+// decides: what the track says and whether THIS screen may roll now — the
+// dying player on their own turn (any time outside a fight), or the table
+// screen for them. The roll itself is made by the server.
+function _deathState(p, me, turn) {
+  const ds = p && p.death_saves;
+  if (!ds) return null;
+  const same = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+  const dying = !ds.stable && !ds.dead;
+  const inFight = !!(turn && turn.current);
+  const myTurn = inFight && same(turn.current, p.name);
+  const rolled = inFight && ds.rolled === ((turn.round ?? 1) + ':' + String(p.name).toLowerCase());
+  return {
+    name: p.name, successes: ds.successes || 0, failures: ds.failures || 0, stable: !!ds.stable, dead: !!ds.dead,
+    mine: !!me && same(p.name, me),
+    canRoll: dying && (!me || same(p.name, me)) && (!inFight || (myTurn && !rolled)),
+  };
+}
+function _deathPips(n, mark) {
+  n = Math.max(0, Math.min(3, n || 0));
+  return mark.repeat(n) + '○'.repeat(3 - n);
+}
+// ── end death-save decision ──
+
+function _deathPipsEl(d, cls) {
+  const el = document.createElement('span');
+  el.className = cls;
+  const ok = document.createElement('span');
+  ok.className = 'ok';
+  ok.textContent = _deathPips(d.successes, '✓');
+  el.append(ok, document.createTextNode(' ' + _deathPips(d.failures, '✗')));
+  return el;
+}
+
+(function _initDeathSaves() {
+  const card = document.getElementById('death-card');
+  if (!card) return;
+  const list = document.getElementById('death-list');
+  const mineBtn = document.getElementById('death-mine');
+  const resultEl = document.getElementById('death-result');
+  let resultTimer = null, wasMine = false;
+
+  function roll(name, button) {
+    if (button) button.disabled = true;
+    fetch('/death-save/roll', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(_dndToken ? { 'X-DND-Token': _dndToken } : {}) },
+      body: JSON.stringify({ character: name }),
+    }).then(r => { if (!r.ok && button) button.disabled = false; }).catch(() => { if (button) button.disabled = false; });
+  }
+
+  function render() {
+    const me = _turnMine();
+    const states = Object.values(_playerData).map(p => _deathState(p, me, _currentTurnOrder)).filter(Boolean);
+    const can = states.filter(d => d.canRoll);
+    const mine = can.find(d => d.mine);
+    const showing = !!resultEl.textContent;
+    card.classList.toggle('open', can.length > 0 || showing);
+    card.classList.toggle('mine', !!mine || (showing && !!me));
+    mineBtn.hidden = !mine;
+    if (mine) {
+      mineBtn.disabled = false;
+      mineBtn.onclick = () => roll(mine.name, mineBtn);
+      if (!wasMine && navigator.vibrate) navigator.vibrate([200, 90, 200]);
+    }
+    wasMine = !!mine;
+    list.textContent = '';
+    (me ? states.filter(d => d.mine) : can).forEach(d => {
+      const row = document.createElement('div');
+      row.className = 'death-row';
+      const name = document.createElement('span');
+      name.className = 'death-name';
+      name.textContent = d.name;
+      row.append(name, _deathPipsEl(d, 'death-pips'));
+      if (!me && d.canRoll) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = _t('death.rollFor', null, 'Roll');
+        b.addEventListener('click', () => roll(d.name, b));
+        row.appendChild(b);
+      }
+      list.appendChild(row);
+    });
+  }
+  window._onDeathSaves = render;
+
+  window._onDeathSaveResult = function (res) {
+    if (!res || !res.character) return;
+    const text = _t('death.res.' + res.outcome, { name: res.character, roll: res.roll },
+                    res.character + ': ' + res.roll);
+    _showToast(text, 6000);
+    if (_turnSame(res.character, _turnMine())) {
+      resultEl.textContent = text;
+      clearTimeout(resultTimer);
+      resultTimer = setTimeout(() => { resultEl.textContent = ''; render(); }, 6000);
+      render();
+    }
+  };
+  card.addEventListener('click', e => { if (e.target === card && !mineBtn.offsetParent) { resultEl.textContent = ''; render(); } });
 })();
 
 // ═══════════════════════════════════════════════════════════════════
@@ -10180,6 +10337,7 @@ function connect() {
       }
     }
     if ('initiative' in payload && typeof window._onInitiative === 'function') window._onInitiative(payload.initiative);
+    if (payload.death_save && typeof window._onDeathSaveResult === 'function') window._onDeathSaveResult(payload.death_save);
     if (payload.effect_expired) {
       const ev = payload.effect_expired;
       renderEffectExpiredBlock(ev.owner, ev.condition ? _condLabel(ev.name) : ev.name, ev.was_concentration);

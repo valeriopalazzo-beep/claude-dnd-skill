@@ -32,6 +32,10 @@ Usage:
     # Conditions — granular add/remove (preferred mid-session):
     python3 push_stats.py --player Flerb --conditions-add "Poisoned"
     python3 push_stats.py --player Flerb --conditions-add "Poisoned:3r"   # ends by itself: 3r / 10m / 1h
+
+    # Death saves (the track starts by itself at 0 HP and ends with any healing):
+    python3 push_stats.py --player Flerb --death-save failure   # hit while down (crit = two failures)
+    python3 push_stats.py --player Flerb --death-save stable    # start | success | failure | crit | stable | reset
     python3 push_stats.py --player Flerb --conditions-remove "Poisoned"
 
     # Concentration:
@@ -178,6 +182,11 @@ def main() -> None:
     parser.add_argument("--conditions-add", metavar="CONDITION[:DURATION]",
                         help="Add one condition without replacing others (requires --player); "
                              "'Poisoned:3r' / ':10m' / ':1h' ends by itself")
+    parser.add_argument("--death-save", metavar="ACTION",
+                        choices=["start", "success", "failure", "crit", "stable", "reset"],
+                        help="Death-save track of a PC at 0 HP (requires --player): failure / crit for damage "
+                             "taken while down, stable for Spare the Dying or a Medicine check, success, "
+                             "start, reset")
     parser.add_argument("--conditions-remove", metavar="CONDITION",
                         help="Remove one condition by name, case-insensitive (requires --player)")
     parser.add_argument("--concentrate", metavar="SPELL",
@@ -253,6 +262,7 @@ def main() -> None:
         args.hp or args.temp_hp is not None or args.xp
         or args.second_wind is not None
         or args.conditions is not None or args.conditions_add or args.conditions_remove
+        or args.death_save
         or args.concentrate is not None
         or args.spell_slots is not None or args.slot_use or args.slot_restore
         or args.hit_dice_use or args.hit_dice_restore
@@ -283,6 +293,8 @@ def main() -> None:
             player_update["_conditions_add"] = _condition_value(args.conditions_add)
         if args.conditions_remove:
             player_update["_conditions_remove"] = args.conditions_remove
+        if args.death_save:
+            player_update["_death_save"] = args.death_save
         if args.concentrate is not None:
             player_update["concentration"] = args.concentrate.strip() or None
         if args.spell_slots is not None:

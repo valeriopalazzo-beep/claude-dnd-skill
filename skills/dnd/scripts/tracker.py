@@ -178,6 +178,17 @@ def _push_timed_condition(entity_name: str, condition: str, duration: str) -> No
         pass  # Display not running — fail silently
 
 
+def _push_death_save(entity_name: str, action: str) -> None:
+    """Mirror a death-save step on the display's card. Silent when it is not running."""
+    try:
+        subprocess.run(
+            [sys.executable, PUSH_STATS, "--player", entity_name, "--death-save", action],
+            capture_output=True, timeout=3,
+        )
+    except Exception:
+        pass
+
+
 def _send_announce(msg: str) -> None:
     """Send a one-line announcement to the display companion."""
     try:
@@ -434,6 +445,7 @@ def cmd_saves(campaign: str, entity_name: str, action: str) -> None:
 
     ent["death_saves"] = saves
     _save(campaign, state)
+    _push_death_save(entity_name, action)
 
 
 def cmd_status(campaign: str, filter_name: str = "") -> None:

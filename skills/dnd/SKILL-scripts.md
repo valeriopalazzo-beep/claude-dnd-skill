@@ -271,6 +271,12 @@ python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --player Flerb --conditions-ad
 python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --player Flerb --conditions-add "Poisoned:3r"   # ends by itself: 3r / 10m / 1h
 python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --player Flerb --conditions-remove "Poisoned"
 
+# Death saves — the track starts by itself at 0 HP and ends with any healing; the player rolls from the phone
+python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --player Flerb --death-save failure   # hit while down
+python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --player Flerb --death-save crit      # critical hit: two failures
+python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --player Flerb --death-save stable    # Spare the Dying, Medicine DC 10
+python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --player Flerb --death-save reset     # also: start, success
+
 # Concentration:
 python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --player Flerb --concentrate "Bless"
 python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --player Flerb --concentrate ""        # clear
@@ -353,6 +359,7 @@ If `check_input.py` returns output, prepend it to the player's terminal input wh
 - Condition gained → `--player NAME --conditions-add "Name"`; removed → `--conditions-remove "Name"`
 - Condition with a set length ("until the end of its next turn", "for 1 minute") → add it as `"Name:1r"` / `"Name:10r"` / `"Name:10m"` / `"Name:1h"`. The pill shows what is left; rounds go down each time the tracker reaches that character (`--turn-current`), minutes and hours run on the clock, and at zero the display removes the condition and announces it. A save that ends it early is still yours: `--conditions-remove`. Sending the same turn twice does not count twice
 - Concentration started → `--player NAME --concentrate "Spell"`; ended → `--concentrate ""`
+- PC at 0 HP → just push the HP: the death-save track appears on their card and their phone gets the roll on their turn. Hit while down → `--death-save failure` (`crit` on a critical hit); stabilised → `--death-save stable`; healed → push the HP, the track goes away. See SKILL.md → *Death saving throws*
 - Item picked up → `scripts/inventory.py add NAME "Item"`; dropped/used → `inventory.py remove NAME "Item"` (they update the sheet file and the display together; the bare `push_stats.py --inventory-add/--inventory-remove` changes the display only)
 - Coins gained or spent → `scripts/inventory.py gain / pay / buy / sell / split`
 - Timed effect starts → `--effect-start "NAME:SPELL:DURATION[:conc]"` bundled with narration send
@@ -430,7 +437,7 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/tracker.py -c $CAMP clear           # condit
 python3 ${CLAUDE_SKILL_DIR}/scripts/tracker.py -c $CAMP clear --all     # also clears death saves
 ```
 
-**When to run:** condition applied/removed; caster begins/loses concentration (immediately, not end of turn); PC drops to 0 HP; each death save rolled; end of encounter → `clear`.
+**When to run:** condition applied/removed; caster begins/loses concentration (immediately, not end of turn); PC drops to 0 HP; each death save rolled; end of encounter → `clear`. With the display running the death saves are rolled and counted there (SKILL.md → *Death saving throws*): `saves` is for a table with no display, and each step it records is mirrored on the display's card.
 
 ---
 

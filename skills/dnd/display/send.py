@@ -46,6 +46,7 @@ Usage:
     #   --stat-slot-restore "NAME:LEVEL"     (restore one slot)
     #   --stat-condition-add    "NAME:CONDITION[:DURATION]"   DURATION: 3r/10m/1h — it ends by itself
     #   --stat-condition-remove "NAME:CONDITION"
+    #   --stat-death-save       "NAME:ACTION"   failure | crit | stable | success | start | reset
     #   --stat-concentrate "NAME:SPELL"       (empty SPELL = clear)
     #   --stat-inventory-add    "NAME:ITEM"
     #   --stat-inventory-remove "NAME:ITEM"
@@ -331,6 +332,11 @@ def _build_stats_payload(args) -> "dict | None":
             if cond.strip():
                 _p(name)["_conditions_remove"] = cond.strip()
 
+    for spec in (getattr(args, "stat_death_save", None) or []):
+        name, _, action = spec.rpartition(":")
+        if name.strip() and action.strip().lower() in ("start", "success", "failure", "crit", "stable", "reset"):
+            _p(name.strip())["_death_save"] = action.strip().lower()
+
     for spec in (args.stat_concentrate or []):
         idx = spec.find(":")
         if idx >= 0:
@@ -481,6 +487,9 @@ def main() -> None:
         help="Add condition: NAME:CONDITION, or NAME:CONDITION:3r / :10m / :1h for one that ends by itself (can repeat)")
     parser.add_argument("--stat-condition-remove", action="append", metavar="NAME:COND",
         help="Remove condition: NAME:CONDITION (can repeat)")
+    parser.add_argument("--stat-death-save", action="append", metavar="NAME:ACTION",
+        help="Death-save track of a PC at 0 HP: NAME:failure (hit while down), NAME:crit (two failures), "
+             "NAME:stable, NAME:success, NAME:start, NAME:reset (can repeat)")
     parser.add_argument("--stat-concentrate", action="append", metavar="NAME:SPELL",
         help="Set concentration: NAME:SPELL (empty SPELL = clear)")
     parser.add_argument("--stat-inventory-add", action="append", metavar="NAME:ITEM",

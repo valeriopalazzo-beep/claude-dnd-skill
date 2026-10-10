@@ -2645,6 +2645,7 @@ def stats():
                     "_effect_start", "_effect_end",
                     "_sheet_spells",
                     "_milestone_inc", "_milestone_dec",
+                    "_death_save",
                 }
                 if match:
                     for key, val in incoming.items():
@@ -2728,6 +2729,8 @@ def stats():
                             if removed and any(e.get("concentration") for e in removed):
                                 if (match.get("concentration") or "").lower() == spell_lower:
                                     match["concentration"] = None
+                        elif key == "_death_save":
+                            _apply_death_save(match, val)
                         elif key == "_sheet_spells":
                             # Patch only the spells sub-key inside sheet
                             sheet = match.setdefault("sheet", {})
@@ -2752,6 +2755,7 @@ def stats():
                             match[key].update(val)
                         else:
                             match[key] = val
+                    _death_saves_follow_hp(match)
                     # A full --conditions replace drops the timers of what it dropped.
                     if match.get("condition_timers"):
                         have = {str(c).lower() for c in match.get("conditions", [])}
@@ -2930,6 +2934,126 @@ def stats():
     if ignored_players:
         return jsonify({"ignored_players": ignored_players}), 200
     return "", 204
+
+
+# ─── Death saving throws ─────────────────────────────────────────────────────
+# A PC at 0 HP gets a death-save track on their card, visible to the table.
+# The player rolls from their phone on their turn (the DM's screen can roll
+# for them); the DM adds a failure for damage taken while down. Three
+# successes: stable. Three failures: dead. A natural 20: back up with 1 HP.
+
+_DEATH_SAVE_ACTIONS = ("start", "success", "failure", "crit", "stable", "reset")
+
+
+def _apply_death_save(p: dict, action: str) -> None:
+    """One step on a character's death-save track."""
+    action = str(action or "").strip().lower()
+    if action not in _DEATH_SAVE_ACTIONS:
+        return
+    if action == "reset":
+        p.pop("death_saves", None)
+        return
+    ds = p.get("death_saves")
+    if action == "start" or not isinstance(ds, dict) or ds.get("dead"):
+        if action != "start" and isinstance(ds, dict) and ds.get("dead"):
+            return                                       # the dead make no more saves
+        ds = {"successes": 0, "failures": 0, "stable": False, "dead": False}
+    if action == "success":
+        ds["successes"] = min(3, int(ds.get("successes", 0)) + 1)
+    elif action in ("failure", "crit"):                  # damage while down; a critical hit counts twice
+        ds["failures"] = min(3, int(ds.get("failures", 0)) + (2 if action == "crit" else 1))
+        ds["stable"] = False
+    if ds["failures"] >= 3:
+        ds.update(dead=True, stable=False)
+    elif action == "stable" or ds["successes"] >= 3:
+        ds.update(stable=True, successes=0, failures=0)  # the count starts over if they are hurt again
+    p["death_saves"] = ds
+
+
+def _death_saves_follow_hp(p: dict) -> None:
+    """Dropping to 0 HP starts the track; any healing ends it (the dead stay dead)."""
+    hp = p.get("hp") if isinstance(p.get("hp"), dict) else {}
+    cur = hp.get("current")
+    if not isinstance(cur, (int, float)) or isinstance(cur, bool):
+        return
+    ds = p.get("death_saves")
+    if cur > 0:
+        if isinstance(ds, dict) and not ds.get("dead"):
+            p.pop("death_saves", None)
+    elif not ds and (hp.get("max") or 0) > 0:
+        _apply_death_save(p, "start")
+
+
+def _pips(n: int, mark: str) -> str:
+    n = max(0, min(3, int(n)))
+    return mark * n + "○" * (3 - n)
+
+
+@app.route("/death-save/roll", methods=["POST"])
+def death_save_roll():
+    """A dying character's death saving throw, rolled here.
+
+    In a fight it can be rolled once, on that character's turn. A player rolls
+    only for their own character; the DM's screen may roll for anyone.
+    """
+    data = request.get_json(silent=True) or {}
+    name = str(data.get("character", "")).strip()
+    if not name:
+        return jsonify({"error": "no character"}), 400
+    if _is_other_character(name):
+        return "Forbidden", 403
+    with _stats_lock:
+        p = next((x for x in _current_stats.get("players", [])
+                  if str(x.get("name", "")).lower() == name.lower()), None)
+        ds = p.get("death_saves") if p else None
+        if not isinstance(ds, dict) or ds.get("stable") or ds.get("dead"):
+            return jsonify({"error": "not dying"}), 409
+        turn = _current_stats.get("turn_order")
+        if isinstance(turn, dict) and turn.get("current"):
+            if str(turn["current"]).lower() != p["name"].lower():
+                return jsonify({"error": "not your turn"}), 409
+            stamp = f"{turn.get('round', 1)}:{p['name'].lower()}"
+            if ds.get("rolled") == stamp:
+                return jsonify({"error": "already rolled this turn"}), 409
+            ds["rolled"] = stamp
+        roll = secrets.randbelow(20) + 1
+        if roll == 20:
+            p.setdefault("hp", {})["current"] = 1
+            p.pop("death_saves", None)
+            outcome, tally = "up", "→ 1 HP"
+        else:
+            _apply_death_save(p, "crit" if roll == 1 else "success" if roll >= 10 else "failure")
+            after = p["death_saves"]
+            outcome = ("dead" if after["dead"] else "stable" if after["stable"]
+                       else "fail2" if roll == 1 else "success" if roll >= 10 else "failure")
+            # A stabilised track is wiped, so the line shows the three that got there.
+            wins = 3 if outcome == "stable" else after["successes"]
+            tally = f"{_pips(wins, '✓')} {_pips(0 if outcome == 'stable' else after['failures'], '✗')}"
+            tally += " ☠" if outcome == "dead" else " ⚕" if outcome == "stable" else ""
+        after = p.get("death_saves") or {}
+        result = {"character": p["name"], "roll": roll, "outcome": outcome,
+                  "successes": after.get("successes", 0), "failures": after.get("failures", 0)}
+        line = f"☠ {p['name']}: d20 = {roll} · {tally}"
+        current = dict(_current_stats)
+
+    entry = {"text": line, "dice": True}
+    try:
+        camp = open(CAMP_FILE, encoding="utf-8").read().strip()
+        if camp:
+            entry["_camp"] = camp
+    except Exception:
+        pass
+    with _text_log_lock:
+        _text_log.append(entry)
+    with _tail_lock:
+        _tail_buffer.append(entry)
+    _persist_log()
+    _persist_tail()
+    _persist_stats()
+    _broadcast({"text": line, "dice": True})
+    _broadcast({"stats": current})
+    _broadcast({"death_save": result})
+    return jsonify(result), 200
 
 
 def _condition_timer(val: dict) -> Optional[dict]:
@@ -4279,7 +4403,7 @@ def whispers_list():
 # watching: enough for the party cards (HP, AC, conditions), never the sheet.
 _PARTY_CARD_KEYS = {
     "name", "race", "class", "level", "background", "hp", "ac", "speed",
-    "conditions", "condition_timers", "concentration", "inspiration", "xp", "hit_dice",
+    "conditions", "condition_timers", "death_saves", "concentration", "inspiration", "xp", "hit_dice",
     "spell_slots", "effects", "initiative", "player_name",
 }
 
