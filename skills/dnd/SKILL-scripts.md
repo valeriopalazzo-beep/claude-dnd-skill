@@ -94,6 +94,32 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/xp.py award \
 
 ---
 
+## Encounter Builder — `scripts/encounter.py`
+
+Sizes a fight for the PCs who are actually present, with the 5e encounter budget done by the script.
+
+```bash
+# The fiction says who is there — how many of each make it hard for this party?
+python3 ${CLAUDE_SKILL_DIR}/scripts/encounter.py build --campaign $CAMP --difficulty hard --with hobgoblin --with goblin
+
+# Nothing decided yet — a few differently shaped groups to choose from
+python3 ${CLAUDE_SKILL_DIR}/scripts/encounter.py build --campaign $CAMP --difficulty medium --type undead
+python3 ${CLAUDE_SKILL_DIR}/scripts/encounter.py build --party 5,5,4,4 --difficulty deadly --type fiend,undead --options 5
+
+# How hard is this group?
+python3 ${CLAUDE_SKILL_DIR}/scripts/encounter.py rate --campaign $CAMP --monsters "goblin:4,hobgoblin"
+```
+
+- **Party:** `--campaign` reads the levels from the sheets and leaves out the PCs in `absent:`; or `--party 3,3,2`; or `--level 3 --players 4`.
+- **`--with NAME`** (repeatable, Italian names understood): the script finds the counts. If those creatures cannot make that difficulty it prints the closest group and says so.
+- **Without `--with`:** one creature, a pair, a pack, a leader with followers — each option of a single creature type. `--type` narrows the types, `--exclude dragon,lich` keeps names out, `--max-cr N` caps one creature (default: party level + 1), `--seed` repeats the draw.
+- Every result prints the XP maths, the party's four thresholds, the `--monsters "…"` string for `xp.py award` and the combatants (AC, HP, DEX) ready for `combat.py init` — add the PCs to that list.
+- Names come out in the campaign's language (`language:` Session Flag, or `--lang it`).
+
+**When to use it:** before any fight you are preparing or improvising — choose the creatures for the story, let the script choose the numbers. Pick the difficulty from the scene and the `difficulty` table dial, not from habit: most fights medium, a hard one where the stakes are, deadly rarely and telegraphed. The budget ignores terrain, surprise and a party that is already hurt: shift one step down when the PCs are low on resources. Read the stat block with `lookup.py monster` before running a creature you have not used.
+
+---
+
 ## Combat Script — `scripts/combat.py`
 ```bash
 # Roll initiative and print tracker

@@ -755,7 +755,7 @@ Run `scripts/dice.py <notation>`. Display output verbatim. Examples: `d20`, `2d6
 ---
 
 ## `/dm:dnd combat start`
-1. Identify combatants; collect name, DEX mod, HP, AC, type (pc/npc) for each.
+1. Identify combatants; collect name, DEX mod, HP, AC, type (pc/npc) for each. For the enemies, `encounter.py build … --with <creature>` gives the numbers that fit the party and prints those fields ready to paste.
 2. Run `combat.py init '<JSON>'` — auto-roll initiative for every combatant including PCs. Display tracker and per-combatant roll breakdown.
 3. Send initiative to display:
    ```bash

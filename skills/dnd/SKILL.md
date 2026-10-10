@@ -159,7 +159,7 @@ ${CLAUDE_SKILL_DIR}/                 ← the skill dir (plugin: <plugin>/skills/
   SKILL.md           ← core DM rules (this file)
   SKILL-scripts.md   ← all Python script syntax (load at session start)
   SKILL-commands.md  ← all /dm:dnd command procedures (load at session start)
-  scripts/           ← dice.py, combat.py, character.py, tracker.py, calendar.py, lookup.py, inventory.py, loot.py, backup.py
+  scripts/           ← dice.py, combat.py, character.py, tracker.py, calendar.py, lookup.py, inventory.py, loot.py, encounter.py, backup.py
   data/              ← bundled 5e SRD dataset (dnd5e_srd.json — no download needed; sync via /dm:dnd data sync)
   templates/         ← blank character-sheet.md, state.md, world.md, npcs.md, session-log.md
   display/           ← Flask SSE display companion (dnd-display-app.py, send.py, push_stats.py, wrapper.py, tts.py, map_render.py, map_art.py, image_gen.py)
@@ -429,7 +429,7 @@ When `state.md → ## Session Flags → absent:` names one or more PCs, their pl
 
 - **In the fiction:** give each a plausible reason to be off-screen — keeping watch at camp, recovering, tending to their own business, following another lead. Pick what fits where the party is; never kill, capture or harm a benched PC, and never make decisions or speak for them. If the scene makes their absence impossible (they were mid-dungeon with the party), they "fade into the background": present but passive, never targeted, never rolling.
 - **Mechanics:** no rolls, no turns in initiative, no resource use. Their sheet is frozen except for XP.
-- **Encounter balance:** build and rate encounters on the PCs who are present — `xp.py calc --players <present count>`.
+- **Encounter balance:** build and rate encounters on the PCs who are present — `encounter.py --campaign <name>` leaves the benched PCs out by itself.
 - **XP:** benched PCs receive **every** award the table receives — pass them with `--absent` (see *XP Awards*), never in `--characters`.
 - **Display:** they are not in the sidebar (see `/dm:dnd load` step 6) and never targeted by `send.py --player` or `--stat-*` flags.
 - **A player arrives late:** remove them from `absent:`, push their full card with `push_stats.py --json` (no `--replace-players`, so the others stay), and write them into the scene with one line.
@@ -443,6 +443,12 @@ Money and gear are **applied by script, never by hand**: `scripts/inventory.py` 
 Treasure is rolled, not improvised: `scripts/loot.py roll --cr N [--monsters N | --hoard]` draws coins, valuables and magic items for the challenge, and `loot.py take` splits the coins and puts each item on the sheet of whoever takes it. Syntax: `SKILL-scripts.md` → *Treasure*.
 
 When the party enters a shop and wants to browse, open it on their screens with `display/shop.py open` and a price list: each player buys from their own phone and the purchase is applied automatically. A `[[SHOP: … bought …]]` line from `check_input.py` reports a sale that is **already paid and on the sheet** — never apply it again. Syntax: `SKILL-scripts.md` → *Inventory Script* / *Shop*.
+
+---
+
+## Encounters
+
+**Never size a fight by feel.** Choose the creatures for the story, then let `scripts/encounter.py build --campaign <name> --difficulty <tier> --with <creature> …` choose how many: it reads the levels of the PCs present and does the encounter budget. With no creature in mind, `build --type <types>` proposes a few groups. It prints the combatants for `combat.py init` and the `--monsters` string for the XP award. Syntax: `SKILL-scripts.md` → *Encounter Builder*.
 
 ---
 
