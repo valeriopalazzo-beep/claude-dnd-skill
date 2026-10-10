@@ -498,6 +498,8 @@ _DM_ENDPOINTS = {
     "handout", "handout_delete",
     # Progress clocks: clock.py moves them, everyone watches.
     "clocks_changed",
+    # The bestiary: bestiary.py writes it, everyone reads it.
+    "bestiary_changed",
     # Opening an initiative roll; rolling in it is the players'.
     "initiative_open", "initiative_cancel",
 }
@@ -2616,6 +2618,39 @@ def clocks_changed():
     event = data.get("event")
     if isinstance(event, dict) and event.get("name"):
         payload["clock_event"] = {k: event.get(k) for k in ("id", "name", "filled", "segments", "delta", "full", "new")}
+    _broadcast(payload)
+    return "", 204
+
+
+# ─── Bestiary (bestiary.py) ──────────────────────────────────────────────────
+# bestiary.py keeps what the party has learned in <campaign>/bestiary.json.
+# Every screen can read it; POST /bestiary says a page was added or grew.
+import bestiary as _bestiary
+
+
+def _public_bestiary() -> list:
+    camp = re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]
+    if not camp:
+        return []
+    try:
+        return _bestiary.public_view(_bestiary.load(str(_find_campaign(camp) / "bestiary.json")))
+    except Exception:
+        return []
+
+
+@app.route("/bestiary", methods=["GET"])
+def bestiary_get():
+    return jsonify(_public_bestiary()), 200
+
+
+@app.route("/bestiary", methods=["POST"])
+def bestiary_changed():
+    """bestiary.py wrote in the notebook: send every screen the pages, and which one changed."""
+    data = request.get_json(silent=True) or {}
+    payload = {"bestiary": _public_bestiary()}
+    event = data.get("event")
+    if isinstance(event, dict) and event.get("name"):
+        payload["bestiary_event"] = {"name": str(event["name"])[:60], "new": bool(event.get("new"))}
     _broadcast(payload)
     return "", 204
 

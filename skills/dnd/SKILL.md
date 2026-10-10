@@ -533,6 +533,12 @@ This fires a green-bordered block in the companion feed showing each character's
 
 ---
 
+## Bestiary
+
+The players have a Bestiary panel that fills up with what their characters learn. Open a page with `display/bestiary.py meet "<creature>"` the first time a kind of creature appears, and add to it as things are found out in play — `learn "<creature>" "note"`, `--resist` / `--immune` / `--weak`, `--stat ac|hp|…` for a real number the party has earned, `defeat` after the fight. It records what the characters know, so never write there what they have not seen. Syntax: `SKILL-scripts.md` → *Bestiary*.
+
+---
+
 ## Clocks
 
 When the fiction has a countdown — a ritual, an alarm about to be raised, a flood, a long job the party is working through — put it on the table with `display/clock.py add "Name" <segments> --kind danger|goal|time` and `tick` it as the scene moves: everyone sees how close it is, and that is where the tension comes from. A full clock means it happens **now**. Keep it `--secret` until the characters could know. Syntax and how to size one: `SKILL-scripts.md` → *Progress Clocks*.

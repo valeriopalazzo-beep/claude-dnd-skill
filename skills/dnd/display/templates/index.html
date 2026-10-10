@@ -1381,6 +1381,37 @@
   .clock-item p{ margin:4px 0 0; font-size:15.5px; color:var(--ln-text-muted, #cdbfa6); }
   .clock-empty{ margin:30px 8px; text-align:center; font-size:16px; color:var(--ln-text-muted, #b9ab92); }
 
+  /* ══ Bestiary (bestiary.py) — what the party has learned, in words only ══ */
+  #beast-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
+    align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  #beast-modal.open{ display:flex; }
+  #beast-panel{ width:min(560px, 100%); margin:auto 0; color:var(--ln-text, #ECE4D2); font-family:'Alegreya Sans','Syne',sans-serif; }
+  #beast-head{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  #beast-head h2{ flex:1; min-width:0; margin:0; font-size:22px; line-height:1.15; }
+  #beast-head button{ flex:none; width:40px; height:40px; border-radius:999px; cursor:pointer; font-size:16px;
+    background:rgba(0,0,0,.35); color:inherit; border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #beast-back[hidden]{ display:none; }
+  #beast-list{ display:flex; flex-direction:column; gap:8px; }
+  .beast-item{ display:flex; align-items:center; gap:12px; width:100%; padding:13px 15px; text-align:left; cursor:pointer;
+    border-radius:12px; font:inherit; font-size:18px; font-weight:700; color:inherit;
+    background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
+  .beast-item span{ flex:1; min-width:0; }
+  .beast-item small{ display:block; font-size:14px; font-weight:500; color:var(--ln-text-muted, #b9ab92); }
+  .beast-item em{ flex:none; font-style:normal; padding:2px 9px; border-radius:999px; font-size:12px; font-weight:800;
+    background:var(--ln-accent, #f2b544); color:#1a140c; }
+  .beast-empty{ margin:30px 8px; text-align:center; font-size:16px; color:var(--ln-text-muted, #b9ab92); }
+  #beast-page{ padding:16px 18px; border-radius:12px; font-size:16.5px; line-height:1.45;
+    background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
+  #beast-page:empty{ display:none; }
+  #beast-page .beast-meta{ margin:0 0 10px; font-size:14.5px; font-weight:700; color:var(--ln-accent, #f2b544); }
+  #beast-page dl{ display:grid; grid-template-columns:auto 1fr; gap:4px 14px; margin:0 0 10px; }
+  #beast-page dt{ font-weight:700; color:var(--ln-text-muted, #cdbfa6); }
+  #beast-page dd{ margin:0; }
+  #beast-page dd.unknown{ opacity:.45; }
+  #beast-page ul{ margin:0; padding-left:20px; }
+  #beast-page li{ margin:3px 0; }
+  #beast-page .beast-none{ margin:0; color:var(--ln-text-muted, #cdbfa6); font-style:italic; }
+
   /* ── Calendar (calendar.py) — the month, the moon, the weather, what is coming ── */
   #world-clock.has-cal{ pointer-events:auto; cursor:pointer; }
   :root[data-skin="lanterna"] body.ln-on #ln-top #world-clock.has-cal{ cursor:pointer; }
@@ -4926,6 +4957,7 @@
     <button class="ph-set-opt" id="ph-theme-opt" type="button"><span data-i18n="ph.theme">Theme</span><strong id="ph-theme-val">Dark</strong></button>
     <button class="ph-set-opt" id="ph-region-opt" type="button" hidden><span data-i18n="region.title">Region map</span><strong>🧭</strong></button>
     <button class="ph-set-opt" id="ph-cal-opt" type="button" hidden><span data-i18n="cal.title">Calendar</span><strong>📅</strong></button>
+    <button class="ph-set-opt" id="ph-beast-opt" type="button" hidden><span data-i18n="beast.title">Bestiary</span><strong>📖</strong></button>
     <button class="ph-set-opt" id="ph-clock-opt" type="button" hidden><span data-i18n="clock.title">Clocks</span><strong>◔</strong></button>
     <label class="ph-set-opt ph-set-row" id="ph-skin-opt"><span data-i18n="ph.style">Style</span><select id="ph-skin-select" class="ph-set-select" aria-label="Display style"><option value="vellum">Vellum</option><option value="editorial">Editorial</option><option value="lanterna">Lanterna</option></select></label>
     <label class="ph-set-opt ph-set-row" id="ph-lang-opt"><span data-i18n="settings.language">Language</span><select id="ph-lang-select" class="ph-set-select" aria-label="Display language" data-i18n-aria="settings.language"></select></label>
@@ -5106,6 +5138,19 @@
   </div>
 </div>
 
+<!-- Bestiary: what the party has learned about the creatures it met, from bestiary.py -->
+<div id="beast-modal">
+  <div id="beast-panel" role="dialog" aria-labelledby="beast-title">
+    <div id="beast-head">
+      <button id="beast-back" type="button" title="All creatures" aria-label="All creatures" data-i18n-title="beast.all" data-i18n-aria="beast.all" hidden>‹</button>
+      <h2 id="beast-title" data-i18n="beast.title">Bestiary</h2>
+      <button id="beast-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
+    </div>
+    <div id="beast-list"></div>
+    <div id="beast-page"></div>
+  </div>
+</div>
+
 <!-- Calendar: the month the party is living, from calendar.py -->
 <div id="cal-modal">
   <div id="cal-panel" role="dialog" aria-labelledby="cal-title">
@@ -5163,6 +5208,7 @@
   <symbol id="ln-i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></symbol>
   <symbol id="ln-i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
   <symbol id="ln-i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2v10l7 7"/></symbol>
+  <symbol id="ln-i-beast" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M9 8l1.5 2L12 8l1.5 2L15 8"/></symbol>
   <symbol id="ln-i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
   <symbol id="ln-i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36z"/></symbol>
   <symbol id="ln-i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
@@ -5198,6 +5244,7 @@
       <button class="ln-item" type="button" data-ln-go="missioni" data-phone title="Quests" data-i18n-title="ln.view.missioni"><svg class="ln-i"><use href="#ln-i-quest"/></svg><span class="ln-lbl" data-i18n="ln.view.missioni">Quests</span><span class="ln-badge" id="ln-badge-quests" hidden></span></button>
       <button class="ln-item" type="button" id="ln-region" title="Region map" data-i18n-title="region.title" hidden><svg class="ln-i"><use href="#ln-i-compass"/></svg><span class="ln-lbl" data-i18n="region.title">Region map</span><span class="ln-badge" id="ln-badge-region" data-i18n="region.new" hidden>New</span></button>
       <button class="ln-item" type="button" id="ln-clocks" title="Clocks" data-i18n-title="clock.title" hidden><svg class="ln-i"><use href="#ln-i-clock"/></svg><span class="ln-lbl" data-i18n="clock.title">Clocks</span></button>
+      <button class="ln-item" type="button" id="ln-beast" title="Bestiary" data-i18n-title="beast.title" hidden><svg class="ln-i"><use href="#ln-i-beast"/></svg><span class="ln-lbl" data-i18n="beast.title">Bestiary</span><span class="ln-badge" id="ln-badge-beast" data-i18n="beast.new" hidden>New</span></button>
       <button class="ln-item" type="button" id="ln-cal" title="Calendar" data-i18n-title="cal.title" hidden><svg class="ln-i"><use href="#ln-i-calendar"/></svg><span class="ln-lbl" data-i18n="cal.title">Calendar</span></button>
       <button class="ln-item" type="button" data-ln-go="fazioni" title="Factions" data-i18n-title="ln.view.fazioni"><svg class="ln-i"><use href="#ln-i-flag"/></svg><span class="ln-lbl" data-i18n="ln.view.fazioni">Factions</span></button>
       <button class="ln-item" type="button" id="ln-handouts" title="Documents" data-i18n-title="handout.title"><svg class="ln-i"><use href="#ln-i-mail"/></svg><span class="ln-lbl" data-i18n="handout.title">Documents</span><span class="ln-badge" id="ln-badge-handouts" hidden></span></button>
@@ -5267,6 +5314,7 @@
         <button class="ln-item" type="button" data-ln-proxy="ln-handouts"><svg class="ln-i"><use href="#ln-i-mail"/></svg><span class="ln-lbl" data-i18n="handout.title">Documents</span></button>
         <button class="ln-item" type="button" id="ln-region-more" data-ln-proxy="ln-region" hidden><svg class="ln-i"><use href="#ln-i-compass"/></svg><span class="ln-lbl" data-i18n="region.title">Region map</span></button>
         <button class="ln-item" type="button" id="ln-clocks-more" data-ln-proxy="ln-clocks" hidden><svg class="ln-i"><use href="#ln-i-clock"/></svg><span class="ln-lbl" data-i18n="clock.title">Clocks</span></button>
+        <button class="ln-item" type="button" id="ln-beast-more" data-ln-proxy="ln-beast" hidden><svg class="ln-i"><use href="#ln-i-beast"/></svg><span class="ln-lbl" data-i18n="beast.title">Bestiary</span></button>
         <button class="ln-item" type="button" id="ln-cal-more" data-ln-proxy="ln-cal" hidden><svg class="ln-i"><use href="#ln-i-calendar"/></svg><span class="ln-lbl" data-i18n="cal.title">Calendar</span></button>
         <button class="ln-item" type="button" data-ln-go="regole"><svg class="ln-i"><use href="#ln-i-rules"/></svg><span class="ln-lbl" data-i18n="ln.view.regole">Rules</span></button>
         <button class="ln-item" type="button" data-ln-go="impostazioni"><svg class="ln-i"><use href="#ln-i-settings"/></svg><span class="ln-lbl" data-i18n="ln.view.impostazioni">Settings</span></button>
@@ -10389,6 +10437,7 @@ function connect() {
       }
     }
     if ('initiative' in payload && typeof window._onInitiative === 'function') window._onInitiative(payload.initiative);
+    if ((payload.bestiary || payload.bestiary_event) && typeof window._onBestiary === 'function') window._onBestiary(payload.bestiary, payload.bestiary_event);
     if ((payload.clocks || payload.clock_event) && typeof window._onClocks === 'function') window._onClocks(payload.clocks, payload.clock_event);
     if (payload.death_save && typeof window._onDeathSaveResult === 'function') window._onDeathSaveResult(payload.death_save);
     if (payload.effect_expired) {
@@ -10667,6 +10716,120 @@ function _clockPie(segments, filled, size) {
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   fetch('/clocks').then(r => r.ok ? r.json() : []).then(d => window._onClocks(d)).catch(() => {});
+})();
+
+// ── Bestiary (bestiary.py) ────────────────────────────────────────────
+// A notebook, not a manual: a page holds only what the DM wrote there as the
+// party found it out. _beastRows turns a page into the rows the panel draws —
+// the four numbers always listed, "?" until the party has earned them.
+function _beastRows(c) {
+  const known = (c && c.known) || {};
+  const stat = k => (known[k] === undefined || known[k] === '' || known[k] === null) ? null : String(known[k]);
+  return {
+    stats: ['type', 'ac', 'hp', 'speed', 'cr'].map(k => ({ key: k, value: stat(k) })),
+    defences: ['weak', 'resist', 'immune'].map(k => ({ key: k, values: (c && c[k]) || [] })).filter(d => d.values.length),
+    facts: (c && c.facts) || [],
+    count: Object.keys(known).filter(k => stat(k) !== null).length
+      + ['weak', 'resist', 'immune', 'facts'].reduce((n, k) => n + ((c && c[k]) || []).length, 0),
+  };
+}
+// ── end bestiary rows ──
+
+(function _initBestiary() {
+  const modal = document.getElementById('beast-modal');
+  if (!modal) return;
+  const list = document.getElementById('beast-list');
+  const page = document.getElementById('beast-page');
+  const back = document.getElementById('beast-back');
+  const title = document.getElementById('beast-title');
+  let beasts = [], openId = '', fresh = new Set();
+  let seen = {};
+  try { seen = JSON.parse(localStorage.getItem('dnd-bestiary-seen') || '{}') || {}; } catch (_) {}
+
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+  const isNew = c => seen[c.id] !== _beastRows(c).count + ':' + c.met + ':' + c.defeated;
+  function remember(c) {
+    seen[c.id] = _beastRows(c).count + ':' + c.met + ':' + c.defeated;
+    try { localStorage.setItem('dnd-bestiary-seen', JSON.stringify(seen)); } catch (_) {}
+  }
+  function triggers() {
+    const has = beasts.length > 0;
+    ['ln-beast', 'ln-beast-more', 'ph-beast-opt'].forEach(id => { const e = document.getElementById(id); if (e) e.hidden = !has; });
+    const badge = document.getElementById('ln-badge-beast');
+    if (badge) badge.hidden = !beasts.some(isNew);
+    if (!has) modal.classList.remove('open');
+  }
+
+  function drawPage(c) {
+    page.textContent = '';
+    const rows = _beastRows(c);
+    page.appendChild(el('p', 'beast-meta', [
+      c.met === 1 ? _t('beast.met1', null, 'met once') : _t('beast.met', { n: c.met }, 'met ' + c.met + ' times'),
+      c.defeated ? _t('beast.defeated', { n: c.defeated }, c.defeated + ' defeated') : '',
+    ].filter(Boolean).join(' · ')));
+    const dl = el('dl');
+    rows.stats.forEach(s => {
+      dl.appendChild(el('dt', '', _t('beast.stat.' + s.key, null, s.key)));
+      dl.appendChild(el('dd', s.value === null ? 'unknown' : '', s.value === null ? '?' : s.value));
+    });
+    rows.defences.forEach(d => {
+      dl.appendChild(el('dt', '', _t('beast.' + d.key, null, d.key)));
+      dl.appendChild(el('dd', '', d.values.join(', ')));
+    });
+    page.appendChild(dl);
+    if (rows.facts.length) {
+      const ul = el('ul');
+      rows.facts.forEach(f => ul.appendChild(el('li', '', f)));
+      page.appendChild(ul);
+    } else if (!rows.defences.length) {
+      page.appendChild(el('p', 'beast-none', _t('beast.nothing', null, 'You have seen it. You know nothing more yet.')));
+    }
+  }
+
+  function render() {
+    const c = openId ? beasts.find(b => b.id === openId) : null;
+    back.hidden = !c;
+    list.hidden = !!c;
+    list.textContent = '';
+    page.textContent = '';
+    if (c) {
+      title.textContent = c.name;
+      drawPage(c);
+      remember(c);
+      triggers();
+      return;
+    }
+    title.textContent = _t('beast.title', null, 'Bestiary');
+    if (!beasts.length) { list.appendChild(el('p', 'beast-empty', _t('beast.empty', null, 'No creature met yet.'))); return; }
+    beasts.forEach(b => {
+      const item = el('button', 'beast-item');
+      item.type = 'button';
+      const text = el('span', '', b.name);
+      const kind = _beastRows(b).stats[0].value;
+      const n = _beastRows(b).count;
+      text.appendChild(el('small', '', [kind, n === 1 ? _t('beast.known1', null, '1 thing known') : _t('beast.known', { n }, n + ' things known')].filter(Boolean).join(' · ')));
+      item.appendChild(text);
+      if (isNew(b)) item.appendChild(el('em', '', _t('beast.new', null, 'New')));
+      item.addEventListener('click', () => { openId = b.id; render(); });
+      list.appendChild(item);
+    });
+  }
+
+  window._onBestiary = function (next, event) {
+    if (Array.isArray(next)) { beasts = next; triggers(); if (modal.classList.contains('open')) render(); }
+    if (event && event.name) {
+      _showToast('📖 ' + (event.new ? _t('beast.toastNew', { name: event.name }, 'Bestiary: ' + event.name)
+                                    : _t('beast.toastMore', { name: event.name }, 'You learn more about: ' + event.name)), 5000);
+    }
+  };
+  const open = () => { openId = ''; modal.classList.add('open'); render(); };
+  const close = () => modal.classList.remove('open');
+  ['ln-beast', 'ph-beast-opt'].forEach(id => { const e = document.getElementById(id); if (e) e.addEventListener('click', open); });
+  back.addEventListener('click', () => { openId = ''; render(); });
+  document.getElementById('beast-close').addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  fetch('/bestiary').then(r => r.ok ? r.json() : []).then(d => window._onBestiary(d)).catch(() => {});
 })();
 
 // ── Calendar (calendar.py) ────────────────────────────────────────────

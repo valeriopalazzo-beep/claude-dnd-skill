@@ -775,7 +775,7 @@ Run `scripts/dice.py <notation>`. Display output verbatim. Examples: `d20`, `2d6
    ```
 5. Save STATE_JSON to `state.md` under `## Active Combat`.
 6. Step through turns using the per-turn sequence (in SKILL.md Active DM Mode).
-7. On combat end: update HP in character sheets, clear `## Active Combat`, `push_stats.py --turn-clear`, narrate aftermath, send XP summary, run `tracker.py -c <campaign> clear`.
+7. On combat end: update HP in character sheets, clear `## Active Combat`, `push_stats.py --turn-clear`, narrate aftermath, send XP summary, run `tracker.py -c <campaign> clear`. Bring the Bestiary up to date: `bestiary.py defeat` for what fell, `learn` for what the party saw the creatures do or shrug off.
 
 **XP awards** go in the final display send:
 ```bash

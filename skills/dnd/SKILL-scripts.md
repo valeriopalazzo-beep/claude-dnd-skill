@@ -784,6 +784,33 @@ python3 ${CLAUDE_SKILL_DIR}/display/clock.py clear
 
 ---
 
+## Bestiary — `display/bestiary.py`
+
+The party's own notebook of the creatures it has met: it starts empty and holds only what the characters have found out. Words only — no pictures. Every screen has a **Bestiary** panel; numbers the party has not earned yet show as `?`.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py meet "ghoul"                          # first sight, or met again
+python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py meet "ghoul" --count 3 --as "Divoratore di tombe"
+python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py meet "La Custode" --custom --type "non morto"   # not in the SRD
+python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py learn "ghoul" "Il suo tocco paralizza chi non è un elfo"
+python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py learn "ghoul" --immune veleno --weak radiante --resist "armi non magiche"
+python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py learn "ghoul" --stat ac --stat hp     # ac hp speed cr type all
+python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py defeat "ghoul" 3
+python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py rename "ghoul" "Ghoul delle cripte"
+python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py forget "ghoul"
+python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py list
+python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py show "ghoul"
+```
+
+- `meet` finds the creature in the SRD (Italian names understood) and writes its name in the campaign's language (`language:` flag, or `--lang it` before the subcommand). `--as` is the name the party gives it; the entry still knows which SRD creature it is. `--custom` is for a creature of your own.
+- `learn` adds a note in your words, what it resists / is immune to / is vulnerable to as the characters saw it, and — with `--stat` — the real numbers from the SRD. What the party already knew is not added twice.
+- An entry can be named by any part of its name that means one entry only. A wrong name changes nothing.
+- Stored in `<campaign>/bestiary.json`; `--campaign NAME` (before the subcommand) works on another campaign.
+
+**How to keep it:** `meet` every kind of creature the first time the party sees it, right after describing it (and again at later encounters, with `--count`). `learn` only what happened at the table: the arrow that did nothing (`--resist`), the flame that hurt it twice as much (`--weak`), the ability it used on someone. Reveal a number with `--stat` when the party has fought it enough to judge, or a character passed the right check — never the whole block at first sight. `defeat` at the end of the fight. An NPC is not a monster: named people go in `npcs.md`, not here.
+
+---
+
 ## Region Map — `display/region_map.py`
 
 The map of the region, drawn on parchment as the party discovers it: places visited or heard of, roads with the days of travel, and a flag where the party is. Saved in `<campaign>/region.json`; every screen has it one tap away, and tapping a place shows what the party knows about it and how many days away it is. No image backend needed.
