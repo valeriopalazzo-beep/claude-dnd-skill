@@ -126,6 +126,9 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/encounter.py rate --campaign $CAMP --monster
 python3 ${CLAUDE_SKILL_DIR}/scripts/combat.py init '<JSON>'
 # JSON: [{"name":"Flerb","dex_mod":0,"hp":12,"ac":16,"type":"pc"}, ...]
 
+# The players roll their own on the display; monsters are rolled hidden; the tracker starts by itself
+python3 ${CLAUDE_SKILL_DIR}/scripts/combat.py init '<JSON>' --phones [--timeout 60]
+
 # Reprint tracker from saved state
 python3 ${CLAUDE_SKILL_DIR}/scripts/combat.py tracker '<JSON>' <round_num>
 
@@ -133,6 +136,11 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/combat.py tracker '<JSON>' <round_num>
 python3 ${CLAUDE_SKILL_DIR}/scripts/combat.py attack --atk 4 --ac 15 --dmg 2d6+2
 ```
 `init` outputs `STATE_JSON:` line — store in `state.md` under `## Active Combat` between turns.
+
+**`--phones`** opens an initiative roll on the display and waits. A browser bound to a character (PIN login or `?char=`) shows that player a big **Roll d20 +N** button and buzzes; the table screen lists the PCs with a small button beside each one still to roll, for players without a phone. Every roll is made by the server and appears to all as it lands; the monsters' rolls stay hidden until the end. When the last PC is in — or `--timeout` seconds have passed, and the missing are rolled for — the order is shown on every screen, written in the story as one line (`⚔ Lio 19 · Goblin 1 15 · …`), and the script pushes `--turn-order` itself (music, "your turn" on the first player's phone). Ties: higher modifier first, then the PC.
+- `"init_mod": N` on a combatant replaces `dex_mod` as the initiative bonus (Alert, Jack of All Trades…).
+- If the display is not running the script says so and rolls for everyone as without `--phones`.
+- `python3 ${CLAUDE_SKILL_DIR}/display/initiative.py cancel` closes a roll nobody will finish; `status` shows it.
 
 ---
 

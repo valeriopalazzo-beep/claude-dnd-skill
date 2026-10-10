@@ -301,7 +301,7 @@ Roll handling is chosen at game start and stored as `roll_mode` in `state.md →
     The roll routes to that PC's **phone** if one is bound, or **auto-opens the on-screen Dice drawer** on the shared screen when no phone is bound (or the display's *Roll on screen* setting is on) — the same roller either way. `--wait` blocks until the player rolls and then prints their result for you to resolve (it exits non-zero on timeout — fall back to asking out loud). When the display is **not** running, just call for the roll verbally and wait. Never roll the PC yourself under `players`.
 - **`roll_mode: auto` — you roll everything openly.** Resolve PC d20s yourself via `dice.py` and show full math inline (`Piper — Perception: d20+5 = 18 → …`), no waiting. For solo / fast play.
 
-**Initiative** is always DM-rolled via `combat.py init` for all combatants (PCs and NPCs) regardless of `roll_mode`.
+**Initiative** is rolled by `combat.py init`. With the display running and `roll_mode: players`, add `--phones`: every player rolls their own with one tap (on their phone, or on the table screen for a player without one), the monsters are rolled hidden, and the order is revealed to the table when everyone is in — the script waits, then prints the order and starts the tracker. With no display, or under `roll_mode: auto`, plain `combat.py init` rolls for everyone.
 
 **Per-player override:** a player can flip their own PC via the phone Settings → *Rolls* toggle. When that player has a queued action, `check_input.py` prepends a `[[<Char> roll mode: auto|players]]` directive — honor it for that character, overriding the campaign default. Precedence: **per-character directive > campaign `roll_mode`**.
 

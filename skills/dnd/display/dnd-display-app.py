@@ -496,6 +496,8 @@ _DM_ENDPOINTS = {
     "set_scene",
     # Documents the party finds: the DM hands them out, everyone may read them.
     "handout", "handout_delete",
+    # Opening an initiative roll; rolling in it is the players'.
+    "initiative_open", "initiative_cancel",
 }
 
 
@@ -3561,6 +3563,179 @@ def dice_request_cancel(request_id):
     return "", 204
 
 
+# ─── Initiative from the players' phones ─────────────────────────────────────
+# `combat.py init --phones` opens a roll here. Each PC's phone gets a button;
+# the table screen can roll for a player who has no phone. Monsters are rolled
+# at once and stay hidden. When every PC is in, or the time is up (whoever is
+# missing is rolled for), the order is settled and shown to everyone.
+
+_initiative: Optional[dict] = None
+_initiative_lock = threading.Lock()
+_INITIATIVE_SECONDS = (5, 300)
+
+
+def _initiative_public(state: Optional[dict]) -> Optional[dict]:
+    """What the screens may see: each PC's roll as it lands; monsters only at the end."""
+    if not state:
+        return None
+    rows = []
+    for e in state["entries"]:
+        if e["type"] != "pc" and not state["done"]:
+            continue
+        row = {"name": e["name"], "type": e["type"], "modifier": e["modifier"], "rolled": e["total"] is not None}
+        if e["total"] is not None:
+            row.update(roll=e["roll"], total=e["total"], auto=bool(e.get("auto")))
+        rows.append(row)
+    return {"id": state["id"], "deadline": state["deadline"], "done": state["done"],
+            "entries": rows, "order": list(state["order"]) if state["done"] else None}
+
+
+def _initiative_roll(entry: dict, auto: bool = False) -> None:
+    roll = secrets.randbelow(20) + 1
+    entry.update(roll=roll, total=roll + entry["modifier"], auto=auto)
+
+
+def _initiative_settle(state: dict) -> str:
+    """Roll for whoever is missing, fix the order, return the line for the story.
+    Call with _initiative_lock held."""
+    for e in state["entries"]:
+        if e["total"] is None:
+            _initiative_roll(e, auto=True)
+    # Highest total first; ties go to the better modifier, then to a PC, then to chance.
+    ranked = sorted(state["entries"],
+                    key=lambda e: (e["total"], e["modifier"], e["type"] == "pc", e["tiebreak"]), reverse=True)
+    state["order"] = [e["name"] for e in ranked]
+    state["done"] = True
+    return "⚔ " + " · ".join(f"{e['name']} {e['total']}" for e in ranked)
+
+
+def _initiative_announce(state: dict, line: str) -> None:
+    """Tell every screen the result and put it in the story. Call without the lock."""
+    entry = {"text": line, "dice": True}
+    try:
+        camp = open(CAMP_FILE, encoding="utf-8").read().strip()
+        if camp:
+            entry["_camp"] = camp
+    except Exception:
+        pass
+    with _text_log_lock:
+        _text_log.append(entry)
+    with _tail_lock:
+        _tail_buffer.append(entry)
+    _persist_log()
+    _persist_tail()
+    _broadcast({"text": line, "dice": True})
+    _broadcast({"initiative": _initiative_public(state)})
+
+
+def _initiative_timeout(roll_id: str) -> None:
+    with _initiative_lock:
+        state = _initiative
+        if not state or state["id"] != roll_id or state["done"]:
+            return
+        line = _initiative_settle(state)
+    _initiative_announce(state, line)
+
+
+@app.route("/initiative", methods=["POST"])
+def initiative_open():
+    """Open an initiative roll.
+
+    Body: {"combatants": [{"name": "Aldric", "type": "pc", "dex_mod": 2}, …], "timeout": 60}
+    `init_mod` overrides `dex_mod` for a character whose initiative bonus is not
+    just Dexterity. Opening a new roll replaces one still open.
+    """
+    global _initiative
+    data = request.get_json(silent=True) or {}
+    entries, seen = [], set()
+    for c in data.get("combatants") or []:
+        if not isinstance(c, dict):
+            continue
+        name = re.sub(r"[`\\$<>]", "", str(c.get("name", "")))[:60].strip()
+        if not name or name.lower() in seen:
+            continue
+        seen.add(name.lower())
+        try:
+            mod = int(c.get("init_mod", c.get("dex_mod", 0)) or 0)
+        except (TypeError, ValueError):
+            mod = 0
+        entries.append({"name": name, "type": "pc" if str(c.get("type", "npc")).lower() == "pc" else "npc",
+                        "modifier": max(-20, min(40, mod)), "roll": None, "total": None,
+                        "tiebreak": secrets.randbelow(10 ** 6)})
+    if not entries:
+        return jsonify({"error": "no combatants"}), 400
+    try:
+        seconds = int(data.get("timeout", 60))
+    except (TypeError, ValueError):
+        seconds = 60
+    seconds = max(_INITIATIVE_SECONDS[0], min(_INITIATIVE_SECONDS[1], seconds))
+    for e in entries:
+        if e["type"] != "pc":
+            _initiative_roll(e)
+    state = {"id": secrets.token_hex(6), "deadline": _time.time() + seconds, "done": False,
+             "entries": entries, "order": None}
+    line = None
+    with _initiative_lock:
+        _initiative = state
+        if all(e["total"] is not None for e in entries):       # no PC to wait for
+            line = _initiative_settle(state)
+    if line:
+        _initiative_announce(state, line)
+    else:
+        _broadcast({"initiative": _initiative_public(state)})
+        timer = threading.Timer(seconds, _initiative_timeout, args=[state["id"]])
+        timer.daemon = True
+        timer.start()
+    return jsonify(_initiative_public(state)), 200
+
+
+@app.route("/initiative", methods=["GET"])
+def initiative_state():
+    """The roll that is open, or the last one settled; {} when there is none."""
+    with _initiative_lock:
+        return jsonify(_initiative_public(_initiative) or {}), 200
+
+
+@app.route("/initiative", methods=["DELETE"])
+def initiative_cancel():
+    global _initiative
+    with _initiative_lock:
+        _initiative = None
+    _broadcast({"initiative": None})
+    return "", 204
+
+
+@app.route("/initiative/roll", methods=["POST"])
+def initiative_roll():
+    """A player rolls for their character (the DM's screen may roll for anyone)."""
+    data = request.get_json(silent=True) or {}
+    name = str(data.get("character", "")).strip()
+    if not name:
+        return jsonify({"error": "no character"}), 400
+    if _is_other_character(name):
+        return "Forbidden", 403
+    line = None
+    with _initiative_lock:
+        state = _initiative
+        if not state or state["done"]:
+            return jsonify({"error": "no roll open"}), 409
+        entry = next((e for e in state["entries"]
+                      if e["type"] == "pc" and e["name"].lower() == name.lower()), None)
+        if entry is None:
+            return jsonify({"error": "not in this fight"}), 404
+        if entry["total"] is not None:
+            return jsonify({"error": "already rolled", "total": entry["total"]}), 409
+        _initiative_roll(entry)
+        mine = {"name": entry["name"], "roll": entry["roll"], "modifier": entry["modifier"], "total": entry["total"]}
+        if all(e["total"] is not None for e in state["entries"]):
+            line = _initiative_settle(state)
+    if line:
+        _initiative_announce(state, line)
+    else:
+        _broadcast({"initiative": _initiative_public(state)})
+    return jsonify(mine), 200
+
+
 def _sheet_key(name: str) -> str:
     """Letters and digits only, lowercased: "Vardamir Ma'feyn" == "vardamir-ma-feyn"."""
     return "".join(ch for ch in (name or "").casefold() if ch.isalnum())
@@ -4216,6 +4391,11 @@ def stream():
             "label": meta.get("label", ""),
             "dc": meta.get("dc"),
         }})
+
+    # An initiative roll still open: a phone that connects now can still roll.
+    with _initiative_lock:
+        if _initiative and not _initiative["done"]:
+            q.put_nowait({"initiative": _initiative_public(_initiative)})
 
     # Replay autorun cycle so reconnecting clients resume the countdown from correct elapsed position.
     with _autorun_cycle_lock:

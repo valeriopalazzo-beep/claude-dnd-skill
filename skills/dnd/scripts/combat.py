@@ -4,9 +4,15 @@
 combat.py — D&D 5e combat tracker
 
 Usage:
-    python3 combat.py init <combatants_json>
+    python3 combat.py init <combatants_json> [--phones] [--timeout SECONDS]
         Rolls initiative for all combatants and prints turn order.
         combatants_json: JSON array of {"name": str, "dex_mod": int, "hp": int, "ac": int, "type": "pc"|"npc"}
+        --phones: the players roll their own on the display (a button on each
+        phone; the table screen rolls for who has none). Monsters are rolled
+        hidden. After --timeout seconds (default 60) whoever is missing is
+        rolled for. The turn order is pushed to the display. With no display
+        running, everyone is rolled here as usual.
+        "init_mod" on a combatant replaces dex_mod as the initiative bonus.
 
     python3 combat.py tracker <state_json>
         Prints the current combat tracker table from a JSON state blob.
@@ -62,6 +68,51 @@ def initiative_order(combatants: list[dict]) -> list[dict]:
         c["conditions"] = []
         c["temp_hp"] = 0
     return sorted(combatants, key=lambda x: (x["initiative"], x.get("dex_mod", 0)), reverse=True)
+
+
+def phone_initiative(combatants: list[dict], seconds: int = 60, collect=None) -> list[dict] | None:
+    """Initiative rolled by the players on the display; None when there is no display.
+
+    `collect` is display/initiative.py's collect(), passed in by the tests.
+    """
+    if collect is None:
+        import os
+        display = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "display")
+        if display not in sys.path:
+            sys.path.insert(0, display)
+        try:
+            from initiative import collect
+        except Exception:
+            return None
+    asked = [{"name": c["name"], "type": c.get("type", "npc"),
+              "init_mod": c.get("init_mod", c.get("dex_mod", 0))} for c in combatants]
+    rolled = collect(asked, seconds)
+    by_name = {c["name"]: c for c in combatants}
+    if not rolled or {r["name"] for r in rolled} != set(by_name):
+        return None
+    ordered = []
+    for r in rolled:
+        c = by_name[r["name"]]
+        c["initiative_roll"] = r["roll"]
+        c["initiative"] = r["total"]
+        c["initiative_auto"] = bool(r.get("auto")) and c.get("type") == "pc"
+        c["conditions"] = []
+        c["temp_hp"] = 0
+        ordered.append(c)
+    return ordered
+
+
+def push_turn_order(ordered: list[dict]) -> None:
+    """Start the tracker on the display. Silent when it is not running."""
+    import os
+    import subprocess
+    script = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "display", "push_stats.py")
+    order = {"order": [c["name"] for c in ordered], "current": ordered[0]["name"], "round": 1}
+    try:
+        subprocess.run([sys.executable, script, "--turn-order", json.dumps(order, ensure_ascii=False)],
+                       capture_output=True, timeout=10)
+    except Exception:
+        pass
 
 
 def print_tracker(combatants: list[dict], round_num: int = 1):
@@ -270,14 +321,27 @@ if __name__ == "__main__":
 
     if cmd == "init":
         combatants = json.loads(sys.argv[2])
+        flags = sys.argv[3:]
         # Store max_hp
         for c in combatants:
             c["max_hp"] = c["hp"]
-        ordered = initiative_order(combatants)
+        ordered = None
+        if "--phones" in flags:
+            seconds = int(flags[flags.index("--timeout") + 1]) if "--timeout" in flags else 60
+            ordered = phone_initiative(combatants, seconds)
+            if ordered is None:
+                print("(no display to roll on — initiative rolled here for everyone)")
+            else:
+                push_turn_order(ordered)
+                print("(rolled by the players on the display; turn order pushed — do not send it again)")
+        if ordered is None:
+            ordered = initiative_order(combatants)
         print_tracker(ordered)
         print("Initiative rolls:")
         for c in ordered:
-            print(f"  {c['name']}: d20({c['initiative_roll']}) + {c.get('dex_mod',0)} = {c['initiative']}")
+            mod = c.get("init_mod", c.get("dex_mod", 0))
+            late = "  (did not roll in time — rolled for them)" if c.get("initiative_auto") else ""
+            print(f"  {c['name']}: d20({c['initiative_roll']}) + {mod} = {c['initiative']}{late}")
         print()
         print("STATE_JSON:", json.dumps(ordered))
 

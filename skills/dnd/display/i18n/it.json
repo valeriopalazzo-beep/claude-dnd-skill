@@ -285,6 +285,13 @@
   "coin.cp": "mr",
   "turn.yours": "Tocca a te!",
   "turn.next": "Preparati: sei il prossimo",
+  "init.title": "Iniziativa!",
+  "init.order": "Ordine dei turni",
+  "init.roll": "Tira d20 {mod}",
+  "init.rollFor": "Tira {mod}",
+  "init.waiting": "sta tirando…",
+  "init.auto": "tirato dal tavolo",
+  "init.seconds": "{n}s",
 
   "sheet.close": "Chiudi (Esc)",
   "sheet.xp": "PE  {cur} / {next}",

@@ -758,7 +758,9 @@ Run `scripts/dice.py <notation>`. Display output verbatim. Examples: `d20`, `2d6
 
 ## `/dm:dnd combat start`
 1. Identify combatants; collect name, DEX mod, HP, AC, type (pc/npc) for each. For the enemies, `encounter.py build … --with <creature>` gives the numbers that fit the party and prints those fields ready to paste.
-2. Run `combat.py init '<JSON>'` — auto-roll initiative for every combatant including PCs. Display tracker and per-combatant roll breakdown.
+2. Roll initiative:
+   - **Display running and `roll_mode: players`** → `combat.py init '<JSON>' --phones`. Say one line first (*"Tirate l'iniziativa!"*): each player taps the button on their phone (the table screen has one for whoever has no phone), monsters are rolled hidden, and after 60 s (`--timeout N`) whoever is missing is rolled for. The script blocks until the order is settled, shows it on every screen, writes it in the story and **pushes the turn order itself — skip steps 3 and 4.**
+   - **Otherwise** → `combat.py init '<JSON>'` — auto-roll initiative for every combatant including PCs. Display tracker and per-combatant roll breakdown.
 3. Send initiative to display:
    ```bash
    python3 ${CLAUDE_SKILL_DIR}/display/send.py << 'DNDEND'
