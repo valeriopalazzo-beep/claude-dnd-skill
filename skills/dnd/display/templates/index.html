@@ -8,6 +8,7 @@
 <meta name="dnd-token" content="{{ lan_token }}">
 <meta name="dnd-login" content="{{ login_role }}">
 <meta name="dnd-char" content="{{ login_char }}">
+<meta name="dnd-local-dm" content="{{ '1' if local_dm else '' }}">
 <meta name="narrator-voice" content="{{ narrator_voice }}">
 <meta name="tts-available" content="{{ '1' if tts_available else '0' }}">
 <meta name="tts-voices" content="{{ tts_voices | tojson | forceescape }}">
@@ -5047,6 +5048,7 @@
     <button class="ph-set-opt" id="ph-whisper-opt" type="button" hidden><span data-i18n="whisper.title">Secret notes</span><strong>🤫 <span class="whisper-count" hidden></span></strong></button>
     <button class="ph-set-opt" id="ph-roll-opt" type="button" hidden><span data-i18n="ph.rolls">Rolls</span><strong id="ph-roll-val">Players</strong></button>
     <button class="ph-set-opt" id="ph-handouts-opt" type="button"><span data-i18n="handout.title">Documents</span><strong id="ph-handouts-val">0</strong></button>
+    <button class="ph-set-opt" id="ph-login-opt" type="button" hidden><span data-i18n="login.asCharacter">Play as a character</span><strong>🎭</strong></button>
     <button class="ph-set-opt" id="ph-logout-opt" type="button" hidden><span data-i18n="ph.logout">Log out</span><strong>⏻</strong></button>
   </div>
 </div>
@@ -5434,6 +5436,8 @@
         <button class="ln-item" type="button" data-ln-go="impostazioni"><svg class="ln-i"><use href="#ln-i-settings"/></svg><span class="ln-lbl" data-i18n="ln.view.impostazioni">Settings</span></button>
         <button class="ln-item" type="button" data-ln-proxy="dm-help-btn"><svg class="ln-i"><use href="#ln-i-help"/></svg><span class="ln-lbl" data-i18n="ln.help">DM help</span></button>
         <button class="ln-item" type="button" data-ln-proxy="phone-mode-btn"><svg class="ln-i"><use href="#ln-i-phone"/></svg><span class="ln-lbl" data-i18n="ln.phoneMode">Phone mode</span></button>
+        <button class="ln-item" type="button" id="ln-login-more" hidden><svg class="ln-i"><use href="#ln-i-me"/></svg><span class="ln-lbl" data-i18n="login.asCharacter">Play as a character</span></button>
+        <button class="ln-item" type="button" id="ln-logout-more" hidden><svg class="ln-i"><use href="#ln-i-back"/></svg><span class="ln-lbl" data-i18n="ph.logout">Log out</span></button>
       </div>
     </div>
   </div>
@@ -11578,7 +11582,8 @@ function _onscreenDiceOn() { try { return localStorage.getItem('dnd-onscreen-dic
     refreshMu();
     if (muOpt && muRow) muOpt.addEventListener('click', e => { e.stopPropagation(); muRow.click(); refreshMu(); });
 
-    // Log out — only for a browser that logged in with a PIN (LAN mode, not this PC).
+    // Log out — only for a browser that logged in with a PIN (LAN mode; this
+    // PC too, once it entered as a character).
     const loOpt = document.getElementById('ph-logout-opt');
     const loginMeta = document.querySelector('meta[name="dnd-login"]');
     if (loOpt && loginMeta && loginMeta.getAttribute('content')) {
@@ -11617,6 +11622,26 @@ function _onscreenDiceOn() { try { return localStorage.getItem('dnd-onscreen-dic
 
     document.addEventListener('click', () => menu.classList.remove('open'));
   })();
+})();
+
+// ── Entering and leaving a character login ────────────────────────────────
+// This PC is the DM without logging in. In LAN mode it can also sit down as a
+// character: "Play as a character" opens the login screen (phone ⚙ menu and
+// More in the full view). The phone ⚙ menu has its own Log out; the full view
+// gets one under More, so a player on a PC can leave too — and this PC is the
+// DM again.
+(function _initLoginLinks() {
+  const meta = n => (document.querySelector('meta[name="' + n + '"]') || {}).content || '';
+  const wire = (ids, fn) => ids.forEach(id => {
+    const b = document.getElementById(id);
+    if (!b) return;
+    b.hidden = false;
+    b.addEventListener('click', e => { e.stopPropagation(); fn(); });
+  });
+  if (meta('dnd-local-dm')) wire(['ph-login-opt', 'ln-login-more'], () => { window.location.href = '/login'; });
+  if (meta('dnd-login')) wire(['ln-logout-more'], () => {
+    fetch('/logout', { method: 'POST' }).finally(() => { window.location.href = '/'; });
+  });
 })();
 
 // ── Secret notes (whisper.py) ─────────────────────────────────────────────

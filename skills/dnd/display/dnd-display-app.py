@@ -452,6 +452,9 @@ CORS(app)
 #   - the X-DND-Token header (send.py / push_stats.py / wrapper.py)  → DM
 #   - a request from this PC (loopback)                              → DM
 #   - a session cookie from POST /login                              → DM or player
+# This PC can also sit down as a player: GET /login shows the login screen
+# here too, and a character session from this PC wins over "loopback is the
+# DM" until that browser logs out.
 # A player session is bound to one character: the server acts as that
 # character whatever name the browser sends, and refuses DM-only endpoints.
 # PINs are stored hashed by accounts.py (see its docstring).
@@ -475,7 +478,7 @@ _login_fails_char: dict[str, list] = {}
 _login_lock = threading.Lock()
 
 # Reachable without logging in. Every other endpoint needs a login.
-_PUBLIC_ENDPOINTS = {"ping", "serve_icon", "favicon", "login", "login_options", "logout", "static",
+_PUBLIC_ENDPOINTS = {"ping", "serve_icon", "favicon", "login", "login_page", "login_options", "logout", "static",
                      "crea_page", "crea_start", "crea_conv", "crea_msg", "crea_finish",
                      # /campagna checks its own password cookie (camp_create.py).
                      "campagna_page", "campagna_login", "campagna_logout", "campagna_start",
@@ -656,11 +659,12 @@ def _auth_gate():
         provided = request.args.get("t", "")   # <img> can't send headers
     if provided and hmac.compare_digest(provided, _lan_token):
         g.role = "dm"
-    elif _is_loopback(request.remote_addr):
-        g.role = "dm"
     else:
+        local = _is_loopback(request.remote_addr)
         s = _session_from_request()
-        if s:
+        # This PC is the DM, unless its browser logged in as a character
+        # (GET /login) to play from here. A DM session adds nothing on this PC.
+        if s and not (local and s.get("role") == "dm"):
             # Cookie-authenticated writes must come from our own pages.
             origin = request.headers.get("Origin", "")
             if (request.method not in ("GET", "HEAD", "OPTIONS") and origin
@@ -668,6 +672,8 @@ def _auth_gate():
                 return "Forbidden", 403
             g.role = s.get("role")
             g.character = s.get("character")
+        elif local:
+            g.role = "dm"
 
     ep = request.endpoint
     if ep is None or ep in _PUBLIC_ENDPOINTS:
@@ -686,14 +692,24 @@ def login_options():
     """What the login screen offers: characters with a PIN, and the DM entry.
 
     `me` is the caller's current login ("dm" / "player" / null), so a page whose
-    session died can notice and go back to the login screen.
+    session died can notice and go back to the login screen. `local` says the
+    caller is this PC: it is the DM without logging in, and the login screen
+    is there for it to enter as a character.
     """
     if _lan_token is None:
         return "Not found", 404
     camp = _login_campaign()
     names = sorted(_accounts.load(camp)["characters"]) if camp else []
     return jsonify({"characters": names, "dm": _accounts.dm_record() is not None,
-                    "me": g.role})
+                    "me": g.role, "local": _is_loopback(request.remote_addr)})
+
+
+@app.route("/login", methods=["GET"])
+def login_page():
+    """The login screen on request — how this PC, always the DM, enters as a character."""
+    if _lan_token is None:
+        return "Not found", 404
+    return _render_login()
 
 
 @app.route("/login", methods=["POST"])
@@ -1817,8 +1833,11 @@ def index():
     return render_template(
         "index.html",
         lan_token="",
-        login_role=(g.role or "") if (_lan_token is not None and not _is_loopback(request.remote_addr)) else "",
+        login_role=(g.role or "") if (_lan_token is not None
+                                      and (g.role == "player" or not _is_loopback(request.remote_addr))) else "",
         login_char=(g.character or "") if g.role == "player" else "",
+        # This PC as the DM in LAN mode: the page offers "play as a character".
+        local_dm=(_lan_token is not None and g.role == "dm" and _is_loopback(request.remote_addr)),
         narrator_voice=_read_narrator_voice(),
         tts_available=(_tts is not None),
         tts_voices=(_tts.voices() if _tts else {"male": [], "female": []}),

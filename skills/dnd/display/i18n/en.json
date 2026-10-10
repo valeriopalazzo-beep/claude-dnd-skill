@@ -91,6 +91,8 @@
   "login.unknown": "This character can no longer log in. Ask the DM.",
   "login.none": "No character has a PIN yet. Ask the DM to set one.",
   "login.error": "Something went wrong. Try again.",
+  "login.asCharacter": "Play as a character",
+  "login.backDm": "← DM screen",
 
   "ph.settings": "Display settings",
   "ph.theme": "Theme",

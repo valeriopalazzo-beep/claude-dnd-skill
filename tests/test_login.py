@@ -7,7 +7,9 @@ Pins the contract that makes impersonation impossible:
 - a player session acts as its own character whatever name the browser sends,
   reads only its own sheet, and can't reach DM-only endpoints;
 - wrong PINs are throttled, and a PIN change / campaign switch / logout-all
-  ends existing sessions.
+  ends existing sessions;
+- this PC is the DM without a login, and can also log in as a character: then
+  its browser is that player, with a player's limits, until it logs out.
 """
 from __future__ import annotations
 
@@ -24,6 +26,7 @@ REPO = pathlib.Path(__file__).resolve().parent.parent
 DISPLAY = REPO / "skills" / "dnd" / "display"
 TOKEN = "t" * 64
 PHONE = {"REMOTE_ADDR": "192.168.1.50"}
+LOCAL = {"REMOTE_ADDR": "127.0.0.1"}
 
 
 def _load(path: pathlib.Path, name: str):
@@ -172,7 +175,7 @@ class LoginGateTests(unittest.TestCase):
 
     def test_options_list_only_characters_with_a_pin(self):
         o = self.client.get("/login/options", environ_base=PHONE).get_json()
-        self.assertEqual(o, {"characters": ["Bran", "Mira"], "dm": False, "me": None})
+        self.assertEqual(o, {"characters": ["Bran", "Mira"], "dm": False, "me": None, "local": False})
 
     # ── login ──
     def test_wrong_pin_then_right_pin(self):
@@ -260,6 +263,49 @@ class LoginGateTests(unittest.TestCase):
         self._post("/logout", {})
         self.assertEqual(self.client.get("/character/Mira", environ_base=PHONE).status_code, 401)
 
+    # ── this PC as a player ──
+    def test_this_pc_is_offered_the_login_screen(self):
+        r = self.client.get("/login", environ_base=LOCAL)
+        self.assertEqual(r.status_code, 200)
+        self.assertIn(b'id="step-pin"', r.data)
+        o = self.client.get("/login/options", environ_base=LOCAL).get_json()
+        self.assertEqual((o["me"], o["local"]), ("dm", True))
+        page = self.client.get("/", environ_base=LOCAL).data
+        self.assertIn(b'name="dnd-local-dm" content="1"', page)
+        # a phone is never offered it, logged in or not
+        self._login()
+        page = self.client.get("/?char=Mira", environ_base=PHONE).data
+        self.assertIn(b'name="dnd-local-dm" content=""', page)
+
+    def test_this_pc_can_enter_as_a_character_and_come_back(self):
+        r = self._login(env=LOCAL)
+        self.assertEqual(r.get_json()["redirect"], "/?char=Mira")
+        page = self.client.get("/?char=Mira", environ_base=LOCAL).data
+        self.assertIn(b'name="dnd-login" content="player"', page)
+        self.assertIn(b'name="dnd-char" content="Mira"', page)
+        self.assertIn(b'name="dnd-local-dm" content=""', page)
+        # a player like any other: own sheet only, no DM endpoints, own name only
+        self.assertEqual(self.client.get("/character/Mira", environ_base=LOCAL).status_code, 200)
+        self.assertEqual(self.client.get("/character/Bran", environ_base=LOCAL).status_code, 403)
+        self.assertEqual(self._post("/stats", {}, env=LOCAL).status_code, 403)
+        r = self._post("/player-input/dice", {"character": "Bran", "spec": "1d20"}, env=LOCAL)
+        self.assertEqual(r.get_json()["character"], "Mira")
+        self.assertEqual(self.client.get("/login/options", environ_base=LOCAL).get_json()["me"], "player")
+        # the scripts on this PC carry the token and no cookie: still the DM
+        r = self.client.get("/dice-request/abc", headers={"X-DND-Token": TOKEN}, environ_base=LOCAL)
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(self.app.app.test_client().get("/dice-request/abc", environ_base=LOCAL).status_code, 200)
+        # logging out gives the DM's screen back
+        self._post("/logout", {}, env=LOCAL)
+        self.assertEqual(self.client.get("/character/Bran", environ_base=LOCAL).status_code, 200)
+        self.assertIn(b'name="dnd-login" content=""', self.client.get("/", environ_base=LOCAL).data)
+
+    def test_a_dead_character_session_leaves_this_pc_the_dm(self):
+        self._login(env=LOCAL)
+        time.sleep(0.01)
+        self.app._accounts.set_pin("prova", "Mira", "333333")
+        self.assertEqual(self.client.get("/character/Bran", environ_base=LOCAL).status_code, 200)
+
     # ── DM PIN ──
     def test_dm_pin_login_from_another_device(self):
         self.assertEqual(self._post("/login", {"dm": True, "pin": "123456"}).status_code, 403)
@@ -273,6 +319,7 @@ class LoginGateTests(unittest.TestCase):
         self.app._lan_token = None
         self.assertEqual(self.client.get("/character/Bran", environ_base=PHONE).status_code, 200)
         self.assertEqual(self.client.get("/login/options").status_code, 404)
+        self.assertEqual(self.client.get("/login").status_code, 404)
 
 
 if __name__ == "__main__":

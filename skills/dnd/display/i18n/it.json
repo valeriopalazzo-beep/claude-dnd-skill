@@ -91,6 +91,8 @@
   "login.unknown": "Questo personaggio non può più accedere. Chiedi al Master.",
   "login.none": "Nessun personaggio ha ancora un PIN. Chiedi al Master di impostarlo.",
   "login.error": "Qualcosa è andato storto. Riprova.",
+  "login.asCharacter": "Entra come personaggio",
+  "login.backDm": "← Schermo del DM",
 
   "ph.settings": "Impostazioni del display",
   "ph.theme": "Tema",

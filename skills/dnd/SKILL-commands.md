@@ -567,7 +567,9 @@ Pull the latest skill changes from `origin/main`.
 
 ### Display login PINs
 
-In LAN mode (`--lan`) the display shows a login screen to every device except this PC: the player taps their character and types its PIN, and from then on that phone acts **only** as that character — actions, rolls, its own sheet. Players can't reach DM controls. This PC (localhost) is always the DM and needs no PIN. Local mode (no `--lan`) has no login.
+In LAN mode (`--lan`) the display shows a login screen to every device except this PC: the player taps their character and types its PIN, and from then on that phone acts **only** as that character — actions, rolls, its own sheet. Players can't reach DM controls. This PC (localhost) is the DM and needs no PIN. Local mode (no `--lan`) has no login.
+
+**Playing a character from this PC.** In LAN mode the DM's own browser can enter as a character too: *More → Play as a character* (or `<display URL>/login`), pick the character, type its PIN. From then on that browser is that player — own sheet, own secret notes, no DM controls — until *More → Log out*, which makes it the DM's screen again. The scripts (`send.py`, `push_stats.py`…) are not affected: they are always the DM.
 
 PINs are stored only as salted hashes — in `<campaign>/accounts.json` for characters, in the runtime dir for the DM PIN.
 
