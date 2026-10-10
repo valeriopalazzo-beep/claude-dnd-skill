@@ -500,6 +500,8 @@ _DM_ENDPOINTS = {
     "clocks_changed",
     # The bestiary: bestiary.py writes it, everyone reads it.
     "bestiary_changed",
+    # Companions: companion.py keeps them, everyone sees them.
+    "companions_changed",
     # Opening an initiative roll; rolling in it is the players'.
     "initiative_open", "initiative_cancel",
 }
@@ -2651,6 +2653,40 @@ def bestiary_changed():
     event = data.get("event")
     if isinstance(event, dict) and event.get("name"):
         payload["bestiary_event"] = {"name": str(event["name"])[:60], "new": bool(event.get("new"))}
+    _broadcast(payload)
+    return "", 204
+
+
+# ─── Companions (companion.py) ───────────────────────────────────────────────
+# Animals and followers travelling with the party, kept by companion.py in
+# <campaign>/companions.json. They are not players: they hang on their owner's
+# card as chips and have a small sheet of their own.
+import companion as _companion
+
+
+def _public_companions() -> list:
+    camp = re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]
+    if not camp:
+        return []
+    try:
+        return _companion.public_view(_companion.load(str(_find_campaign(camp) / "companions.json")))
+    except Exception:
+        return []
+
+
+@app.route("/companions", methods=["GET"])
+def companions_get():
+    return jsonify(_public_companions()), 200
+
+
+@app.route("/companions", methods=["POST"])
+def companions_changed():
+    """companion.py changed one: send every screen the list, and what happened."""
+    data = request.get_json(silent=True) or {}
+    payload = {"companions": _public_companions()}
+    event = data.get("event")
+    if isinstance(event, dict) and event.get("name"):
+        payload["companion_event"] = {k: event.get(k) for k in ("name", "what", "delta", "current", "max")}
     _broadcast(payload)
     return "", 204
 

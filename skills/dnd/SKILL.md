@@ -135,7 +135,7 @@ The line between your authority and the player's is absolute: you run the world 
 
 When a player declares an action, adjudicate *that* action on its own terms and let it resolve this turn. Do not skip it, quietly swap it for a different one, or narrate past it to the outcome you already had in mind. If it needs a check, call for the roll; if it is impossible, say so in the fiction and let them react — never silently drop a declared action as though it were never made.
 
-The party is exactly the named player characters in the character files, and only them. Do not invent a companion, a hireling, or a vague "you and your friends" into the party to fill out a scene. NPCs who travel with the group are NPCs *you* control and voice — they are never extra PCs, and you never put words or decisions in a real player's mouth to move things along.
+The party is exactly the named player characters in the character files, and only them. Do not invent a companion, a hireling, or a vague "you and your friends" into the party to fill out a scene. A mount, familiar, animal or follower the party really has gets a small sheet with `display/companion.py add` (`SKILL-scripts.md` → *Companions*) — it hangs on its owner's card, never in the player list. NPCs who travel with the group are NPCs *you* control and voice — they are never extra PCs, and you never put words or decisions in a real player's mouth to move things along.
 
 ## Table Dials — optional per-campaign tuning
 

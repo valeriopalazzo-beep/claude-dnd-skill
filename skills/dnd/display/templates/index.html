@@ -1412,6 +1412,47 @@
   #beast-page li{ margin:3px 0; }
   #beast-page .beast-none{ margin:0; color:var(--ln-text-muted, #cdbfa6); font-style:italic; }
 
+  /* ══ Companions (companion.py) — the horse, the familiar, the hired guard ══ */
+  .sb-companions{ display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
+  .sb-comp-chip{ display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px; cursor:pointer;
+    font:inherit; font-size:10px; font-weight:700; color:inherit; background:rgba(0,0,0,.25);
+    border:1px solid rgba(180,140,60,.4); -webkit-tap-highlight-color:transparent; }
+  .sb-comp-chip i{ font-style:normal; font-variant-numeric:tabular-nums; opacity:.85; }
+  .sb-comp-chip.hurt{ border-color:rgba(220,150,50,.7); }
+  .sb-comp-chip.down{ border-color:rgba(220,80,80,.8); opacity:.75; }
+  :root[data-skin="lanterna"] .sb-companions{ gap:6px; margin-top:8px; }
+  :root[data-skin="lanterna"] .sb-comp-chip{ font-family:'Alegreya Sans',sans-serif; font-size:14.5px; padding:3px 11px;
+    background:var(--ln-surface-2, rgba(255,255,255,.05)); border-color:var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #comp-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
+    align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  #comp-modal.open{ display:flex; }
+  #comp-panel{ width:min(520px, 100%); margin:auto 0; color:var(--ln-text, #ECE4D2); font-family:'Alegreya Sans','Syne',sans-serif; }
+  #comp-head{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  #comp-head h2{ flex:1; min-width:0; margin:0; font-size:22px; line-height:1.15; }
+  #comp-head button{ flex:none; width:40px; height:40px; border-radius:999px; cursor:pointer; font-size:16px;
+    background:rgba(0,0,0,.35); color:inherit; border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #comp-back[hidden]{ display:none; }
+  #comp-list{ display:flex; flex-direction:column; gap:8px; }
+  .comp-item{ display:flex; align-items:center; gap:12px; width:100%; padding:12px 15px; text-align:left; cursor:pointer;
+    border-radius:12px; font:inherit; font-size:18px; font-weight:700; color:inherit;
+    background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
+  .comp-item span{ flex:1; min-width:0; }
+  .comp-item small{ display:block; font-size:14px; font-weight:500; color:var(--ln-text-muted, #b9ab92); }
+  .comp-item b{ flex:none; font-size:16px; font-variant-numeric:tabular-nums; }
+  .comp-empty{ margin:30px 8px; text-align:center; font-size:16px; color:var(--ln-text-muted, #b9ab92); }
+  #comp-sheet{ padding:16px 18px; border-radius:12px; font-size:16.5px; line-height:1.45;
+    background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
+  #comp-sheet:empty{ display:none; }
+  #comp-sheet .comp-meta{ margin:0 0 10px; font-size:14.5px; font-weight:700; color:var(--ln-accent, #f2b544); }
+  #comp-sheet .comp-hp{ display:flex; justify-content:space-between; font-weight:800; font-size:18px; }
+  #comp-sheet .comp-bar{ height:9px; margin:5px 0 12px; border-radius:999px; overflow:hidden; background:rgba(255,255,255,.12); }
+  #comp-sheet .comp-bar div{ height:100%; border-radius:999px; }
+  #comp-sheet .comp-nums{ display:flex; gap:18px; margin:0 0 10px; font-weight:700; }
+  #comp-sheet .comp-nums span{ color:var(--ln-text-muted, #cdbfa6); font-weight:600; }
+  #comp-sheet h4{ margin:12px 0 4px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--ln-text-muted, #cdbfa6); }
+  #comp-sheet p{ margin:0 0 6px; }
+  #comp-sheet .comp-note{ font-style:italic; color:var(--ln-text-muted, #cdbfa6); }
+
   /* ── Calendar (calendar.py) — the month, the moon, the weather, what is coming ── */
   #world-clock.has-cal{ pointer-events:auto; cursor:pointer; }
   :root[data-skin="lanterna"] body.ln-on #ln-top #world-clock.has-cal{ cursor:pointer; }
@@ -4957,6 +4998,7 @@
     <button class="ph-set-opt" id="ph-theme-opt" type="button"><span data-i18n="ph.theme">Theme</span><strong id="ph-theme-val">Dark</strong></button>
     <button class="ph-set-opt" id="ph-region-opt" type="button" hidden><span data-i18n="region.title">Region map</span><strong>🧭</strong></button>
     <button class="ph-set-opt" id="ph-cal-opt" type="button" hidden><span data-i18n="cal.title">Calendar</span><strong>📅</strong></button>
+    <button class="ph-set-opt" id="ph-comp-opt" type="button" hidden><span data-i18n="comp.title">Companions</span><strong>🐾</strong></button>
     <button class="ph-set-opt" id="ph-beast-opt" type="button" hidden><span data-i18n="beast.title">Bestiary</span><strong>📖</strong></button>
     <button class="ph-set-opt" id="ph-clock-opt" type="button" hidden><span data-i18n="clock.title">Clocks</span><strong>◔</strong></button>
     <label class="ph-set-opt ph-set-row" id="ph-skin-opt"><span data-i18n="ph.style">Style</span><select id="ph-skin-select" class="ph-set-select" aria-label="Display style"><option value="vellum">Vellum</option><option value="editorial">Editorial</option><option value="lanterna">Lanterna</option></select></label>
@@ -5151,6 +5193,19 @@
   </div>
 </div>
 
+<!-- Companions: the animals and followers travelling with the party, from companion.py -->
+<div id="comp-modal">
+  <div id="comp-panel" role="dialog" aria-labelledby="comp-title">
+    <div id="comp-head">
+      <button id="comp-back" type="button" title="All companions" aria-label="All companions" data-i18n-title="comp.all" data-i18n-aria="comp.all" hidden>‹</button>
+      <h2 id="comp-title" data-i18n="comp.title">Companions</h2>
+      <button id="comp-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
+    </div>
+    <div id="comp-list"></div>
+    <div id="comp-sheet"></div>
+  </div>
+</div>
+
 <!-- Calendar: the month the party is living, from calendar.py -->
 <div id="cal-modal">
   <div id="cal-panel" role="dialog" aria-labelledby="cal-title">
@@ -5209,6 +5264,7 @@
   <symbol id="ln-i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
   <symbol id="ln-i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2v10l7 7"/></symbol>
   <symbol id="ln-i-beast" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M9 8l1.5 2L12 8l1.5 2L15 8"/></symbol>
+  <symbol id="ln-i-paw" viewBox="0 0 24 24"><circle cx="6.5" cy="10" r="2"/><circle cx="10" cy="5.5" r="2"/><circle cx="14" cy="5.5" r="2"/><circle cx="17.5" cy="10" r="2"/><path d="M12 12c-3 0-5.5 2.6-5.5 5.2 0 1.7 1.3 2.8 2.9 2.8 1 0 1.7-.5 2.6-.5s1.6.5 2.6.5c1.6 0 2.9-1.1 2.9-2.8C17.500 14.6 15 12 12 12z"/></symbol>
   <symbol id="ln-i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
   <symbol id="ln-i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36z"/></symbol>
   <symbol id="ln-i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
@@ -5238,6 +5294,7 @@
       <div class="ln-h" data-i18n="ln.group.party">Party</div>
       <button class="ln-item" type="button" data-ln-go="personaggi" data-phone title="Characters" data-i18n-title="ln.view.personaggi"><svg class="ln-i"><use href="#ln-i-party"/></svg><span class="ln-lbl" data-i18n="ln.view.personaggi">Characters</span><span class="ln-badge alert" id="ln-badge-combat" hidden></span></button>
       <button class="ln-item" type="button" data-ln-go="scheda" data-phone title="My character" data-i18n-title="ln.view.scheda"><svg class="ln-i"><use href="#ln-i-me"/></svg><span class="ln-lbl"><span class="ln-long" data-i18n="ln.view.scheda">My character</span><span class="ln-short" data-i18n="ln.view.schedaShort">Me</span></span></button>
+      <button class="ln-item" type="button" id="ln-comp" title="Companions" data-i18n-title="comp.title" hidden><svg class="ln-i"><use href="#ln-i-paw"/></svg><span class="ln-lbl" data-i18n="comp.title">Companions</span></button>
     </div>
     <div class="ln-group">
       <div class="ln-h" data-i18n="ln.group.world">World</div>
@@ -5315,6 +5372,7 @@
         <button class="ln-item" type="button" id="ln-region-more" data-ln-proxy="ln-region" hidden><svg class="ln-i"><use href="#ln-i-compass"/></svg><span class="ln-lbl" data-i18n="region.title">Region map</span></button>
         <button class="ln-item" type="button" id="ln-clocks-more" data-ln-proxy="ln-clocks" hidden><svg class="ln-i"><use href="#ln-i-clock"/></svg><span class="ln-lbl" data-i18n="clock.title">Clocks</span></button>
         <button class="ln-item" type="button" id="ln-beast-more" data-ln-proxy="ln-beast" hidden><svg class="ln-i"><use href="#ln-i-beast"/></svg><span class="ln-lbl" data-i18n="beast.title">Bestiary</span></button>
+        <button class="ln-item" type="button" id="ln-comp-more" data-ln-proxy="ln-comp" hidden><svg class="ln-i"><use href="#ln-i-paw"/></svg><span class="ln-lbl" data-i18n="comp.title">Companions</span></button>
         <button class="ln-item" type="button" id="ln-cal-more" data-ln-proxy="ln-cal" hidden><svg class="ln-i"><use href="#ln-i-calendar"/></svg><span class="ln-lbl" data-i18n="cal.title">Calendar</span></button>
         <button class="ln-item" type="button" data-ln-go="regole"><svg class="ln-i"><use href="#ln-i-rules"/></svg><span class="ln-lbl" data-i18n="ln.view.regole">Rules</span></button>
         <button class="ln-item" type="button" data-ln-go="impostazioni"><svg class="ln-i"><use href="#ln-i-settings"/></svg><span class="ln-lbl" data-i18n="ln.view.impostazioni">Settings</span></button>
@@ -8348,6 +8406,7 @@ function updateStats(stats) {
     }
   }
   // Lanterna skin: refresh its menu badges / "me" card from the merged data.
+  if (typeof window._onCompanionCards === 'function') window._onCompanionCards();
   if (typeof window._lnAfterStats === 'function') window._lnAfterStats(stats);
   if (typeof window._onDeathSaves === 'function') window._onDeathSaves();
 }
@@ -10437,6 +10496,7 @@ function connect() {
       }
     }
     if ('initiative' in payload && typeof window._onInitiative === 'function') window._onInitiative(payload.initiative);
+    if ((payload.companions || payload.companion_event) && typeof window._onCompanions === 'function') window._onCompanions(payload.companions, payload.companion_event);
     if ((payload.bestiary || payload.bestiary_event) && typeof window._onBestiary === 'function') window._onBestiary(payload.bestiary, payload.bestiary_event);
     if ((payload.clocks || payload.clock_event) && typeof window._onClocks === 'function') window._onClocks(payload.clocks, payload.clock_event);
     if (payload.death_save && typeof window._onDeathSaveResult === 'function') window._onDeathSaveResult(payload.death_save);
@@ -10830,6 +10890,120 @@ function _beastRows(c) {
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   fetch('/bestiary').then(r => r.ok ? r.json() : []).then(d => window._onBestiary(d)).catch(() => {});
+})();
+
+// ── Companions (companion.py) ─────────────────────────────────────────
+// Not players: each one hangs on its owner's card as a chip and opens into a
+// small sheet. _compChips decides which chips a card gets and how they look.
+function _compChips(companions, ownerName) {
+  const same = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+  const ICON = { mount: '🐎', familiar: '🦉', pet: '🐾', ally: '🛡' };
+  return (companions || []).filter(c => c.owner && same(c.owner, ownerName)).map(c => {
+    const cur = (c.hp && c.hp.current) || 0, max = (c.hp && c.hp.max) || 1;
+    return { id: c.id, name: c.name, icon: ICON[c.kind] || '🐾', hp: cur + '/' + max,
+             state: cur <= 0 ? 'down' : cur * 2 <= max ? 'hurt' : '' };
+  });
+}
+// ── end companion chips ──
+
+(function _initCompanions() {
+  const modal = document.getElementById('comp-modal');
+  if (!modal) return;
+  const list = document.getElementById('comp-list');
+  const sheet = document.getElementById('comp-sheet');
+  const back = document.getElementById('comp-back');
+  const title = document.getElementById('comp-title');
+  let companions = [], openId = '';
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+  const kindWord = c => _t('comp.kind.' + c.kind, null, c.kind);
+  const withWho = c => c.owner ? _t('comp.owner', { name: c.owner }, 'With ' + c.owner) : _t('comp.party', null, 'With the party');
+
+  // The chips on the owners' cards — redrawn whenever cards or companions change.
+  function chips() {
+    document.querySelectorAll('.sb-player[data-player-name]').forEach(card => {
+      card.querySelectorAll('.sb-companions').forEach(n => n.remove());
+      const mine = _compChips(companions, card.dataset.playerName);
+      if (!mine.length) return;
+      const row = el('div', 'sb-companions');
+      mine.forEach(m => {
+        const chip = el('button', 'sb-comp-chip' + (m.state ? ' ' + m.state : ''));
+        chip.type = 'button';
+        chip.append(document.createTextNode(m.icon + ' ' + m.name), el('i', '', m.hp));
+        chip.addEventListener('click', e => { e.stopPropagation(); open(m.id); });
+        row.appendChild(chip);
+      });
+      card.appendChild(row);
+    });
+  }
+
+  function drawSheet(c) {
+    sheet.textContent = '';
+    sheet.appendChild(el('p', 'comp-meta', [kindWord(c), c.species, withWho(c)].filter(Boolean).join(' · ')));
+    const cur = c.hp.current, max = c.hp.max || 1;
+    const hp = el('div', 'comp-hp');
+    hp.append(el('span', '', _t('stat.hp', null, 'HP')), el('span', '', cur + ' / ' + max + (cur <= 0 ? ' — ' + _t('comp.down', null, 'down') : '')));
+    const bar = el('div', 'comp-bar'), fill = el('div');
+    const pct = Math.max(0, Math.min(100, cur / max * 100));
+    fill.style.width = pct + '%';
+    fill.style.backgroundColor = _hpColor(pct);
+    bar.appendChild(fill);
+    sheet.append(hp, bar);
+    const nums = el('div', 'comp-nums');
+    if (c.ac !== '' && c.ac != null) { const n = el('div', '', String(c.ac)); n.prepend(el('span', '', _t('stat.ac', null, 'AC') + ' ')); nums.appendChild(n); }
+    if (c.speed) { const n = el('div', '', c.speed); n.prepend(el('span', '', _t('comp.speed', null, 'Speed') + ' ')); nums.appendChild(n); }
+    if (nums.children.length) sheet.appendChild(nums);
+    [['attacks', 'comp.attacks', 'Attacks'], ['traits', 'comp.traits', 'Traits']].forEach(([key, k, fb]) => {
+      if (!(c[key] || []).length) return;
+      sheet.appendChild(el('h4', '', _t(k, null, fb)));
+      c[key].forEach(line => sheet.appendChild(el('p', '', line)));
+    });
+    if (c.note) sheet.appendChild(el('p', 'comp-note', c.note));
+  }
+
+  function render() {
+    const c = openId ? companions.find(x => x.id === openId) : null;
+    back.hidden = !c || companions.length < 2;
+    list.hidden = !!c;
+    list.textContent = '';
+    sheet.textContent = '';
+    if (c) { title.textContent = c.name; drawSheet(c); return; }
+    title.textContent = _t('comp.title', null, 'Companions');
+    if (!companions.length) { list.appendChild(el('p', 'comp-empty', _t('comp.empty', null, 'Nobody travels with you.'))); return; }
+    companions.forEach(c => {
+      const item = el('button', 'comp-item');
+      item.type = 'button';
+      const text = el('span', '', c.name);
+      text.appendChild(el('small', '', [kindWord(c), c.species, withWho(c)].filter(Boolean).join(' · ')));
+      item.append(text, el('b', '', c.hp.current + '/' + c.hp.max));
+      item.addEventListener('click', () => { openId = c.id; render(); });
+      list.appendChild(item);
+    });
+  }
+
+  function open(id) { openId = id || ''; modal.classList.add('open'); render(); }
+  const close = () => modal.classList.remove('open');
+
+  window._onCompanions = function (next, event) {
+    if (Array.isArray(next)) {
+      companions = next;
+      const has = companions.length > 0;
+      ['ln-comp', 'ln-comp-more', 'ph-comp-opt'].forEach(id => { const e = document.getElementById(id); if (e) e.hidden = !has; });
+      chips();
+      if (!has) close(); else if (modal.classList.contains('open')) render();
+    }
+    if (event && event.name) {
+      if (event.what === 'new') _showToast('🐾 ' + _t('comp.toastNew', { name: event.name }, event.name + ' joins you'), 4500);
+      else if (event.what === 'hp' && event.current === 0) _showToast('🐾 ' + _t('comp.toastDown', { name: event.name }, event.name + ' is down!'), 6000);
+      else if (event.what === 'hp') _showToast('🐾 ' + event.name + ': ' + (event.delta > 0 ? '+' : '') + event.delta + ' (' + event.current + '/' + event.max + ')', 4000);
+    }
+  };
+  window._onCompanionCards = chips;
+  ['ln-comp', 'ph-comp-opt'].forEach(id => { const e = document.getElementById(id); if (e) e.addEventListener('click', () => open('')); });
+  back.addEventListener('click', () => { openId = ''; render(); });
+  document.getElementById('comp-close').addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  fetch('/companions').then(r => r.ok ? r.json() : []).then(d => window._onCompanions(d)).catch(() => {});
 })();
 
 // ── Calendar (calendar.py) ────────────────────────────────────────────

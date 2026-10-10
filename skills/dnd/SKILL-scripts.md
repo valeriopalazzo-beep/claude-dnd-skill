@@ -811,6 +811,32 @@ python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py show "ghoul"
 
 ---
 
+## Companions — `display/companion.py`
+
+A small sheet for whatever travels with the party and has hit points but is not a player character: a mount, a familiar, an animal, a hired guard, a summoned creature. On the display each one is a chip on its owner's card (name and hit points) that opens into its own sheet; the **Companions** panel lists them all.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/display/companion.py add "Fulmine" --owner "Lyra" --kind mount --from "riding horse"
+python3 ${CLAUDE_SKILL_DIR}/display/companion.py add "Nebbia" --owner "Vardamir" --kind familiar --from raven --note "vede con i suoi occhi"
+python3 ${CLAUDE_SKILL_DIR}/display/companion.py add "Ser Bertrand" --kind ally --hp 27 --ac 16 --speed "9 m" \
+    --attack "Spada lunga: +5 a colpire, 1d8+3 taglienti" --trait "Non abbandona mai un ferito"
+python3 ${CLAUDE_SKILL_DIR}/display/companion.py hp "Fulmine" -5          # damage · +3 heals · =9 sets · full restores
+python3 ${CLAUDE_SKILL_DIR}/display/companion.py set "Fulmine" --ac 12 --note "ferrato di fresco"
+python3 ${CLAUDE_SKILL_DIR}/display/companion.py set "Nebbia" --owner ""  # with the whole party; --name renames
+python3 ${CLAUDE_SKILL_DIR}/display/companion.py remove "Fulmine"
+python3 ${CLAUDE_SKILL_DIR}/display/companion.py list
+python3 ${CLAUDE_SKILL_DIR}/display/companion.py show "Fulmine"
+```
+
+- `--from` copies Armour Class, hit points, speed, attacks and traits from an SRD creature (Italian names understood), written in the campaign's language. Anything you pass (`--hp`, `--ac`, `--attack`…) replaces what was copied.
+- Kinds: `mount`, `familiar`, `pet`, `ally` (also `cavalcatura`, `famiglio`, `animale`, `alleato`). `--owner` is the PC it belongs to; with no owner it is the party's and shows in the panel only.
+- A name can be cut to any part that means one companion only. A mistake changes nothing.
+- Stored in `<campaign>/companions.json`; `--campaign NAME` (before the subcommand) works on another campaign.
+
+**Rules of use:** a companion is **never** added to the player list (`push_stats --player`) — that is for PCs. Its owner's player decides what a mount, familiar or pet does and you resolve it; an `ally` is an NPC you play. Apply every wound and every healing with `hp`, in the same Bash call as the narration that causes it; at 0 the script prints `★ DOWN`. In initiative a mount acts on its rider's turn, a familiar and an ally get their own entry in the `combat.py init` list as `"type":"npc"`. `remove` it when it dies, is dismissed or leaves.
+
+---
+
 ## Region Map — `display/region_map.py`
 
 The map of the region, drawn on parchment as the party discovers it: places visited or heard of, roads with the days of travel, and a flag where the party is. Saved in `<campaign>/region.json`; every screen has it one tap away, and tapping a place shows what the party knows about it and how many days away it is. No image backend needed.
