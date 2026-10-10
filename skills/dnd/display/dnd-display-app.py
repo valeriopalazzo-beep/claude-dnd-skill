@@ -2363,10 +2363,15 @@ def stats():
                         {k: v for k, v in incoming.items() if k not in _MUTATION_KEYS}
                     )
 
-        # turn_order replaces entirely (None = clear); also ticks round-based effects
+        # turn_order: a full order replaces it, None clears it; also ticks round-based effects.
+        # A partial update (--turn-current / --turn-round carries no "order") keeps
+        # the rest, so a browser that loads mid-fight still gets the whole list.
         _effect_expire_events: list[dict] = []
         if "turn_order" in data:
             new_to = data["turn_order"]
+            prev_to = _current_stats.get("turn_order")
+            if isinstance(new_to, dict) and isinstance(prev_to, dict) and "order" not in new_to:
+                new_to = {**prev_to, **new_to}
             _current_stats["turn_order"] = new_to
             # Decrement round-based effects for the actor whose turn just started
             if new_to and isinstance(new_to, dict) and new_to.get("current"):
