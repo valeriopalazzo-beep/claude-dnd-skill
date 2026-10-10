@@ -60,6 +60,9 @@ except Exception:
     _lookup = None          # type: ignore
     _SRD_AVAILABLE = False
 
+import functools as _functools
+import script_ranges
+
 from paths import find_campaign as _find_campaign
 from utf8io import read_text as _read_text
 
@@ -1136,9 +1139,18 @@ SCENES: dict[str, dict] = {
         "label": "The Night",
     },
     "temple": {
+        # `lantern` and `cleric` REMOVED. Every other word here names a place
+        # or a fixture of one -- a nave, an altar, incense. Those two named a
+        # thing a character CARRIES and a thing a character IS, so they scored
+        # wherever the party went: measured, three mentions of a lantern in a
+        # room with no other keyword present rendered the room as THE TEMPLE,
+        # and so did a cleric walking down a road.
+        #
+        # `prayer` is the weakest survivor and is kept: people pray in
+        # foxholes, but it at least describes an act performed AT the place.
         "keywords": [
             "temple", "shrine", "altar", "holy", "sacred", "chapel",
-            "prayer", "cleric", "incense", "lantern", "pew", "nave",
+            "prayer", "incense", "pew", "nave",
             "pale flame",
         ],
         "keywords_it": ['tempio', 'santuario', 'altare', 'cappella', 'preghiera', 'sacerdote', 'incenso', 'navata'],
@@ -1370,17 +1382,56 @@ try:
 except OSError:
     pass
 
-# Whole words only: substring counting matched "ore" (mine) inside "signore",
-# "port" (ocean) inside "porta" and "ale" (tavern) inside "quale".
-_SCENE_RES = {
-    name: re.compile(r"\b(?:" + "|".join(re.escape(k) for k in
-                     scene["keywords"] + scene.get("keywords_it", [])) + r")\b")
-    for name, scene in SCENES.items()
-}
-
 
 def _scene_payload(name: str) -> dict:
     return {k: v for k, v in SCENES[name].items() if not k.startswith("keywords")} | {"name": name}
+
+
+# How much evidence a scene change needs. A bare `max()` over keyword counts
+# meant ONE stray keyword could move the background, and two plausible scenes
+# traded it back and forth on a one-point edge.
+#
+# MARGIN is the gap a challenger must open over the scene already on screen.
+# The INCUMBENT BONUS lets the current scene defend itself even after its own
+# keywords have scrolled out of the window, which is the usual case for a long
+# scene: a fight in a crypt stops saying "crypt" after the first line.
+#
+# The bonus is 1 rather than 2 by measurement against this repo's own keyword
+# lists, not by feel. A genuine transition narrated over three chunks --
+# arriving at a city -- scores 4; incidental noise, a couple of night words
+# while at sea, scores 2. With MARGIN 2 an aged-out incumbent needs the
+# challenger at 3, which admits the real change and blocks the noise. At 2 the
+# bar becomes 4 and a genuine arrival stops registering.
+#
+# There is deliberately NO separate minimum-hits floor. One was written here
+# first and it could never fire: the test below requires
+# `best >= scores.get(current, 0) + BONUS + MARGIN`, which is at least 3, so a
+# floor of 2 is unreachable for every input. A constant that decides nothing
+# reads as protection and is not, so it is gone rather than documented.
+_SCENE_SWITCH_MARGIN = 2    # a challenger must beat the scene on screen by this
+_SCENE_INCUMBENT_BONUS = 1
+
+
+def _keyword_pattern(keyword: str) -> "re.Pattern":
+    r"""Match `keyword` as a whole word where the script has word delimiters.
+
+    Scored with `window.count(kw)` before this, which is a SUBSTRING count:
+    the arcane keyword `ward` matched inside "deputy warden", so a prison
+    fight scored as arcane. It also matches "wardrobe", "forward", "steward".
+    In Italian it matched "ore" (mine) inside "signore", "port" (ocean) inside
+    "porta" and "ale" (tavern) inside "quale".
+
+    Anchors are applied only for keywords in a script that separates words. A
+    campaign may override a scene's keyword list in its own language (the lists
+    shipped here are English), and `\b` is an impossible condition for Han,
+    Kana, Hangul or Thai -- see scripts/script_ranges.py.
+    """
+    return script_ranges.whole_word_pattern(keyword)
+
+
+@_functools.lru_cache(maxsize=512)
+def _cached_keyword_pattern(keyword: str) -> "re.Pattern":
+    return _keyword_pattern(keyword)
 
 
 def _detect_scene(text: str) -> Optional[dict]:
@@ -1397,7 +1448,9 @@ def _detect_scene(text: str) -> Optional[dict]:
 
     scores: dict[str, int] = {}
     for scene_name in SCENE_PRIORITY:
-        score = len(_SCENE_RES[scene_name].findall(window))
+        scene = SCENES[scene_name]
+        score = sum(len(_cached_keyword_pattern(kw).findall(window))
+                    for kw in scene["keywords"] + scene.get("keywords_it", []))
         if score > 0:
             scores[scene_name] = score
 
@@ -1407,6 +1460,11 @@ def _detect_scene(text: str) -> Optional[dict]:
     best = max(scores, key=lambda k: scores[k])
     if best == _current_scene_name:
         return None   # no change
+    # `_current_scene_name` may not be in `scores` at all once its keywords
+    # have scrolled out of the window -- that is the case the bonus is for.
+    held = scores.get(_current_scene_name, 0) + _SCENE_INCUMBENT_BONUS
+    if scores[best] - held < _SCENE_SWITCH_MARGIN:
+        return None
 
     _current_scene_name = best
     return _scene_payload(best)

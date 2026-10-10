@@ -8061,41 +8061,79 @@ let _ttsSources = [];       // queued/playing pieces of the current block
 let _ttsRun = null;         // identity of the current playback; null = stopped
 let _ttsActivePlayBtn = null;
 
-// ── Free fallback: browser speech synthesis (no API key needed) ──────────
-// Used when the server has no Gemini key (/tts → 503) or fails. Prefers a
-// voice matching the page/browser language, falling back to Italian, and
-// ranks neural/online voices (Edge "Natural", Google) above local ones.
+// Free fallback: the browser's own speech synthesis, no API key needed.
+// Used when /tts has no key configured (503) or fails. Without this, a
+// keyless install got a play button that flashed "TTS 503" for three seconds
+// and never spoke -- the server path was the only path.
 let _ttsServerOk = true;
 let _ttsUtterance = null;
 const _TTS_HAS_BROWSER = 'speechSynthesis' in window;
 if (_TTS_HAS_BROWSER) {
+  // Chrome populates the voice list asynchronously; the first call primes it.
   speechSynthesis.getVoices();
   speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
 }
 
 function _ttsPickBrowserVoice() {
   const voices = speechSynthesis.getVoices() || [];
-  const prefs = [(navigator.language || '').slice(0, 2).toLowerCase(), 'it'];
+  if (!voices.length) return null;
+  // Preference order: Italian first -- this table's narration is always
+  // Italian, whatever language a player picks for the menus (personal fork;
+  // upstream pins no locale). Then the page's declared language, the
+  // browser's accept-language chain, English, then any voice at all -- a
+  // voice in the wrong accent still beats silence.
+  const prefs = [];
+  const want = t => {
+    t = String(t || '').slice(0, 2).toLowerCase();
+    if (t && !prefs.includes(t)) prefs.push(t);
+  };
+  want('it');
+  want(document.documentElement.lang);
+  (navigator.languages && navigator.languages.length
+    ? navigator.languages : [navigator.language]).forEach(want);
+  want('en');
+  // Neural/online voices first: the local fallbacks are markedly flatter.
+  // Note these are usually NOT local — Chrome's "Google …" and Edge's
+  // "… Online (Natural)" voices synthesize on the vendor's servers. No key
+  // and no cost to the player, but not offline. `v.localService === true`
+  // is the flag to rank on instead if on-device ever has to be the default.
+  const rank = v => /natural|online|neural/i.test(v.name) ? 0
+                  : /google/i.test(v.name) ? 1 : 2;
   for (const p of prefs) {
     const pool = voices.filter(v => (v.lang || '').toLowerCase().startsWith(p));
-    if (!pool.length) continue;
-    const rank = v => /natural|online|neural/i.test(v.name) ? 0 : /google/i.test(v.name) ? 1 : 2;
-    return pool.sort((a, b) => rank(a) - rank(b))[0];
+    if (pool.length) return pool.sort((a, b) => rank(a) - rank(b))[0];
   }
-  return null;
+  return voices.slice().sort((a, b) => rank(a) - rank(b))[0];
 }
 
+const _TTS_CHUNK_MAX = 220;
+
 function _ttsChunkText(text) {
-  // Short utterances avoid Chrome's ~15s cut-off on long speech.
-  const parts = text.match(/[^.!?…]+[.!?…]*["»”]?\s*/g) || [text];
+  // Short utterances avoid Chrome's ~15s cut-off on a single long speech.
+  // The terminator set carries CJK and Arabic/Armenian stops as well as the
+  // Latin ones: a Japanese paragraph contains no ".!?" at all, so a
+  // Latin-only split returns the whole paragraph as one chunk and walks
+  // straight into the cut-off this function exists to avoid.
+  const parts = text.match(/[^.!?…。！？؟։]+[.!?…。！？؟։]*["»”」』]?\s*/g) || [text];
   const chunks = [];
   let cur = '';
-  for (const p of parts) {
-    if ((cur + p).length > 220 && cur) { chunks.push(cur.trim()); cur = ''; }
+  for (const part of parts) {
+    // A single sentence longer than the cap still has to be broken, or
+    // scripts that do not punctuate every 220 characters are back to one
+    // oversized utterance.
+    let p = part;
+    while (p.length > _TTS_CHUNK_MAX) {
+      if (cur) { chunks.push(cur.trim()); cur = ''; }
+      let cut = p.lastIndexOf(' ', _TTS_CHUNK_MAX);
+      if (cut < _TTS_CHUNK_MAX * 0.5) cut = _TTS_CHUNK_MAX;   // CJK has no spaces
+      chunks.push(p.slice(0, cut).trim());
+      p = p.slice(cut);
+    }
+    if ((cur + p).length > _TTS_CHUNK_MAX && cur) { chunks.push(cur.trim()); cur = ''; }
     cur += p;
   }
   if (cur.trim()) chunks.push(cur.trim());
-  return chunks;
+  return chunks.filter(Boolean);
 }
 
 function _ttsBrowserSpeak(btn, text) {
@@ -8105,6 +8143,7 @@ function _ttsBrowserSpeak(btn, text) {
   let last = null;
   chunks.forEach(chunk => {
     const u = new SpeechSynthesisUtterance(chunk);
+    // No voice list yet: still ask for Italian, the language of this table.
     if (voice) { u.voice = voice; u.lang = voice.lang; } else { u.lang = 'it-IT'; }
     u.rate = 0.95;
     speechSynthesis.speak(u);
@@ -8120,7 +8159,7 @@ function _ttsBrowserSpeak(btn, text) {
   _ttsUtterance = last;
 
   const done = () => {
-    if (_ttsUtterance !== last) return;
+    if (_ttsUtterance !== last) return;      // a newer block took over
     _ttsUtterance = null;
     if (_ttsActivePlayBtn === btn) {
       btn.innerHTML = _SVG_SPEAKER;
@@ -8274,8 +8313,10 @@ async function _ttsPlayBlock(btn, blockEl) {
     }
     _ttsRun = null;
     if (_ttsActivePlayBtn === btn && _TTS_HAS_BROWSER) {
-      // 503 = no engine configured: stop asking the server. Transient errors
-      // (429, 502, network, local model still loading) fall back for this block only.
+      // 503 means no engine is configured, so stop asking the server at all.
+      // Anything else (429, 502, a dropped connection, the local model still
+      // loading) is transient: fall back for this block and try the server
+      // again on the next one.
       if (err.message === 'TTS 503') _ttsServerOk = false;
       _ttsBrowserSpeak(btn, text);
       return;

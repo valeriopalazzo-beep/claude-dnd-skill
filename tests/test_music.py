@@ -82,7 +82,8 @@ class MusicTests(unittest.TestCase):
     def test_keywords_match_whole_words_only(self):
         # "signore" holds "ore" (mine), "porta" holds "port" (ocean), "quale" holds "ale"
         self.assertIsNone(self.app._detect_scene("Il signore apre la porta. Quale strada?"))
-        scene = self.app._detect_scene("Arrivate al castello: i bastioni si stagliano nel cielo.")
+        # three keywords: a challenger must beat the scene on screen by a margin
+        scene = self.app._detect_scene("Arrivate al castello: i bastioni e il torrione si stagliano nel cielo.")
         self.assertEqual(scene["name"], "castle")
         self.assertNotIn("keywords", scene)
 
