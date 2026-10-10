@@ -539,6 +539,12 @@ The players have a Bestiary panel that fills up with what their characters learn
 
 ---
 
+## Puzzles
+
+A lock, a riddle or a coded note can be put on the players' own screens for them to work out: `display/puzzle.py lock|riddle|cipher "Title" …` shows it everywhere, checks every try on the server and tells you — as a `[[PUZZLE … SOLVED by … ]]` or `[[PUZZLE … FAILED … ]]` line from `check_input.py` — when it is over. A `[[PUZZLE …]]` line is not a player action: narrate what it means, then `puzzle.py close`. Plant the clues in the fiction first; give a hint (`puzzle.py hint`) rather than let it stall. Syntax: `SKILL-scripts.md` → *Puzzles*.
+
+---
+
 ## Clocks
 
 When the fiction has a countdown — a ritual, an alarm about to be raised, a flood, a long job the party is working through — put it on the table with `display/clock.py add "Name" <segments> --kind danger|goal|time` and `tick` it as the scene moves: everyone sees how close it is, and that is where the tension comes from. A full clock means it happens **now**. Keep it `--secret` until the characters could know. Syntax and how to size one: `SKILL-scripts.md` → *Progress Clocks*.

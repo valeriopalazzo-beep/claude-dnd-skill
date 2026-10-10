@@ -1453,6 +1453,43 @@
   #comp-sheet p{ margin:0 0 6px; }
   #comp-sheet .comp-note{ font-style:italic; color:var(--ln-text-muted, #cdbfa6); }
 
+  /* ══ Puzzles (puzzle.py) — a lock to turn, a riddle to answer, a cipher to read ══ */
+  #puzzle-modal{ display:none; position:fixed; inset:0; z-index:10545; background:rgba(8,6,4,.92);
+    align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  #puzzle-modal.open{ display:flex; }
+  #puzzle-panel{ width:min(520px, 100%); margin:auto 0; color:var(--ln-text, #ECE4D2); font-family:'Alegreya Sans','Syne',sans-serif; }
+  #puzzle-head{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  #puzzle-head h2{ flex:1; min-width:0; margin:0; font-size:22px; line-height:1.15; }
+  #puzzle-close{ flex:none; width:40px; height:40px; border-radius:999px; cursor:pointer; font-size:16px;
+    background:rgba(0,0,0,.35); color:inherit; border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #puzzle-body{ padding:16px 18px; border-radius:14px; font-size:17px; line-height:1.45;
+    background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
+  .pz-text{ margin:0 0 14px; white-space:pre-wrap; font-style:italic; }
+  .pz-wheels{ display:flex; justify-content:center; gap:10px; margin:6px 0 14px; flex-wrap:wrap; }
+  .pz-wheel{ display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .pz-wheel button{ width:54px; height:40px; border-radius:10px; cursor:pointer; font-size:18px; color:inherit;
+    background:rgba(0,0,0,.3); border:1px solid var(--ln-line-strong, rgba(255,255,255,.3)); }
+  .pz-wheel b{ display:grid; place-items:center; width:54px; height:62px; border-radius:10px; font-size:32px;
+    background:#efe4c8; color:#2a2118; border:2px solid #6b4a2b; font-variant-numeric:tabular-nums; }
+  .pz-cipher{ margin:0 0 12px; padding:12px 14px; border-radius:10px; font-size:19px; letter-spacing:.04em; overflow-wrap:anywhere;
+    background:#efe4c8; color:#2a2118; font-family:'Courier New',monospace; }
+  .pz-slider{ display:flex; align-items:center; gap:12px; margin:0 0 14px; font-weight:700; }
+  .pz-slider input{ flex:1; }
+  .pz-input{ width:100%; margin:0 0 12px; padding:13px 14px; border-radius:10px; font:inherit; font-size:18px; color:inherit;
+    background:rgba(0,0,0,.3); border:1px solid var(--ln-line-strong, rgba(255,255,255,.3)); }
+  .pz-go{ display:block; width:100%; padding:15px 12px; border:0; border-radius:12px; cursor:pointer; font:inherit;
+    font-size:20px; font-weight:800; color:#17110a; background:var(--ln-accent, #f2b544); }
+  .pz-go:disabled{ opacity:.5; }
+  .pz-state{ margin:12px 0 0; font-weight:700; color:var(--ln-accent, #f2b544); }
+  .pz-state.solved{ font-size:21px; color:#6cc070; }
+  .pz-state.failed{ font-size:19px; color:#e2574c; }
+  .pz-hint{ margin:12px 0 0; padding:10px 13px; border-radius:10px; border:1px dashed var(--ln-accent, #f2b544); }
+  .pz-tries{ margin:14px 0 0; padding:0; list-style:none; font-size:15.5px; }
+  .pz-tries li{ display:flex; gap:8px; padding:5px 0; border-top:1px solid var(--ln-line, rgba(255,255,255,.1)); }
+  .pz-tries li span{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pz-tries .ok{ color:#6cc070; font-weight:800; }
+  .pz-tries .no{ color:#e2574c; font-weight:800; }
+
   /* ── Calendar (calendar.py) — the month, the moon, the weather, what is coming ── */
   #world-clock.has-cal{ pointer-events:auto; cursor:pointer; }
   :root[data-skin="lanterna"] body.ln-on #ln-top #world-clock.has-cal{ cursor:pointer; }
@@ -4994,6 +5031,7 @@
 <div id="phone-settings">
   <button id="ph-set-toggle" type="button" title="Display settings" aria-label="Display settings" data-i18n-title="ph.settings" data-i18n-aria="ph.settings">⚙</button>
   <div id="ph-set-menu" role="menu">
+    <button class="ph-set-opt" id="ph-puzzle-opt" type="button" hidden><span data-i18n="puzzle.title">Puzzle</span><strong>🧩</strong></button>
     <button class="ph-set-opt" id="ph-shop-opt" type="button" hidden><span data-i18n="shop.title">Shop</span><strong>🛒</strong></button>
     <button class="ph-set-opt" id="ph-theme-opt" type="button"><span data-i18n="ph.theme">Theme</span><strong id="ph-theme-val">Dark</strong></button>
     <button class="ph-set-opt" id="ph-region-opt" type="button" hidden><span data-i18n="region.title">Region map</span><strong>🧭</strong></button>
@@ -5207,6 +5245,17 @@
   </div>
 </div>
 
+<!-- Puzzle: a lock, a riddle or a cipher the players try from their own screens (puzzle.py) -->
+<div id="puzzle-modal">
+  <div id="puzzle-panel" role="dialog" aria-labelledby="puzzle-title">
+    <div id="puzzle-head">
+      <h2 id="puzzle-title" data-i18n="puzzle.title">Puzzle</h2>
+      <button id="puzzle-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
+    </div>
+    <div id="puzzle-body"></div>
+  </div>
+</div>
+
 <!-- Calendar: the month the party is living, from calendar.py -->
 <div id="cal-modal">
   <div id="cal-panel" role="dialog" aria-labelledby="cal-title">
@@ -5267,6 +5316,7 @@
   <symbol id="ln-i-beast" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M9 8l1.5 2L12 8l1.5 2L15 8"/></symbol>
   <symbol id="ln-i-paw" viewBox="0 0 24 24"><circle cx="6.5" cy="10" r="2"/><circle cx="10" cy="5.5" r="2"/><circle cx="14" cy="5.5" r="2"/><circle cx="17.5" cy="10" r="2"/><path d="M12 12c-3 0-5.5 2.6-5.5 5.2 0 1.7 1.3 2.8 2.9 2.8 1 0 1.7-.5 2.6-.5s1.6.5 2.6.5c1.6 0 2.9-1.1 2.9-2.8C17.500 14.6 15 12 12 12z"/></symbol>
   <symbol id="ln-i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M12 7v6m0 0-2.5-2.5M12 13l2.5-2.5"/></symbol>
+  <symbol id="ln-i-puzzle" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="16" r="1.3"/></symbol>
   <symbol id="ln-i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
   <symbol id="ln-i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36z"/></symbol>
   <symbol id="ln-i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
@@ -5289,6 +5339,7 @@
       <button class="ln-item" type="button" data-ln-go="storia" data-phone title="Story" data-i18n-title="ln.view.storia"><svg class="ln-i"><use href="#ln-i-story"/></svg><span class="ln-lbl" data-i18n="ln.view.storia">Story</span></button>
       <button class="ln-item" type="button" data-ln-go="dadi" title="Roll dice" data-i18n-title="ln.view.dadi"><svg class="ln-i"><use href="#ln-i-dice"/></svg><span class="ln-lbl" data-i18n="ln.view.dadi">Roll dice</span></button>
       <button class="ln-item" type="button" data-ln-go="mappa" title="Map" data-i18n-title="ln.view.mappa"><svg class="ln-i"><use href="#ln-i-map"/></svg><span class="ln-lbl" data-i18n="ln.view.mappa">Map</span><span class="ln-badge" id="ln-badge-map" data-i18n="ln.badge.new" hidden>New</span></button>
+      <button class="ln-item" type="button" id="ln-puzzle" title="Puzzle" data-i18n-title="puzzle.title" hidden><svg class="ln-i"><use href="#ln-i-puzzle"/></svg><span class="ln-lbl" data-i18n="puzzle.title">Puzzle</span><span class="ln-badge alert">!</span></button>
       <button class="ln-item" type="button" id="ln-shop" title="Shop" data-i18n-title="shop.title" hidden><svg class="ln-i"><use href="#ln-i-coins"/></svg><span class="ln-lbl" data-i18n="shop.title">Shop</span><span class="ln-badge" data-i18n="shop.open">Open</span></button>
       <div class="ln-slot" id="ln-help-slot"></div>
     </div>
@@ -5369,6 +5420,7 @@
       <div class="ln-more">
         <button class="ln-item" type="button" data-ln-go="dadi"><svg class="ln-i"><use href="#ln-i-dice"/></svg><span class="ln-lbl" data-i18n="ln.view.dadi">Roll dice</span></button>
         <button class="ln-item" type="button" data-ln-go="mappa"><svg class="ln-i"><use href="#ln-i-map"/></svg><span class="ln-lbl" data-i18n="ln.view.mappa">Map</span></button>
+        <button class="ln-item" type="button" id="ln-puzzle-more" data-ln-proxy="ln-puzzle" hidden><svg class="ln-i"><use href="#ln-i-puzzle"/></svg><span class="ln-lbl" data-i18n="puzzle.title">Puzzle</span></button>
         <button class="ln-item" type="button" id="ln-shop-more" data-ln-proxy="ln-shop" hidden><svg class="ln-i"><use href="#ln-i-coins"/></svg><span class="ln-lbl" data-i18n="shop.title">Shop</span></button>
         <button class="ln-item" type="button" data-ln-go="fazioni"><svg class="ln-i"><use href="#ln-i-flag"/></svg><span class="ln-lbl" data-i18n="ln.view.fazioni">Factions</span></button>
         <button class="ln-item" type="button" data-ln-proxy="ln-handouts"><svg class="ln-i"><use href="#ln-i-mail"/></svg><span class="ln-lbl" data-i18n="handout.title">Documents</span></button>
@@ -10500,6 +10552,7 @@ function connect() {
       }
     }
     if ('initiative' in payload && typeof window._onInitiative === 'function') window._onInitiative(payload.initiative);
+    if (('puzzle' in payload || payload.puzzle_event) && typeof window._onPuzzle === 'function') window._onPuzzle('puzzle' in payload ? payload.puzzle : undefined, payload.puzzle_event);
     if (payload.book && typeof window._onBook === 'function') window._onBook(payload.book, true);
     if ((payload.companions || payload.companion_event) && typeof window._onCompanions === 'function') window._onCompanions(payload.companions, payload.companion_event);
     if ((payload.bestiary || payload.bestiary_event) && typeof window._onBestiary === 'function') window._onBestiary(payload.bestiary, payload.bestiary_event);
@@ -11029,6 +11082,150 @@ function _compChips(companions, ownerName) {
     if (el) el.addEventListener('click', () => { window.open('/book', '_blank'); });
   });
   fetch('/book/info').then(r => r.ok ? r.json() : null).then(d => window._onBook(d, false)).catch(() => {});
+})();
+
+// ── Puzzles (puzzle.py) ───────────────────────────────────────────────
+// The server holds the answer and checks every try. The page only turns the
+// wheels: _puzzleSpin moves one, _puzzleDecode reads a cipher at a given turn
+// of the alphabet (letters move, everything else stays).
+function _puzzleSpin(value, size, by) {
+  return (((value + by) % size) + size) % size;
+}
+function _puzzleDecode(text, shift) {
+  const turn = (ch, base) => String.fromCharCode((((ch.charCodeAt(0) - base - shift) % 26) + 26) % 26 + base);
+  return String(text || '').replace(/[a-z]/g, c => turn(c, 97)).replace(/[A-Z]/g, c => turn(c, 65));
+}
+// ── end puzzle helpers ──
+
+(function _initPuzzle() {
+  const modal = document.getElementById('puzzle-modal');
+  if (!modal) return;
+  const body = document.getElementById('puzzle-body');
+  const title = document.getElementById('puzzle-title');
+  let puzzle = null, wheels = [], shift = 0, answer = '', shownId = '';
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+
+  function send(guess, button) {
+    button.disabled = true;
+    fetch('/puzzle/try', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(_dndToken ? { 'X-DND-Token': _dndToken } : {}) },
+      body: JSON.stringify({ character: _turnMine() || _t('puzzle.table', null, 'The table'), guess }),
+    }).then(r => r.json().then(d => ({ ok: r.ok, d })))
+      .then(({ ok, d }) => {
+        button.disabled = false;
+        if (!ok) _showToast(_t('puzzle.err.' + (d.code === 'wait' ? 'wait' : 'bad'), null, d.error || 'No'), 3500);
+      })
+      .catch(() => { button.disabled = false; });
+  }
+
+  function controls() {
+    const p = puzzle;
+    if (p.kind === 'lock') {
+      if (wheels.length !== p.wheels) wheels = new Array(p.wheels).fill(0);
+      const row = el('div', 'pz-wheels');
+      wheels.forEach((v, i) => {
+        const w = el('div', 'pz-wheel'), face = el('b', '', p.symbols[v]);
+        const up = el('button', '', '▲'), down = el('button', '', '▼');
+        up.type = down.type = 'button';
+        const spin = by => { wheels[i] = _puzzleSpin(wheels[i], p.symbols.length, by); face.textContent = p.symbols[wheels[i]]; };
+        up.addEventListener('click', () => spin(1));
+        down.addEventListener('click', () => spin(-1));
+        w.append(up, face, down);
+        row.appendChild(w);
+      });
+      const go = el('button', 'pz-go', _t('puzzle.try', null, 'Try it'));
+      go.type = 'button';
+      go.addEventListener('click', () => send(wheels.slice(), go));
+      body.append(row, go);
+    } else if (p.kind === 'riddle') {
+      const input = el('input', 'pz-input');
+      input.type = 'text';
+      input.maxLength = 80;
+      input.value = answer;
+      input.placeholder = _t('puzzle.answerPh', null, 'Your answer…');
+      input.addEventListener('input', () => { answer = input.value; });
+      const go = el('button', 'pz-go', _t('puzzle.answer', null, 'Answer'));
+      go.type = 'button';
+      const submit = () => { if (input.value.trim()) send(input.value.trim(), go); };
+      go.addEventListener('click', submit);
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+      body.append(input, go);
+    } else {
+      const text = el('p', 'pz-cipher', _puzzleDecode(p.cipher, shift));
+      const row = el('label', 'pz-slider'), label = el('span', '', _t('puzzle.turn', { n: shift }, 'Wheel: ' + shift));
+      const slider = el('input');
+      slider.type = 'range'; slider.min = 0; slider.max = 25; slider.value = shift;
+      slider.addEventListener('input', () => {
+        shift = +slider.value;
+        text.textContent = _puzzleDecode(p.cipher, shift);
+        label.textContent = _t('puzzle.turn', { n: shift }, 'Wheel: ' + shift);
+      });
+      row.append(label, slider);
+      const go = el('button', 'pz-go', _t('puzzle.this', null, 'This is it!'));
+      go.type = 'button';
+      go.addEventListener('click', () => send(shift, go));
+      body.append(text, row, go);
+    }
+  }
+
+  function render() {
+    body.textContent = '';
+    if (!puzzle) return;
+    const p = puzzle;
+    title.textContent = p.title;
+    if (p.text) body.appendChild(el('p', 'pz-text', p.text));
+    if (p.solved) {
+      if (p.kind === 'cipher' && p.plain) body.appendChild(el('p', 'pz-cipher', p.plain));
+      body.appendChild(el('p', 'pz-state solved', '✓ ' + _t('puzzle.solved', { name: p.solved_by || '?' }, 'Solved by ' + p.solved_by + '!')));
+    } else if (p.failed) {
+      body.appendChild(el('p', 'pz-state failed', '✗ ' + _t('puzzle.failed', null, 'No attempts left.')));
+    } else {
+      controls();
+      if (p.max_attempts) {
+        const left = p.max_attempts - p.used;
+        body.appendChild(el('p', 'pz-state', left === 1 ? _t('puzzle.left1', null, '1 attempt left') : _t('puzzle.left', { n: left }, left + ' attempts left')));
+      }
+    }
+    if (p.hint) body.appendChild(el('p', 'pz-hint', '💡 ' + p.hint));
+    if ((p.tries || []).length) {
+      const ul = el('ul', 'pz-tries');
+      p.tries.slice(-8).reverse().forEach(t => {
+        const li = el('li');
+        li.append(el('b', t.ok ? 'ok' : 'no', t.ok ? '✓' : '✗'), el('span', '', t.who + ': ' + t.guess));
+        if (t.feedback !== '' && t.feedback != null && !t.ok) li.appendChild(el('i', '', _t('puzzle.right', { n: t.feedback }, t.feedback + ' right')));
+        ul.appendChild(li);
+      });
+      body.appendChild(ul);
+    }
+  }
+
+  const open = () => { if (puzzle) { modal.classList.add('open'); render(); } };
+  const close = () => modal.classList.remove('open');
+
+  window._onPuzzle = function (next, event) {
+    if (next !== undefined) {
+      const fresh = next && next.id !== shownId;
+      puzzle = next && next.id ? next : null;
+      if (fresh) { wheels = []; shift = 0; answer = ''; }
+      shownId = puzzle ? puzzle.id : '';
+      ['ln-puzzle', 'ln-puzzle-more', 'ph-puzzle-opt'].forEach(id => { const e = document.getElementById(id); if (e) e.hidden = !puzzle; });
+      if (!puzzle) close(); else if (modal.classList.contains('open')) render();
+    }
+    if (!event) return;
+    if (event.what === 'new') { _showToast('🧩 ' + _t('puzzle.new', { title: event.title }, 'A puzzle: ' + event.title), 5000); open(); }
+    else if (event.what === 'hint') { _showToast('💡 ' + _t('puzzle.hint', null, 'Hint'), 4000); open(); }
+    else if (event.what === 'try') {
+      if (event.ok) { _showToast('🧩 ✓ ' + _t('puzzle.solved', { name: event.who }, 'Solved by ' + event.who + '!'), 7000); if (navigator.vibrate) navigator.vibrate([100, 60, 100, 60, 300]); }
+      else if (event.failed) _showToast('🧩 ✗ ' + _t('puzzle.failed', null, 'No attempts left.'), 7000);
+      else _showToast('🧩 ✗ ' + event.who + ': ' + event.guess, 3500);
+    }
+  };
+  ['ln-puzzle', 'ph-puzzle-opt'].forEach(id => { const e = document.getElementById(id); if (e) e.addEventListener('click', open); });
+  document.getElementById('puzzle-close').addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  fetch('/puzzle').then(r => r.ok ? r.json() : null).then(d => window._onPuzzle(d && d.id ? d : null)).catch(() => {});
 })();
 
 // ── Calendar (calendar.py) ────────────────────────────────────────────

@@ -15,7 +15,8 @@ Output format (when non-empty):
 One line per character. Same format as autorun_wait.py output.
 
 What the players bought from an open shop (shop.py) is printed first, one
-`[[SHOP: <Char> bought … ]]` line each — information, not an action.
+`[[SHOP: <Char> bought … ]]` line each — information, not an action. A puzzle
+that was solved, or ran out of attempts (puzzle.py), is a `[[PUZZLE …]]` line.
 
 Secret notes the players wrote to the DM (whisper.py) are printed first, one
 `[[SECRET NOTE from <Char> — …]] text` line each, whether or not an action is queued.
@@ -77,6 +78,13 @@ except Exception:
 try:
     from shop import drain_sales
     for line in drain_sales():
+        print(line)
+except Exception:
+    pass
+
+try:
+    from puzzle import drain_news
+    for line in drain_news():
         print(line)
 except Exception:
     pass

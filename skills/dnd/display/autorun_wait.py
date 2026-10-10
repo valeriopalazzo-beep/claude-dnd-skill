@@ -26,6 +26,10 @@ try:
     import whisper as _whisper
 except Exception:
     _whisper = None
+try:
+    import puzzle as _puzzle
+except Exception:
+    _puzzle = None
 PUSH = os.path.join(DISPLAY_DIR, "push_stats.py")
 
 try:
@@ -70,6 +74,8 @@ for _ in range(1800):  # 0.3s * 1800 = 9 min
         break
     if _whisper and _whisper.inbox_pending():
         break
+    if _puzzle and _puzzle.news_pending():   # a puzzle was solved or failed: the DM narrates it now
+        break
     try:
         if open(SESSION_FILE, encoding="utf-8").read().strip() != my_session:
             break
@@ -105,6 +111,7 @@ if content:
         pass
 
 notes = _whisper.drain_inbox() if _whisper else []
+notes += _puzzle.drain_news() if _puzzle else []
 if notes:
     content = "\n".join(notes + ([content] if content else []))
 

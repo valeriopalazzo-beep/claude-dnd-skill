@@ -504,6 +504,8 @@ _DM_ENDPOINTS = {
     "companions_changed",
     # The campaign book: campaign_book.py makes it, everyone may download it.
     "book_changed",
+    # A puzzle: the DM sets it, hints and closes it; trying it is the players'.
+    "puzzle_open", "puzzle_close", "puzzle_hint", "puzzle_status",
     # Opening an initiative roll; rolling in it is the players'.
     "initiative_open", "initiative_cancel",
 }
@@ -2734,6 +2736,130 @@ def book_changed():
     return "", 204
 
 
+# ─── Puzzles (puzzle.py) ─────────────────────────────────────────────────────
+# One puzzle at a time on the table: a combination lock, a riddle, a cipher.
+# The answer stays here; the screens get only what public_view allows. Anyone
+# may try, everyone sees each try, and the DM is told when it is over.
+import puzzle as _puzzle_lib
+
+PUZZLE_FILE = rt("puzzle.json")
+_puzzle: Optional[dict] = None
+_puzzle_lock = threading.Lock()
+
+
+def _load_puzzle() -> None:
+    global _puzzle
+    try:
+        with open(PUZZLE_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, dict) and data.get("kind") in _puzzle_lib.KINDS:
+            _puzzle = data
+    except (OSError, ValueError):
+        pass
+
+
+def _persist_puzzle() -> None:
+    try:
+        if _puzzle is None:
+            if os.path.exists(PUZZLE_FILE):
+                os.remove(PUZZLE_FILE)
+            return
+        tmp = PUZZLE_FILE + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(_puzzle, f, ensure_ascii=False)
+        os.replace(tmp, PUZZLE_FILE)
+    except OSError:
+        pass
+
+
+_load_puzzle()
+
+_PUZZLE_NEEDS = {"lock": ("symbols", "wheels", "solution"), "riddle": ("answers",), "cipher": ("cipher", "plain", "solution")}
+
+
+@app.route("/puzzle", methods=["POST"])
+def puzzle_open():
+    """Put a puzzle on the table (replaces the one there). Body: {"puzzle": <made by puzzle.py>}."""
+    global _puzzle
+    data = (request.get_json(silent=True) or {}).get("puzzle")
+    if not isinstance(data, dict) or data.get("kind") not in _puzzle_lib.KINDS or not data.get("title"):
+        return jsonify({"error": "not a puzzle"}), 400
+    if any(k not in data for k in _PUZZLE_NEEDS[data["kind"]]):
+        return jsonify({"error": "the puzzle is incomplete"}), 400
+    data = dict(data, id=secrets.token_hex(5), tries=[], used=0, solved=False, failed=False, solved_by="", last_try=0.0)
+    with _puzzle_lock:
+        _puzzle = data
+        _persist_puzzle()
+        view = _puzzle_lib.public_view(_puzzle)
+    _broadcast({"puzzle": view, "puzzle_event": {"what": "new", "title": view["title"]}})
+    return jsonify(view), 200
+
+
+@app.route("/puzzle", methods=["GET"])
+def puzzle_get():
+    with _puzzle_lock:
+        return jsonify(_puzzle_lib.public_view(_puzzle) or {}), 200
+
+
+@app.route("/puzzle/status", methods=["GET"])
+def puzzle_status():
+    with _puzzle_lock:
+        return jsonify(_puzzle_lib.public_view(_puzzle) or {}), 200
+
+
+@app.route("/puzzle/hint", methods=["POST"])
+def puzzle_hint():
+    data = request.get_json(silent=True) or {}
+    with _puzzle_lock:
+        if _puzzle is None:
+            return jsonify({"error": "no puzzle on the table"}), 404
+        text = " ".join(str(data.get("text") or "").split())[:300]
+        if text:
+            _puzzle["hint"] = text
+        if not _puzzle.get("hint"):
+            return jsonify({"error": "this puzzle has no hint — pass one: puzzle.py hint \"…\""}), 400
+        _puzzle["hint_shown"] = True
+        _persist_puzzle()
+        view = _puzzle_lib.public_view(_puzzle)
+    _broadcast({"puzzle": view, "puzzle_event": {"what": "hint", "title": view["title"]}})
+    return jsonify(view), 200
+
+
+@app.route("/puzzle", methods=["DELETE"])
+def puzzle_close():
+    global _puzzle
+    with _puzzle_lock:
+        _puzzle = None
+        _persist_puzzle()
+    _broadcast({"puzzle": None})
+    return jsonify({}), 200
+
+
+@app.route("/puzzle/try", methods=["POST"])
+def puzzle_try():
+    """Anyone at the table tries the puzzle. A logged-in player tries as their own character."""
+    data = request.get_json(silent=True) or {}
+    who = re.sub(r"[`\\$<>]", "", _acting_character(str(data.get("character", ""))[:50])).strip()
+    with _puzzle_lock:
+        if _puzzle is None:
+            return jsonify({"error": "no puzzle on the table", "code": "over"}), 404
+        try:
+            result = _puzzle_lib.attempt(_puzzle, who, data.get("guess"), _time.time())
+        except _puzzle_lib.PuzzleError as e:
+            code = "wait" if "wait" in str(e) else "over" if "over" in str(e) else "bad"
+            return jsonify({"error": str(e), "code": code}), 409
+        _persist_puzzle()
+        view = _puzzle_lib.public_view(_puzzle)
+        over = _puzzle["solved"] or _puzzle["failed"]
+        line = _puzzle_lib.outcome_line(_puzzle) if over else ""
+    if line:
+        _puzzle_lib.news_add(line)
+    _broadcast({"puzzle": view, "puzzle_event": {"what": "try", "title": view["title"], "who": who,
+                                                 "guess": result["shown"], "ok": result["ok"],
+                                                 "feedback": result["feedback"], "failed": view["failed"]}})
+    return jsonify({"ok": result["ok"], "puzzle": view}), 200
+
+
 @app.route("/music/<track_id>.mp3")
 def music_track(track_id):
     """Serve a background-music MP3 built by build_music.py (Range-capable)."""
@@ -4664,6 +4790,11 @@ def stream():
             "label": meta.get("label", ""),
             "dc": meta.get("dc"),
         }})
+
+    # A puzzle on the table stays there for whoever connects now.
+    with _puzzle_lock:
+        if _puzzle is not None:
+            q.put_nowait({"puzzle": _puzzle_lib.public_view(_puzzle)})
 
     # An initiative roll still open: a phone that connects now can still roll.
     with _initiative_lock:

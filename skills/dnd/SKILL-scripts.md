@@ -863,6 +863,39 @@ python3 ${CLAUDE_SKILL_DIR}/display/companion.py show "Fulmine"
 
 ---
 
+## Puzzles — `display/puzzle.py`
+
+A puzzle the players solve with their own hands, on their own screens. One at a time on the table; anyone may try, everyone sees each try, and the answer never leaves the display server. Needs the display running.
+
+```bash
+# A combination lock — wheels to turn
+python3 ${CLAUDE_SKILL_DIR}/display/puzzle.py lock "Il forziere di Brakka" --code 3-7-1 --attempts 5 --hint "Le date sulla lapide"
+python3 ${CLAUDE_SKILL_DIR}/display/puzzle.py lock "La porta delle rune" --code S-O-L --feedback
+python3 ${CLAUDE_SKILL_DIR}/display/puzzle.py lock "Il sigillo" --code 2-5-8 --symbols runes     # places in ᚠᚢᚦᚨᚱᚲᚷᚹ
+
+# A riddle — any accepted answer opens it (case, accents, punctuation and a leading article do not matter)
+python3 ${CLAUDE_SKILL_DIR}/display/puzzle.py riddle "L'enigma della porta" --answer eco --answer "il rimbombo" << 'DNDEND'
+Parlo senza bocca e sento senza orecchie.
+Non ho corpo, ma prendo vita con il vento. Chi sono?
+DNDEND
+
+# A cipher — you write the message, the script scrambles it; the players turn a wheel until it reads true
+python3 ${CLAUDE_SKILL_DIR}/display/puzzle.py cipher "Il biglietto del contrabbandiere" --plain "la chiave è sotto la terza pietra" --shift 7
+
+python3 ${CLAUDE_SKILL_DIR}/display/puzzle.py hint                           # show the hint you stored (or: hint "a new one")
+python3 ${CLAUDE_SKILL_DIR}/display/puzzle.py status                         # who tried what, attempts left
+python3 ${CLAUDE_SKILL_DIR}/display/puzzle.py close                          # take it off the table
+```
+
+- `--attempts N` is the number of tries the **whole table** gets (default: no limit). `--feedback` makes a lock say how many wheels are right after a wrong try. `--text "…"` (or stdin) is what is written on the thing; `--hint` is kept until you run `hint`.
+- A lock has 2 to 8 wheels of `digits`, `letters` or `runes` (guessed from the code).
+- **When it is over you are told** with the next `check_input.py` / `autorun_wait.py` (it ends the autorun wait): `[[PUZZLE "…" SOLVED by Aldric (3-7-1) at try 2 …]]` or `[[PUZZLE "…" FAILED — the 5 attempts are spent …]]`. Narrate what opens, or the consequence, then `close`.
+- Opening a new puzzle replaces the one on the table.
+
+**How to use one:** the puzzle on the screen is the object in the fiction — the lock on the chest, the words carved over the door, the note in the dead man's pocket — so plant the clues in the world first (the numbers on a gravestone, a rhyme in a handout) and let the players connect them. Give limited attempts only when failing has a consequence you are ready to narrate (a needle trap, an alarm, a jammed mechanism); otherwise leave it open and use a clock for the pressure. If the table is stuck and the fun is draining, `hint` — do not let a puzzle stall the session. A character's Investigation or Arcana check can earn a hint; it never solves the puzzle for the players.
+
+---
+
 ## Region Map — `display/region_map.py`
 
 The map of the region, drawn on parchment as the party discovers it: places visited or heard of, roads with the days of travel, and a flag where the party is. Saved in `<campaign>/region.json`; every screen has it one tap away, and tapping a place shows what the party knows about it and how many days away it is. No image backend needed.
