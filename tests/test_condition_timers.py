@@ -312,6 +312,35 @@ class PageTests(unittest.TestCase):
             {"text": "6610s", "warn": False, "expireAt": 8200000},
             None])
 
+    def test_a_timer_the_server_dropped_is_gone_from_the_page_too(self):
+        if NODE is None:
+            raise unittest.SkipTest("node not available")
+        m = re.search(r"(const _WHOLE_KEYS = .*?)\n// ── end player merge ──", HTML.read_text(encoding="utf-8"), re.S)
+        self.assertTrue(m, "the player-merge block is no longer where this test slices it")
+        script = m.group(1) + """
+const p = _mergePlayer({}, {name: 'Aldric', hp: {current: 9, max: 20}, conditions: ['Poisoned'],
+  condition_timers: {poisoned: {duration_type: 'rounds', duration_remaining: 1}}});
+_mergePlayer(p, {name: 'Aldric', hp: {current: 7}, conditions: [], condition_timers: {}});
+const after_expiry = JSON.parse(JSON.stringify(p));
+_mergePlayer(p, {name: 'Aldric', conditions: ['Poisoned'], condition_timers: {stunned: {duration_type: 'rounds', duration_remaining: 2}}});
+const replaced = JSON.parse(JSON.stringify(p));
+_mergePlayer(p, {name: 'Aldric', conditions: ['Poisoned']});
+console.log(JSON.stringify([after_expiry, replaced, p]));
+"""
+        with tempfile.NamedTemporaryFile("w", suffix=".mjs", delete=False, encoding="utf-8") as f:
+            f.write(script)
+            path = f.name
+        try:
+            r = subprocess.run([NODE, path], capture_output=True, text=True, encoding="utf-8", timeout=30)
+            self.assertEqual(r.returncode, 0, r.stderr[:500])
+            after_expiry, replaced, absent = json.loads(r.stdout.strip().splitlines()[-1])
+        finally:
+            pathlib.Path(path).unlink(missing_ok=True)
+        self.assertEqual(after_expiry["condition_timers"], {})
+        self.assertEqual(after_expiry["hp"], {"current": 7, "max": 20})          # hp is still merged field by field
+        self.assertEqual(list(replaced["condition_timers"]), ["stunned"])
+        self.assertNotIn("condition_timers", absent)
+
     def test_the_page_draws_counts_down_and_announces(self):
         src = HTML.read_text(encoding="utf-8")
         for needle in ("_condTimeLeft((p.condition_timers || {})[c.toLowerCase()])",

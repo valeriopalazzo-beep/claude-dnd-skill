@@ -8042,6 +8042,26 @@ function _makeUnfoldable(item, detail, key, openSet) {
   });
 }
 
+// What the page knows of a character after a stats snapshot. hp, xp and the
+// like are merged field by field; the keys in _WHOLE_KEYS travel whole with
+// every snapshot, so what the server no longer sends is over (a timer that
+// ran out must not come back with the next plain "Poisoned").
+const _WHOLE_KEYS = ['condition_timers'];
+function _mergePlayer(existing, p) {
+  // Deep merge hp, xp, ability_scores; replace scalars
+  for (const [k, v] of Object.entries(p)) {
+    if (_WHOLE_KEYS.includes(k)) continue;
+    if (v !== null && typeof v === 'object' && !Array.isArray(v) && typeof existing[k] === 'object') {
+      existing[k] = Object.assign({}, existing[k], v);
+    } else {
+      existing[k] = v;
+    }
+  }
+  _WHOLE_KEYS.forEach(k => { if (k in p) existing[k] = p[k]; else delete existing[k]; });
+  return existing;
+}
+// ── end player merge ──
+
 function updateStats(stats) {
   if (!stats || !stats.players) return;
   const sidebar = document.getElementById('sidebar');
@@ -8051,16 +8071,7 @@ function updateStats(stats) {
   // Merge incoming players into _playerData
   stats.players.forEach(p => {
     if (!p.name) return;
-    const existing = _playerData[p.name] || {};
-    // Deep merge hp, xp, ability_scores; replace scalars
-    for (const [k, v] of Object.entries(p)) {
-      if (v !== null && typeof v === 'object' && !Array.isArray(v) && typeof existing[k] === 'object') {
-        existing[k] = Object.assign({}, existing[k], v);
-      } else {
-        existing[k] = v;
-      }
-    }
-    _playerData[p.name] = existing;
+    _playerData[p.name] = _mergePlayer(_playerData[p.name] || {}, p);
   });
 
   // Rebuild all player cards (insert before turn section)
