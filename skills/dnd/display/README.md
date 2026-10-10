@@ -150,6 +150,7 @@ The right sidebar tracks each party member in real time:
 - **Combat turn order** — initiative tracker with current actor highlighted
 - **"Your turn" alert** — a phone bound to a character (PIN login or `?char=`) vibrates, chimes and shows a banner when the tracker reaches that character, and gets a heads-up one turn earlier. The chime follows the Sound Effects switch; the screen is kept awake while a fight runs so the alert is not lost to a sleeping phone
 - **Factions** — party standings (Allied → Hostile)
+- **Secret notes** — the DM sends a note to one player with `whisper.py --to NAME "…"`; it opens on that player's phone only, and the player can write back in secret. Other screens show at most "the DM passes a note to NAME"
 
 Click any character's name to open the **full character sheet modal**: attacks, spells, features, inventory, with SRD lookup links on every spell and feature name.
 

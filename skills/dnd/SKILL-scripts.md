@@ -517,6 +517,37 @@ Open the browser tab and Chromecast it *before* running `/dm:dnd load` so the br
 
 ---
 
+## Secret Notes — `display/whisper.py`
+
+A note only one player reads: it appears on that player's phone and nowhere else — not in the narration, not in the voice, not on the shared screen, not on the other phones.
+
+```bash
+# The others see just "the DM passes a note to Aldric" (good table tension):
+python3 ${CLAUDE_SKILL_DIR}/display/whisper.py --to "Aldric" "Dietro l'arazzo senti qualcuno respirare."
+# The others see nothing at all:
+python3 ${CLAUDE_SKILL_DIR}/display/whisper.py --to "Aldric" --no-teaser "Il mercante ti fa l'occhiolino."
+# Re-read the notes of this campaign (all, or one character's thread):
+python3 ${CLAUDE_SKILL_DIR}/display/whisper.py --list --character "Aldric"
+```
+
+**When to use it** — whenever a fact belongs to one character and saying it aloud would hand it to the whole table:
+- what only the PC who passed the check notices (Perception, Insight, Arcana);
+- a vision, a dream, a telepathic voice, a patron's or deity's message;
+- the command behind a charm or domination, a curse the others should not know about;
+- a private aside from an NPC, or the answer to a secret note the player sent.
+
+Narrate publicly only what everyone perceives ("Aldric si irrigidisce un istante"), then send the note. The player decides whether to tell the others — do not do it for them.
+
+**Notes from players.** A player can write to the DM in secret from their phone (*Secret notes*). `check_input.py` and `autorun_wait.py` print each one as a line like:
+
+```
+[[SECRET NOTE from Mira — for the DM only, not a turn action. …]] Sfilo la chiave ad Aldric di nascosto.
+```
+
+It is not a turn action and not for the table: resolve it quietly (a hidden roll if it needs one), answer with `whisper.py --to "Mira"`, and keep the public narration free of anything the other characters could not perceive. A secret note ends an autorun wait early; after answering it, go back to waiting.
+
+---
+
 ## Battle Maps — `display/map_render.py`
 
 Write the layout as text; the image backend paints the terrain, the script draws grid, coordinates and tokens on top (exact squares), saves an SVG into `<campaign>/media/` and shows it on the display.

@@ -7,6 +7,8 @@ redirect; this script does the identical job (session-invalidation, countdown
 broadcast, input-queue poll, /queue/consumed POST) using python I/O only.
 
 Prints the queued player action(s) to stdout, or nothing on timeout (9 min).
+A secret note from a player (whisper.py) also ends the wait: it is printed as a
+`[[SECRET NOTE from <Char> — …]]` line, before any queued action.
 """
 import os
 import sys
@@ -19,6 +21,11 @@ import urllib.request
 
 DISPLAY_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(DISPLAY_DIR, "..", "scripts"))
+sys.path.insert(0, DISPLAY_DIR)
+try:
+    import whisper as _whisper
+except Exception:
+    _whisper = None
 PUSH = os.path.join(DISPLAY_DIR, "push_stats.py")
 
 try:
@@ -51,7 +58,7 @@ except Exception:
 subprocess.run([sys.executable, PUSH, "--autorun-waiting", "true", "--autorun-cycle", str(interval)],
                capture_output=True)
 
-# Poll loop — exit when queue appears, session changes, or 9 minutes pass
+# Poll loop — exit when queue appears, a secret note arrives, session changes, or 9 minutes pass
 content = ""
 for _ in range(1800):  # 0.3s * 1800 = 9 min
     if os.path.exists(QFILE):
@@ -60,6 +67,8 @@ for _ in range(1800):  # 0.3s * 1800 = 9 min
             os.unlink(QFILE)
         except Exception:
             content = ""
+        break
+    if _whisper and _whisper.inbox_pending():
         break
     try:
         if open(SESSION_FILE, encoding="utf-8").read().strip() != my_session:
@@ -94,5 +103,9 @@ if content:
         urllib.request.urlopen(req, timeout=1, context=ctx)
     except Exception:
         pass
+
+notes = _whisper.drain_inbox() if _whisper else []
+if notes:
+    content = "\n".join(notes + ([content] if content else []))
 
 sys.stdout.write(content)

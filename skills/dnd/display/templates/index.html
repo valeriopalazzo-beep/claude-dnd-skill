@@ -3728,6 +3728,44 @@
   #cs-back{ color:var(--e-accent, #FF7A2D); }
   #cs-skip:active, #cs-back:active{ opacity:.6; }
 
+  /* ══ Secret notes (whisper.py) — a thread between the DM and this player ══ */
+  #whisper-modal{ display:none; position:fixed; inset:0; z-index:10600; background:rgba(0,0,0,.72);
+    align-items:center; justify-content:center; }
+  #whisper-modal.open{ display:flex; }
+  #whisper-panel{ position:relative; display:flex; flex-direction:column; gap:10px;
+    width:min(520px, 92vw); max-height:min(640px, 86vh); padding:20px 20px 16px;
+    background:var(--ln-surface, #14100c); color:var(--ln-text, #ECE4D2);
+    border:1px solid var(--ln-line-strong, rgba(180,140,60,.3)); border-radius:14px;
+    box-shadow:0 24px 70px rgba(0,0,0,.6); font-family:'Alegreya Sans','Syne',sans-serif; }
+  #whisper-panel h2{ margin:0; padding-right:40px; font-size:22px; line-height:1.15; }
+  #whisper-hint{ margin:0; font-size:14px; color:var(--ln-text-muted, #b9ab92); }
+  #whisper-close{ position:absolute; top:12px; right:12px; width:36px; height:36px; border-radius:999px; cursor:pointer;
+    background:transparent; color:inherit; border:1px solid var(--ln-line, rgba(255,255,255,.16)); font-size:15px; }
+  #whisper-thread{ flex:1; min-height:120px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding:4px 2px; }
+  .whisper-empty{ margin:auto; text-align:center; font-size:15px; color:var(--ln-text-faint, #9a8c74); }
+  .whisper-note{ max-width:88%; padding:9px 13px 10px; border-radius:12px; font-size:16px; line-height:1.4; }
+  .whisper-note p{ margin:0; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .whisper-who{ display:block; margin-bottom:2px; font-size:12px; font-weight:700; letter-spacing:.03em; opacity:.8; }
+  .whisper-note.from-dm{ align-self:flex-start; background:var(--ln-npc-bg, #2d2414); color:var(--ln-npc-text, #fff6e3);
+    border-left:3px solid var(--ln-accent, #f2b544); }
+  .whisper-note.from-me{ align-self:flex-end; background:var(--ln-pc-bg, #15222f); color:var(--ln-pc-text, #dcefff); }
+  #whisper-form{ display:flex; gap:8px; align-items:flex-end; }
+  #whisper-text{ flex:1; min-height:46px; max-height:120px; resize:none; padding:10px 12px; border-radius:10px;
+    background:var(--ln-surface-2, #1f1912); color:inherit; border:1px solid var(--ln-line-strong, rgba(180,140,60,.3));
+    font:inherit; font-size:16px; }
+  #whisper-send{ flex:none; padding:12px 16px; border-radius:10px; border:0; cursor:pointer;
+    background:var(--ln-accent, #f2b544); color:var(--ln-on-accent, #1a1206); font:inherit; font-weight:800; font-size:15px; }
+  #whisper-send:disabled{ opacity:.5; }
+  .whisper-count{ display:inline-grid; place-items:center; min-width:18px; height:18px; padding:0 5px; border-radius:999px;
+    background:var(--ln-bad, #ff7a6b); color:var(--ln-on-bad, #1c0705); font:800 11px/1 'Alegreya Sans',sans-serif; }
+  .whisper-count[hidden]{ display:none; }
+  #ln-whisper{ position:relative; font-size:19px; }
+  #ln-whisper .whisper-count{ position:absolute; top:-4px; right:-4px; }
+  #ln-whisper[hidden]{ display:none; }
+  #ph-set-toggle.has-whisper{ position:relative; }
+  #ph-set-toggle.has-whisper::after{ content:''; position:absolute; top:2px; right:2px; width:11px; height:11px; border-radius:50%;
+    background:var(--ln-bad, #ff7a6b); }
+
   /* ══ Toast ══ */
   #toast{
     position:fixed; left:50%; bottom:36px;
@@ -4627,6 +4665,7 @@
     <label class="ph-set-opt ph-set-row" id="ph-lang-opt"><span data-i18n="settings.language">Language</span><select id="ph-lang-select" class="ph-set-select" aria-label="Display language" data-i18n-aria="settings.language"></select></label>
     <button class="ph-set-opt" id="ph-sfx-opt" type="button"><span data-i18n="settings.sfx">Sound Effects</span><strong id="ph-sfx-val">On</strong></button>
     <button class="ph-set-opt" id="ph-music-opt" type="button"><span data-i18n="settings.music">Music</span><strong id="ph-music-val">On</strong></button>
+    <button class="ph-set-opt" id="ph-whisper-opt" type="button" hidden><span data-i18n="whisper.title">Secret notes</span><strong>🤫 <span class="whisper-count" hidden></span></strong></button>
     <button class="ph-set-opt" id="ph-roll-opt" type="button" hidden><span data-i18n="ph.rolls">Rolls</span><strong id="ph-roll-val">Players</strong></button>
     <button class="ph-set-opt" id="ph-logout-opt" type="button" hidden><span data-i18n="ph.logout">Log out</span><strong>⏻</strong></button>
   </div>
@@ -4738,6 +4777,20 @@
   </div>
 </div>
 
+<!-- Secret notes between the DM and the player this browser is bound to -->
+<div id="whisper-modal">
+  <div id="whisper-panel" role="dialog" aria-labelledby="whisper-title">
+    <button id="whisper-close" type="button" title="Close" data-i18n-title="srd.close">✕</button>
+    <h2 id="whisper-title" data-i18n="whisper.title">Secret notes</h2>
+    <p id="whisper-hint" data-i18n="whisper.hint">Only you and the DM read these.</p>
+    <div id="whisper-thread"></div>
+    <form id="whisper-form">
+      <textarea id="whisper-text" rows="2" maxlength="500" placeholder="Write to the DM in secret…" data-i18n-placeholder="whisper.placeholder"></textarea>
+      <button id="whisper-send" type="submit" data-i18n="whisper.send">Send</button>
+    </form>
+  </div>
+</div>
+
 <!-- Character sidebar -->
 <div id="sidebar">
   <!-- Player cards are injected here by updateStats() -->
@@ -4823,6 +4876,7 @@
   <div id="ln-scene"><small data-i18n="ln.scene">Scene</small><span id="ln-scene-title"></span></div>
   <span class="ln-spacer"></span>
   <button id="ln-combat" class="ln-pill ln-combat" type="button" data-ln-go="personaggi" hidden><svg class="ln-i"><use href="#ln-i-swords"/></svg><span id="ln-combat-txt"></span></button>
+  <button id="ln-whisper" class="ln-icon-btn" type="button" title="Secret notes" aria-label="Secret notes" data-i18n-title="whisper.title" data-i18n-aria="whisper.title" hidden>🤫<span class="whisper-count" hidden></span></button>
   <div id="ln-clock-slot"></div>
   <button id="ln-theme" class="ln-icon-btn" type="button" aria-label="Change theme" data-i18n-aria="ln.theme"><svg class="ln-i"><use href="#ln-i-sun"/></svg></button>
   <button id="ln-me-chip" class="ln-pill" type="button" data-ln-go="scheda" hidden></button>
@@ -9449,6 +9503,10 @@ function connect() {
     if (payload.dice_pending !== undefined) {
       _updateDicePendingBadge(payload.dice_pending);
     }
+    if (payload.whisper && typeof window._onWhisper === 'function') window._onWhisper(payload.whisper);
+    if (payload.whisper_teaser) {
+      _showToast(_t('whisper.teaser', { name: payload.whisper_teaser.to }, 'The DM passes a note to ' + payload.whisper_teaser.to), 4500);
+    }
 
     if (payload.stats) {
       updateStats(payload.stats);
@@ -9800,6 +9858,110 @@ function _onscreenDiceOn() { try { return localStorage.getItem('dnd-onscreen-dic
 
     document.addEventListener('click', () => menu.classList.remove('open'));
   })();
+})();
+
+// ── Secret notes (whisper.py) ─────────────────────────────────────────────
+// A thread between the DM and the one character this browser is bound to
+// (PIN login, or the phone view's ?char=). The server sends a note to nobody
+// else; every other screen gets at most "the DM passes a note to <name>".
+(function _initWhispers() {
+  const q = new URLSearchParams(location.search);
+  const me = (window._LOGIN_CHAR || q.get('char') || q.get('character') || '').trim();
+  const modal = document.getElementById('whisper-modal');
+  if (!me || !modal) return;                    // the shared table screen keeps no secrets
+  const thread = document.getElementById('whisper-thread');
+  const form   = document.getElementById('whisper-form');
+  const text   = document.getElementById('whisper-text');
+  const send   = document.getElementById('whisper-send');
+  const gear   = document.getElementById('ph-set-toggle');
+  const SEEN_KEY = 'dnd-whisper-seen-' + me.toLowerCase();
+  let notes = [], seen = 0;
+  try { seen = parseFloat(localStorage.getItem(SEEN_KEY)) || 0; } catch (_) {}
+
+  function badge() {
+    const n = notes.filter(x => x.from === 'dm' && x.ts > seen).length;
+    document.querySelectorAll('.whisper-count').forEach(el => { el.textContent = n || ''; el.hidden = !n; });
+    if (gear) gear.classList.toggle('has-whisper', n > 0);
+  }
+  function render() {
+    thread.textContent = '';
+    if (!notes.length) {
+      const p = document.createElement('p');
+      p.className = 'whisper-empty';
+      p.textContent = _t('whisper.empty', null, 'No notes yet.');
+      thread.appendChild(p);
+    }
+    notes.forEach(n => {
+      const row = document.createElement('div');
+      row.className = 'whisper-note ' + (n.from === 'dm' ? 'from-dm' : 'from-me');
+      const who = document.createElement('span');
+      who.className = 'whisper-who';
+      who.textContent = (n.from === 'dm' ? _t('whisper.dm', null, 'DM') : _t('whisper.you', null, 'You')) + ' · ' +
+        new Date(n.ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const body = document.createElement('p');
+      body.textContent = n.text;
+      row.append(who, body);
+      thread.appendChild(row);
+    });
+    thread.scrollTop = thread.scrollHeight;
+  }
+  function markSeen() {
+    seen = Math.max(seen, ...notes.map(n => n.ts));
+    try { localStorage.setItem(SEEN_KEY, String(seen)); } catch (_) {}
+    badge();
+  }
+  function add(n) {
+    if (!n || !n.id || notes.some(x => x.id === n.id)) return false;
+    notes.push(n);
+    notes.sort((a, b) => a.ts - b.ts);
+    return true;
+  }
+  function open()  { modal.classList.add('open'); render(); markSeen(); }
+  function close() { modal.classList.remove('open'); }
+
+  // A note from the DM opens by itself, unless the player is in the middle of
+  // typing something: then it waits behind the badge.
+  window._onWhisper = n => {
+    if (!add(n)) return;
+    if (modal.classList.contains('open')) { render(); markSeen(); return; }
+    if (n.from !== 'dm') return;
+    if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
+    const el = document.activeElement;
+    if (el && /^(TEXTAREA|INPUT)$/.test(el.tagName) && el.value) {
+      badge();
+      _showToast(_t('whisper.arrived', null, 'A secret note from the DM is waiting'), 6000);
+    } else {
+      open();
+    }
+  };
+
+  [document.getElementById('ln-whisper'), document.getElementById('ph-whisper-opt')].forEach(btn => {
+    if (!btn) return;
+    btn.hidden = false;
+    btn.addEventListener('click', open);
+  });
+  document.getElementById('whisper-close').addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && modal.classList.contains('open')) close(); });
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const value = text.value.trim();
+    if (!value) return;
+    send.disabled = true;
+    const headers = { 'Content-Type': 'application/json', 'X-DND-Device': _deviceId };
+    if (_dndToken) headers['X-DND-Token'] = _dndToken;
+    fetch('/whisper', { method: 'POST', headers, body: JSON.stringify({ from: me, text: value }) })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(n => { text.value = ''; add(n); render(); markSeen(); })
+      .catch(() => _showToast(_t('whisper.failed', null, 'The note was not sent — try again')))
+      .finally(() => { send.disabled = false; });
+  });
+
+  fetch('/whispers?character=' + encodeURIComponent(me))
+    .then(r => r.ok ? r.json() : [])
+    .then(list => { (list || []).forEach(add); badge(); if (modal.classList.contains('open')) render(); })
+    .catch(() => {});
 })();
 
 // ── Mode switcher ─────────────────────────────────────────────────────────

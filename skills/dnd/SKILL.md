@@ -271,6 +271,8 @@ At the start of each turn, run `check_input.py` before processing the player's m
 
 A line wrapped in double brackets — e.g. `[[Narration length for this turn: aim for ~250 words…]]` — is **not** a player action; it is a directive from the display's Narration slider. Treat it as a hard length budget for **this turn's** narration: write to roughly that word count, trimming description and pacing to fit, and never pad to reach it. The remaining `[Char]: …` lines are the actual player actions. (If the only thing returned is the `[[…]]` directive with no action lines, treat it as no player input.)
 
+**Secret notes:** what only one character perceives or knows goes to that player's phone alone with `display/whisper.py --to "Name" "…"`, never into the shared narration. A `[[SECRET NOTE from <Char> — …]]` line is a player writing to you privately: resolve it without telling the table and answer the same way. See `SKILL-scripts.md` → Secret Notes.
+
 **Autorun / taxi mode** (`autorun: true` in `state.md → ## Session Flags`):
 
 When autorun is active, Claude drives the turn loop — no DM Enter required and no PTY wrapper needed. After completing each response, run this blocking wait as the very last Bash call of the response. The CLI shows the command text in the `⏺ Bash(...)` label — the comment on line 1 is what the DM sees while it blocks.

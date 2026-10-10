@@ -13,6 +13,9 @@ Output format (when non-empty):
   [CharName2]: action text
 
 One line per character. Same format as autorun_wait.py output.
+
+Secret notes the players wrote to the DM (whisper.py) are printed first, one
+`[[SECRET NOTE from <Char> — …]] text` line each, whether or not an action is queued.
 """
 import os
 import sys
@@ -60,6 +63,13 @@ def _roll_directives():
         pass
     return ""
 
+
+try:
+    from whisper import drain_inbox
+    for line in drain_inbox():
+        print(line)
+except Exception:
+    pass
 
 try:
     if os.path.exists(QUEUE_FILE):

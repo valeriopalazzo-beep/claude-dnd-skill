@@ -3505,6 +3505,146 @@ def drain_player_input():
     return jsonify(drained), 200
 
 
+# ─── Secret notes (whispers) ─────────────────────────────────────────────────
+# A note between the DM and ONE player. It never enters the narration log, the
+# text replay or the voice: it is stored here and sent only to the browsers
+# bound to that player's character (see _whisper_for, applied per SSE client).
+# A note from a player is also dropped in WHISPER_INBOX_FILE, which
+# whisper.py / check_input.py / autorun_wait.py hand to the DM and clear.
+
+import whisper as _whisper
+
+WHISPERS_FILE = rt("whispers.json")
+_WHISPER_KEEP = 200            # newest notes kept on disk, all campaigns together
+_WHISPER_DM_MAX = 2000         # characters in a note from the DM
+_whispers: list = []
+_whispers_lock = threading.Lock()
+
+
+def _load_whispers() -> None:
+    try:
+        with open(WHISPERS_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return
+    if isinstance(data, list):
+        _whispers[:] = [e for e in data if isinstance(e, dict) and e.get("text")][-_WHISPER_KEEP:]
+
+
+def _persist_whispers() -> None:
+    with _whispers_lock:
+        data = list(_whispers)
+    try:
+        tmp = WHISPERS_FILE + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False)
+        os.replace(tmp, WHISPERS_FILE)
+        os.chmod(WHISPERS_FILE, 0o600)
+    except OSError:
+        pass
+
+
+_load_whispers()
+
+
+def _whisper_owner(entry: dict) -> str:
+    """The player character a note belongs to (its recipient, or its author)."""
+    return str(entry.get("to") if entry.get("from") == "dm" else entry.get("from") or "")
+
+
+def _whisper_for(payload: Optional[dict], viewer: Optional[str], bound: str) -> Optional[dict]:
+    """Keep a secret note for its player only.
+
+    `viewer` is a logged-in player's character (lowercase) or None; `bound` is
+    the character a browser on this PC opened the phone view for ("" for the
+    shared table screen). Everyone else loses the note: they get a bare
+    "the DM passed a note to X" when the DM asked for that, otherwise nothing.
+    """
+    if not isinstance(payload, dict) or "whisper" not in payload:
+        return payload
+    note = payload["whisper"]
+    me = viewer if viewer is not None else (bound or None)
+    if me and isinstance(note, dict) and me == _whisper_owner(note).lower():
+        return payload
+    out = {k: v for k, v in payload.items() if k != "whisper"}
+    if isinstance(note, dict) and note.get("from") == "dm" and note.get("teaser"):
+        out["whisper_teaser"] = {"to": note.get("to", "")}
+    return out or None
+
+
+@app.route("/whisper", methods=["POST"])
+def whisper():
+    """Send a secret note.
+
+    From the DM:      {"to": "Aldric", "text": "...", "teaser": true}
+    From a player:    {"text": "..."}   (a phone view on this PC adds "from")
+    A logged-in player always writes to the DM as their own character.
+    """
+    if not _token_ok():
+        return "Forbidden", 403
+    data = request.get_json(force=True, silent=True) or {}
+    is_player = getattr(g, "role", None) == "player"
+    to = str(data.get("to", "")).strip()[:50]
+    with _stats_lock:
+        party = [p.get("name", "") for p in _current_stats.get("players", []) if p.get("name")]
+
+    if is_player or not to:
+        if not _rate_ok(request.remote_addr):
+            return "Too Many Requests", 429
+        sender = _acting_character(str(data.get("from", ""))[:50].strip())
+        text = _sanitize_input(str(data.get("text", "")))
+        if not sender or not text:
+            return "Bad Request", 400
+        if not _char_ok(sender, set(party)) or sender == "Everybody":
+            return "Forbidden", 403
+        entry = {"from": sender, "to": "dm"}
+    else:
+        # The DM's own words: keep punctuation and line breaks, drop control characters.
+        text = re.sub(r"[\x00-\x09\x0b-\x1f\x7f]", "", str(data.get("text", "")))[:_WHISPER_DM_MAX].strip()
+        if not text:
+            return "Bad Request", 400
+        name = next((n for n in party if n.lower() == to.lower()), None)
+        if name is None:
+            return jsonify({"error": "unknown character", "party": party}), 404
+        entry = {"from": "dm", "to": name, "teaser": bool(data.get("teaser", True))}
+
+    entry.update({
+        "id": secrets.token_hex(6),
+        "text": text,
+        "ts": _time.time(),
+        "campaign": _active_campaign(),
+    })
+    with _whispers_lock:
+        _whispers.append(entry)
+        del _whispers[:-_WHISPER_KEEP]
+    _persist_whispers()
+    if entry["to"] == "dm":
+        _whisper.inbox_add(entry)
+    _broadcast({"whisper": entry})
+    return jsonify(entry), 200
+
+
+@app.route("/whispers")
+def whispers_list():
+    """The notes of one character in the active campaign, oldest first.
+
+    A logged-in player gets their own. The DM names a character with
+    ?character=, or passes ?all=1 for every thread (whisper.py --list).
+    """
+    if not _token_ok():
+        return "Forbidden", 403
+    camp = _active_campaign()
+    with _whispers_lock:
+        notes = [e for e in _whispers if e.get("campaign", "") == camp]
+    if getattr(g, "role", None) == "player":
+        who = (g.character or "").lower()
+    elif request.args.get("all"):
+        return jsonify(notes), 200
+    else:
+        who = request.args.get("character", "").strip().lower()
+    return jsonify([e for e in notes if who and _whisper_owner(e).lower() == who]), 200
+
+
 # Per-player fields kept for other characters when a logged-in player is
 # watching: enough for the party cards (HP, AC, conditions), never the sheet.
 _PARTY_CARD_KEYS = {
@@ -3635,7 +3775,7 @@ def stream():
         try:
             while True:
                 try:
-                    payload = _for_viewer(q.get(timeout=5), _viewer)
+                    payload = _whisper_for(_for_viewer(q.get(timeout=5), _viewer), _viewer, _ch)
                     if payload:
                         yield f"data: {json.dumps(payload)}\n\n"
                 except queue.Empty:
