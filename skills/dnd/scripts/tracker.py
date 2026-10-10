@@ -11,7 +11,7 @@ Usage:
     # Conditions (5e SRD: blinded, charmed, deafened, exhausted, frightened,
     #   grappled, incapacitated, invisible, paralyzed, petrified, poisoned,
     #   prone, restrained, stunned, unconscious)
-    python3 tracker.py -c $CAMPAIGN condition add <entity> <condition>
+    python3 tracker.py -c $CAMPAIGN condition add <entity> <condition> [duration]   # 3r / 10m / 1h: ends by itself
     python3 tracker.py -c $CAMPAIGN condition remove <entity> <condition>
     python3 tracker.py -c $CAMPAIGN condition clear <entity>
 
@@ -102,6 +102,7 @@ def _entity(state: dict, name: str) -> dict:
         }
     # Backfill effects key for older entries
     state[key].setdefault("effects", [])
+    state[key].setdefault("condition_timers", {})
     return state[key]
 
 
@@ -159,6 +160,18 @@ def _push_conditions(entity_name: str, conditions: list[str]) -> None:
         subprocess.run(
             [sys.executable, PUSH_STATS, "--player", entity_name,
              "--conditions", cond_str],
+            capture_output=True, timeout=3,
+        )
+    except Exception:
+        pass  # Display not running — fail silently
+
+
+def _push_timed_condition(entity_name: str, condition: str, duration: str) -> None:
+    """Add one condition with its duration on the display (the others keep their own)."""
+    try:
+        subprocess.run(
+            [sys.executable, PUSH_STATS, "--player", entity_name,
+             "--conditions-add", f"{condition}:{duration}"],
             capture_output=True, timeout=3,
         )
     except Exception:
@@ -261,6 +274,27 @@ def cmd_effect(campaign: str, action: str, entity_name: str,
         all_expired = expired + time_expired
         ent["effects"] = kept
 
+        # Conditions with a duration run on the same turns
+        timers = ent.get("condition_timers", {})
+        ended = []
+        for cond in list(timers):
+            t = timers[cond]
+            if t.get("duration_type") == "rounds":
+                t["duration_remaining"] = max(0, t.get("duration_remaining", 1) - 1)
+                if t["duration_remaining"] <= 0:
+                    ended.append(cond)
+            elif time.time() - t.get("started_at", time.time()) >= t.get("duration_seconds", 0):
+                ended.append(cond)
+        for cond in ended:
+            timers.pop(cond, None)
+            ent["conditions"] = [c for c in ent["conditions"] if c != cond]
+            print(f"  ! {entity_name}: {cond.capitalize()} ENDS (duration over)")
+        if ended:
+            _push_conditions(entity_name, ent["conditions"])
+        left = [f"{c.capitalize()} · {_fmt_effect(t)}" for c, t in timers.items()]
+        if left:
+            print(f"  {entity_name} — conditions: {', '.join(left)}")
+
         if not all_expired and not kept:
             # Nothing to report
             _save(campaign, state)
@@ -288,18 +322,31 @@ def cmd_effect(campaign: str, action: str, entity_name: str,
         print(f"  error: unknown effect action '{action}' — use start / end / tick")
 
 
-def cmd_condition(campaign: str, entity_name: str, action: str, condition: str = "") -> None:
+def cmd_condition(campaign: str, entity_name: str, action: str, condition: str = "",
+                  duration: str = "") -> None:
     state = _load(campaign)
     ent   = _entity(state, entity_name)
     conds = ent["conditions"]
+    timers = ent["condition_timers"]
 
     if action == "add":
         cond = condition.lower()
-        if cond not in conds:
-            conds.append(cond)
-            _push_conditions(entity_name, conds)
+        timer = None
+        if duration:
+            timer = _parse_duration(duration)
+            if timer is None or timer.get("duration_type") == "indefinite":
+                print(f"  error: bad duration '{duration}' — use 3r / 10m / 1h, or leave it out")
+                return
+        if cond not in conds or timer:
+            if cond not in conds:
+                conds.append(cond)
+            if timer:
+                timers[cond] = timer
+                _push_timed_condition(entity_name, cond, duration.strip().lower())
+            else:
+                _push_conditions(entity_name, conds)
             _send_announce(f"{entity_name} → {cond.capitalize()}")
-            print(f"  + {entity_name}: {cond}")
+            print(f"  + {entity_name}: {cond}" + (f" · {_fmt_effect(timer)}" if timer else ""))
         else:
             print(f"  (already has {cond})")
 
@@ -307,6 +354,7 @@ def cmd_condition(campaign: str, entity_name: str, action: str, condition: str =
         cond = condition.lower()
         if cond in conds:
             conds.remove(cond)
+            timers.pop(cond, None)
             _push_conditions(entity_name, conds)
             _send_announce(f"{entity_name} — {cond.capitalize()} ends")
             print(f"  - {entity_name}: {cond} removed")
@@ -317,6 +365,7 @@ def cmd_condition(campaign: str, entity_name: str, action: str, condition: str =
         if conds:
             _send_announce(f"{entity_name} — all conditions cleared")
         conds.clear()
+        timers.clear()
         _push_conditions(entity_name, [])
         print(f"  {entity_name}: conditions cleared")
 
@@ -406,7 +455,9 @@ def cmd_status(campaign: str, filter_name: str = "") -> None:
         effects = ent.get("effects", [])
         parts = []
         if conds:
-            parts.append("Conditions: " + ", ".join(c.capitalize() for c in conds))
+            timers = ent.get("condition_timers", {})
+            parts.append("Conditions: " + ", ".join(
+                c.capitalize() + (f" · {_fmt_effect(timers[c])}" if c in timers else "") for c in conds))
         if conc:
             parts.append(f"Concentrating: {conc}")
         if effects:
@@ -434,6 +485,7 @@ def cmd_clear(campaign: str, clear_all: bool = False) -> None:
     state = _load(campaign)
     for ent in state.values():
         ent["conditions"] = []
+        ent["condition_timers"] = {}
         ent["concentration"] = None
         ent["effects"] = []
         _push_conditions(ent["name"], [])
@@ -468,6 +520,8 @@ def main() -> None:
     cond.add_argument("action", choices=["add", "remove", "clear"])
     cond.add_argument("entity")
     cond.add_argument("condition", nargs="?", default="")
+    cond.add_argument("duration", nargs="?", default="",
+                      help="add: 3r / 10m / 1h — the condition ends by itself")
 
     # concentrate
     conc = sub.add_parser("concentrate", help="Track spell concentration")
@@ -495,7 +549,7 @@ def main() -> None:
                    spell=args.spell, duration=args.duration,
                    is_conc=(args.conc.lower() == "conc"))
     elif args.cmd == "condition":
-        cmd_condition(args.campaign, args.entity, args.action, args.condition)
+        cmd_condition(args.campaign, args.entity, args.action, args.condition, args.duration)
     elif args.cmd == "concentrate":
         cmd_concentrate(args.campaign, args.entity, args.spell)
     elif args.cmd == "saves":

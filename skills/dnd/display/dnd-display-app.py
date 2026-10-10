@@ -2657,14 +2657,26 @@ def stats():
                                 if i.lower() != str(val).lower()
                             ]
                         elif key == "_conditions_add":
+                            # A plain name, or {name, duration_type, …} for a
+                            # condition that ends by itself (see _condition_timer).
+                            cond = str(val.get("name", "") if isinstance(val, dict) else val).strip()
+                            if not cond:
+                                continue
                             conds = match.setdefault("conditions", [])
-                            if val not in conds:
-                                conds.append(val)
+                            if cond.lower() not in [c.lower() for c in conds]:
+                                conds.append(cond)
+                            timers = match.setdefault("condition_timers", {})
+                            timer = _condition_timer(val) if isinstance(val, dict) else None
+                            if timer:
+                                timers[cond.lower()] = timer
+                            else:
+                                timers.pop(cond.lower(), None)   # re-applied with no end in sight
                         elif key == "_conditions_remove":
                             match["conditions"] = [
                                 c for c in match.get("conditions", [])
                                 if c.lower() != str(val).lower()
                             ]
+                            match.get("condition_timers", {}).pop(str(val).lower(), None)
                         elif key == "_slot_use":
                             slots = match.setdefault("spell_slots", {})
                             lvl = str(val)
@@ -2738,6 +2750,11 @@ def stats():
                             match[key].update(val)
                         else:
                             match[key] = val
+                    # A full --conditions replace drops the timers of what it dropped.
+                    if match.get("condition_timers"):
+                        have = {str(c).lower() for c in match.get("conditions", [])}
+                        match["condition_timers"] = {
+                            k: v for k, v in match["condition_timers"].items() if k in have}
                 else:
                     # Strip mutation ops — they're meaningless for new players
                     existing_players.append(
@@ -2754,8 +2771,14 @@ def stats():
             if isinstance(new_to, dict) and isinstance(prev_to, dict) and "order" not in new_to:
                 new_to = {**prev_to, **new_to}
             _current_stats["turn_order"] = new_to
-            # Decrement round-based effects for the actor whose turn just started
-            if new_to and isinstance(new_to, dict) and new_to.get("current"):
+            # Decrement round-based effects and conditions for the actor whose
+            # turn just started. Only when the pointer really moved: a re-send
+            # of the same turn (a creature joins, the list is pushed again) is
+            # not another round gone.
+            moved = (not isinstance(prev_to, dict) or not isinstance(new_to, dict)
+                     or str(prev_to.get("current") or "").lower() != str(new_to.get("current") or "").lower()
+                     or prev_to.get("round") != new_to.get("round"))
+            if new_to and isinstance(new_to, dict) and new_to.get("current") and moved:
                 actor = new_to["current"].lower()
                 for p in _current_stats.get("players", []):
                     if p.get("name", "").lower() != actor:
@@ -2780,6 +2803,22 @@ def stats():
                             "owner": p["name"],
                             "name": eff["name"],
                             "was_concentration": was_conc,
+                        })
+                    timers = p.get("condition_timers") or {}
+                    for cond_key in list(timers):
+                        timer = timers[cond_key]
+                        if timer.get("duration_type") != "rounds":
+                            continue
+                        left = max(0, int(timer.get("duration_remaining", 1)) - 1)
+                        if left > 0:
+                            timers[cond_key] = {**timer, "duration_remaining": left}
+                            continue
+                        del timers[cond_key]
+                        shown = next((c for c in p.get("conditions", []) if c.lower() == cond_key), cond_key)
+                        p["conditions"] = [c for c in p.get("conditions", []) if c.lower() != cond_key]
+                        _effect_expire_events.append({
+                            "owner": p["name"], "name": shown,
+                            "was_concentration": False, "condition": True,
                         })
 
         # world_time replaces entirely
@@ -2891,6 +2930,31 @@ def stats():
     return "", 204
 
 
+def _condition_timer(val: dict) -> Optional[dict]:
+    """The duration fields of a timed condition, or None when it has no end set.
+
+    Same shape as a timed effect: rounds count down on the owner's turns,
+    minutes / hours run on the wall clock from started_at.
+    """
+    kind = val.get("duration_type")
+    try:
+        if kind == "rounds":
+            left = int(val.get("duration_remaining", 0))
+            return {"duration_type": "rounds", "duration_remaining": left} if left > 0 else None
+        if kind in ("minutes", "hours"):
+            secs = int(val.get("duration_seconds", 0))
+            if secs > 0:
+                return {"duration_type": kind, "duration_seconds": secs,
+                        "started_at": float(val.get("started_at") or _time.time())}
+    except (TypeError, ValueError):
+        pass
+    return None
+
+
+def _timer_seconds_left(timer: dict) -> float:
+    return float(timer.get("started_at", 0)) + float(timer.get("duration_seconds", 0)) - _time.time()
+
+
 @app.route("/effects/expire", methods=["POST"])
 def effects_expire():
     """Called by browser when a time-based effect countdown reaches zero.
@@ -2912,6 +2976,16 @@ def effects_expire():
         for p in _current_stats.get("players", []):
             if p.get("name", "").lower() != owner.lower():
                 continue
+            if data.get("condition"):
+                # A timed condition ran out on the clock (minutes / hours).
+                timer = (p.get("condition_timers") or {}).get(name.lower())
+                if not timer or timer.get("duration_type") == "rounds" or _timer_seconds_left(timer) > 2:
+                    return "", 204          # nothing to end, or a browser with a fast clock
+                p["condition_timers"].pop(name.lower(), None)
+                shown = next((c for c in p.get("conditions", []) if c.lower() == name.lower()), name)
+                p["conditions"] = [c for c in p.get("conditions", []) if c.lower() != name.lower()]
+                expire_evt = {"owner": p["name"], "name": shown, "was_concentration": False, "condition": True}
+                break
             was_conc   = False
             new_effects = []
             for e in p.get("effects", []):

@@ -366,7 +366,7 @@ DNDEND
 | `--stat-temp-hp` | `"NAME:N"` | Temp HP set (Symbiotic Entity, Aid, etc.) |
 | `--stat-slot-use` | `"NAME:LEVEL"` | Spell cast (expend slot) |
 | `--stat-slot-restore` | `"NAME:LEVEL"` | Slot restored mid-encounter |
-| `--stat-condition-add` | `"NAME:CONDITION"` | Condition applied |
+| `--stat-condition-add` | `"NAME:CONDITION"` or `"NAME:CONDITION:DURATION"` | Condition applied — DURATION `3r` / `10m` / `1h` when the rules give it an end: it counts down on the player's screen and removes itself |
 | `--stat-condition-remove` | `"NAME:CONDITION"` | Condition ends |
 | `--stat-concentrate` | `"NAME:SPELL"` | Concentration starts (empty SPELL = clear) |
 | `--stat-inventory-add` | `"NAME:ITEM"` | Item gained |
@@ -415,6 +415,7 @@ d. tracker.py        ← conditions, concentration, death saves if applicable
 e. Write full narration for this turn
 f. send.py [--stat-*] ← send complete narration + ALL stat changes — NEVER skip
    Use --effect-start / --effect-end flags when effects begin or end this turn (syncs display)
+   A condition with a set length goes in as --stat-condition-add "NAME:COND:3r" — never count its rounds yourself
 g. push_stats.py --turn-current  ← advance turn pointer (still separate — not a narration)
 ```
 Step (f) is the most commonly missed. Every narration block must be sent.

@@ -260,6 +260,7 @@ python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --player Flerb --conditions ""
 
 # Conditions — granular (preferred mid-session):
 python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --player Flerb --conditions-add "Poisoned"
+python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --player Flerb --conditions-add "Poisoned:3r"   # ends by itself: 3r / 10m / 1h
 python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --player Flerb --conditions-remove "Poisoned"
 
 # Concentration:
@@ -342,6 +343,7 @@ If `check_input.py` returns output, prepend it to the player's terminal input wh
 - Hit die spent → `--player NAME --hit-dice-use`; restored → `--hit-dice-restore N`
 - Spell slot used → `--player NAME --slot-use <level>`; restored → `--slot-restore <level>`
 - Condition gained → `--player NAME --conditions-add "Name"`; removed → `--conditions-remove "Name"`
+- Condition with a set length ("until the end of its next turn", "for 1 minute") → add it as `"Name:1r"` / `"Name:10r"` / `"Name:10m"` / `"Name:1h"`. The pill shows what is left; rounds go down each time the tracker reaches that character (`--turn-current`), minutes and hours run on the clock, and at zero the display removes the condition and announces it. A save that ends it early is still yours: `--conditions-remove`. Sending the same turn twice does not count twice
 - Concentration started → `--player NAME --concentrate "Spell"`; ended → `--concentrate ""`
 - Item picked up → `scripts/inventory.py add NAME "Item"`; dropped/used → `inventory.py remove NAME "Item"` (they update the sheet file and the display together; the bare `push_stats.py --inventory-add/--inventory-remove` changes the display only)
 - Coins gained or spent → `scripts/inventory.py gain / pay / buy / sell / split`
@@ -397,8 +399,9 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/tracker.py -c $CAMP effect start "Ethros the
 python3 ${CLAUDE_SKILL_DIR}/scripts/tracker.py -c $CAMP effect end   "Max of Thraxx" "Web"   # narrative end (broken/dispelled)
 python3 ${CLAUDE_SKILL_DIR}/scripts/tracker.py -c $CAMP effect tick  "Max of Thraxx"         # call on actor's turn — decrements rounds, prints expiry
 
-# Conditions
+# Conditions — an optional duration (3r / 10m / 1h) makes it end by itself on `effect tick`
 python3 ${CLAUDE_SKILL_DIR}/scripts/tracker.py -c $CAMP condition add "Ethros the 19th" poisoned
+python3 ${CLAUDE_SKILL_DIR}/scripts/tracker.py -c $CAMP condition add "Ethros the 19th" frightened 3r
 python3 ${CLAUDE_SKILL_DIR}/scripts/tracker.py -c $CAMP condition remove "Ethros the 19th" poisoned
 python3 ${CLAUDE_SKILL_DIR}/scripts/tracker.py -c $CAMP condition clear "Ethros the 19th"
 

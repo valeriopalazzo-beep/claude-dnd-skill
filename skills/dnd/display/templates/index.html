@@ -811,6 +811,9 @@
     border: 1px solid;
     cursor: pointer;   /* tap to open the condition's rule text */
   }
+  .sb-condition-pill.timed { font-variant-numeric: tabular-nums; }
+  .sb-condition-pill.ending { animation: condEnding 1.2s ease-in-out infinite; }
+  @keyframes condEnding { 50% { opacity: .45; } }
   .sb-condition-pill.danger {
     color: rgba(220,80,80,0.9);
     border-color: rgba(220,80,80,0.35);
@@ -7094,7 +7097,22 @@ function _buildPlayerCard(p, solo) {
       // Known condition names are shown in the display language; the rule
       // lookup below keeps the original (SRD) name.
       const _cBase = c.replace(/\s*\(.*\)\s*$/, '').trim();
-      pill.textContent = _t('cond.' + _cBase.toLowerCase(), null, _cBase) + c.slice(_cBase.length);
+      const label = _condLabel(c);
+      pill.textContent = label;
+      // A condition with a duration says how long is left, and counts down.
+      const left = _condTimeLeft((p.condition_timers || {})[c.toLowerCase()]);
+      if (left) {
+        pill.textContent = label + ' · ' + left.text;
+        pill.classList.add('timed');
+        if (left.warn) pill.classList.add('ending');
+        if (left.expireAt) {
+          pill.dataset.durationType = 'time';
+          pill.dataset.expireAt = left.expireAt;
+          pill.dataset.label = label;
+          pill.dataset.owner = p.name;
+          pill.dataset.cond = c;
+        }
+      }
       // Tap a condition to pull its rule text (SRD condition lookup). The name
       // may carry a suffix like "Exhaustion (2)" — strip it to the base name.
       pill.dataset.srdName = c.replace(/\s*\(.*\)\s*$/, '').trim();
@@ -7805,6 +7823,29 @@ function _makeEffectPill(eff, ownerName) {
   return pill;
 }
 
+// A condition's name in the display language ("Exhaustion (2)" keeps its suffix).
+function _condLabel(c) {
+  const base = String(c).replace(/\s*\(.*\)\s*$/, '').trim();
+  return _t('cond.' + base.toLowerCase(), null, base) + String(c).slice(base.length);
+}
+
+// What is left of a timed condition: {text, warn, expireAt} — expireAt (ms) only
+// for the ones that run on the clock. null when the condition has no end set.
+function _condTimeLeft(timer, now) {
+  if (!timer) return null;
+  if (timer.duration_type === 'rounds') {
+    const n = timer.duration_remaining || 0;
+    return { text: _t('effect.rounds', { n }, n + ' rnd'), warn: n <= 1, expireAt: 0 };
+  }
+  if (timer.duration_type === 'minutes' || timer.duration_type === 'hours') {
+    const expireAt = (timer.started_at + timer.duration_seconds) * 1000;
+    const remaining = Math.max(0, expireAt - (now || Date.now()));
+    return { text: _fmtDuration(remaining), warn: remaining < Math.max(10000, timer.duration_seconds * 100), expireAt };
+  }
+  return null;
+}
+// ── end timed conditions ──
+
 function renderEffectExpiredBlock(owner, name, wasConcentration) {
   _flushForBlock();
   const block = document.createElement('div');
@@ -7842,6 +7883,24 @@ setInterval(() => {
           ...(_dndToken ? {'X-DND-Token': _dndToken} : {}),
         },
         body: JSON.stringify({owner, name: spell}),
+      }).catch(() => {});
+    }
+  });
+  // Conditions that run on the clock count down the same way.
+  document.querySelectorAll('.sb-condition-pill[data-duration-type="time"]').forEach(pill => {
+    if (pill.dataset.fired) return;
+    const remaining = Math.max(0, +pill.dataset.expireAt - Date.now());
+    pill.textContent = pill.dataset.label + ' · ' + _fmtDuration(remaining);
+    pill.classList.toggle('ending', remaining < 10000);
+    if (remaining <= 0) {
+      pill.dataset.fired = '1';
+      fetch('/effects/expire', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(_dndToken ? {'X-DND-Token': _dndToken} : {}),
+        },
+        body: JSON.stringify({owner: pill.dataset.owner, name: pill.dataset.cond, condition: true}),
       }).catch(() => {});
     }
   });
@@ -9954,7 +10013,7 @@ function connect() {
     }
     if (payload.effect_expired) {
       const ev = payload.effect_expired;
-      renderEffectExpiredBlock(ev.owner, ev.name, ev.was_concentration);
+      renderEffectExpiredBlock(ev.owner, ev.condition ? _condLabel(ev.name) : ev.name, ev.was_concentration);
     }
     if (('shop' in payload || payload.shop_sale) && typeof window._onShop === 'function') window._onShop(payload);
     if (payload.device_request) {

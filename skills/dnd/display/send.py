@@ -44,7 +44,7 @@ Usage:
     #   --stat-temp-hp    "NAME:N"
     #   --stat-slot-use   "NAME:LEVEL"       (expend one slot)
     #   --stat-slot-restore "NAME:LEVEL"     (restore one slot)
-    #   --stat-condition-add    "NAME:CONDITION"
+    #   --stat-condition-add    "NAME:CONDITION[:DURATION]"   DURATION: 3r/10m/1h — it ends by itself
     #   --stat-condition-remove "NAME:CONDITION"
     #   --stat-concentrate "NAME:SPELL"       (empty SPELL = clear)
     #   --stat-inventory-add    "NAME:ITEM"
@@ -62,6 +62,7 @@ import sys
 import json
 import argparse
 import os
+import re
 import ssl
 import time
 import urllib.request
@@ -249,6 +250,30 @@ def _split_paragraphs(text: str, limit: int = CHUNK_LIMIT) -> list:
     return chunks
 
 
+_DURATION_RE = re.compile(r"^(\d+)\s*([rmh])$", re.IGNORECASE)
+
+
+def _duration_fields(text: str) -> "dict | None":
+    """'3r' / '10m' / '1h' → the duration fields of a timed effect or condition."""
+    m = _DURATION_RE.match((text or "").strip())
+    if not m or int(m.group(1)) <= 0:
+        return None
+    n, unit = int(m.group(1)), m.group(2).lower()
+    if unit == "r":
+        return {"duration_type": "rounds", "duration_remaining": n}
+    return {"duration_type": "minutes" if unit == "m" else "hours",
+            "duration_seconds": n * (60 if unit == "m" else 3600), "started_at": time.time()}
+
+
+def _condition_value(text: str):
+    """'Poisoned' stays a name; 'Poisoned:3r' becomes a condition that ends by itself."""
+    name, sep, tail = text.strip().rpartition(":")
+    fields = _duration_fields(tail) if sep else None
+    if not fields or not name.strip():
+        return text.strip()
+    return {"name": name.strip(), **fields}
+
+
 def _build_stats_payload(args) -> "dict | None":
     """Build a push_stats-compatible payload from --stat-* flags."""
     players: "dict[str, dict]" = {}
@@ -297,7 +322,7 @@ def _build_stats_payload(args) -> "dict | None":
         if idx > 0:
             name, cond = spec[:idx], spec[idx + 1:]
             if cond.strip():
-                _p(name)["_conditions_add"] = cond.strip()
+                _p(name)["_conditions_add"] = _condition_value(cond)
 
     for spec in (args.stat_condition_remove or []):
         idx = spec.find(":")
@@ -452,8 +477,8 @@ def main() -> None:
         help="Expend one spell slot: NAME:LEVEL")
     parser.add_argument("--stat-slot-restore", action="append", metavar="NAME:LEVEL",
         help="Restore one spell slot: NAME:LEVEL")
-    parser.add_argument("--stat-condition-add", action="append", metavar="NAME:COND",
-        help="Add condition: NAME:CONDITION (can repeat)")
+    parser.add_argument("--stat-condition-add", action="append", metavar="NAME:COND[:DURATION]",
+        help="Add condition: NAME:CONDITION, or NAME:CONDITION:3r / :10m / :1h for one that ends by itself (can repeat)")
     parser.add_argument("--stat-condition-remove", action="append", metavar="NAME:COND",
         help="Remove condition: NAME:CONDITION (can repeat)")
     parser.add_argument("--stat-concentrate", action="append", metavar="NAME:SPELL",

@@ -31,6 +31,7 @@ Usage:
 
     # Conditions — granular add/remove (preferred mid-session):
     python3 push_stats.py --player Flerb --conditions-add "Poisoned"
+    python3 push_stats.py --player Flerb --conditions-add "Poisoned:3r"   # ends by itself: 3r / 10m / 1h
     python3 push_stats.py --player Flerb --conditions-remove "Poisoned"
 
     # Concentration:
@@ -72,6 +73,7 @@ import sys
 import json
 import argparse
 import os
+import re
 import ssl
 import time
 import urllib.request
@@ -129,6 +131,30 @@ def _send(url: str, data: bytes, token: str) -> None:
               + ", ".join(ignored) + ". NPCs never go in the player list.", file=sys.stderr)
 
 
+_DURATION_RE = re.compile(r"^(\d+)\s*([rmh])$", re.IGNORECASE)
+
+
+def _duration_fields(text: str) -> "dict | None":
+    """'3r' / '10m' / '1h' → the duration fields of a timed effect or condition."""
+    m = _DURATION_RE.match((text or "").strip())
+    if not m or int(m.group(1)) <= 0:
+        return None
+    n, unit = int(m.group(1)), m.group(2).lower()
+    if unit == "r":
+        return {"duration_type": "rounds", "duration_remaining": n}
+    return {"duration_type": "minutes" if unit == "m" else "hours",
+            "duration_seconds": n * (60 if unit == "m" else 3600), "started_at": time.time()}
+
+
+def _condition_value(text: str):
+    """'Poisoned' stays a name; 'Poisoned:3r' becomes a condition that ends by itself."""
+    name, sep, tail = text.strip().rpartition(":")
+    fields = _duration_fields(tail) if sep else None
+    if not fields or not name.strip():
+        return text.strip()
+    return {"name": name.strip(), **fields}
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Push stats to the DnD display server.")
     parser.add_argument("--json", metavar="JSON",
@@ -149,8 +175,9 @@ def main() -> None:
                         help="Second Wind available: true or false (requires --player)")
     parser.add_argument("--conditions", metavar="LIST",
                         help="Comma-separated active conditions, full replace (requires --player); empty string clears all")
-    parser.add_argument("--conditions-add", metavar="CONDITION",
-                        help="Add one condition without replacing others (requires --player)")
+    parser.add_argument("--conditions-add", metavar="CONDITION[:DURATION]",
+                        help="Add one condition without replacing others (requires --player); "
+                             "'Poisoned:3r' / ':10m' / ':1h' ends by itself")
     parser.add_argument("--conditions-remove", metavar="CONDITION",
                         help="Remove one condition by name, case-insensitive (requires --player)")
     parser.add_argument("--concentrate", metavar="SPELL",
@@ -253,7 +280,7 @@ def main() -> None:
                 if args.conditions.strip() else []
             )
         if args.conditions_add:
-            player_update["_conditions_add"] = args.conditions_add
+            player_update["_conditions_add"] = _condition_value(args.conditions_add)
         if args.conditions_remove:
             player_update["_conditions_remove"] = args.conditions_remove
         if args.concentrate is not None:
