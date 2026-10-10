@@ -204,10 +204,7 @@
 
   // Character list
   fetch('/login/options').then(function (r) { return r.json(); }).then(function (o) {
-    // Already logged in — except this PC, which is the DM without a login and
-    // comes here to enter as a character.
-    var localDm = !!(o && o.local && o.me === 'dm');
-    if (o && o.me && !localDm) { window.location.href = '/'; return; }
+    if (o && o.me) { window.location.href = '/'; return; }   // already logged in
     var list = $('list'); list.innerHTML = '';
     var names = (o && o.characters) || [];
     if (!names.length) {
@@ -222,9 +219,10 @@
       b.addEventListener('click', function () { showPin({ dm: false, name: name }); });
       list.appendChild(b);
     });
-    if (localDm) {
+    if (o && o.dm_url) {
+      // This PC at the players' door: its DM screen is on the display's own port.
       var h = document.createElement('a');
-      h.className = 'opt dm'; h.href = '/';
+      h.className = 'opt dm'; h.href = o.dm_url;
       h.textContent = _t('login.backDm', null, '← DM screen');
       list.appendChild(h);
     } else if (o && o.dm) {

@@ -8,8 +8,9 @@ Pins the contract that makes impersonation impossible:
   reads only its own sheet, and can't reach DM-only endpoints;
 - wrong PINs are throttled, and a PIN change / campaign switch / logout-all
   ends existing sessions;
-- this PC is the DM without a login, and can also log in as a character: then
-  its browser is that player, with a player's limits, until it logs out.
+- this PC is the DM without a login, and stays so; through the players' door
+  (a second port, this PC only) it logs in as a character like any device, and
+  that login never reaches the DM's screen, though the browser is the same.
 """
 from __future__ import annotations
 
@@ -27,6 +28,7 @@ DISPLAY = REPO / "skills" / "dnd" / "display"
 TOKEN = "t" * 64
 PHONE = {"REMOTE_ADDR": "192.168.1.50"}
 LOCAL = {"REMOTE_ADDR": "127.0.0.1"}
+DOOR = "http://localhost:25001"      # the players' door on this PC (see _PLAYER_PORT)
 
 
 def _load(path: pathlib.Path, name: str):
@@ -105,7 +107,7 @@ class LoginGateTests(unittest.TestCase):
             _persist_input_queue=a._persist_input_queue, _expected_count=a._expected_count,
             _current_stats=a._current_stats,
             _persist_log=a._persist_log, _persist_tail=a._persist_tail,
-            LOG_FILE=a.LOG_FILE, STATS_FILE=a.STATS_FILE,
+            LOG_FILE=a.LOG_FILE, STATS_FILE=a.STATS_FILE, _PLAYER_PORT=a._PLAYER_PORT,
         )
         self._saved_env = os.environ.get("DND_CAMPAIGN_ROOT")
         os.environ["DND_CAMPAIGN_ROOT"] = str(root)   # /character/<name> reads it directly
@@ -113,6 +115,7 @@ class LoginGateTests(unittest.TestCase):
         a.CAMP_FILE = str(self.camp_file)
         a.SESSIONS_FILE = str(root / "sessions.json")
         a._lan_token = TOKEN
+        a._PLAYER_PORT = 25001
         self.sent = []
         a._broadcast = self.sent.append
         a._persist_approved_devices = lambda: None
@@ -175,7 +178,7 @@ class LoginGateTests(unittest.TestCase):
 
     def test_options_list_only_characters_with_a_pin(self):
         o = self.client.get("/login/options", environ_base=PHONE).get_json()
-        self.assertEqual(o, {"characters": ["Bran", "Mira"], "dm": False, "me": None, "local": False})
+        self.assertEqual(o, {"characters": ["Bran", "Mira"], "dm": False, "me": None, "dm_url": ""})
 
     # ── login ──
     def test_wrong_pin_then_right_pin(self):
@@ -264,46 +267,52 @@ class LoginGateTests(unittest.TestCase):
         self.assertEqual(self.client.get("/character/Mira", environ_base=PHONE).status_code, 401)
 
     # ── this PC as a player ──
-    def test_this_pc_is_offered_the_login_screen(self):
-        r = self.client.get("/login", environ_base=LOCAL)
-        self.assertEqual(r.status_code, 200)
-        self.assertIn(b'id="step-pin"', r.data)
-        o = self.client.get("/login/options", environ_base=LOCAL).get_json()
-        self.assertEqual((o["me"], o["local"]), ("dm", True))
+    def test_this_pc_is_offered_the_players_door(self):
         page = self.client.get("/", environ_base=LOCAL).data
-        self.assertIn(b'name="dnd-local-dm" content="1"', page)
-        # a phone is never offered it, logged in or not
+        self.assertIn(b'name="dnd-player-url" content="http://localhost:25001/"', page)
+        self.assertIn(b'name="dnd-dm-url" content=""', page)
+        # through the door this PC is nobody until it logs in
+        r = self.client.get("/", base_url=DOOR, environ_base=LOCAL)
+        self.assertIn(b'id="step-pin"', r.data)
+        self.assertEqual(self.client.get("/character/Mira", base_url=DOOR, environ_base=LOCAL).status_code, 401)
+        o = self.client.get("/login/options", base_url=DOOR, environ_base=LOCAL).get_json()
+        self.assertEqual((o["me"], o["dm_url"]), (None, "http://localhost:5001/"))
+        # a phone is never offered either link
         self._login()
         page = self.client.get("/?char=Mira", environ_base=PHONE).data
-        self.assertIn(b'name="dnd-local-dm" content=""', page)
+        self.assertIn(b'name="dnd-player-url" content=""', page)
+        self.assertIn(b'name="dnd-dm-url" content=""', page)
+        # and with no door open, the DM's page offers nothing
+        self.app._PLAYER_PORT = None
+        self.assertIn(b'name="dnd-player-url" content=""', self.client.get("/", environ_base=LOCAL).data)
 
-    def test_this_pc_can_enter_as_a_character_and_come_back(self):
-        r = self._login(env=LOCAL)
+    def test_this_pc_plays_a_character_and_keeps_the_dm_screen(self):
+        r = self._post("/login", {"character": "Mira", "pin": "111111"}, env=LOCAL, base_url=DOOR)
         self.assertEqual(r.get_json()["redirect"], "/?char=Mira")
-        page = self.client.get("/?char=Mira", environ_base=LOCAL).data
+        # the tab at the door is Mira, a player like any other
+        page = self.client.get("/?char=Mira", base_url=DOOR, environ_base=LOCAL).data
         self.assertIn(b'name="dnd-login" content="player"', page)
         self.assertIn(b'name="dnd-char" content="Mira"', page)
-        self.assertIn(b'name="dnd-local-dm" content=""', page)
-        # a player like any other: own sheet only, no DM endpoints, own name only
-        self.assertEqual(self.client.get("/character/Mira", environ_base=LOCAL).status_code, 200)
-        self.assertEqual(self.client.get("/character/Bran", environ_base=LOCAL).status_code, 403)
-        self.assertEqual(self._post("/stats", {}, env=LOCAL).status_code, 403)
-        r = self._post("/player-input/dice", {"character": "Bran", "spec": "1d20"}, env=LOCAL)
+        self.assertIn(b'name="dnd-dm-url" content="http://localhost:5001/"', page)
+        self.assertEqual(self.client.get("/character/Mira", base_url=DOOR, environ_base=LOCAL).status_code, 200)
+        self.assertEqual(self.client.get("/character/Bran", base_url=DOOR, environ_base=LOCAL).status_code, 403)
+        self.assertEqual(self._post("/stats", {}, env=LOCAL, base_url=DOOR).status_code, 403)
+        r = self._post("/player-input/dice", {"character": "Bran", "spec": "1d20"}, env=LOCAL, base_url=DOOR)
         self.assertEqual(r.get_json()["character"], "Mira")
-        self.assertEqual(self.client.get("/login/options", environ_base=LOCAL).get_json()["me"], "player")
-        # the scripts on this PC carry the token and no cookie: still the DM
-        r = self.client.get("/dice-request/abc", headers={"X-DND-Token": TOKEN}, environ_base=LOCAL)
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(self.app.app.test_client().get("/dice-request/abc", environ_base=LOCAL).status_code, 200)
-        # logging out gives the DM's screen back
-        self._post("/logout", {}, env=LOCAL)
+        # the same browser (same cookie: cookies ignore the port) on the display's
+        # own port is still the DM, with the DM's page
+        self.assertIsNotNone(self.client.get_cookie("dnd_session"))
         self.assertEqual(self.client.get("/character/Bran", environ_base=LOCAL).status_code, 200)
-        self.assertIn(b'name="dnd-login" content=""', self.client.get("/", environ_base=LOCAL).data)
-
-    def test_a_dead_character_session_leaves_this_pc_the_dm(self):
-        self._login(env=LOCAL)
-        time.sleep(0.01)
-        self.app._accounts.set_pin("prova", "Mira", "333333")
+        page = self.client.get("/", environ_base=LOCAL).data
+        self.assertIn(b'name="dnd-login" content=""', page)
+        self.assertIn(b'name="dnd-char" content=""', page)
+        self.assertIn(b'name="dnd-player-url" content="http://localhost:25001/"', page)
+        # the scripts carry the token: the DM through either door
+        r = self.client.get("/dice-request/abc", headers={"X-DND-Token": TOKEN}, base_url=DOOR, environ_base=LOCAL)
+        self.assertEqual(r.status_code, 200)
+        # logging out at the door ends the character, not the DM
+        self._post("/logout", {}, env=LOCAL, base_url=DOOR)
+        self.assertEqual(self.client.get("/character/Mira", base_url=DOOR, environ_base=LOCAL).status_code, 401)
         self.assertEqual(self.client.get("/character/Bran", environ_base=LOCAL).status_code, 200)
 
     # ── DM PIN ──
@@ -319,7 +328,6 @@ class LoginGateTests(unittest.TestCase):
         self.app._lan_token = None
         self.assertEqual(self.client.get("/character/Bran", environ_base=PHONE).status_code, 200)
         self.assertEqual(self.client.get("/login/options").status_code, 404)
-        self.assertEqual(self.client.get("/login").status_code, 404)
 
 
 if __name__ == "__main__":

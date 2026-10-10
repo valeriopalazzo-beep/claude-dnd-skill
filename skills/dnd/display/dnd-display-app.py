@@ -452,9 +452,12 @@ CORS(app)
 #   - the X-DND-Token header (send.py / push_stats.py / wrapper.py)  → DM
 #   - a request from this PC (loopback)                              → DM
 #   - a session cookie from POST /login                              → DM or player
-# This PC can also sit down as a player: GET /login shows the login screen
-# here too, and a character session from this PC wins over "loopback is the
-# DM" until that browser logs out.
+# This PC can also sit down as a player without giving up the DM's screen: in
+# LAN mode a second listener on 127.0.0.1 (_PLAYER_PORT, "the players' door")
+# serves the same app, and a request that comes in through it is never "this
+# PC, so the DM" - it logs in with a PIN like any other device. A browser's
+# cookies ignore the port, so the display's own port keeps ignoring sessions
+# from this PC: one tab is the DM, another is the character.
 # A player session is bound to one character: the server acts as that
 # character whatever name the browser sends, and refuses DM-only endpoints.
 # PINs are stored hashed by accounts.py (see its docstring).
@@ -478,7 +481,7 @@ _login_fails_char: dict[str, list] = {}
 _login_lock = threading.Lock()
 
 # Reachable without logging in. Every other endpoint needs a login.
-_PUBLIC_ENDPOINTS = {"ping", "serve_icon", "favicon", "login", "login_page", "login_options", "logout", "static",
+_PUBLIC_ENDPOINTS = {"ping", "serve_icon", "favicon", "login", "login_options", "logout", "static",
                      "crea_page", "crea_start", "crea_conv", "crea_msg", "crea_finish",
                      # /campagna checks its own password cookie (camp_create.py).
                      "campagna_page", "campagna_login", "campagna_logout", "campagna_start",
@@ -549,6 +552,41 @@ _load_sessions()
 
 def _is_loopback(ip: Optional[str]) -> bool:
     return ip in ("127.0.0.1", "::1") or (ip or "").startswith("::ffff:127.")
+
+
+_DISPLAY_PORT = 5001
+# The players' door on this PC: set at startup when its listener is up.
+_PLAYER_PORT: Optional[int] = None
+
+
+def _on_players_door() -> bool:
+    """The request came in through the players' door (this PC, second port)."""
+    return _PLAYER_PORT is not None and str(request.environ.get("SERVER_PORT", "")) == str(_PLAYER_PORT)
+
+
+def _this_pc_is_dm() -> bool:
+    """This PC on the display's own port: the DM, with no login."""
+    return _is_loopback(request.remote_addr) and not _on_players_door()
+
+
+def _door_url(port: int) -> str:
+    """The address of another door of this display, on the host this browser used."""
+    host = request.host if request.host.endswith("]") else request.host.rsplit(":", 1)[0]
+    return f"{request.scheme}://{host}:{port}/"
+
+
+def _player_url() -> str:
+    """Where the DM's own browser opens the display as a player ("" if it cannot)."""
+    if _lan_token is None or _PLAYER_PORT is None or not _this_pc_is_dm():
+        return ""
+    return _door_url(_PLAYER_PORT)
+
+
+def _dm_url() -> str:
+    """The DM's screen, for a browser on this PC that came in as a player ("" elsewhere)."""
+    if _lan_token is None or not (_is_loopback(request.remote_addr) and _on_players_door()):
+        return ""
+    return _door_url(_DISPLAY_PORT)
 
 
 def _login_campaign() -> str:
@@ -659,12 +697,11 @@ def _auth_gate():
         provided = request.args.get("t", "")   # <img> can't send headers
     if provided and hmac.compare_digest(provided, _lan_token):
         g.role = "dm"
+    elif _this_pc_is_dm():
+        g.role = "dm"          # whatever cookie this browser holds from the players' door
     else:
-        local = _is_loopback(request.remote_addr)
         s = _session_from_request()
-        # This PC is the DM, unless its browser logged in as a character
-        # (GET /login) to play from here. A DM session adds nothing on this PC.
-        if s and not (local and s.get("role") == "dm"):
+        if s:
             # Cookie-authenticated writes must come from our own pages.
             origin = request.headers.get("Origin", "")
             if (request.method not in ("GET", "HEAD", "OPTIONS") and origin
@@ -672,8 +709,6 @@ def _auth_gate():
                 return "Forbidden", 403
             g.role = s.get("role")
             g.character = s.get("character")
-        elif local:
-            g.role = "dm"
 
     ep = request.endpoint
     if ep is None or ep in _PUBLIC_ENDPOINTS:
@@ -692,24 +727,15 @@ def login_options():
     """What the login screen offers: characters with a PIN, and the DM entry.
 
     `me` is the caller's current login ("dm" / "player" / null), so a page whose
-    session died can notice and go back to the login screen. `local` says the
-    caller is this PC: it is the DM without logging in, and the login screen
-    is there for it to enter as a character.
+    session died can notice and go back to the login screen. `dm_url` is set
+    for this PC at the players' door: the way back to the DM's screen.
     """
     if _lan_token is None:
         return "Not found", 404
     camp = _login_campaign()
     names = sorted(_accounts.load(camp)["characters"]) if camp else []
     return jsonify({"characters": names, "dm": _accounts.dm_record() is not None,
-                    "me": g.role, "local": _is_loopback(request.remote_addr)})
-
-
-@app.route("/login", methods=["GET"])
-def login_page():
-    """The login screen on request — how this PC, always the DM, enters as a character."""
-    if _lan_token is None:
-        return "Not found", 404
-    return _render_login()
+                    "me": g.role, "dm_url": _dm_url()})
 
 
 @app.route("/login", methods=["POST"])
@@ -1833,11 +1859,11 @@ def index():
     return render_template(
         "index.html",
         lan_token="",
-        login_role=(g.role or "") if (_lan_token is not None
-                                      and (g.role == "player" or not _is_loopback(request.remote_addr))) else "",
+        login_role=(g.role or "") if (_lan_token is not None and not _this_pc_is_dm()) else "",
         login_char=(g.character or "") if g.role == "player" else "",
-        # This PC as the DM in LAN mode: the page offers "play as a character".
-        local_dm=(_lan_token is not None and g.role == "dm" and _is_loopback(request.remote_addr)),
+        # This PC: the DM's page links to the players' door, and back.
+        player_url=_player_url(),
+        dm_url=_dm_url(),
         narrator_voice=_read_narrator_voice(),
         tts_available=(_tts is not None),
         tts_voices=(_tts.voices() if _tts else {"male": [], "female": []}),
@@ -4982,5 +5008,27 @@ if __name__ == "__main__":
         print(f"DnD DM Display — Flask server starting on {scheme}://localhost:5001")
         print(f"Open {scheme}://localhost:5001 in your browser, then Chromecast the tab.")
         print()
-    app.run(host=host, port=5001, threaded=True, debug=False, ssl_context=ssl_ctx,
+    # The players' door: the same app on a second port of this PC only, where
+    # this PC is not the DM (see the Login section). It takes the port of the
+    # players' public address when there is one, so the link the DM gives the
+    # table works from the DM's own PC too.
+    if _LAN_MODE:
+        _door_port = 5002
+        try:
+            _pub = open(rt("public_host"), encoding="utf-8").read().strip()
+            if ":" in _pub and int(_pub.rsplit(":", 1)[1]) != _DISPLAY_PORT:
+                _door_port = int(_pub.rsplit(":", 1)[1])
+        except (OSError, ValueError):
+            pass
+        try:
+            from werkzeug.serving import make_server
+            _door = make_server("127.0.0.1", _door_port, app, threaded=True,
+                                request_handler=_TimeoutRequestHandler, ssl_context=ssl_ctx)
+            threading.Thread(target=_door.serve_forever, daemon=True).start()
+            _PLAYER_PORT = _door_port
+            print(f"  This PC as a player: {scheme}://localhost:{_door_port} (PIN login; the DM's screen stays on 5001)")
+        except OSError as _exc:
+            print(f"  Players' door on this PC not opened (port {_door_port}): {_exc}")
+
+    app.run(host=host, port=_DISPLAY_PORT, threaded=True, debug=False, ssl_context=ssl_ctx,
             request_handler=_TimeoutRequestHandler)

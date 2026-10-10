@@ -8,7 +8,8 @@
 <meta name="dnd-token" content="{{ lan_token }}">
 <meta name="dnd-login" content="{{ login_role }}">
 <meta name="dnd-char" content="{{ login_char }}">
-<meta name="dnd-local-dm" content="{{ '1' if local_dm else '' }}">
+<meta name="dnd-player-url" content="{{ player_url }}">
+<meta name="dnd-dm-url" content="{{ dm_url }}">
 <meta name="narrator-voice" content="{{ narrator_voice }}">
 <meta name="tts-available" content="{{ '1' if tts_available else '0' }}">
 <meta name="tts-voices" content="{{ tts_voices | tojson | forceescape }}">
@@ -5049,6 +5050,7 @@
     <button class="ph-set-opt" id="ph-roll-opt" type="button" hidden><span data-i18n="ph.rolls">Rolls</span><strong id="ph-roll-val">Players</strong></button>
     <button class="ph-set-opt" id="ph-handouts-opt" type="button"><span data-i18n="handout.title">Documents</span><strong id="ph-handouts-val">0</strong></button>
     <button class="ph-set-opt" id="ph-login-opt" type="button" hidden><span data-i18n="login.asCharacter">Play as a character</span><strong>🎭</strong></button>
+    <button class="ph-set-opt" id="ph-dm-opt" type="button" hidden><span data-i18n="login.dmScreen">DM screen</span><strong>🎲</strong></button>
     <button class="ph-set-opt" id="ph-logout-opt" type="button" hidden><span data-i18n="ph.logout">Log out</span><strong>⏻</strong></button>
   </div>
 </div>
@@ -5367,6 +5369,9 @@
       <div class="ln-h" data-i18n="ln.group.display">Display</div>
       <button class="ln-item" type="button" data-ln-go="impostazioni" title="Settings" data-i18n-title="ln.view.impostazioni"><svg class="ln-i"><use href="#ln-i-settings"/></svg><span class="ln-lbl" data-i18n="ln.view.impostazioni">Settings</span></button>
       <div class="ln-slot" id="ln-phone-slot"></div>
+      <button class="ln-item" type="button" id="ln-login" title="Play as a character" data-i18n-title="login.asCharacter" hidden><svg class="ln-i"><use href="#ln-i-me"/></svg><span class="ln-lbl" data-i18n="login.asCharacter">Play as a character</span></button>
+      <button class="ln-item" type="button" id="ln-dm" title="DM screen" data-i18n-title="login.dmScreen" hidden><svg class="ln-i"><use href="#ln-i-back"/></svg><span class="ln-lbl" data-i18n="login.dmScreen">DM screen</span></button>
+      <button class="ln-item" type="button" id="ln-logout" title="Log out" data-i18n-title="ph.logout" hidden><svg class="ln-i"><use href="#ln-i-x"/></svg><span class="ln-lbl" data-i18n="ph.logout">Log out</span></button>
       <button class="ln-item" type="button" data-ln-go="altro" data-phone title="More" data-i18n-title="ln.view.altro"><svg class="ln-i"><use href="#ln-i-more"/></svg><span class="ln-lbl" data-i18n="ln.view.altro">More</span></button>
     </div>
   </div>
@@ -5436,8 +5441,9 @@
         <button class="ln-item" type="button" data-ln-go="impostazioni"><svg class="ln-i"><use href="#ln-i-settings"/></svg><span class="ln-lbl" data-i18n="ln.view.impostazioni">Settings</span></button>
         <button class="ln-item" type="button" data-ln-proxy="dm-help-btn"><svg class="ln-i"><use href="#ln-i-help"/></svg><span class="ln-lbl" data-i18n="ln.help">DM help</span></button>
         <button class="ln-item" type="button" data-ln-proxy="phone-mode-btn"><svg class="ln-i"><use href="#ln-i-phone"/></svg><span class="ln-lbl" data-i18n="ln.phoneMode">Phone mode</span></button>
-        <button class="ln-item" type="button" id="ln-login-more" hidden><svg class="ln-i"><use href="#ln-i-me"/></svg><span class="ln-lbl" data-i18n="login.asCharacter">Play as a character</span></button>
-        <button class="ln-item" type="button" id="ln-logout-more" hidden><svg class="ln-i"><use href="#ln-i-back"/></svg><span class="ln-lbl" data-i18n="ph.logout">Log out</span></button>
+        <button class="ln-item" type="button" id="ln-login-more" title="Play as a character" data-i18n-title="login.asCharacter" hidden><svg class="ln-i"><use href="#ln-i-me"/></svg><span class="ln-lbl" data-i18n="login.asCharacter">Play as a character</span></button>
+        <button class="ln-item" type="button" id="ln-dm-more" title="DM screen" data-i18n-title="login.dmScreen" hidden><svg class="ln-i"><use href="#ln-i-back"/></svg><span class="ln-lbl" data-i18n="login.dmScreen">DM screen</span></button>
+        <button class="ln-item" type="button" id="ln-logout-more" title="Log out" data-i18n-title="ph.logout" hidden><svg class="ln-i"><use href="#ln-i-x"/></svg><span class="ln-lbl" data-i18n="ph.logout">Log out</span></button>
       </div>
     </div>
   </div>
@@ -11624,12 +11630,14 @@ function _onscreenDiceOn() { try { return localStorage.getItem('dnd-onscreen-dic
   })();
 })();
 
-// ── Entering and leaving a character login ────────────────────────────────
-// This PC is the DM without logging in. In LAN mode it can also sit down as a
-// character: "Play as a character" opens the login screen (phone ⚙ menu and
-// More in the full view). The phone ⚙ menu has its own Log out; the full view
-// gets one under More, so a player on a PC can leave too — and this PC is the
-// DM again.
+// ── Playing a character from the DM's own PC, and logging out ─────────────
+// This PC is the DM without logging in, and stays so. In LAN mode the display
+// also answers on a second port of this PC — the players' door — where this
+// PC logs in with a PIN like any other device. "Play as a character" opens
+// that door in its own tab; from there "DM screen" comes back to this one.
+// Two tabs, two roles, neither logs the other out. The buttons are in the side
+// bar (wide), under More (narrow) and in the phone ⚙ menu — which already had
+// Log out; the full view gets one too, so a player on a PC can leave.
 (function _initLoginLinks() {
   const meta = n => (document.querySelector('meta[name="' + n + '"]') || {}).content || '';
   const wire = (ids, fn) => ids.forEach(id => {
@@ -11638,8 +11646,10 @@ function _onscreenDiceOn() { try { return localStorage.getItem('dnd-onscreen-dic
     b.hidden = false;
     b.addEventListener('click', e => { e.stopPropagation(); fn(); });
   });
-  if (meta('dnd-local-dm')) wire(['ph-login-opt', 'ln-login-more'], () => { window.location.href = '/login'; });
-  if (meta('dnd-login')) wire(['ln-logout-more'], () => {
+  const playerUrl = meta('dnd-player-url'), dmUrl = meta('dnd-dm-url');
+  if (playerUrl) wire(['ph-login-opt', 'ln-login', 'ln-login-more'], () => { window.open(playerUrl, 'dnd-player'); });
+  if (dmUrl) wire(['ph-dm-opt', 'ln-dm', 'ln-dm-more'], () => { window.open(dmUrl, 'dnd-dm'); });
+  if (meta('dnd-login')) wire(['ln-logout', 'ln-logout-more'], () => {
     fetch('/logout', { method: 'POST' }).finally(() => { window.location.href = '/'; });
   });
 })();

@@ -93,6 +93,7 @@
   "login.error": "Something went wrong. Try again.",
   "login.asCharacter": "Play as a character",
   "login.backDm": "← DM screen",
+  "login.dmScreen": "DM screen",
 
   "ph.settings": "Display settings",
   "ph.theme": "Theme",
