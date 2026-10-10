@@ -126,6 +126,33 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/character.py xp --level 1 --gained 150
 
 ---
 
+## Inventory Script — `scripts/inventory.py`
+
+Coins and items on the character sheet (`## Equipment & Inventory`), **applied by the script, not remembered**: it makes change, refuses a purchase the purse cannot cover, and exits non-zero without touching the file when a name or an item does not match. It also pushes the change to the display. Never edit the `**Currency:**` line or an item list by hand.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/scripts/inventory.py show  "Aldric"
+python3 ${CLAUDE_SKILL_DIR}/scripts/inventory.py gain  "Aldric" 12gp 5sp            # found, earned, rewarded
+python3 ${CLAUDE_SKILL_DIR}/scripts/inventory.py pay   "Aldric" 3sp                 # toll, bribe, a round of ale
+python3 ${CLAUDE_SKILL_DIR}/scripts/inventory.py add   "Aldric" "Chiave di ferro"   # picked up
+python3 ${CLAUDE_SKILL_DIR}/scripts/inventory.py add   "Aldric" "Pozione di guarigione" --qty 2
+python3 ${CLAUDE_SKILL_DIR}/scripts/inventory.py add   "Aldric" "Spada corta" --section weapons   # weapons | armour | gear
+python3 ${CLAUDE_SKILL_DIR}/scripts/inventory.py remove "Aldric" "Pozione di guarigione"          # drunk, lost, broken
+python3 ${CLAUDE_SKILL_DIR}/scripts/inventory.py buy   "Aldric" "Lanterna schermabile" --price 5gp   # pays and adds, or neither
+python3 ${CLAUDE_SKILL_DIR}/scripts/inventory.py sell  "Aldric" "Spada corta" --price 5gp
+python3 ${CLAUDE_SKILL_DIR}/scripts/inventory.py give  "Aldric" "Mira" --item "Chiave di ferro"
+python3 ${CLAUDE_SKILL_DIR}/scripts/inventory.py give  "Aldric" "Mira" --coins 10gp
+python3 ${CLAUDE_SKILL_DIR}/scripts/inventory.py split 137gp 4sp --among "Aldric,Mira,Lio"       # loot in equal shares
+```
+
+- Coins: `pp gp ep sp cp` (Italian `mp mo me ma mr` are read too). `--price` is the price of **one**; `--qty N` buys or sells N.
+- Several of an item are written `Name ×N`; adding one more of an item already on the sheet raises the count.
+- `remove` / `sell` / `give --item` match the exact name first, then a unique part of it (`"pozione"`). An ambiguous or missing match changes nothing and lists the candidates — pick one and run it again.
+- `split` reports any copper left over; hand it to someone with `gain`.
+- `--campaign NAME` (before the subcommand) works on a campaign other than the active one.
+
+---
+
 ## Stats Display Script — `display/push_stats.py`
 Pushes character and combat stats to the sidebar. Players merged by name; partial updates work.
 
@@ -265,7 +292,8 @@ If `check_input.py` returns output, prepend it to the player's terminal input wh
 - Spell slot used → `--player NAME --slot-use <level>`; restored → `--slot-restore <level>`
 - Condition gained → `--player NAME --conditions-add "Name"`; removed → `--conditions-remove "Name"`
 - Concentration started → `--player NAME --concentrate "Spell"`; ended → `--concentrate ""`
-- Item picked up → `--player NAME --inventory-add "Item"`; dropped/used → `--inventory-remove "Item"`
+- Item picked up → `scripts/inventory.py add NAME "Item"`; dropped/used → `inventory.py remove NAME "Item"` (they update the sheet file and the display together; the bare `push_stats.py --inventory-add/--inventory-remove` changes the display only)
+- Coins gained or spent → `scripts/inventory.py gain / pay / buy / sell / split`
 - Timed effect starts → `--effect-start "NAME:SPELL:DURATION[:conc]"` bundled with narration send
 - Timed effect ends → `--effect-end "NAME:SPELL"` bundled with narration send
 - Faction standing changes → `--factions '[...]'` (full replace)
