@@ -551,6 +551,12 @@ The players have a People panel: their own notebook of the people in the story. 
 
 ---
 
+## Timeline
+
+The players have a Timeline panel: what has happened, by the dates of the world rather than by session. When something the party will want to place in time happens — an arrival, a death, a discovery, a promise with a date on it — record it with `display/timeline.py add "<what happened>" --note "<a line of detail>"`; with no `--date` it is dated today, at the calendar's time of day. Events from earlier in the story take `--date "12 Brumosa 1147"`; what only you know takes `--secret` until it comes out (`reveal`). A handful per session is right: the turning points, not every scene. Syntax: `SKILL-scripts.md` → *Timeline*.
+
+---
+
 ## Puzzles
 
 A lock, a riddle or a coded note can be put on the players' own screens for them to work out: `display/puzzle.py lock|riddle|cipher "Title" …` shows it everywhere, checks every try on the server and tells you — as a `[[PUZZLE … SOLVED by … ]]` or `[[PUZZLE … FAILED … ]]` line from `check_input.py` — when it is over. A `[[PUZZLE …]]` line is not a player action: narrate what it means, then `puzzle.py close`. Plant the clues in the fiction first; give a hint (`puzzle.py hint`) rather than let it stall. Syntax: `SKILL-scripts.md` → *Puzzles*.

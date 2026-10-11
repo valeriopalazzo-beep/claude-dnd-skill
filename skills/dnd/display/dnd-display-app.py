@@ -510,6 +510,8 @@ _DM_ENDPOINTS = {
     "quests_changed",
     # People met: people.py writes the notebook, everyone reads it.
     "people_changed",
+    # The timeline: timeline.py writes it, everyone reads what is not secret.
+    "timeline_changed",
     # Companions: companion.py keeps them, everyone sees them.
     "companions_changed",
     # The campaign book: campaign_book.py makes it, everyone may download it.
@@ -2791,6 +2793,35 @@ def people_changed():
     return "", 204
 
 
+# ─── Timeline (timeline.py) ──────────────────────────────────────────────────
+# timeline.py keeps what happened, by the world's dates, in
+# <campaign>/timeline.json. Every screen reads the events that are not secret;
+# POST /timeline says the list changed.
+import timeline as _timeline
+
+
+def _public_timeline() -> list:
+    camp = re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]
+    if not camp:
+        return []
+    try:
+        return _timeline.public_view(_timeline.load(str(_find_campaign(camp) / "timeline.json")))
+    except Exception:
+        return []
+
+
+@app.route("/timeline", methods=["GET"])
+def timeline_get():
+    return jsonify(_public_timeline()), 200
+
+
+@app.route("/timeline", methods=["POST"])
+def timeline_changed():
+    """timeline.py changed the timeline: send every screen the events the players may see."""
+    _broadcast({"timeline": _public_timeline()})
+    return "", 204
+
+
 # ─── Companions (companion.py) ───────────────────────────────────────────────
 # Animals and followers travelling with the party, kept by companion.py in
 # <campaign>/companions.json. They are not players: they hang on their owner's
@@ -3308,6 +3339,7 @@ def stats():
         # the new campaign's, or those panels stay empty until a reload.
         try:
             _broadcast({"clocks": _public_clocks(), "bestiary": _public_bestiary(), "people": _public_people(),
+                        "timeline": _public_timeline(),
                         "companions": _public_companions(), "region_changed": _time.time()})
         except Exception:
             pass

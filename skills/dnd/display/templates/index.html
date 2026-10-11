@@ -1450,6 +1450,31 @@
   #people-page blockquote{ margin:6px 0; padding:2px 0 2px 12px; font-style:italic; border-left:3px solid var(--ln-accent, #f2b544); }
   #people-page .people-none{ margin:0; color:var(--ln-text-muted, #cdbfa6); font-style:italic; }
 
+  /* ══ Timeline (timeline.py) — what happened, by the world's dates ══ */
+  #tl-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
+    align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  #tl-modal.open{ display:flex; }
+  #tl-panel{ width:min(600px, 100%); margin:auto 0; color:var(--ln-text, #ECE4D2); font-family:'Alegreya Sans','Syne',sans-serif; }
+  #tl-head{ display:flex; align-items:center; gap:10px; margin-bottom:12px; color:#ECE4D2; }
+  #tl-head h2{ flex:1; min-width:0; margin:0; font-size:22px; line-height:1.15; }
+  #tl-head button{ flex:none; min-width:40px; height:40px; padding:0 12px; border-radius:999px; cursor:pointer; font:inherit; font-size:15px;
+    font-weight:700; background:rgba(0,0,0,.35); color:inherit; border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #tl-list{ display:flex; flex-direction:column; gap:10px; }
+  .tl-empty{ margin:30px 8px; text-align:center; font-size:16px; color:#b9ab92; }
+  .tl-day{ padding:12px 16px 6px; border-radius:12px; background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
+  .tl-day h3{ display:flex; align-items:baseline; gap:10px; margin:0 0 8px; font-size:18px; line-height:1.2; }
+  .tl-day h3 span{ flex:1; min-width:0; }
+  .tl-day h3 small{ flex:none; font-size:14px; font-weight:600; color:var(--ln-accent, #f2b544); }
+  .tl-event{ position:relative; margin:0 0 0 5px; padding:0 0 10px 18px; border-left:2px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  .tl-event:last-child{ border-left-color:transparent; }
+  .tl-event::before{ content:''; position:absolute; left:-6px; top:6px; width:10px; height:10px; border-radius:50%;
+    background:var(--ln-accent, #f2b544); }
+  .tl-event b{ display:block; font-size:16.5px; line-height:1.3; }
+  .tl-event p{ margin:2px 0 0; font-size:15.5px; line-height:1.4; color:var(--ln-text-muted, #cdbfa6); }
+  .tl-event small{ display:block; font-size:13px; font-weight:700; letter-spacing:.03em; color:var(--ln-text-muted, #b9ab92); }
+  .tl-event em{ margin-left:8px; padding:1px 8px; border-radius:999px; font-style:normal; font-size:11.5px; font-weight:800;
+    background:var(--ln-accent, #f2b544); color:var(--ln-on-accent, #1a140c); vertical-align:1px; }
+
   /* ══ Companions (companion.py) — the horse, the familiar, the hired guard ══ */
   .sb-companions{ display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
   .sb-comp-chip{ display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px; cursor:pointer;
@@ -5081,6 +5106,7 @@
     <button class="ph-set-opt" id="ph-theme-opt" type="button"><span data-i18n="ph.theme">Theme</span><strong id="ph-theme-val">Dark</strong></button>
     <button class="ph-set-opt" id="ph-region-opt" type="button" hidden><span data-i18n="region.title">Region map</span><strong>🧭</strong></button>
     <button class="ph-set-opt" id="ph-cal-opt" type="button" hidden><span data-i18n="cal.title">Calendar</span><strong>📅</strong></button>
+    <button class="ph-set-opt" id="ph-timeline-opt" type="button" hidden><span data-i18n="tl.title">Timeline</span><strong>🕰</strong></button>
     <button class="ph-set-opt" id="ph-book-opt" type="button" hidden><span data-i18n="book.title">Campaign book</span><strong>📕</strong></button>
     <button class="ph-set-opt" id="ph-comp-opt" type="button" hidden><span data-i18n="comp.title">Companions</span><strong>🐾</strong></button>
     <button class="ph-set-opt" id="ph-beast-opt" type="button" hidden><span data-i18n="beast.title">Bestiary</span><strong>📖</strong></button>
@@ -5294,6 +5320,18 @@
   </div>
 </div>
 
+<!-- Timeline: what happened in the campaign by the world's dates, from timeline.py -->
+<div id="tl-modal">
+  <div id="tl-panel" role="dialog" aria-labelledby="tl-title">
+    <div id="tl-head">
+      <h2 id="tl-title" data-i18n="tl.title">Timeline</h2>
+      <button id="tl-order" type="button"></button>
+      <button id="tl-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
+    </div>
+    <div id="tl-list"></div>
+  </div>
+</div>
+
 <!-- Companions: the animals and followers travelling with the party, from companion.py -->
 <div id="comp-modal">
   <div id="comp-panel" role="dialog" aria-labelledby="comp-title">
@@ -5377,6 +5415,7 @@
   <symbol id="ln-i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2v10l7 7"/></symbol>
   <symbol id="ln-i-beast" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M9 8l1.5 2L12 8l1.5 2L15 8"/></symbol>
   <symbol id="ln-i-people" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M15 4h6v5h-3l-2 2V9h-1z"/></symbol>
+  <symbol id="ln-i-timeline" viewBox="0 0 24 24"><path d="M6 3v18"/><circle cx="6" cy="6" r="2"/><circle cx="6" cy="13" r="2"/><circle cx="6" cy="19" r="1.4"/><path d="M11 6h9M11 13h7M11 19h5"/></symbol>
   <symbol id="ln-i-paw" viewBox="0 0 24 24"><circle cx="6.5" cy="10" r="2"/><circle cx="10" cy="5.5" r="2"/><circle cx="14" cy="5.5" r="2"/><circle cx="17.5" cy="10" r="2"/><path d="M12 12c-3 0-5.5 2.6-5.5 5.2 0 1.7 1.3 2.8 2.9 2.8 1 0 1.7-.5 2.6-.5s1.6.5 2.6.5c1.6 0 2.9-1.1 2.9-2.8C17.500 14.6 15 12 12 12z"/></symbol>
   <symbol id="ln-i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M12 7v6m0 0-2.5-2.5M12 13l2.5-2.5"/></symbol>
   <symbol id="ln-i-puzzle" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="16" r="1.3"/></symbol>
@@ -5420,6 +5459,7 @@
       <button class="ln-item" type="button" id="ln-beast" title="Bestiary" data-i18n-title="beast.title" hidden><svg class="ln-i"><use href="#ln-i-beast"/></svg><span class="ln-lbl" data-i18n="beast.title">Bestiary</span><span class="ln-badge" id="ln-badge-beast" data-i18n="beast.new" hidden>New</span></button>
       <button class="ln-item" type="button" id="ln-people" title="People met" data-i18n-title="people.title" hidden><svg class="ln-i"><use href="#ln-i-people"/></svg><span class="ln-lbl" data-i18n="people.title">People met</span><span class="ln-badge" id="ln-badge-people" data-i18n="people.new" hidden>New</span></button>
       <button class="ln-item" type="button" id="ln-cal" title="Calendar" data-i18n-title="cal.title" hidden><svg class="ln-i"><use href="#ln-i-calendar"/></svg><span class="ln-lbl" data-i18n="cal.title">Calendar</span></button>
+      <button class="ln-item" type="button" id="ln-timeline" title="Timeline" data-i18n-title="tl.title" hidden><svg class="ln-i"><use href="#ln-i-timeline"/></svg><span class="ln-lbl" data-i18n="tl.title">Timeline</span><span class="ln-badge" id="ln-badge-timeline" data-i18n="tl.new" hidden>New</span></button>
       <button class="ln-item" type="button" data-ln-go="fazioni" title="Factions" data-i18n-title="ln.view.fazioni"><svg class="ln-i"><use href="#ln-i-flag"/></svg><span class="ln-lbl" data-i18n="ln.view.fazioni">Factions</span></button>
       <button class="ln-item" type="button" id="ln-handouts" title="Documents" data-i18n-title="handout.title"><svg class="ln-i"><use href="#ln-i-mail"/></svg><span class="ln-lbl" data-i18n="handout.title">Documents</span><span class="ln-badge" id="ln-badge-handouts" hidden></span></button>
       <button class="ln-item" type="button" id="ln-book" title="Campaign book" data-i18n-title="book.title" hidden><svg class="ln-i"><use href="#ln-i-book"/></svg><span class="ln-lbl" data-i18n="book.title">Campaign book</span></button>
@@ -5497,6 +5537,7 @@
         <button class="ln-item" type="button" id="ln-people-more" data-ln-proxy="ln-people" hidden><svg class="ln-i"><use href="#ln-i-people"/></svg><span class="ln-lbl" data-i18n="people.title">People met</span></button>
         <button class="ln-item" type="button" id="ln-comp-more" data-ln-proxy="ln-comp" hidden><svg class="ln-i"><use href="#ln-i-paw"/></svg><span class="ln-lbl" data-i18n="comp.title">Companions</span></button>
         <button class="ln-item" type="button" id="ln-book-more" data-ln-proxy="ln-book" hidden><svg class="ln-i"><use href="#ln-i-book"/></svg><span class="ln-lbl" data-i18n="book.title">Campaign book</span></button>
+        <button class="ln-item" type="button" id="ln-timeline-more" data-ln-proxy="ln-timeline" hidden><svg class="ln-i"><use href="#ln-i-timeline"/></svg><span class="ln-lbl" data-i18n="tl.title">Timeline</span></button>
         <button class="ln-item" type="button" id="ln-cal-more" data-ln-proxy="ln-cal" hidden><svg class="ln-i"><use href="#ln-i-calendar"/></svg><span class="ln-lbl" data-i18n="cal.title">Calendar</span></button>
         <button class="ln-item" type="button" data-ln-go="regole"><svg class="ln-i"><use href="#ln-i-rules"/></svg><span class="ln-lbl" data-i18n="ln.view.regole">Rules</span></button>
         <button class="ln-item" type="button" data-ln-go="impostazioni"><svg class="ln-i"><use href="#ln-i-settings"/></svg><span class="ln-lbl" data-i18n="ln.view.impostazioni">Settings</span></button>
@@ -10628,6 +10669,7 @@ function connect() {
     if ((payload.companions || payload.companion_event) && typeof window._onCompanions === 'function') window._onCompanions(payload.companions, payload.companion_event);
     if ((payload.bestiary || payload.bestiary_event) && typeof window._onBestiary === 'function') window._onBestiary(payload.bestiary, payload.bestiary_event);
     if ((payload.people || payload.people_event) && typeof window._onPeople === 'function') window._onPeople(payload.people, payload.people_event);
+    if (payload.timeline && typeof window._onTimeline === 'function') window._onTimeline(payload.timeline);
     if (payload.quest_event && payload.quest_event.name) {
       const qe = payload.quest_event;
       _showToast('📜 ' + _t('quest.toast.' + qe.what, { name: qe.name }, qe.name), qe.what === 'updated' ? 4500 : 6500);
@@ -11604,6 +11646,105 @@ function _calEventsOn(c, day, month, year) {
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   if (window._worldTime) window._onWorldTime(window._worldTime);
+})();
+
+// ── Timeline (timeline.py) ────────────────────────────────────────────
+// The events arrive oldest first. _timelineDays groups them by the world's
+// date and says how long ago each day was, when the calendar knows today.
+function _timelineDays(rows, todayAbs, newestFirst) {
+  const days = [];
+  (rows || []).forEach(r => {
+    const last = days[days.length - 1];
+    if (last && last.date === (r.date || '')) { last.events.push(r); return; }
+    const known = typeof r.abs === 'number' && typeof todayAbs === 'number';
+    days.push({ date: r.date || '', ago: known ? todayAbs - r.abs : null, events: [r] });
+  });
+  return newestFirst ? days.reverse() : days;
+}
+// ── end timeline days ──
+
+(function _initTimeline() {
+  const modal = document.getElementById('tl-modal');
+  if (!modal) return;
+  const list = document.getElementById('tl-list');
+  const orderBtn = document.getElementById('tl-order');
+  let rows = [], newestFirst = true, fresh = new Set();
+  let seen = [];
+  try { seen = JSON.parse(localStorage.getItem('dnd-timeline-seen') || '[]') || []; } catch (_) {}
+  try { newestFirst = localStorage.getItem('dnd-timeline-order') !== 'oldest'; } catch (_) {}
+
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+  const unseen = () => rows.filter(r => !seen.includes(r.id));
+  function triggers() {
+    const has = rows.length > 0;
+    ['ln-timeline', 'ln-timeline-more', 'ph-timeline-opt'].forEach(id => { const e = document.getElementById(id); if (e) e.hidden = !has; });
+    const badge = document.getElementById('ln-badge-timeline');
+    if (badge) badge.hidden = !unseen().length;
+    if (!has) modal.classList.remove('open');
+  }
+  function today() {
+    const c = window._worldTime && window._worldTime.calendar;
+    return c && c.month_length > 0 ? _calAbs(c, c.day, c.month, c.year) : null;
+  }
+  function agoText(n) {
+    return n === 0 ? _t('cal.todayWord', null, 'today') : n === 1 ? _t('tl.yesterday', null, 'yesterday')
+      : n > 1 ? _t('tl.daysAgo', { n }, n + ' days ago') : _t('cal.inDays', { n: -n }, 'in ' + (-n) + ' days');
+  }
+
+  function render() {
+    orderBtn.textContent = newestFirst ? '↓' : '↑';
+    orderBtn.title = newestFirst ? _t('tl.order.newest', null, 'Latest first') : _t('tl.order.oldest', null, 'From the beginning');
+    orderBtn.setAttribute('aria-label', orderBtn.title);
+    list.textContent = '';
+    if (!rows.length) { list.appendChild(el('p', 'tl-empty', _t('tl.empty', null, 'Nothing recorded yet.'))); return; }
+    _timelineDays(rows, today(), newestFirst).forEach(day => {
+      const box = el('div', 'tl-day');
+      const head = el('h3');
+      head.appendChild(el('span', '', day.date || _t('tl.noDate', null, 'Some time ago')));
+      if (day.ago !== null) head.appendChild(el('small', '', agoText(day.ago)));
+      box.appendChild(head);
+      day.events.forEach(ev => {
+        const item = el('div', 'tl-event');
+        const meta = [ev.time ? _t('time.' + ev.time, null, ev.time) : '',
+                      ev.session ? _t('tl.session', { n: ev.session }, 'Session ' + ev.session) : ''].filter(Boolean).join(' · ');
+        if (meta) item.appendChild(el('small', '', meta));
+        const title = el('b', '', ev.title);
+        if (fresh.has(ev.id)) title.appendChild(el('em', '', _t('tl.new', null, 'New')));
+        item.appendChild(title);
+        if (ev.note) item.appendChild(el('p', '', ev.note));
+        box.appendChild(item);
+      });
+      list.appendChild(box);
+    });
+  }
+
+  window._onTimeline = function (next) {
+    if (!Array.isArray(next)) return;
+    rows = next;
+    triggers();
+    if (modal.classList.contains('open')) open(true);
+  };
+  function open(keep) {
+    if (keep !== true) fresh = new Set();
+    unseen().forEach(r => fresh.add(r.id));
+    seen = rows.map(r => r.id).slice(-MAX_SEEN);
+    try { localStorage.setItem('dnd-timeline-seen', JSON.stringify(seen)); } catch (_) {}
+    modal.classList.add('open');
+    render();
+    triggers();
+  }
+  const MAX_SEEN = 2000;
+  const close = () => modal.classList.remove('open');
+  ['ln-timeline', 'ph-timeline-opt'].forEach(id => { const e = document.getElementById(id); if (e) e.addEventListener('click', open); });
+  orderBtn.addEventListener('click', () => {
+    newestFirst = !newestFirst;
+    try { localStorage.setItem('dnd-timeline-order', newestFirst ? 'newest' : 'oldest'); } catch (_) {}
+    render();
+  });
+  document.getElementById('tl-close').addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  fetch('/timeline').then(r => r.ok ? r.json() : []).then(d => window._onTimeline(d)).catch(() => {});
 })();
 
 // ── Input-only mode for mobile players ───────────────────────────────────

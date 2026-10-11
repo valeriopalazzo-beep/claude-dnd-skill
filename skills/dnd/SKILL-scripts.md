@@ -893,6 +893,30 @@ python3 ${CLAUDE_SKILL_DIR}/display/people.py show "oderico"
 
 ---
 
+## Timeline — `display/timeline.py`
+
+What has happened in the campaign, in the order of the world's own dates. Every screen has a **Timeline** panel: the events grouped by day, each day saying how long ago it was ("today", "yesterday", "5 days ago"), latest first or from the beginning.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/display/timeline.py add "Il rogo della strega è fermato" --note "Corradi è disarmato; Ada resta da Gunda" --session 3
+python3 ${CLAUDE_SKILL_DIR}/display/timeline.py add "Arrivo a Vallombra" --date "12 Brumosa 1147" --time evening --session 1
+python3 ${CLAUDE_SKILL_DIR}/display/timeline.py add "La Custode scrive al Duca" --date "9 Brumosa" --secret      # yours alone
+python3 ${CLAUDE_SKILL_DIR}/display/timeline.py set "rogo" --time morning --note "…"      # also --title, --date, --session
+python3 ${CLAUDE_SKILL_DIR}/display/timeline.py reveal "custode"                          # hide: back to secret
+python3 ${CLAUDE_SKILL_DIR}/display/timeline.py remove "rogo"
+python3 ${CLAUDE_SKILL_DIR}/display/timeline.py list                                      # all of them, the secret ones too
+```
+
+- **No `--date` = today**, at the time of day the campaign calendar is on (`calendar.py`). A date is written as the calendar writes it; leave the year out for the current one. A date the calendar does not have is refused.
+- **Times of day:** `midnight dawn morning midday afternoon dusk evening night` (Italian words are understood). Within a day, events with no time come first, then by time of day, then in the order they were added.
+- A campaign with no `calendar.json` can still keep a timeline: `--date` is then free text and the events stay in the order they were added.
+- An event can be named by any part of its title that means one only. A wrong name changes nothing.
+- Stored in `<campaign>/timeline.json`; `--campaign NAME` (before the subcommand) works on another campaign.
+
+**How to keep it:** add an event when it happens, in the same turn — the date comes from the calendar, so keep the calendar moving (`calendar.py advance …`) and the timeline dates itself. Write titles as the party would remember them ("Il rogo della strega è fermato"), one line of `--note` for what changed. Pass `--session N` so the players can find the evening it was played. At the first load of a campaign that has none, fill it in from `session-log.md` with `--date`. **Only what the party knows** unless `--secret`: a secret event is your own note of when something happened off-stage, and becomes visible with `reveal` when the party learns of it.
+
+---
+
 ## Companions — `display/companion.py`
 
 A small sheet for whatever travels with the party and has hit points but is not a player character: a mount, a familiar, an animal, a hired guard, a summoned creature. On the display each one is a chip on its owner's card (name and hit points) that opens into its own sheet; the **Companions** panel lists them all.
