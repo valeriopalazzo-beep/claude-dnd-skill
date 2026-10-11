@@ -1475,6 +1475,14 @@
   .tl-event em{ margin-left:8px; padding:1px 8px; border-radius:999px; font-style:normal; font-size:11.5px; font-weight:800;
     background:var(--ln-accent, #f2b544); color:var(--ln-on-accent, #1a140c); vertical-align:1px; }
 
+  /* ══ A split party (split.py) — whose scene this is, in the story itself ══ */
+  .split-mark{ display:flex; align-items:center; gap:12px; max-width:640px; margin:16px auto 12px;
+    font-family:'Alegreya Sans','Syne',sans-serif; font-size:13px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--ln-accent, rgba(200,165,80,.95)); }
+  .split-mark::before, .split-mark::after{ content:''; flex:1; height:1px; background:currentColor; opacity:.45; }
+  .split-mark.elsewhere{ font-weight:600; font-style:italic; letter-spacing:.02em; text-transform:none; opacity:.8; }
+  #ln-split[hidden]{ display:none; }
+
   /* ══ Companions (companion.py) — the horse, the familiar, the hired guard ══ */
   .sb-companions{ display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
   .sb-comp-chip{ display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px; cursor:pointer;
@@ -5482,6 +5490,7 @@
   <div id="ln-scene"><small data-i18n="ln.scene">Scene</small><span id="ln-scene-title"></span></div>
   <span class="ln-spacer"></span>
   <button id="ln-combat" class="ln-pill ln-combat" type="button" data-ln-go="personaggi" hidden><svg class="ln-i"><use href="#ln-i-swords"/></svg><span id="ln-combat-txt"></span></button>
+  <button id="ln-split" class="ln-pill" type="button" hidden></button>
   <button id="ln-whisper" class="ln-icon-btn" type="button" title="Secret notes" aria-label="Secret notes" data-i18n-title="whisper.title" data-i18n-aria="whisper.title" hidden>🤫<span class="whisper-count" hidden></span></button>
   <div id="ln-clocks-slot"></div>
   <div id="ln-clock-slot"></div>
@@ -6331,6 +6340,11 @@ function typeNextChar() {
   }
 
   const item = charQueue.shift();
+  if (item && typeof item === 'object' && item.split) {     // a split party: whose scene starts here
+    _splitDraw(item.split);
+    setTimeout(typeNextChar, 0);
+    return;
+  }
   const p    = getOrCreateBlock();
 
   if (currentCursor) currentCursor.classList.remove('typing-cursor');
@@ -6531,7 +6545,10 @@ function instantFlush() {
   const pending = charQueue.splice(0);  // atomically drain
   let flushInline = null;  // local inline tracker for this flush pass
   for (const item of pending) {
-    if (item === '\n') {
+    if (item && typeof item === 'object' && item.split) {
+      flushInline = null;
+      _splitDraw(item.split);
+    } else if (item === '\n') {
       flushInline = null;
       if (!currentEl) getOrCreateBlock();
       const next = document.createElement('p');
@@ -7193,6 +7210,9 @@ function renderReplayBatch(items) {
   flushNewBlock();
   items.forEach(item => {
     if (!item) return;
+    if (item.elsewhere) { _splitInUse = true; _splitElsewhere(); return; }
+    if ((item.image || (item.text && !item.inspiration_award && !item.milestone_award && !item.xp_award))
+        && _splitWanted(item)) _splitDraw(_splitInfo(item));
     if (item.image) {
       renderImageBlock(item.image, true);
       return;
@@ -10669,6 +10689,7 @@ function connect() {
     if ((payload.companions || payload.companion_event) && typeof window._onCompanions === 'function') window._onCompanions(payload.companions, payload.companion_event);
     if ((payload.bestiary || payload.bestiary_event) && typeof window._onBestiary === 'function') window._onBestiary(payload.bestiary, payload.bestiary_event);
     if ((payload.people || payload.people_event) && typeof window._onPeople === 'function') window._onPeople(payload.people, payload.people_event);
+    if ((payload.split || payload.split_event) && typeof window._onSplit === 'function') window._onSplit(payload.split, payload.split_event);
     if (payload.timeline && typeof window._onTimeline === 'function') window._onTimeline(payload.timeline);
     if (payload.quest_event && payload.quest_event.name) {
       const qe = payload.quest_event;
@@ -10728,12 +10749,25 @@ function connect() {
     if (payload.xp_award) {
       renderXpBlock(payload.xp_award);
     }
+    if (payload.elsewhere) {
+      _splitInUse = true;
+      _deferBlock(() => { _flushForBlock(); _splitElsewhere(); }, false);
+    }
     if (payload.image) {
+      if (_splitWanted(payload)) { const si = _splitInfo(payload); _deferBlock(() => { _flushForBlock(); _splitDraw(si); }, false); }
       renderImageBlock(payload.image);
     }
     if (payload.handout) renderHandoutBlock(payload.handout);
     if (payload.handout_removed) _handoutRemoved(payload.handout_removed);
     if (payload.text &&!payload.inspiration_award && !payload.milestone_award && !payload.milestone_spend && !payload.xp_award) {
+      if (_splitWanted(payload)) {
+        const si = _splitInfo(payload);
+        if (payload.action || payload.player || payload.npc || payload.dice || payload.tutor) {
+          _deferBlock(() => { _flushForBlock(); _splitDraw(si); }, false);
+        } else {
+          charQueue.push({ split: si });        // narration: the line waits its turn in the typewriter
+        }
+      }
       if (payload.action) {
         renderActionBlock(payload.action, payload.text);
       } else if (payload.player) {
@@ -11745,6 +11779,92 @@ function _timelineDays(rows, todayAbs, newestFirst) {
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   fetch('/timeline').then(r => r.ok ? r.json() : []).then(d => window._onTimeline(d)).catch(() => {});
+})();
+
+// ── A split party (split.py) ──────────────────────────────────────────
+// A piece of the story may be addressed to some characters only (`only`).
+// The players it is not for never receive it; the DM's screen does, and here
+// a line across the story says whose scene each stretch is. _splitStep
+// decides when such a line is due: (the audience drawn last, the piece about
+// to be drawn) → [the audience now, the line to draw or null].
+const _SPLIT_ELSEWHERE = '\u0000elsewhere';
+function _splitStep(last, item) {
+  const names = item && Array.isArray(item.only) ? item.only.filter(Boolean) : [];
+  if (names.length) {
+    const key = names.map(n => String(n).toLowerCase()).sort().join('|');
+    return key === last ? [last, null] : [key, { names: names, label: item.label || '' }];
+  }
+  // For everyone: only narration closes a group's scene — a stray roll does not.
+  return last && item && item.narration ? ['', { everyone: true }] : [last, null];
+}
+// ── end split step ──
+
+let _domAudience = '';        // whose scene the last thing drawn in the story was
+let _splitInUse = false;      // nothing below runs until a piece addressed to someone arrives
+function _splitInfo(p) {
+  return { only: Array.isArray(p.only) ? p.only : null, label: p.only_label || '',
+           narration: !!p.image || !(p.player || p.action || p.dice || p.tutor) };
+}
+function _splitWanted(p) {
+  if (p && Array.isArray(p.only) && p.only.length) _splitInUse = true;
+  return _splitInUse;
+}
+function _splitLine(text, cls) {
+  // End the narration block being written, without touching what is still queued.
+  if (currentCursor) { currentCursor.classList.remove('typing-cursor'); currentCursor = null; }
+  if (currentEl) { _addBlockBadge(currentEl); _addTtsBar(currentEl); }
+  currentEl = null;
+  _currentInlineEl = null;
+  const el = document.createElement('div');
+  el.className = 'split-mark' + (cls ? ' ' + cls : '');
+  el.textContent = text;
+  textContent.appendChild(el);
+  scrollToBottom();
+}
+// Called at the moment a piece is about to be drawn, so the line lands where the piece does.
+function _splitDraw(info) {
+  if (!textContent.firstElementChild) _domAudience = '';
+  const step = _splitStep(_domAudience, info);
+  _domAudience = step[0];
+  const mark = step[1];
+  if (!mark) return;
+  _splitLine(mark.everyone ? _t('split.everyone', null, 'The whole party')
+                           : [mark.label, mark.names.join(', ')].filter(Boolean).join(' · '));
+}
+function _splitElsewhere() {
+  if (!textContent.firstElementChild) _domAudience = '';
+  if (_domAudience === _SPLIT_ELSEWHERE) return;
+  _domAudience = _SPLIT_ELSEWHERE;
+  _splitLine(_t('split.elsewhere', null, '… meanwhile, elsewhere …'), 'elsewhere');
+}
+
+(function _initSplit() {
+  const pill = document.getElementById('ln-split');
+  let groups = [];
+  const me = String(window._LOGIN_CHAR || '').toLowerCase();
+  const mine = () => me ? groups.find(g => (g.members || []).some(m => String(m).toLowerCase() === me)) : null;
+  function summary() {
+    const g = mine();
+    if (g) {
+      const others = g.members.filter(m => String(m).toLowerCase() !== me);
+      return others.length ? _t('split.with', { names: others.join(', '), group: g.name }, 'You are with ' + others.join(', ') + ' — ' + g.name)
+                           : _t('split.alone', { group: g.name }, 'You are on your own — ' + g.name);
+    }
+    return _t('split.dm', { groups: groups.map(x => x.name + ' (' + x.members.join(', ') + ')').join(' · ') },
+              'The party is split: ' + groups.map(x => x.name + ' (' + x.members.join(', ') + ')').join(' · '));
+  }
+  window._onSplit = function (next, event) {
+    if (Array.isArray(next)) groups = next;
+    if (pill) {
+      pill.hidden = !groups.length;
+      pill.textContent = '⑂ ' + (mine() ? mine().name : _t('split.pill', null, 'Split'));
+      pill.title = groups.length ? summary() : '';
+    }
+    if (event === 'joined') _showToast('⑂ ' + _t('split.joined', null, 'The party is together again.'), 6000);
+    else if ((event === 'split' || event === 'moved') && groups.length) _showToast('⑂ ' + summary(), 7000);
+  };
+  if (pill) pill.addEventListener('click', () => { if (groups.length) _showToast('⑂ ' + summary(), 6000); });
+  fetch('/split').then(r => r.ok ? r.json() : []).then(d => window._onSplit(d)).catch(() => {});
 })();
 
 // ── Input-only mode for mobile players ───────────────────────────────────

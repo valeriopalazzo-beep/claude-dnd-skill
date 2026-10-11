@@ -512,6 +512,8 @@ _DM_ENDPOINTS = {
     "people_changed",
     # The timeline: timeline.py writes it, everyone reads what is not secret.
     "timeline_changed",
+    # Who is with whom when the party splits: split.py sets it.
+    "split_changed",
     # Companions: companion.py keeps them, everyone sees them.
     "companions_changed",
     # The campaign book: campaign_book.py makes it, everyone may download it.
@@ -1994,6 +1996,21 @@ def health():
     }, 200
 
 
+def _only_fields(data: dict) -> dict:
+    """{"only": [names], "only_label": group} when a piece is addressed to some characters, else {}."""
+    only = data.get("only")
+    if not isinstance(only, list):
+        return {}
+    names = [str(n).strip()[:48] for n in only if str(n).strip()][:12]
+    if not names:
+        return {}
+    out = {"only": names}
+    label = str(data.get("only_label") or "").strip()[:40]
+    if label:
+        out["only_label"] = label
+    return out
+
+
 @app.route("/chunk", methods=["POST"])
 def chunk():
     if not _token_ok():
@@ -2127,6 +2144,11 @@ def chunk():
     elif is_tutor:
         log_entry["tutor"] = True
 
+    # A split party: this piece is for some characters only (send.py --group / --only).
+    audience = _only_fields(data)
+    payload.update(audience)
+    log_entry.update(audience)
+
     # Stamp campaign on tail entries to prevent bleed when switching campaigns
     try:
         _camp_stamp = open(CAMP_FILE, encoding="utf-8").read().strip()
@@ -2195,7 +2217,8 @@ def image():
         "caption": str(data.get("caption", "")).strip()[:240],
         "subject": str(data.get("subject", "")).strip()[:80],
     }
-    log_entry: dict = {"image": img}
+    audience = _only_fields(data)
+    log_entry: dict = {"image": img, **audience}
     if _active_campaign():
         log_entry["_camp"] = _active_campaign()
     with _text_log_lock:
@@ -2204,7 +2227,7 @@ def image():
         _tail_buffer.append(log_entry)
     _persist_log()
     _persist_tail()
-    _broadcast({"image": img})
+    _broadcast({"image": img, **audience})
     return "", 204
 
 
@@ -2822,6 +2845,44 @@ def timeline_changed():
     return "", 204
 
 
+# ─── A split party (split.py) ────────────────────────────────────────────────
+# split.py keeps who is with whom in <campaign>/split.json. The DM's screen
+# gets every group, a player only their own; what send.py addresses to a
+# group reaches only its players (_scene_for, on the way out of /stream).
+import split as _split_lib
+
+
+def _party_split() -> list:
+    camp = re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]
+    if not camp:
+        return []
+    try:
+        return _split_lib.public_view(_split_lib.load(str(_find_campaign(camp) / "split.json")))
+    except Exception:
+        return []
+
+
+def _own_group(groups: list, me: str) -> list:
+    return [grp for grp in groups if isinstance(grp, dict)
+            and me in [str(m).lower() for m in grp.get("members") or []]]
+
+
+@app.route("/split", methods=["GET"])
+def split_get():
+    groups = _party_split()
+    if g.role == "player":
+        groups = _own_group(groups, (g.character or "").lower())
+    return jsonify(groups), 200
+
+
+@app.route("/split", methods=["POST"])
+def split_changed():
+    """split.py changed the groups: tell every screen who is with whom now."""
+    event = str((request.get_json(silent=True) or {}).get("event") or "")
+    _broadcast({"split": _party_split(), "split_event": event if event in ("split", "moved", "joined") else ""})
+    return "", 204
+
+
 # ─── Companions (companion.py) ───────────────────────────────────────────────
 # Animals and followers travelling with the party, kept by companion.py in
 # <campaign>/companions.json. They are not players: they hang on their owner's
@@ -3339,7 +3400,7 @@ def stats():
         # the new campaign's, or those panels stay empty until a reload.
         try:
             _broadcast({"clocks": _public_clocks(), "bestiary": _public_bestiary(), "people": _public_people(),
-                        "timeline": _public_timeline(),
+                        "timeline": _public_timeline(), "split": _party_split(), "split_event": "",
                         "companions": _public_companions(), "region_changed": _time.time()})
         except Exception:
             pass
@@ -4760,6 +4821,43 @@ def _whisper_owner(entry: dict) -> str:
     return str(entry.get("to") if entry.get("from") == "dm" else entry.get("from") or "")
 
 
+def _addressed_elsewhere(entry, me: str) -> bool:
+    only = entry.get("only") if isinstance(entry, dict) else None
+    return isinstance(only, list) and bool(only) and me not in [str(n).lower() for n in only]
+
+
+def _scene_for(payload: Optional[dict], viewer: Optional[str], bound: str) -> Optional[dict]:
+    """A split party: keep a piece of the story for the players it was addressed to.
+
+    `viewer` is a logged-in player's character (lowercase) or None; `bound` is
+    the character a browser on this PC opened the phone view for ("" for the
+    shared table screen, which shows everything). Whoever is elsewhere gets a
+    bare "meanwhile, elsewhere" instead of the piece — once per run in a replay
+    — and of the groups only their own.
+    """
+    me = viewer if viewer is not None else (bound or None)
+    if not isinstance(payload, dict) or not me:
+        return payload
+    if _addressed_elsewhere(payload, me):
+        return {"elsewhere": True}
+    batch = payload.get("replay_batch")
+    groups = payload.get("split")
+    if not isinstance(batch, list) and not isinstance(groups, list):
+        return payload
+    out = dict(payload)
+    if isinstance(batch, list):
+        kept: list = []
+        for entry in batch:
+            if not _addressed_elsewhere(entry, me):
+                kept.append(entry)
+            elif not (kept and isinstance(kept[-1], dict) and kept[-1].get("elsewhere")):
+                kept.append({"elsewhere": True})
+        out["replay_batch"] = kept
+    if isinstance(groups, list):
+        out["split"] = _own_group(groups, me)
+    return out
+
+
 def _whisper_for(payload: Optional[dict], viewer: Optional[str], bound: str) -> Optional[dict]:
     """Keep a secret note for its player only.
 
@@ -4999,6 +5097,7 @@ def stream():
             while True:
                 try:
                     payload = _whisper_for(_for_viewer(q.get(timeout=5), _viewer), _viewer, _ch)
+                    payload = _scene_for(payload, _viewer, _ch)
                     if payload:
                         yield f"data: {json.dumps(payload)}\n\n"
                 except queue.Empty:

@@ -440,6 +440,20 @@ When `state.md → ## Session Flags → absent:` names one or more PCs, their pl
 
 When they come back at a later load, they rejoin the scene with one line of fiction — see `/dm:dnd load` step 8.
 
+## A Split Party
+
+When the characters separate — one scouts ahead, two stay behind, someone is taken away — each player should read the scene their own character is in and not the others': what one group learns is theirs to tell. Say who is where with `display/split.py set "Collina: Hernio, Lyra" "Rocca: Ajeje"` and from then on address each piece of the story to its group: `send.py --group Collina …` (with `--npc`, `--player`, `--dice`… as usual). Only those players' screens show it; the others see a quiet "meanwhile, elsewhere" and your own screen shows everything, with a line saying whose scene it is. What you send with no `--group` is for the whole table.
+
+- **Cut between the groups often** — a few exchanges each, on a cliffhanger when you can. Nobody should wait ten minutes watching "meanwhile, elsewhere".
+- **Rolls and sheets are not hidden**: a dice request, HP, conditions and the party cards reach everyone as always. Keep what must stay secret in the narration you address, or in a secret note (`whisper.py`).
+- A character joins another group: `split.py move "Ajeje" "Collina"`. Everyone together again: `split.py join` — do it the moment they meet, and tell the scene to the whole table.
+- The groups are kept with the campaign: a session that ends with the party divided starts again divided. At load, run `split.py show` and carry on addressing each group.
+- A single line for one character with the party together (a private perception, a voice only they hear) takes `--only "Lio"`: no split needed.
+
+Syntax: `SKILL-scripts.md` → *A Split Party*.
+
+---
+
 ## Coins, Items & Shops
 
 Money and gear are **applied by script, never by hand**: `scripts/inventory.py` (`gain`, `pay`, `add`, `remove`, `buy`, `sell`, `give`, `split`) edits the sheet's Currency line and item lists, makes change, and refuses what cannot be paid. Use it every time coins or items change hands — loot, a toll, a potion drunk, a gift between characters — and to split treasure in equal shares.

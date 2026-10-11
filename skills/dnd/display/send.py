@@ -429,6 +429,13 @@ def main() -> None:
         help="Send as a player action intent — subdued label echoing what the player declared",
     )
 
+    # ── A split party: narration for some characters only ────────────────────
+    parser.add_argument("--group", metavar="NAME",
+        help="Only the players of this group read it (the groups are set with split.py). "
+             "Works with plain narration, --npc, --player, --action, --dice, --tutor and --image.")
+    parser.add_argument("--only", metavar="NAMES",
+        help='Only these characters\' players read it: "Hernio, Lyra" — split or not.')
+
     # ── Inspiration / XP award flags ─────────────────────────────────────────
     parser.add_argument("--inspiration-award", metavar="NAME",
         help="Award Inspiration: fires a styled gold block in the feed + sidebar badge")
@@ -518,9 +525,22 @@ def main() -> None:
 
     args = parser.parse_args()
 
+    # Who it is for, when it is not for the whole table. Resolved before
+    # anything is sent: a wrong group must not turn into a line everyone reads.
+    audience: dict = {}
+    if args.group or args.only:
+        import media
+        import split as _split
+        try:
+            names, label = _split.audience(media.active_campaign(), args.group or "", args.only or "")
+        except _split.SplitError as e:
+            print(f"send.py: ABORT — {e}. Nothing was sent.", file=sys.stderr)
+            sys.exit(2)
+        audience = {"only": names, "only_label": label}
+
     if args.image:
         body = {"file": os.path.basename(args.image), "caption": args.image_caption,
-                "kind": args.image_kind, "subject": args.image_subject}
+                "kind": args.image_kind, "subject": args.image_subject, **audience}
         if not _post(f"{BASE_URL}/image", json.dumps(body).encode("utf-8"), _read_token()):
             failed = _SEND_LOG[-1] if _SEND_LOG else {}
             if failed.get("reason") == "display offline":
@@ -701,7 +721,7 @@ def main() -> None:
     if text.strip():
         chunks = _split_paragraphs(text)
         for chunk in chunks:
-            payload: dict = {"text": chunk}
+            payload: dict = {"text": chunk, **audience}
             if args.action:
                 payload["action"] = args.action
             elif args.player:

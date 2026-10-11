@@ -917,6 +917,38 @@ python3 ${CLAUDE_SKILL_DIR}/display/timeline.py list                            
 
 ---
 
+## A Split Party — `display/split.py` and `send.py --group`
+
+Who is with whom when the characters are in more than one place, so that each player reads their own character's scene only.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/display/split.py set "Collina: Hernio, Lyra" "Cappella: Lio, Vardamir" "Rocca: Ajeje"
+python3 ${CLAUDE_SKILL_DIR}/display/split.py move "Ajeje" "Collina"       # joins another group — or goes off alone: move "Lio" "Sentiero"
+python3 ${CLAUDE_SKILL_DIR}/display/split.py rename "Rocca" "Scala della Rocca"
+python3 ${CLAUDE_SKILL_DIR}/display/split.py show
+python3 ${CLAUDE_SKILL_DIR}/display/split.py join                         # everyone is together again
+
+python3 ${CLAUDE_SKILL_DIR}/display/send.py --group Collina << 'DNDEND'  # only Hernio's and Lyra's players read this
+I morti si voltano tutti insieme verso la montagna.
+DNDEND
+python3 ${CLAUDE_SKILL_DIR}/display/send.py --group Rocca --npc "L'adepto" << 'DNDEND'
+«La Custode ti vuole vedere. Giù. Subito.»
+DNDEND
+python3 ${CLAUDE_SKILL_DIR}/display/send.py --only "Lio" << 'DNDEND'     # one character, split or not
+Una voce che senti solo tu: «Figlio di Kalda.»
+DNDEND
+```
+
+- A group is `"Name: Character, Character"`; the name is usually the place. Characters and groups can be written by any part of the name that means one only. A character is in one group; one left out of every group reads only what is sent to the whole table (`set` and `show` list them).
+- `--group` / `--only` work with plain narration and with `--npc`, `--player`, `--action`, `--dice`, `--tutor` and `--image`. A wrong group or name sends **nothing** and exits 2 — it never falls back to sending to everyone.
+- **Who sees what:** the players named get the piece; the other players get "… meanwhile, elsewhere …" (once, however many pieces follow); the DM's screen and the shared table screen get everything, with a line across the story — "Collina · Hernio, Lyra", then "The whole party" when the story is for everyone again. A reload or a late login replays to each player only their own scenes. Each player also sees who they are with (a pill in the top bar, a notice when the groups change).
+- **Not hidden:** dice requests and their results, stats, party cards, handouts, the region map. Images sent with `--image --group` are.
+- When the last two groups meet through `move`, the split ends by itself. `join` ends it at once.
+- Stored in `<campaign>/split.json`; `--campaign NAME` (before the subcommand) works on another campaign.
+- Session tail replay: an entry with an `only` list is replayed with `--only "<names, comma-separated>"`.
+
+---
+
 ## Companions — `display/companion.py`
 
 A small sheet for whatever travels with the party and has hit points but is not a player character: a mount, a familiar, an animal, a hired guard, a summoned creature. On the display each one is a chip on its owner's card (name and hit points) that opens into its own sheet; the **Companions** panel lists them all.
