@@ -83,6 +83,13 @@ except Exception:
     pass
 
 try:
+    from spellbook import drain_casts
+    for line in drain_casts():
+        print(line)
+except Exception:
+    pass
+
+try:
     from puzzle import drain_news
     for line in drain_news():
         print(line)

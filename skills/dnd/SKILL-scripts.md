@@ -374,6 +374,26 @@ If `check_input.py` returns output, prepend it to the player's terminal input wh
 
 ---
 
+## Spellbook — `scripts/spellbook.py`
+
+A caster's spells and slots, read from and written to the character sheet. The players' **Spellbook** panel is built on it.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/scripts/spellbook.py -c $CAMP show "Vardamir"
+python3 ${CLAUDE_SKILL_DIR}/scripts/spellbook.py -c $CAMP cast "Vardamir" "parola guaritrice"      # a slot of the spell's level
+python3 ${CLAUDE_SKILL_DIR}/scripts/spellbook.py -c $CAMP cast "Vardamir" "cura ferite" --level 2   # a higher slot
+python3 ${CLAUDE_SKILL_DIR}/scripts/spellbook.py -c $CAMP restore "Vardamir" --level 1              # one slot back
+python3 ${CLAUDE_SKILL_DIR}/scripts/spellbook.py -c $CAMP restore "Vardamir"                        # all of them: a long rest
+```
+
+- **What it reads.** Slots from the table under `## Spell Slots` (`| 1st | 3 | 1 |` = level, total, used); the line in italics under it (casting ability, save DC, attack bonus) is shown as it is. Spells from the bullets under `## Known Spells / Cantrips`: `- **Cantrips:** a, b` / `- **1st level:** c, d` (Italian labels — *Trucchetti*, *1° livello* — are read the same way). A note in brackets after a name is kept as a note.
+- **What the SRD adds.** For a spell the SRD has (Italian names understood): level, casting time, range, duration, components, concentration, ritual, and the full text on the panel, in the display's language. A spell that is not in the SRD is listed with the level its line gives; its text is yours to tell.
+- `cast` marks one slot of the spell's level (`--level N` for a higher one), refuses when none is left or the spell is not on the sheet, and costs nothing for a cantrip. `restore` gives one slot of `--level` back, or all of them. Both write the sheet and send the new count to the display. A character or a spell can be named by any part of the name that means one only. A mistake changes nothing.
+- **From the panel.** A player opens *Spellbook* on their own screen (the DM's screen can open any caster's), reads a spell and casts it with two taps. The server checks the slot against the display's live count, marks the sheet, updates the party cards, sets concentration if the spell needs it and leaves you a line: `[[SPELL: Vardamir cast Parola guaritrice from the spellbook with a 1st-level slot (1 of 3 left) — the slot is already marked … do not mark it again …]]`. Letting go of concentration from the panel sends `[[SPELL: Vardamir stopped concentrating on …]]`. These arrive with the next `check_input.py`, like shop sales.
+- **Keeping it right.** When a character learns a spell or gains slots (level up), edit those two sections of the sheet in the same format. After a long rest run `restore "<Char>"` for every caster. Do not also use `send.py --stat-slot-use` for a cast already made from the panel or with `spellbook.py cast`.
+
+---
+
 ## Shop — `display/shop.py`
 
 Put a shop's price list on the players' screens. Each player buys from their own phone (tap **Buy**, then **Confirm**) and the display applies the purchase at once with `inventory.py`: coins off the sheet with change, item on it, stock down. Nothing to add up, nothing to remember.

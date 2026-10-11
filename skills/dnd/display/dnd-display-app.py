@@ -2883,6 +2883,175 @@ def split_changed():
     return "", 204
 
 
+# ─── Spellbook (scripts/spellbook.py) ────────────────────────────────────────
+# A caster's spells and slots, read from the character sheet. A player opens
+# their own; casting from it marks the slot on the sheet and on the display at
+# once and leaves a line for the DM (check_input.py). The display's live slot
+# count wins over the sheet's when the DM has pushed one.
+import spellbook as _spellbook
+
+_spell_lock = threading.Lock()
+
+
+def _spell_lang(value: str = "") -> str:
+    lang = re.sub(r"[^a-z-]", "", str(value or "").lower())[:8]
+    if lang:
+        return lang
+    try:
+        from paths import campaign_language as _campaign_language
+        return _campaign_language(re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]) or "en"
+    except Exception:
+        return "en"
+
+
+def _spell_ruleset() -> str:
+    with _stats_lock:
+        rs = str(_current_stats.get("ruleset") or "")
+    return rs if rs in ("2014", "2024") else "2014"
+
+
+def _live_slots(player: Optional[dict]) -> dict:
+    """{level: {"max", "used"}} as the display holds it — {} when it holds none."""
+    out = {}
+    for lvl, slot in ((player or {}).get("spell_slots") or {}).items():
+        if not str(lvl).isdigit() or not isinstance(slot, dict):
+            continue
+        slot = dict(slot)
+        _normalize_slot(slot)
+        try:
+            mx = int(slot.get("max", 0))
+            out[int(lvl)] = {"max": mx, "used": max(0, min(int(slot.get("used", 0)), mx))}
+        except (TypeError, ValueError):
+            continue
+    return out
+
+
+def _spell_view(character: str, text: str, lang: str) -> dict:
+    data = _spellbook.book(text, _spell_ruleset(), lang)
+    live = _live_player(character) or {}
+    slots = {int(k): v for k, v in data["slots"].items()}
+    slots.update(_live_slots(live))
+    data["slots"] = {str(k): slots[k] for k in sorted(slots)}
+    data["concentration"] = str(live.get("concentration") or "")
+    data["character"] = live.get("name") or character
+    return data
+
+
+def _spell_sheet(character: str):
+    """(path, text) of the character's sheet, or (None, an error response)."""
+    if not _token_ok() or _is_other_character(character):
+        return None, ("Forbidden", 403)
+    path, safe, _camp = _find_sheet_file(character)
+    if not safe:
+        return None, ("Bad character name", 400)
+    if not path:
+        return None, (jsonify({"error": "no sheet"}), 404)
+    try:
+        with open(path, encoding="utf-8", newline="") as f:
+            return path, f.read()
+    except OSError as e:
+        return None, (jsonify({"error": str(e)}), 500)
+
+
+@app.route("/spellbook", methods=["GET"])
+def spellbook_list():
+    """The casters this screen may open: every one at the table for the DM, a player's own."""
+    if not _token_ok():
+        return "Forbidden", 403
+    with _stats_lock:
+        names = [str(p.get("name", "")) for p in _current_stats.get("players", []) if p.get("name")]
+    if g.role == "player":
+        names = [n for n in names if n.lower() == (g.character or "").lower()] or [g.character or ""]
+    out = []
+    for name in names:
+        path, _safe, _camp = _find_sheet_file(name)
+        if not path:
+            continue
+        try:
+            with open(path, encoding="utf-8") as f:
+                count = len(_spellbook.read_spells(f.read()))
+        except OSError:
+            continue
+        if count:
+            out.append({"character": name, "spells": count})
+    return jsonify(out), 200
+
+
+@app.route("/spellbook/<character>", methods=["GET"])
+def spellbook_get(character):
+    path, text = _spell_sheet(character)
+    if path is None:
+        return text
+    return jsonify(_spell_view(character, text, _spell_lang(request.args.get("lang", "")))), 200
+
+
+@app.route("/spellbook/<character>/cast", methods=["POST"])
+def spellbook_cast(character):
+    """Cast a spell from the panel: mark the slot, set concentration, tell the DM."""
+    data = request.get_json(silent=True) or {}
+    lang = _spell_lang(data.get("lang", ""))
+    with _spell_lock:
+        path, text = _spell_sheet(character)
+        if path is None:
+            return text
+        live = _live_player(character) or {}
+        slots = {**_spellbook.read_slots(text), **_live_slots(live)}
+        try:
+            new_text, done = _spellbook.cast(text, str(data.get("spell", ""))[:80], data.get("level"),
+                                             _spell_ruleset(), lang, slots)
+        except _spellbook.SpellError as e:
+            return jsonify({"error": str(e), "code": "slots" if "slot left" in str(e) else "spell"}), 409
+        if new_text != text:
+            try:
+                tmp = path + ".tmp"
+                with open(tmp, "w", encoding="utf-8", newline="") as f:
+                    f.write(new_text)
+                os.replace(tmp, path)
+            except OSError as e:
+                return jsonify({"error": str(e), "code": "sheet"}), 500
+        name = live.get("name") or character
+        snapshot = None
+        with _stats_lock:
+            for p in _current_stats.get("players", []):
+                if _sheet_key(p.get("name", "")) != _sheet_key(character):
+                    continue
+                if done["slot"]:
+                    p.setdefault("spell_slots", {})[str(done["slot"])] = {"used": done["max"] - done["left"], "max": done["max"]}
+                if done["concentration"]:
+                    p["concentration"] = done["spell"]
+                snapshot = dict(_current_stats)
+        if snapshot is not None:
+            _persist_stats()
+            _broadcast({"stats": snapshot})
+    _spellbook.casts_add({"character": name, **done})
+    _broadcast({"spell_cast": {"character": name, "spell": done["spell"], "slot": done["slot"]}})
+    return jsonify({**_spell_view(character, new_text, lang), "cast": done}), 200
+
+
+@app.route("/spellbook/<character>/concentration", methods=["POST"])
+def spellbook_drop(character):
+    """The player lets go of the spell they are concentrating on."""
+    lang = _spell_lang((request.get_json(silent=True) or {}).get("lang", ""))
+    path, text = _spell_sheet(character)
+    if path is None:
+        return text
+    dropped, name, snapshot = "", character, None
+    with _stats_lock:
+        for p in _current_stats.get("players", []):
+            if _sheet_key(p.get("name", "")) == _sheet_key(character) and p.get("concentration"):
+                dropped, name = str(p["concentration"]), p.get("name") or character
+                p["concentration"] = None
+                p["effects"] = [e for e in p.get("effects", []) if not (isinstance(e, dict) and e.get("concentration")
+                                                                        and str(e.get("name", "")).lower() == dropped.lower())]
+                snapshot = dict(_current_stats)
+    if not dropped:
+        return jsonify({"error": "not concentrating", "code": "none"}), 409
+    _persist_stats()
+    _broadcast({"stats": snapshot})
+    _spellbook.casts_add({"character": name, "spell": dropped, "dropped": True})
+    return jsonify(_spell_view(character, text, lang)), 200
+
+
 # ─── Companions (companion.py) ───────────────────────────────────────────────
 # Animals and followers travelling with the party, kept by companion.py in
 # <campaign>/companions.json. They are not players: they hang on their owner's

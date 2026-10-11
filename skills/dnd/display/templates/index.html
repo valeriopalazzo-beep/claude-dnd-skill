@@ -1483,6 +1483,51 @@
   .split-mark.elsewhere{ font-weight:600; font-style:italic; letter-spacing:.02em; text-transform:none; opacity:.8; }
   #ln-split[hidden]{ display:none; }
 
+  /* ══ Spellbook (spellbook.py) — a caster's spells and slots, cast from here ══ */
+  #spell-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
+    align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  #spell-modal.open{ display:flex; }
+  #spell-panel{ width:min(580px, 100%); margin:auto 0; color:var(--ln-text, #ECE4D2); font-family:'Alegreya Sans','Syne',sans-serif; }
+  #spell-head{ display:flex; align-items:center; gap:10px; margin-bottom:12px; color:#ECE4D2; }
+  #spell-head h2{ flex:1; min-width:0; margin:0; font-size:22px; line-height:1.15; }
+  #spell-head button{ flex:none; width:40px; height:40px; border-radius:999px; cursor:pointer; font-size:16px;
+    background:rgba(0,0,0,.35); color:inherit; border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #spell-back[hidden], #spell-who[hidden]{ display:none; }
+  #spell-who{ display:flex; flex-wrap:wrap; gap:8px; margin:0 0 12px; }
+  #spell-who button{ padding:8px 14px; border-radius:999px; cursor:pointer; font:inherit; font-size:15.5px; font-weight:700;
+    color:#ECE4D2; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.3); }
+  #spell-who button.sel{ color:#1a140c; background:#f2b544; border-color:#f2b544; }
+  #spell-book, #spell-page{ display:flex; flex-direction:column; gap:8px; }
+  #spell-book[hidden], #spell-page[hidden]{ display:none; }
+  .spell-card{ padding:12px 16px; border-radius:12px; font-size:16px; line-height:1.4;
+    background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
+  .spell-casting{ font-weight:700; color:var(--ln-accent, #f2b544); }
+  .spell-slot-row{ display:flex; align-items:center; gap:12px; padding:3px 0; }
+  .spell-slot-row b{ flex:none; min-width:92px; }
+  .spell-slot-row span{ flex:1; display:flex; flex-wrap:wrap; gap:6px; }
+  .spell-slot-row i{ flex:none; font-style:normal; font-variant-numeric:tabular-nums; color:var(--ln-text-muted, #cdbfa6); }
+  .spell-pip{ width:16px; height:16px; border-radius:50%; border:2px solid var(--ln-accent, #f2b544); }
+  .spell-pip.avail{ background:var(--ln-accent, #f2b544); }
+  .spell-pip.spent{ opacity:.4; }
+  .spell-conc{ display:flex; align-items:center; gap:10px; }
+  .spell-conc span{ flex:1; min-width:0; font-weight:700; }
+  .spell-conc button, .spell-go{ padding:9px 14px; border-radius:10px; cursor:pointer; font:inherit; font-size:15.5px; font-weight:800;
+    color:var(--ln-on-accent, #1a140c); background:var(--ln-accent, #f2b544); border:0; }
+  .spell-go{ display:block; width:100%; padding:14px 12px; font-size:18px; border-radius:12px; }
+  .spell-go:disabled{ opacity:.45; cursor:default; }
+  .spell-go.armed{ outline:3px solid var(--ln-text, #ECE4D2); outline-offset:2px; }
+  .spell-group{ margin:8px 2px 0; font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; color:#b9ab92; }
+  .spell-item{ display:flex; align-items:center; gap:12px; width:100%; padding:11px 15px; text-align:left; cursor:pointer;
+    border-radius:12px; font:inherit; font-size:18px; font-weight:700; color:inherit;
+    background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
+  .spell-item span{ flex:1; min-width:0; }
+  .spell-item small{ display:block; font-size:14px; font-weight:500; color:var(--ln-text-muted, #b9ab92); }
+  .spell-item em{ flex:none; font-style:normal; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:800;
+    color:var(--ln-accent, #f2b544); border:1px solid var(--ln-accent, #f2b544); }
+  .spell-text{ white-space:pre-wrap; font-size:16.5px; line-height:1.45; }
+  .spell-note{ margin:0; color:var(--ln-text-muted, #cdbfa6); font-style:italic; }
+  .spell-empty{ margin:30px 8px; text-align:center; font-size:16px; color:#b9ab92; }
+
   /* ══ Companions (companion.py) — the horse, the familiar, the hired guard ══ */
   .sb-companions{ display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
   .sb-comp-chip{ display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px; cursor:pointer;
@@ -5116,6 +5161,7 @@
     <button class="ph-set-opt" id="ph-cal-opt" type="button" hidden><span data-i18n="cal.title">Calendar</span><strong>📅</strong></button>
     <button class="ph-set-opt" id="ph-timeline-opt" type="button" hidden><span data-i18n="tl.title">Timeline</span><strong>🕰</strong></button>
     <button class="ph-set-opt" id="ph-book-opt" type="button" hidden><span data-i18n="book.title">Campaign book</span><strong>📕</strong></button>
+    <button class="ph-set-opt" id="ph-spells-opt" type="button" hidden><span data-i18n="spell.title">Spellbook</span><strong>✨</strong></button>
     <button class="ph-set-opt" id="ph-comp-opt" type="button" hidden><span data-i18n="comp.title">Companions</span><strong>🐾</strong></button>
     <button class="ph-set-opt" id="ph-beast-opt" type="button" hidden><span data-i18n="beast.title">Bestiary</span><strong>📖</strong></button>
     <button class="ph-set-opt" id="ph-people-opt" type="button" hidden><span data-i18n="people.title">People met</span><strong>👤</strong></button>
@@ -5340,6 +5386,20 @@
   </div>
 </div>
 
+<!-- Spellbook: a caster's spells and slots, read from the sheet (scripts/spellbook.py) -->
+<div id="spell-modal">
+  <div id="spell-panel" role="dialog" aria-labelledby="spell-title">
+    <div id="spell-head">
+      <button id="spell-back" type="button" title="All spells" aria-label="All spells" data-i18n-title="spell.all" data-i18n-aria="spell.all" hidden>‹</button>
+      <h2 id="spell-title" data-i18n="spell.title">Spellbook</h2>
+      <button id="spell-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
+    </div>
+    <div id="spell-who" hidden></div>
+    <div id="spell-book"></div>
+    <div id="spell-page" hidden></div>
+  </div>
+</div>
+
 <!-- Companions: the animals and followers travelling with the party, from companion.py -->
 <div id="comp-modal">
   <div id="comp-panel" role="dialog" aria-labelledby="comp-title">
@@ -5424,6 +5484,7 @@
   <symbol id="ln-i-beast" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M9 8l1.5 2L12 8l1.5 2L15 8"/></symbol>
   <symbol id="ln-i-people" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M15 4h6v5h-3l-2 2V9h-1z"/></symbol>
   <symbol id="ln-i-timeline" viewBox="0 0 24 24"><path d="M6 3v18"/><circle cx="6" cy="6" r="2"/><circle cx="6" cy="13" r="2"/><circle cx="6" cy="19" r="1.4"/><path d="M11 6h9M11 13h7M11 19h5"/></symbol>
+  <symbol id="ln-i-spell" viewBox="0 0 24 24"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.200-.800z"/><path d="M5 15.500l.6 1.500 1.500.600-1.500.600L5 19.700l-.600-1.500-1.500-.600 1.500-.600z"/></symbol>
   <symbol id="ln-i-paw" viewBox="0 0 24 24"><circle cx="6.5" cy="10" r="2"/><circle cx="10" cy="5.5" r="2"/><circle cx="14" cy="5.5" r="2"/><circle cx="17.5" cy="10" r="2"/><path d="M12 12c-3 0-5.5 2.6-5.5 5.2 0 1.7 1.3 2.8 2.9 2.8 1 0 1.7-.5 2.6-.5s1.6.5 2.6.5c1.6 0 2.9-1.1 2.9-2.8C17.500 14.6 15 12 12 12z"/></symbol>
   <symbol id="ln-i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M12 7v6m0 0-2.5-2.5M12 13l2.5-2.5"/></symbol>
   <symbol id="ln-i-puzzle" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="16" r="1.3"/></symbol>
@@ -5457,6 +5518,7 @@
       <div class="ln-h" data-i18n="ln.group.party">Party</div>
       <button class="ln-item" type="button" data-ln-go="personaggi" data-phone title="Characters" data-i18n-title="ln.view.personaggi"><svg class="ln-i"><use href="#ln-i-party"/></svg><span class="ln-lbl" data-i18n="ln.view.personaggi">Characters</span><span class="ln-badge alert" id="ln-badge-combat" hidden></span></button>
       <button class="ln-item" type="button" data-ln-go="scheda" data-phone title="My character" data-i18n-title="ln.view.scheda"><svg class="ln-i"><use href="#ln-i-me"/></svg><span class="ln-lbl"><span class="ln-long" data-i18n="ln.view.scheda">My character</span><span class="ln-short" data-i18n="ln.view.schedaShort">Me</span></span></button>
+      <button class="ln-item" type="button" id="ln-spells" title="Spellbook" data-i18n-title="spell.title" hidden><svg class="ln-i"><use href="#ln-i-spell"/></svg><span class="ln-lbl" data-i18n="spell.title">Spellbook</span></button>
       <button class="ln-item" type="button" id="ln-comp" title="Companions" data-i18n-title="comp.title" hidden><svg class="ln-i"><use href="#ln-i-paw"/></svg><span class="ln-lbl" data-i18n="comp.title">Companions</span></button>
     </div>
     <div class="ln-group">
@@ -5544,6 +5606,7 @@
         <button class="ln-item" type="button" id="ln-clocks-more" data-ln-proxy="ln-clocks" hidden><svg class="ln-i"><use href="#ln-i-clock"/></svg><span class="ln-lbl" data-i18n="clock.title">Clocks</span></button>
         <button class="ln-item" type="button" id="ln-beast-more" data-ln-proxy="ln-beast" hidden><svg class="ln-i"><use href="#ln-i-beast"/></svg><span class="ln-lbl" data-i18n="beast.title">Bestiary</span></button>
         <button class="ln-item" type="button" id="ln-people-more" data-ln-proxy="ln-people" hidden><svg class="ln-i"><use href="#ln-i-people"/></svg><span class="ln-lbl" data-i18n="people.title">People met</span></button>
+        <button class="ln-item" type="button" id="ln-spells-more" data-ln-proxy="ln-spells" hidden><svg class="ln-i"><use href="#ln-i-spell"/></svg><span class="ln-lbl" data-i18n="spell.title">Spellbook</span></button>
         <button class="ln-item" type="button" id="ln-comp-more" data-ln-proxy="ln-comp" hidden><svg class="ln-i"><use href="#ln-i-paw"/></svg><span class="ln-lbl" data-i18n="comp.title">Companions</span></button>
         <button class="ln-item" type="button" id="ln-book-more" data-ln-proxy="ln-book" hidden><svg class="ln-i"><use href="#ln-i-book"/></svg><span class="ln-lbl" data-i18n="book.title">Campaign book</span></button>
         <button class="ln-item" type="button" id="ln-timeline-more" data-ln-proxy="ln-timeline" hidden><svg class="ln-i"><use href="#ln-i-timeline"/></svg><span class="ln-lbl" data-i18n="tl.title">Timeline</span></button>
@@ -10690,6 +10753,8 @@ function connect() {
     if ((payload.bestiary || payload.bestiary_event) && typeof window._onBestiary === 'function') window._onBestiary(payload.bestiary, payload.bestiary_event);
     if ((payload.people || payload.people_event) && typeof window._onPeople === 'function') window._onPeople(payload.people, payload.people_event);
     if ((payload.split || payload.split_event) && typeof window._onSplit === 'function') window._onSplit(payload.split, payload.split_event);
+    if (payload.stats && typeof window._onSpellStats === 'function') window._onSpellStats(payload.stats);
+    if (payload.spell_cast && typeof window._onSpellCast === 'function') window._onSpellCast(payload.spell_cast);
     if (payload.timeline && typeof window._onTimeline === 'function') window._onTimeline(payload.timeline);
     if (payload.quest_event && payload.quest_event.name) {
       const qe = payload.quest_event;
@@ -11865,6 +11930,217 @@ function _splitElsewhere() {
   };
   if (pill) pill.addEventListener('click', () => { if (groups.length) _showToast('⑂ ' + summary(), 6000); });
   fetch('/split').then(r => r.ok ? r.json() : []).then(d => window._onSplit(d)).catch(() => {});
+})();
+
+// ── Spellbook (scripts/spellbook.py) ──────────────────────────────────
+// The server reads the spells and the slots from the character sheet.
+// _spellRows arranges them for the panel: the slots left per level, the
+// spells in groups by level, and for one spell the slots it can be cast with.
+function _spellRows(book, spellName) {
+  book = book || {};
+  const slots = Object.keys(book.slots || {}).map(Number).sort((a, b) => a - b)
+    .map(l => ({ level: l, max: book.slots[l].max, left: Math.max(0, book.slots[l].max - book.slots[l].used) }));
+  const groups = [];
+  (book.spells || []).forEach(s => {
+    const key = s.level === null || s.level === undefined ? -1 : s.level;
+    let g = groups.find(x => x.level === key);
+    if (!g) { g = { level: key, spells: [] }; groups.push(g); }
+    g.spells.push(s);
+  });
+  groups.sort((a, b) => (a.level < 0) - (b.level < 0) || a.level - b.level);
+  const spell = spellName ? (book.spells || []).find(s => s.name === spellName) || null : null;
+  const options = spell && spell.level > 0 ? slots.filter(s => s.level >= spell.level) : [];
+  return { slots: slots, groups: groups, spell: spell, options: options };
+}
+// ── end spell rows ──
+
+(function _initSpellbook() {
+  const modal = document.getElementById('spell-modal');
+  if (!modal) return;
+  const $ = id => document.getElementById(id);
+  const bookEl = $('spell-book'), pageEl = $('spell-page'), whoEl = $('spell-who'), back = $('spell-back'), title = $('spell-title');
+  const qp = new URLSearchParams(location.search);
+  const mine = String(window._LOGIN_CHAR || qp.get('char') || qp.get('character') || '').trim();
+  let casters = [], who = '', book = null, openSpell = '', armed = null, playersSig = '', timer = null;
+
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+  const lang = () => window._LANG || 'en';
+  const same = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+  const levelName = l => l === 0 ? _t('spell.cantrips', null, 'Cantrips') : l < 0 ? _t('spell.unknownLevel', null, 'Level not given')
+    : _t('spell.level', { n: l }, 'Level ' + l);
+
+  function triggers() {
+    const has = casters.length > 0;
+    ['ln-spells', 'ln-spells-more', 'ph-spells-opt'].forEach(id => { const e = $(id); if (e) e.hidden = !has; });
+    if (!has) modal.classList.remove('open');
+  }
+  function loadCasters() {
+    return fetch('/spellbook', { headers: _authHeaders() }).then(r => r.ok ? r.json() : []).then(d => {
+      casters = Array.isArray(d) ? d : [];
+      if (mine) casters = casters.filter(c => same(c.character, mine));     // a player's screen: their own book only
+      triggers();
+    }).catch(() => {});
+  }
+  function loadBook() {
+    if (!who) return Promise.resolve();
+    return fetch('/spellbook/' + encodeURIComponent(who) + '?lang=' + encodeURIComponent(lang()), { headers: _authHeaders() })
+      .then(r => r.ok ? r.json() : null).then(d => { if (d) { book = d; render(); } }).catch(() => {});
+  }
+  function post(path, body) {
+    return fetch('/spellbook/' + encodeURIComponent(who) + path, {
+      method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, _authHeaders()),
+      body: JSON.stringify(Object.assign({ lang: lang() }, body || {})),
+    }).then(r => r.json().then(d => ({ ok: r.ok, data: d })).catch(() => ({ ok: false, data: {} })));
+  }
+
+  function drawBook() {
+    bookEl.textContent = '';
+    const rows = _spellRows(book);
+    if (!rows.groups.length) { bookEl.appendChild(el('p', 'spell-empty', _t('spell.empty', null, 'No spells on the sheet.'))); return; }
+    if (book.casting || rows.slots.length) {
+      const card = el('div', 'spell-card');
+      if (book.casting) card.appendChild(el('div', 'spell-casting', book.casting));
+      rows.slots.forEach(s => {
+        const row = el('div', 'spell-slot-row');
+        row.appendChild(el('b', '', levelName(s.level)));
+        const pips = el('span');
+        for (let i = 0; i < s.max; i++) pips.appendChild(el('div', 'spell-pip ' + (i < s.left ? 'avail' : 'spent')));
+        row.appendChild(pips);
+        row.appendChild(el('i', '', _t('spell.left', { n: s.left, max: s.max }, s.left + ' of ' + s.max)));
+        card.appendChild(row);
+      });
+      bookEl.appendChild(card);
+    }
+    if (book.concentration) {
+      const conc = el('div', 'spell-card spell-conc');
+      conc.appendChild(el('span', '', _t('spell.conc', { spell: book.concentration }, 'Concentrating on: ' + book.concentration)));
+      const stop = el('button', '', _t('spell.drop', null, 'Stop'));
+      stop.type = 'button';
+      stop.addEventListener('click', () => post('/concentration').then(res => { if (res.ok) { book = res.data; render(); } }));
+      conc.appendChild(stop);
+      bookEl.appendChild(conc);
+    }
+    rows.groups.forEach(g => {
+      bookEl.appendChild(el('div', 'spell-group', levelName(g.level)));
+      g.spells.forEach(s => {
+        const item = el('button', 'spell-item');
+        item.type = 'button';
+        const text = el('span', '', s.name);
+        text.appendChild(el('small', '', [s.time, s.range, s.duration, s.note].filter(Boolean).join(' · ')));
+        item.appendChild(text);
+        if (s.concentration) item.appendChild(el('em', '', _t('spell.tag.conc', null, 'Conc.')));
+        if (s.ritual) item.appendChild(el('em', '', _t('spell.tag.ritual', null, 'Ritual')));
+        item.addEventListener('click', () => { openSpell = s.name; render(); });
+        bookEl.appendChild(item);
+      });
+    });
+  }
+
+  function drawPage() {
+    pageEl.textContent = '';
+    const rows = _spellRows(book, openSpell);
+    const s = rows.spell;
+    if (!s) { openSpell = ''; render(); return; }
+    const card = el('div', 'spell-card');
+    const text = el('div', 'spell-text', s.known ? _t('spell.loading', null, 'Loading…') : '');
+    if (s.known) {
+      const params = new URLSearchParams({ name: s.name, category: 'spell', lang: lang() });
+      fetch('/srd-lookup?' + params, { headers: _authHeaders() }).then(r => r.json()).then(d => {
+        const body = (d.translation && d.translation.text) || d.text || '';
+        // The card is laid out for a terminal: drop the column padding and the markdown marks.
+        text.textContent = body.replace(/^##\s*/, '').replace(/ +: +/g, ': ').replace(/\*\*/g, '').replace(/ {2,}/g, ' ').trim()
+          || _t('spell.notSrd', null, 'Not in the basic rules: ask the DM for its text.');
+      }).catch(() => { text.textContent = ''; });
+      card.appendChild(text);
+    } else {
+      card.appendChild(el('p', 'spell-note', _t('spell.notSrd', null, 'Not in the basic rules: ask the DM for its text.')));
+    }
+    pageEl.appendChild(card);
+    if (s.level === 0) { pageEl.appendChild(el('p', 'spell-empty', _t('spell.cantripFree', null, 'Cantrips use no slot.'))); return; }
+    if (!rows.options.some(o => o.left > 0)) {
+      pageEl.appendChild(el('p', 'spell-empty', _t('spell.noSlot', null, 'No slot left for this spell.')));
+      return;
+    }
+    rows.options.forEach(o => {
+      const go = el('button', 'spell-go', _t('spell.cast', { n: o.level, left: o.left }, 'Cast with a level-' + o.level + ' slot (' + o.left + ' left)'));
+      go.type = 'button';
+      go.disabled = o.left < 1;
+      go.addEventListener('click', () => {
+        if (armed !== go) {                       // the first tap asks, the second casts
+          if (armed) { armed.classList.remove('armed'); armed.textContent = armed.dataset.label; }
+          armed = go;
+          go.dataset.label = go.textContent;
+          go.classList.add('armed');
+          go.textContent = _t('spell.confirm', null, 'Tap again to cast');
+          return;
+        }
+        go.disabled = true;
+        post('/cast', { spell: s.name, level: o.level }).then(res => {
+          armed = null;
+          if (res.ok) {
+            book = res.data;
+            openSpell = '';
+            render();
+          } else {
+            _showToast('✨ ' + (res.data.code === 'slots' ? _t('spell.noSlot', null, 'No slot left for this spell.')
+                                                          : _t('spell.failed', null, 'The spell could not be cast.')), 5000);
+            loadBook();
+          }
+        });
+      });
+      pageEl.appendChild(go);
+    });
+  }
+
+  function render() {
+    armed = null;
+    whoEl.textContent = '';
+    whoEl.hidden = !!mine || casters.length < 2 || !!openSpell;
+    casters.forEach(c => {
+      const chip = el('button', same(c.character, who) ? 'sel' : '', c.character);
+      chip.type = 'button';
+      chip.addEventListener('click', () => { who = c.character; book = null; openSpell = ''; bookEl.textContent = ''; loadBook(); render(); });
+      whoEl.appendChild(chip);
+    });
+    back.hidden = !openSpell;
+    bookEl.hidden = !!openSpell;
+    pageEl.hidden = !openSpell;
+    title.textContent = openSpell || (who ? _t('spell.titleOf', { name: who }, who + ': spells') : _t('spell.title', null, 'Spellbook'));
+    if (!book) return;
+    if (openSpell) drawPage(); else drawBook();
+  }
+
+  function open() {
+    openSpell = '';
+    if (!who || !casters.some(c => same(c.character, who))) {
+      const own = casters.find(c => same(c.character, mine));
+      who = own ? own.character : (casters[0] ? casters[0].character : '');
+      book = null;
+    }
+    modal.classList.add('open');
+    render();
+    loadBook();
+  }
+  const close = () => modal.classList.remove('open');
+
+  // The slots can change from outside (the DM, a rest): keep an open book in step,
+  // and look for casters again when the party at the table changes.
+  window._onSpellStats = function (stats) {
+    const sig = ((stats && stats.players) || []).map(p => p.name).join('|');
+    if (sig !== playersSig) { playersSig = sig; loadCasters(); }
+    if (!modal.classList.contains('open') || openSpell) return;
+    clearTimeout(timer);
+    timer = setTimeout(loadBook, 400);
+  };
+  window._onSpellCast = function (c) {
+    if (c && c.character && c.spell) _showToast('✨ ' + _t('spell.toast', { name: c.character, spell: c.spell }, c.character + ' casts ' + c.spell), 5000);
+  };
+  ['ln-spells', 'ph-spells-opt'].forEach(id => { const e = $(id); if (e) e.addEventListener('click', open); });
+  back.addEventListener('click', () => { openSpell = ''; render(); });
+  $('spell-close').addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  loadCasters();
 })();
 
 // ── Input-only mode for mobile players ───────────────────────────────────

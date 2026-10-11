@@ -806,7 +806,7 @@ DNDEND
 4. Clear encounter conditions: `tracker.py -c <campaign> clear` (concentration may persist — ask)
 
 **Long (8 hours):**
-1. Restore all HP, half max Hit Dice (round up), all spell slots, most class features. Update sheet.
+1. Restore all HP, half max Hit Dice (round up), all spell slots, most class features. Update sheet. For each caster: `python3 ${CLAUDE_SKILL_DIR}/scripts/spellbook.py -c <campaign> restore "<Char>"` — it empties the Used column of the sheet's Spell Slots and sends the count to the display.
 2. Push: `push_stats.py --player NAME --hp <max> <max>` and `--second-wind true`.
 3. Advance time: `calendar.py -c <campaign> rest long`
 4. Clear all tracker state: `tracker.py -c <campaign> clear --all`

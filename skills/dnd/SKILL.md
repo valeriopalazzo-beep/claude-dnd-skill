@@ -454,6 +454,12 @@ Syntax: `SKILL-scripts.md` → *A Split Party*.
 
 ---
 
+## Spellbook
+
+Every caster has a Spellbook panel on their own screen: the spells on their sheet (`## Known Spells / Cantrips`), the slots left (`## Spell Slots`), the text of each spell, and a button to cast it. Casting there marks the slot on the sheet and on the display at once, sets concentration when the spell needs it, and reaches you as a `[[SPELL: <Char> cast <spell> … with a 1st-level slot …]]` line from `check_input.py`: the slot is **already marked — do not mark it again**. The line says what was cast, not on whom: take that from the player's own message, and ask if it is missing. When a player casts by just saying so, mark it yourself with `scripts/spellbook.py cast "<Char>" "<spell>"` (it does the same things), not with `--stat-slot-use`, so sheet and display stay in step. A long rest: `spellbook.py restore "<Char>"`. Keep the two sections of the sheet in their format when a character learns a spell or gains slots — the panel is read from them. Syntax: `SKILL-scripts.md` → *Spellbook*.
+
+---
+
 ## Coins, Items & Shops
 
 Money and gear are **applied by script, never by hand**: `scripts/inventory.py` (`gain`, `pay`, `add`, `remove`, `buy`, `sell`, `give`, `split`) edits the sheet's Currency line and item lists, makes change, and refuses what cannot be paid. Use it every time coins or items change hands — loot, a toll, a potion drunk, a gift between characters — and to split treasure in equal shares.
