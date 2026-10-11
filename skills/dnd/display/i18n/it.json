@@ -228,6 +228,7 @@
   "region.known": "Sentito nominare, mai visto",
   "region.days": "{n} giorni da qui",
   "region.day1": "1 giorno da qui",
+  "region.hours": "{n} h di cammino da qui",
   "region.noroute": "Nessuna strada nota da qui",
   "puzzle.title": "Enigma",
   "puzzle.table": "Il tavolo",

@@ -20,9 +20,20 @@ every screen has it one tap away, with travel times from where the party is.
     python3 region_map.py here "Sarvenna"              # the party is here (marks it visited, shows the map)
     python3 region_map.py travel "Cripta di Vessar"    # shortest known route: prints the legs and the days, moves the party
     python3 region_map.py note "Sarvenna" "Il duca è morto; reggenza del siniscalco"
+    python3 region_map.py mark "Porto Grigio" visited  # or rumor — nothing goes in the story, the party stays put
+    python3 region_map.py here "Sarvenna" --quiet      # move the marker without a postcard (travel --quiet too)
     python3 region_map.py remove "Porto Grigio"
     python3 region_map.py list
     python3 region_map.py show                         # put the map in the story now
+
+A small region — a village and what lies an hour or two around it — is drawn
+in hours instead of days, so that an hour and half a day are not the same
+stretch of paper:
+
+    python3 region_map.py scale hours                  # the roads now read in hours; the places are set out again
+    python3 region_map.py add "Carbonaia" --near "Vallombra" --dir W --hours 1 --road trail
+    python3 region_map.py road "Carbonaia" "La Rocca Muta" --hours 3
+    python3 region_map.py relayout                     # set every place at the distance its road says
 
 Kinds: city, town, village, castle, tower, ruin, dungeon, forest, mountain,
 lake, port, temple, camp, landmark (Italian words such as città, villaggio,
@@ -51,6 +62,10 @@ W, H = 1200, 900                      # the drawing, in px
 PAD_X, PAD_TOP, PAD_BOTTOM = 90, 120, 100
 KEEP_FILES = 12                       # older renderings of the map kept for the story's replay
 MIN_GAP_PX = 105                      # two linked places are drawn at least this far apart
+HOURS_PER_DAY = 8                     # a day on the road is eight hours of travel
+UNITS = ("days", "hours")
+MAX_ZOOM = 2.5                        # how much a map in hours may be enlarged to fill the sheet
+CLOSE_UP_MARGIN = 100                 # …and the room it leaves at each side for the names
 
 KINDS = ("city", "town", "village", "castle", "tower", "ruin", "dungeon", "forest",
          "mountain", "lake", "port", "temple", "camp", "landmark")
@@ -95,7 +110,8 @@ def data_path(campaign: str = "") -> str:
 
 
 def empty() -> dict:
-    return {"title": "", "legend": "", "day_px": 100, "party": "", "places": [], "roads": [], "file": ""}
+    return {"title": "", "legend": "", "day_px": 100, "unit": "days", "hour_px": 110, "party": "",
+            "places": [], "roads": [], "file": ""}
 
 
 def load(path: str) -> dict:
@@ -165,8 +181,51 @@ def fmt_days(d: float) -> str:
     return f"{d:.1f}".rstrip("0").rstrip(".")
 
 
+def unit(data: dict) -> str:
+    return data.get("unit") if data.get("unit") in UNITS else "days"
+
+
+def fmt_hours(days: float) -> str:
+    """A stretch of road in hours, to the quarter of an hour: ¼, 1, 1½, 3¾, 12."""
+    h = float(days) * HOURS_PER_DAY
+    if h >= 10:
+        return str(int(round(h)))
+    quarters = int(round(h * 4)) or (1 if h > 0 else 0)
+    if not quarters:
+        return "0"
+    whole, part = divmod(quarters, 4)
+    return (str(whole) if whole else "") + ("", "¼", "½", "¾")[part]
+
+
+def fmt_dist(data: dict, days: float) -> str:
+    """A distance as this map counts it: days, or hours on a small region."""
+    return fmt_hours(days) if unit(data) == "hours" else fmt_days(days)
+
+
+def _length(days=None, hours=None) -> float:
+    """A road's length in days, from --days or --hours (one of them; a day when neither is given)."""
+    if days is not None and hours is not None:
+        raise RegionError("give --days or --hours, not both")
+    if hours is None:
+        return _days(days if days is not None else 1)
+    try:
+        h = float(str(hours).replace(",", "."))
+    except ValueError:
+        raise RegionError(f"hours must be a number (got {hours!r})")
+    if not 0 < h <= 365 * HOURS_PER_DAY:
+        raise RegionError("hours must be more than 0")
+    return h / HOURS_PER_DAY
+
+
+def _step_px(data: dict, days: float) -> float:
+    """How long a road of `days` is on the drawing, before any zoom — never shorter than MIN_GAP_PX."""
+    if unit(data) == "hours":
+        return max(MIN_GAP_PX, days * HOURS_PER_DAY * float(data.get("hour_px") or 110))
+    return max(MIN_GAP_PX, days * float(data.get("day_px") or 100))
+
+
 def add_place(data: dict, name: str, kind: str = "", at: str = "", near: str = "", direction: str = "",
-              days=None, road: str = "", note: str = "", rumor: bool = False) -> dict:
+              days=None, road: str = "", note: str = "", rumor: bool = False, hours=None) -> dict:
     name = " ".join((name or "").split())[:60]
     if not name:
         raise RegionError("a place needs a name")
@@ -184,19 +243,19 @@ def add_place(data: dict, name: str, kind: str = "", at: str = "", near: str = "
         d = (direction or "").strip().upper()
         if d not in DIRECTIONS:
             raise RegionError(f"--dir must be one of N NE E SE S SW W NW (got {direction!r})")
-        n = _days(days if days is not None else 1)
+        n = _length(days, hours)
         dx, dy = DIRECTIONS[d]
         # One day is the same length on the drawing whichever way you walk, and
         # never so short that two places would sit on top of each other.
         length = math.hypot(dx, dy)
-        step = max(MIN_GAP_PX, n * float(data.get("day_px") or 100))
+        step = _step_px(data, n)
         X0, Y0 = _raw(origin)
         x = (X0 + dx / length * step) / _AREA_W * 100
         y = (Y0 + dy / length * step) / _AREA_H * 100
         link = {"from": origin["name"], "to": name, "days": n,
                 "kind": _kind(road, ROAD_KINDS, ROAD_ALIASES, "road")}
     else:
-        raise RegionError("say where it is: --at x,y, or --near PLACE --dir NE --days 2")
+        raise RegionError("say where it is: --at x,y, or --near PLACE --dir NE --days 2 (or --hours 3)")
     place = {"name": name, "kind": kind, "x": round(x, 1), "y": round(y, 1),
              "status": "known" if rumor else "visited",
              "note": " ".join((note or "").split())[:300]}
@@ -206,11 +265,13 @@ def add_place(data: dict, name: str, kind: str = "", at: str = "", near: str = "
     return place
 
 
-def add_road(data: dict, a: str, b: str, days, kind: str = "") -> dict:
+def add_road(data: dict, a: str, b: str, days=None, kind: str = "", hours=None) -> dict:
     pa, pb = find_place(data, a), find_place(data, b)
     if pa is pb:
         raise RegionError("a road needs two different places")
-    link = {"from": pa["name"], "to": pb["name"], "days": _days(days),
+    if days is None and hours is None:
+        raise RegionError("how long is the road? --days 2, or --hours 3")
+    link = {"from": pa["name"], "to": pb["name"], "days": _length(days, hours),
             "kind": _kind(kind, ROAD_KINDS, ROAD_ALIASES, "road")}
     pair = {_key(pa["name"]), _key(pb["name"])}
     data["roads"] = [r for r in data["roads"] if {_key(r["from"]), _key(r["to"])} != pair] + [link]
@@ -225,6 +286,79 @@ def remove_place(data: dict, name: str) -> str:
     if _key(data.get("party", "")) == k:
         data["party"] = ""
     return place["name"]
+
+
+def mark(data: dict, name: str, status: str) -> dict:
+    """A place the party has now seen, or only heard of — the party's marker does not move."""
+    status = {"visited": "visited", "visto": "visited", "visitato": "visited", "seen": "visited",
+              "rumor": "known", "rumour": "known", "known": "known", "voce": "known",
+              "sentito": "known"}.get((status or "").strip().lower())
+    if not status:
+        raise RegionError("mark a place visited or rumor")
+    place = find_place(data, name)
+    place["status"] = status
+    return place
+
+
+def relayout(data: dict) -> int:
+    """Set every place at the distance its road says, keeping the directions. Returns how many moved.
+
+    The first place of each group of linked places stays where it is and the
+    others are set out from it along the roads, in the order the roads were
+    drawn — so a place sits where its first road puts it, as `add --near` does.
+    A place no road reaches keeps its offset from the nearest linked one.
+    """
+    old = {_key(p["name"]): _raw(p) for p in data["places"]}
+    links: dict = {}
+    for r in data["roads"]:
+        a, b = _key(r["from"]), _key(r["to"])
+        if a in old and b in old and a != b:
+            links.setdefault(a, []).append((b, float(r["days"])))
+            links.setdefault(b, []).append((a, float(r["days"])))
+    new: dict = {}
+    for root in old:
+        if root in new or root not in links:
+            continue
+        new[root] = old[root]
+        queue = [root]
+        while queue:
+            at = queue.pop(0)
+            for nxt, days in links[at]:
+                if nxt in new:
+                    continue
+                dx, dy = old[nxt][0] - old[at][0], old[nxt][1] - old[at][1]
+                length = math.hypot(dx, dy)
+                if length < 1e-6:
+                    dx, dy, length = 1.0, 0.0, 1.0
+                step = _step_px(data, days)
+                new[nxt] = (new[at][0] + dx / length * step, new[at][1] + dy / length * step)
+                queue.append(nxt)
+    for k in old:
+        if k not in new:
+            anchor = min(new, key=lambda n: math.hypot(old[n][0] - old[k][0], old[n][1] - old[k][1]), default=None)
+            new[k] = old[k] if anchor is None else (new[anchor][0] + old[k][0] - old[anchor][0],
+                                                    new[anchor][1] + old[k][1] - old[anchor][1])
+    moved = 0
+    for p in data["places"]:
+        x, y = new[_key(p["name"])]
+        x, y = round(x / _AREA_W * 100, 1), round(y / _AREA_H * 100, 1)
+        moved += (x, y) != (p["x"], p["y"])
+        p["x"], p["y"] = x, y
+    return moved
+
+
+def set_scale(data: dict, value: str, hour_px=None, keep: bool = False) -> int:
+    """Count this map in days or in hours. Returns how many places were set out again."""
+    value = {"giorni": "days", "day": "days", "ore": "hours", "hour": "hours"}.get((value or "").strip().lower(),
+                                                                                  (value or "").strip().lower())
+    if value not in UNITS:
+        raise RegionError("scale is days or hours")
+    if hour_px is not None:
+        if not 30 <= float(hour_px) <= 400:
+            raise RegionError("--hour-px must be between 30 and 400")
+        data["hour_px"] = float(hour_px)
+    data["unit"] = value
+    return 0 if keep else relayout(data)
 
 
 def distances(data: dict, start: str) -> dict:
@@ -287,9 +421,10 @@ def public_view(data: dict) -> dict:
         places.append({"name": p["name"], "kind": p["kind"], "status": p["status"], "note": p.get("note", ""),
                        "px": round(X / W * 100, 2), "py": round(Y / H * 100, 2),
                        "days": None if d is None else fmt_days(d[0]),
+                       "dist": None if d is None else fmt_dist(data, d[0]),
                        "here": _key(p["name"]) == _key(data.get("party", ""))})
     return {"title": data.get("title", ""), "legend": data.get("legend", ""), "file": data.get("file", ""),
-            "party": data.get("party", ""), "places": places}
+            "party": data.get("party", ""), "unit": unit(data), "places": places}
 
 
 # ─── The drawing ──────────────────────────────────────────────────────────────
@@ -307,14 +442,19 @@ def _transform(data: dict) -> tuple:
 
     A region that fits is drawn exactly where its coordinates say. One that has
     grown past an edge is zoomed out as a whole and centred, so distances stay
-    in proportion and nothing is pushed against the border.
+    in proportion and nothing is pushed against the border. A map counted in
+    hours is a close-up: it is also enlarged (up to MAX_ZOOM) to fill the sheet,
+    so that places an hour apart do not huddle in the middle of it.
     """
     pts = [_raw(p) for p in data["places"]]
-    if not pts or all(0 <= x <= _AREA_W and 0 <= y <= _AREA_H for x, y in pts):
+    close_up = unit(data) == "hours" and len(pts) > 1
+    if not pts or (not close_up and all(0 <= x <= _AREA_W and 0 <= y <= _AREA_H for x, y in pts)):
         return 1.0, PAD_X, PAD_TOP
     x0, x1 = min(x for x, _ in pts), max(x for x, _ in pts)
     y0, y1 = min(y for _, y in pts), max(y for _, y in pts)
-    s = min(1.0, _AREA_W / max(x1 - x0, 1.0), _AREA_H / max(y1 - y0, 1.0))
+    # A close-up keeps a margin at the sides: the names of the outermost places need the room.
+    room_w, room_h = (_AREA_W - 2 * CLOSE_UP_MARGIN, _AREA_H - 40) if close_up else (_AREA_W, _AREA_H)
+    s = min(MAX_ZOOM if close_up else 1.0, room_w / max(x1 - x0, 1.0), room_h / max(y1 - y0, 1.0))
     return s, PAD_X + (_AREA_W - (x1 - x0) * s) / 2 - x0 * s, PAD_TOP + (_AREA_H - (y1 - y0) * s) / 2 - y0 * s
 
 
@@ -389,6 +529,17 @@ def _layout(data: dict) -> dict:
         X, Y = _xy(p, tf)
         s = 1.25 if p["kind"] in ("city", "castle") else 1.0
         icons[_key(p["name"])] = (X - 27 * s, Y - 30 * s, X + 27 * s, Y + 16 * s)
+    spots_by_key = {_key(p["name"]): _xy(p, tf) for p in data["places"]}
+    on_roads = []                                 # points along every road: a name should not lie across one
+    for r in data["roads"]:
+        a, b = spots_by_key.get(_key(r["from"])), spots_by_key.get(_key(r["to"]))
+        if not a or not b:
+            continue
+        _path, (cx, cy) = _curve(a, b, _key(r["from"]) + "|" + _key(r["to"]))
+        for i in range(2, 19):
+            t = i / 20
+            on_roads.append(((1 - t) ** 2 * a[0] + 2 * t * (1 - t) * cx + t * t * b[0],
+                             (1 - t) ** 2 * a[1] + 2 * t * (1 - t) * cy + t * t * b[1]))
     for p in data["places"]:
         k = _key(p["name"])
         X, Y = _xy(p, tf)
@@ -409,7 +560,8 @@ def _layout(data: dict) -> dict:
             box = spot[3]
             cost = sum(_overlap(box, b) for kk, b in icons.items() if kk != k)
             cost += sum(_overlap(box, b) for b in taken)
-            cost += 4 * (max(0, 34 - box[0]) + max(0, box[2] - (W - 34)) + max(0, 100 - box[1]) + max(0, box[3] - (H - 34)))
+            cost += 250 * sum(1 for x, y in on_roads if box[0] - 3 <= x <= box[2] + 3 and box[1] - 3 <= y <= box[3] + 3)
+            cost += 40 * (max(0, 34 - box[0]) + max(0, box[2] - (W - 34)) + max(0, 100 - box[1]) + max(0, box[3] - (H - 34)))
             cost += rank * 0.5                    # all else equal: below, above, right, left
             if best_cost is None or cost < best_cost:
                 best, best_cost = spot, cost
@@ -469,7 +621,7 @@ def render(data: dict) -> str:
                 best, best_cost = (mx, my), cost
             if cost == 0:
                 break
-        day_marks.append((best, fmt_days(float(r["days"]))))
+        day_marks.append((best, fmt_dist(data, float(r["days"])) + ("h" if unit(data) == "hours" else "")))
         busy.append((best[0] - 16, best[1] - 16, best[0] + 16, best[1] + 16))
 
     party = _key(data.get("party", ""))
@@ -481,8 +633,10 @@ def render(data: dict) -> str:
                  f'stroke="{C["ink"]}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">'
                  f'{_icon(p["kind"])}</g>')
     for (mx, my), text in day_marks:
-        o.append(f'<circle cx="{mx:.1f}" cy="{my:.1f}" r="14" fill="{C["bg"]}" stroke="{C["ink"]}" stroke-width="1.4"/>'
-                 f'<text x="{mx:.1f}" y="{my + 6:.1f}" text-anchor="middle" font-size="{17 if len(text) < 3 else 13}" '
+        o.append(f'<circle cx="{mx:.1f}" cy="{my:.1f}" r="{14 if len(text) < 4 else 17}" fill="{C["bg"]}" '
+                 f'stroke="{C["ink"]}" stroke-width="1.4"/>'
+                 f'<text x="{mx:.1f}" y="{my + (6 if len(text) < 3 else 5):.1f}" text-anchor="middle" '
+                 f'font-size="{17 if len(text) < 3 else 13}" '
                  f'fill="{C["ink"]}">{escape(text)}</text>')
     for p in data["places"]:
         X, Y = _xy(p, tf)
@@ -576,18 +730,30 @@ def main(argv: list | None = None) -> int:
     p.add_argument("--near", default="", help="a place already on the map")
     p.add_argument("--dir", default="", help="N NE E SE S SW W NW, from --near")
     p.add_argument("--days", default=None, help="days of travel from --near (default 1)")
+    p.add_argument("--hours", default=None, help="hours of travel from --near, instead of --days")
     p.add_argument("--road", default="", help="what links it to --near: road (default), trail, river, sea")
     p.add_argument("--note", default="")
     p.add_argument("--rumor", action="store_true", help="heard of, not visited: drawn faint, with a question mark")
     p.add_argument("--show", action="store_true", help="also put the map in the story")
     p = sub.add_parser("road", help="link two places, or change the link they have")
     p.add_argument("a"); p.add_argument("b")
-    p.add_argument("--days", required=True)
+    p.add_argument("--days", default=None)
+    p.add_argument("--hours", default=None, help="instead of --days")
     p.add_argument("--kind", default="road")
     p = sub.add_parser("here", help="the party is at this place now")
     p.add_argument("name")
+    p.add_argument("--quiet", action="store_true", help="do not put the map in the story")
     p = sub.add_parser("travel", help="move the party there by the shortest known route")
     p.add_argument("name")
+    p.add_argument("--quiet", action="store_true", help="do not put the map in the story")
+    p = sub.add_parser("mark", help="a place is now visited, or only a rumor — the party does not move")
+    p.add_argument("name"); p.add_argument("status", help="visited or rumor")
+    p = sub.add_parser("scale", help="count this map in days or in hours")
+    p.add_argument("unit", help="days or hours")
+    p.add_argument("--hour-px", type=float, default=None,
+                   help="how long one hour of travel is on the drawing (default 110)")
+    p.add_argument("--keep", action="store_true", help="leave the places where they are")
+    sub.add_parser("relayout", help="set every place at the distance its road says")
     p = sub.add_parser("note", help="set what the party knows about a place")
     p.add_argument("name"); p.add_argument("text")
     p = sub.add_parser("remove", help="take a place (and its roads) off the map")
@@ -602,12 +768,12 @@ def main(argv: list | None = None) -> int:
         story, message = False, ""
 
         if args.cmd == "list":
-            print(f'{data["title"] or "(untitled region)"} — party at: {data["party"] or "unknown"}')
+            print(f'{data["title"] or "(untitled region)"} — party at: {data["party"] or "unknown"} — counted in {unit(data)}')
             for pl in data["places"]:
                 print(f'  {pl["name"]} [{pl["kind"]}, {pl["status"]}] at {pl["x"]},{pl["y"]}'
                       + (f' — {pl["note"]}' if pl.get("note") else ""))
             for r in data["roads"]:
-                print(f'  {r["from"]} ↔ {r["to"]}: {fmt_days(float(r["days"]))} days ({r["kind"]})')
+                print(f'  {r["from"]} ↔ {r["to"]}: {fmt_dist(data, float(r["days"]))} {unit(data)} ({r["kind"]})')
             return 0
         if args.cmd == "init":
             data["title"] = " ".join(args.title.split())[:60]
@@ -620,21 +786,32 @@ def main(argv: list | None = None) -> int:
             message = f'region "{data["title"]}" ready'
         elif args.cmd == "add":
             pl = add_place(data, args.name, args.kind, args.at, args.near, args.dir, args.days,
-                           args.road, args.note, args.rumor)
+                           args.road, args.note, args.rumor, args.hours)
             story = args.show
             message = f'{pl["name"]} added at {pl["x"]},{pl["y"]} ({pl["kind"]}, {pl["status"]})'
         elif args.cmd == "road":
-            r = add_road(data, args.a, args.b, args.days, args.kind)
-            message = f'{r["from"]} ↔ {r["to"]}: {fmt_days(r["days"])} days ({r["kind"]})'
+            r = add_road(data, args.a, args.b, args.days, args.kind, args.hours)
+            message = f'{r["from"]} ↔ {r["to"]}: {fmt_dist(data, r["days"])} {unit(data)} ({r["kind"]})'
         elif args.cmd == "here":
             pl = set_here(data, args.name)
-            story, message = True, f'the party is at {pl["name"]}'
+            story, message = not args.quiet, f'the party is at {pl["name"]}'
         elif args.cmd == "travel":
             days, route = travel(data, args.name)
-            story = True
-            message = (" → ".join(route) + f': {fmt_days(days)} days of travel. '
+            story = not args.quiet
+            hours = max(1, int(round(days * HOURS_PER_DAY)))
+            took = (f'{fmt_hours(days)} hours of travel', f'{hours} hours') if unit(data) == "hours" else \
+                   (f'{fmt_days(days)} days of travel', f'{fmt_days(days).replace("½", ".5")} days')
+            message = (" → ".join(route) + f': {took[0]}. '
                        f'The calendar has NOT moved — when the journey is played: '
-                       f'calendar.py -c <campaign> advance {fmt_days(days).replace("½", ".5")} days')
+                       f'calendar.py -c <campaign> advance {took[1]}')
+        elif args.cmd == "mark":
+            pl = mark(data, args.name, args.status)
+            message = f'{pl["name"]}: {"visited" if pl["status"] == "visited" else "a rumor"}'
+        elif args.cmd == "scale":
+            moved = set_scale(data, args.unit, args.hour_px, args.keep)
+            message = f'the map is counted in {unit(data)}; {moved} place(s) set out again'
+        elif args.cmd == "relayout":
+            message = f'{relayout(data)} place(s) set out again'
         elif args.cmd == "note":
             pl = find_place(data, args.name)
             pl["note"] = " ".join(args.text.split())[:300]

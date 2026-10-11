@@ -942,9 +942,17 @@ python3 ${CLAUDE_SKILL_DIR}/display/region_map.py road "Cripta di Vessar" "Porto
 python3 ${CLAUDE_SKILL_DIR}/display/region_map.py here "Sarvenna"            # the party is here; shows the map
 python3 ${CLAUDE_SKILL_DIR}/display/region_map.py travel "Cripta di Vessar"  # shortest known route; moves the party
 python3 ${CLAUDE_SKILL_DIR}/display/region_map.py note "Sarvenna" "Il duca è morto; regge il siniscalco"
+python3 ${CLAUDE_SKILL_DIR}/display/region_map.py mark "Porto Grigio" visited   # or rumor: the place changes, the party stays, no postcard
+python3 ${CLAUDE_SKILL_DIR}/display/region_map.py here "Sarvenna" --quiet    # move the flag without a postcard (travel --quiet too)
 python3 ${CLAUDE_SKILL_DIR}/display/region_map.py list                       # places, coordinates, roads
 python3 ${CLAUDE_SKILL_DIR}/display/region_map.py remove "Porto Grigio"
 python3 ${CLAUDE_SKILL_DIR}/display/region_map.py show                       # put the map in the story now
+
+# A small region — a village and what lies an hour or two around it — is counted in hours:
+python3 ${CLAUDE_SKILL_DIR}/display/region_map.py scale hours                # roads read in hours, places are set out again
+python3 ${CLAUDE_SKILL_DIR}/display/region_map.py add "Carbonaia" --near "Vallombra" --dir W --hours 1 --road trail
+python3 ${CLAUDE_SKILL_DIR}/display/region_map.py road "Carbonaia" "La Rocca Muta" --hours 3
+python3 ${CLAUDE_SKILL_DIR}/display/region_map.py relayout                   # set every place at the distance its road says
 ```
 
 - **Kinds:** `city town village castle tower ruin dungeon forest mountain lake port temple camp landmark` (Italian words — città, villaggio, rovine, cripta, bosco… — are understood). **Roads:** `road` (default), `trail`, `river`, `sea`. **Directions:** `N NE E SE S SW W NW`.
@@ -952,6 +960,8 @@ python3 ${CLAUDE_SKILL_DIR}/display/region_map.py show                       # p
 - **Keep it consistent with `world.md`**: same names, same directions and distances. Run `list` before adding if unsure where things are. Half days are fine (`--days 1.5`).
 - `travel` follows the shortest route along the roads on the map, marks every place on the way as visited and prints the legs and the total days. **It does not move the calendar**: when the journey has been played (encounters, camps), advance it with `calendar.py -c <campaign> advance N days`. If no known road leads there, add one with `road` — or use `here` when the party gets there some other way (teleport, ship, captured).
 - The map zooms out by itself when the known world outgrows the sheet. `note` text is shown to the players: write only what the party knows.
+- **Days or hours.** A map counts in days unless you say `scale hours`. Use hours when most places are less than a day apart: in days anything under a day is drawn at the same minimum distance, so an hour and half a day look alike and everything huddles round the middle. In hours the roads are as long as they take (`--hours 1.5`; a day is 8 hours), the numbers on them read `1h`, `3h`, and the map is enlarged to fill the sheet. `scale hours` on an existing map sets the places out again along their roads, keeping the directions; give each road its hours first (`road A B --hours N`) or run `relayout` after. `--keep` changes the unit and leaves the places where they are. A far-off place (the capital, twelve days away) is better left in the legend than drawn on a map in hours. `travel` then prints hours and the `calendar.py … advance N hours` to run.
+- **Without a postcard.** `here`, `travel` and `show` put the map in the story as a picture; that is right when the whole party moves. To update the map quietly — a place a scout has reached, a rumour confirmed, the flag moved in the middle of a scene — use `mark "<place>" visited|rumor` or add `--quiet` to `here` / `travel`: every screen's Region map changes, nothing is added to the story.
 
 ## Generated Images — `display/image_gen.py`
 

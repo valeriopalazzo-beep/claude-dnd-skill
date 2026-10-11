@@ -10,6 +10,8 @@ Run from repo root:
     python -m pytest tests/test_region_map.py -q
 """
 import importlib.util
+import contextlib
+import io
 import json
 import pathlib
 import sys
@@ -195,6 +197,93 @@ class DrawingTests(unittest.TestCase):
                 self.assertEqual(rm._overlap(a, b), 0.0)
 
 
+class CloseUpTests(unittest.TestCase):
+    """A village and what lies an hour around it: counted in hours, not in tenths of a day."""
+
+    def _village(self):
+        d = rm.empty()
+        rm.add_place(d, "Vallombra", "villaggio", at="50,60")
+        rm.add_place(d, "Pozzo", "campo", near="Vallombra", direction="N", days=0.1)
+        rm.add_place(d, "Carbonaia", near="Vallombra", direction="W", days=0.1, road="trail")
+        rm.add_place(d, "Rocca", "rovine", near="Carbonaia", direction="W", days=0.4, road="trail")
+        rm.add_place(d, "Locanda", at="56,68")                       # no road: it is in the village
+        return d
+
+    def test_in_days_an_hour_and_half_a_day_are_the_same_stretch_of_paper(self):
+        d = self._village()
+        x = {p["name"]: p["x"] for p in d["places"]}
+        self.assertAlmostEqual(x["Vallombra"] - x["Carbonaia"], x["Carbonaia"] - x["Rocca"], places=1)
+
+    def test_in_hours_the_roads_are_as_long_as_they_take(self):
+        d = self._village()
+        rm.add_road(d, "Carbonaia", "Rocca", hours=3, kind="trail")
+        rm.add_road(d, "Vallombra", "Carbonaia", hours=1, kind="trail")
+        rm.add_road(d, "Vallombra", "Pozzo", hours=1)
+        before = {p["name"]: (p["x"], p["y"]) for p in d["places"]}
+        self.assertEqual(rm.set_scale(d, "ore"), 3)                  # the village stays, and the inn that is in it
+        at = {p["name"]: rm._raw(p) for p in d["places"]}
+        self.assertEqual((d["unit"], d["places"][0]["x"], d["places"][0]["y"]), ("hours", 50.0, 60.0))
+        self.assertAlmostEqual(at["Vallombra"][0] - at["Carbonaia"][0], 110, delta=1)
+        self.assertAlmostEqual(at["Carbonaia"][0] - at["Rocca"][0], 330, delta=1)
+        self.assertAlmostEqual(at["Vallombra"][1] - at["Pozzo"][1], 110, delta=1)
+        self.assertAlmostEqual(at["Rocca"][1], at["Vallombra"][1], delta=1, msg="the direction is kept")
+        # the inn has no road: it stays as far from the village as it was
+        self.assertAlmostEqual(d["places"][4]["x"] - d["places"][0]["x"], before["Locanda"][0] - before["Vallombra"][0], places=1)
+        self.assertEqual(rm.relayout(d), 0, "a second pass moves nothing")
+        svg = rm.render(d)
+        xml.dom.minidom.parseString(svg)
+        self.assertIn(">3h<", svg)
+        self.assertIn(">1h<", svg)
+
+    def test_a_close_up_fills_the_sheet_and_keeps_room_for_the_names(self):
+        d = self._village()
+        rm.set_scale(d, "hours")
+        scale, _ox, _oy = rm._transform(d)
+        self.assertGreater(scale, 1.0)
+        self.assertLessEqual(scale, rm.MAX_ZOOM)
+        xs = [p["px"] / 100 * rm.W for p in rm.public_view(d)["places"]]
+        self.assertGreaterEqual(min(xs), rm.PAD_X + rm.CLOSE_UP_MARGIN - 1)
+        self.assertLessEqual(max(xs), rm.W - rm.PAD_X - rm.CLOSE_UP_MARGIN + 1)
+        one = rm.empty()
+        one["unit"] = "hours"
+        rm.add_place(one, "Solo", at="10,10")
+        self.assertEqual(rm._transform(one), (1.0, rm.PAD_X, rm.PAD_TOP))     # nothing to fit yet
+
+    def test_hours_are_said_to_the_quarter(self):
+        for days, text in ((1 / 8, "1"), (0.1, "¾"), (1.5 / 8, "1½"), (3.25 / 8, "3¼"), (0.01, "¼"), (0, "0"), (2, "16")):
+            with self.subTest(days=days):
+                self.assertEqual(rm.fmt_hours(days), text)
+        d = self._village()
+        self.assertEqual(rm.fmt_dist(d, 0.5), "½")
+        d["unit"] = "hours"
+        self.assertEqual(rm.fmt_dist(d, 0.5), "4")
+
+    def test_a_road_is_given_in_days_or_in_hours_not_both(self):
+        d = self._village()
+        self.assertAlmostEqual(rm.add_road(d, "Pozzo", "Carbonaia", hours="2,5")["days"], 2.5 / 8)
+        p = rm.add_place(d, "Camino", near="Pozzo", direction="E", hours=1)
+        self.assertAlmostEqual(d["roads"][-1]["days"], 1 / 8)
+        self.assertEqual(p["status"], "visited")
+        for kwargs in ({"days": 1, "hours": 2}, {}, {"hours": 0}, {"hours": "tante"}):
+            with self.assertRaises(rm.RegionError):
+                rm.add_road(d, "Pozzo", "Rocca", **kwargs)
+        with self.assertRaises(rm.RegionError):
+            rm.set_scale(d, "leghe")
+        with self.assertRaises(rm.RegionError):
+            rm.set_scale(d, "hours", hour_px=5)
+
+    def test_a_place_changes_state_without_moving_the_party(self):
+        d = self._village()
+        rm.set_here(d, "Vallombra")
+        rm.add_place(d, "Sarvenna", "città", near="Vallombra", direction="S", days=12, rumor=True)
+        self.assertEqual(rm.mark(d, "sarv", "visited")["status"], "visited")
+        self.assertEqual(rm.mark(d, "sarv", "rumor")["status"], "known")
+        self.assertEqual(d["party"], "Vallombra")
+        for name, status in (("sarv", "bruciata"), ("nessuno", "visited")):
+            with self.assertRaises(rm.RegionError):
+                rm.mark(d, name, status)
+
+
 class PlayerViewTests(unittest.TestCase):
 
     def test_each_place_says_how_far_it_is_from_the_party(self):
@@ -239,12 +328,35 @@ class CommandLineTests(unittest.TestCase):
         self.assertEqual(self.announced, [False, False, False, True, True, False],
                          "only moving the party puts the map in the story")
 
+    def test_a_small_region_is_kept_in_hours_and_changed_without_postcards(self):
+        steps = [["add", "Vallombra", "--kind", "villaggio", "--at", "50,60"], ["scale", "hours"],
+                 ["add", "Carbonaia", "--near", "Vallombra", "--dir", "O", "--hours", "1", "--road", "sentiero"],
+                 ["add", "Rocca", "--kind", "rovine", "--near", "Carbonaia", "--dir", "O", "--hours", "3", "--rumor"],
+                 ["road", "Vallombra", "Rocca", "--hours", "4.5", "--kind", "trail"],
+                 ["here", "Vallombra", "--quiet"], ["mark", "Rocca", "visited"], ["travel", "Rocca", "--quiet"], ["relayout"]]
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            for argv in steps:
+                with self.subTest(argv=argv):
+                    self.assertEqual(rm.main(argv), 0)
+            rm.main(["list"])
+        data = self._data()
+        self.assertEqual((data["unit"], data["party"], data["places"][2]["status"]), ("hours", "Rocca", "visited"))
+        self.assertEqual(self.announced, [False] * len(steps), "nothing went in the story")
+        text = out.getvalue()
+        self.assertIn("Vallombra → Carbonaia → Rocca: 4 hours of travel", text)
+        self.assertIn("calendar.py -c <campaign> advance 4 hours", text)
+        self.assertIn("counted in hours", text)
+        self.assertIn("Vallombra ↔ Rocca: 4½ hours (trail)", text)
+
     def test_a_bad_request_exits_non_zero_and_leaves_the_file_alone(self):
         rm.main(["add", "Sarvenna", "--at", "40,60"])
         before = (self.dir / "region.json").read_text(encoding="utf-8")
         self.announced.clear()
         for argv in (["travel", "Sarvenna"], ["add", "Sarvenna", "--at", "1,1"], ["road", "Sarvenna", "Nulla", "--days", "1"],
-                     ["remove", "Nulla"], ["init", "X", "--day-px", "5"]):
+                     ["remove", "Nulla"], ["init", "X", "--day-px", "5"], ["scale", "leghe"], ["mark", "Sarvenna", "x"],
+                     ["road", "Sarvenna", "Sarvenna", "--hours", "1"], ["add", "Qui", "--near", "Sarvenna", "--dir", "N",
+                                                                         "--days", "1", "--hours", "1"]):
             with self.subTest(argv=argv):
                 self.assertEqual(rm.main(argv), 1)
         self.assertEqual((self.dir / "region.json").read_text(encoding="utf-8"), before)
@@ -295,7 +407,7 @@ class ServerTests(unittest.TestCase):
 
     def test_strings_exist_in_every_language(self):
         keys = ["region.title", "region.new", "region.hint", "region.here", "region.visited", "region.known",
-                "region.days", "region.day1", "region.noroute"]
+                "region.days", "region.day1", "region.hours", "region.noroute"]
         for path in sorted((DISPLAY / "i18n").glob("*.json")):
             data = json.loads(path.read_text(encoding="utf-8"))
             for key in keys:

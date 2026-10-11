@@ -10709,6 +10709,7 @@ connect();
       parts.push(place.status === 'visited' ? _t('region.visited', null, 'Visited') : _t('region.known', null, 'Heard of, never seen'));
       if (region.party) {
         parts.push(place.days === null ? _t('region.noroute', null, 'No known road from here')
+          : region.unit === 'hours' ? _t('region.hours', { n: place.dist }, place.dist + ' h of travel from here')
           : place.days === '1' ? _t('region.day1', null, '1 day from here')
           : _t('region.days', { n: place.days }, place.days + ' days from here'));
       }
