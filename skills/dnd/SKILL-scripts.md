@@ -866,6 +866,33 @@ python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py show "ghoul"
 
 ---
 
+## People met — `display/people.py`
+
+The party's own notebook of the people it has met: who someone is, where they met, what the characters found out and what was said to them. It starts empty. Every screen has a **People met** panel, with a search box once the list grows; a badge marks the pages that changed.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/display/people.py meet "Padre Oderico" --role "prete di Vallombra" --where "Cappella della Luce Vigile"
+python3 ${CLAUDE_SKILL_DIR}/display/people.py meet "L'Incappucciato" --role "adepto della Confraternita" --attitude hostile
+python3 ${CLAUDE_SKILL_DIR}/display/people.py learn "oderico" "Compagno di seminario di Isolda Fenn"
+python3 ${CLAUDE_SKILL_DIR}/display/people.py said "oderico" "A me risponde. A me ha sempre risposto."
+python3 ${CLAUDE_SKILL_DIR}/display/people.py seen "oderico" "Cimitero della Collina"     # where the party last saw them
+python3 ${CLAUDE_SKILL_DIR}/display/people.py set "oderico" --attitude friendly --faction "Chiesa di Morwen" --status missing
+python3 ${CLAUDE_SKILL_DIR}/display/people.py rename "incappucciato" "Nando"              # the party learns the name
+python3 ${CLAUDE_SKILL_DIR}/display/people.py drop "oderico" --fact "seminario"           # or --said
+python3 ${CLAUDE_SKILL_DIR}/display/people.py forget "nando"
+python3 ${CLAUDE_SKILL_DIR}/display/people.py list
+python3 ${CLAUDE_SKILL_DIR}/display/people.py show "oderico"
+```
+
+- `meet` opens a page; `meet` again with `--where` records where they were seen this time (the first place stays as where the party met them).
+- **Attitude** (towards the party): `ally`, `friendly`, `neutral`, `wary`, `hostile`, or `""` for unknown. **Status:** `alive` (default), `dead`, `prisoner`, `missing`, `gone`. Italian words are understood (amico, ostile, morto, prigioniero, scomparso…).
+- A person can be named by any part of the name that means one page only. A wrong name changes nothing; what is already written is not added twice.
+- Stored in `<campaign>/people.json`; `--campaign NAME` (before the subcommand) works on another campaign.
+
+**How to keep it:** a page for everyone the party is likely to meet again, look for or talk about — not for every guard at a gate. Write the role as the characters would say it ("il prete", "il comandante dei Valtrenna"). Add a fact the moment it is learned and a quote when a line carries weight: a promise, a threat, a clue. Until the party knows a name, use what it calls the person and `rename` later. **Only what the characters know**: `npcs.md` stays yours, with the secrets. Monsters go in the Bestiary, not here.
+
+---
+
 ## Companions — `display/companion.py`
 
 A small sheet for whatever travels with the party and has hit points but is not a player character: a mount, a familiar, an animal, a hired guard, a summoned creature. On the display each one is a chip on its owner's card (name and hit points) that opens into its own sheet; the **Companions** panel lists them all.

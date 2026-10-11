@@ -545,6 +545,12 @@ The players have a Bestiary panel that fills up with what their characters learn
 
 ---
 
+## People met
+
+The players have a People panel: their own notebook of the people in the story. Open a page with `display/people.py meet "<name>" --role "<who they are>" --where "<place>"` the first time the party meets someone who matters, and add to it as play goes on — `learn "<name>" "fact"` for what the characters find out, `said "<name>" "words"` for a line worth remembering, `seen` when they turn up somewhere else, `set --attitude … --status dead|prisoner|missing|gone` when things change, `rename` when a nickname gives way to a name. It is what the characters know, never what `npcs.md` knows: no secret, no hidden motive, no true name before it is learned. Do it in the same turn, without being asked. Syntax: `SKILL-scripts.md` → *People met*.
+
+---
+
 ## Puzzles
 
 A lock, a riddle or a coded note can be put on the players' own screens for them to work out: `display/puzzle.py lock|riddle|cipher "Title" …` shows it everywhere, checks every try on the server and tells you — as a `[[PUZZLE … SOLVED by … ]]` or `[[PUZZLE … FAILED … ]]` line from `check_input.py` — when it is over. A `[[PUZZLE …]]` line is not a player action: narrate what it means, then `puzzle.py close`. Plant the clues in the fiction first; give a hint (`puzzle.py hint`) rather than let it stall. Syntax: `SKILL-scripts.md` → *Puzzles*.

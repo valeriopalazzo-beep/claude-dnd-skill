@@ -508,6 +508,8 @@ _DM_ENDPOINTS = {
     "bestiary_changed",
     # Quests: quests.py keeps them with the campaign, everyone reads them.
     "quests_changed",
+    # People met: people.py writes the notebook, everyone reads it.
+    "people_changed",
     # Companions: companion.py keeps them, everyone sees them.
     "companions_changed",
     # The campaign book: campaign_book.py makes it, everyone may download it.
@@ -2755,6 +2757,40 @@ def quests_changed():
     return "", 204
 
 
+# ─── People met (people.py) ──────────────────────────────────────────────────
+# people.py keeps what the party knows of the people it met in
+# <campaign>/people.json. Every screen can read it; POST /people says a page
+# was added or grew.
+import people as _people
+
+
+def _public_people() -> list:
+    camp = re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]
+    if not camp:
+        return []
+    try:
+        return _people.public_view(_people.load(str(_find_campaign(camp) / "people.json")))
+    except Exception:
+        return []
+
+
+@app.route("/people", methods=["GET"])
+def people_get():
+    return jsonify(_public_people()), 200
+
+
+@app.route("/people", methods=["POST"])
+def people_changed():
+    """people.py wrote in the notebook: send every screen the pages, and which one changed."""
+    data = request.get_json(silent=True) or {}
+    payload = {"people": _public_people()}
+    event = data.get("event")
+    if isinstance(event, dict) and event.get("name"):
+        payload["people_event"] = {"name": str(event["name"])[:60], "new": bool(event.get("new"))}
+    _broadcast(payload)
+    return "", 204
+
+
 # ─── Companions (companion.py) ───────────────────────────────────────────────
 # Animals and followers travelling with the party, kept by companion.py in
 # <campaign>/companions.json. They are not players: they hang on their owner's
@@ -3271,7 +3307,7 @@ def stats():
         # clocks, bestiary, companions and region map once, at load: send it
         # the new campaign's, or those panels stay empty until a reload.
         try:
-            _broadcast({"clocks": _public_clocks(), "bestiary": _public_bestiary(),
+            _broadcast({"clocks": _public_clocks(), "bestiary": _public_bestiary(), "people": _public_people(),
                         "companions": _public_companions(), "region_changed": _time.time()})
         except Exception:
             pass

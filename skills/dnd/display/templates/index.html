@@ -1414,6 +1414,42 @@
   #beast-page li{ margin:3px 0; }
   #beast-page .beast-none{ margin:0; color:var(--ln-text-muted, #cdbfa6); font-style:italic; }
 
+  /* ══ People met (people.py) — who the party knows, and what of them ══ */
+  #people-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
+    align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  #people-modal.open{ display:flex; }
+  #people-panel{ width:min(560px, 100%); margin:auto 0; color:var(--ln-text, #ECE4D2); font-family:'Alegreya Sans','Syne',sans-serif; }
+  #people-head{ display:flex; align-items:center; gap:10px; margin-bottom:12px; color:#ECE4D2; }
+  #people-head h2{ flex:1; min-width:0; margin:0; font-size:22px; line-height:1.15; }
+  #people-head button{ flex:none; width:40px; height:40px; border-radius:999px; cursor:pointer; font-size:16px;
+    background:rgba(0,0,0,.35); color:inherit; border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #people-back[hidden], #people-filter[hidden]{ display:none; }
+  #people-filter{ display:block; width:100%; margin:0 0 10px; padding:11px 14px; border-radius:12px; font:inherit; font-size:17px;
+    color:var(--ln-text, #ECE4D2); background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #people-list{ display:flex; flex-direction:column; gap:8px; }
+  .people-item{ display:flex; align-items:center; gap:12px; width:100%; padding:12px 15px; text-align:left; cursor:pointer;
+    border-radius:12px; font:inherit; font-size:18px; font-weight:700; color:inherit;
+    background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
+  .people-item span{ flex:1; min-width:0; }
+  .people-item small{ display:block; font-size:14px; font-weight:500; color:var(--ln-text-muted, #b9ab92); }
+  .people-item em{ flex:none; font-style:normal; padding:2px 9px; border-radius:999px; font-size:12px; font-weight:800;
+    background:var(--ln-accent, #f2b544); color:var(--ln-on-accent, #1a140c); }
+  .people-item.st-dead, .people-item.st-gone{ opacity:.62; }
+  .people-item.st-dead span > b{ text-decoration:line-through; }
+  .people-empty{ margin:30px 8px; text-align:center; font-size:16px; color:#b9ab92; }
+  #people-page{ padding:16px 18px; border-radius:12px; font-size:16.5px; line-height:1.45;
+    background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
+  #people-page:empty{ display:none; }
+  #people-page .people-role{ margin:0 0 10px; font-size:16px; font-weight:700; color:var(--ln-accent, #f2b544); }
+  #people-page dl{ display:grid; grid-template-columns:auto 1fr; gap:4px 14px; margin:0 0 10px; }
+  #people-page dt{ font-weight:700; color:var(--ln-text-muted, #cdbfa6); }
+  #people-page dd{ margin:0; }
+  #people-page h4{ margin:12px 0 4px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--ln-text-muted, #cdbfa6); }
+  #people-page ul{ margin:0; padding-left:20px; }
+  #people-page li{ margin:3px 0; }
+  #people-page blockquote{ margin:6px 0; padding:2px 0 2px 12px; font-style:italic; border-left:3px solid var(--ln-accent, #f2b544); }
+  #people-page .people-none{ margin:0; color:var(--ln-text-muted, #cdbfa6); font-style:italic; }
+
   /* ══ Companions (companion.py) — the horse, the familiar, the hired guard ══ */
   .sb-companions{ display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
   .sb-comp-chip{ display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px; cursor:pointer;
@@ -5048,6 +5084,7 @@
     <button class="ph-set-opt" id="ph-book-opt" type="button" hidden><span data-i18n="book.title">Campaign book</span><strong>📕</strong></button>
     <button class="ph-set-opt" id="ph-comp-opt" type="button" hidden><span data-i18n="comp.title">Companions</span><strong>🐾</strong></button>
     <button class="ph-set-opt" id="ph-beast-opt" type="button" hidden><span data-i18n="beast.title">Bestiary</span><strong>📖</strong></button>
+    <button class="ph-set-opt" id="ph-people-opt" type="button" hidden><span data-i18n="people.title">People met</span><strong>👤</strong></button>
     <button class="ph-set-opt" id="ph-clock-opt" type="button" hidden><span data-i18n="clock.title">Clocks</span><strong>◔</strong></button>
     <label class="ph-set-opt ph-set-row" id="ph-skin-opt"><span data-i18n="ph.style">Style</span><select id="ph-skin-select" class="ph-set-select" aria-label="Display style"><option value="vellum">Vellum</option><option value="editorial">Editorial</option><option value="lanterna">Lanterna</option></select></label>
     <label class="ph-set-opt ph-set-row" id="ph-lang-opt"><span data-i18n="settings.language">Language</span><select id="ph-lang-select" class="ph-set-select" aria-label="Display language" data-i18n-aria="settings.language"></select></label>
@@ -5243,6 +5280,20 @@
   </div>
 </div>
 
+<!-- People met: what the party knows of the people it has met, from people.py -->
+<div id="people-modal">
+  <div id="people-panel" role="dialog" aria-labelledby="people-title">
+    <div id="people-head">
+      <button id="people-back" type="button" title="Everyone" aria-label="Everyone" data-i18n-title="people.all" data-i18n-aria="people.all" hidden>‹</button>
+      <h2 id="people-title" data-i18n="people.title">People met</h2>
+      <button id="people-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
+    </div>
+    <input id="people-filter" type="search" autocomplete="off" placeholder="Find a name…" aria-label="Find a name" data-i18n-placeholder="people.filter" data-i18n-aria="people.filter" hidden>
+    <div id="people-list"></div>
+    <div id="people-page"></div>
+  </div>
+</div>
+
 <!-- Companions: the animals and followers travelling with the party, from companion.py -->
 <div id="comp-modal">
   <div id="comp-panel" role="dialog" aria-labelledby="comp-title">
@@ -5325,6 +5376,7 @@
   <symbol id="ln-i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
   <symbol id="ln-i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2v10l7 7"/></symbol>
   <symbol id="ln-i-beast" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M9 8l1.5 2L12 8l1.5 2L15 8"/></symbol>
+  <symbol id="ln-i-people" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M15 4h6v5h-3l-2 2V9h-1z"/></symbol>
   <symbol id="ln-i-paw" viewBox="0 0 24 24"><circle cx="6.5" cy="10" r="2"/><circle cx="10" cy="5.5" r="2"/><circle cx="14" cy="5.5" r="2"/><circle cx="17.5" cy="10" r="2"/><path d="M12 12c-3 0-5.5 2.6-5.5 5.2 0 1.7 1.3 2.8 2.9 2.8 1 0 1.7-.5 2.6-.5s1.6.5 2.6.5c1.6 0 2.9-1.1 2.9-2.8C17.500 14.6 15 12 12 12z"/></symbol>
   <symbol id="ln-i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M12 7v6m0 0-2.5-2.5M12 13l2.5-2.5"/></symbol>
   <symbol id="ln-i-puzzle" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="16" r="1.3"/></symbol>
@@ -5366,6 +5418,7 @@
       <button class="ln-item" type="button" id="ln-region" title="Region map" data-i18n-title="region.title" hidden><svg class="ln-i"><use href="#ln-i-compass"/></svg><span class="ln-lbl" data-i18n="region.title">Region map</span><span class="ln-badge" id="ln-badge-region" data-i18n="region.new" hidden>New</span></button>
       <button class="ln-item" type="button" id="ln-clocks" title="Clocks" data-i18n-title="clock.title" hidden><svg class="ln-i"><use href="#ln-i-clock"/></svg><span class="ln-lbl" data-i18n="clock.title">Clocks</span></button>
       <button class="ln-item" type="button" id="ln-beast" title="Bestiary" data-i18n-title="beast.title" hidden><svg class="ln-i"><use href="#ln-i-beast"/></svg><span class="ln-lbl" data-i18n="beast.title">Bestiary</span><span class="ln-badge" id="ln-badge-beast" data-i18n="beast.new" hidden>New</span></button>
+      <button class="ln-item" type="button" id="ln-people" title="People met" data-i18n-title="people.title" hidden><svg class="ln-i"><use href="#ln-i-people"/></svg><span class="ln-lbl" data-i18n="people.title">People met</span><span class="ln-badge" id="ln-badge-people" data-i18n="people.new" hidden>New</span></button>
       <button class="ln-item" type="button" id="ln-cal" title="Calendar" data-i18n-title="cal.title" hidden><svg class="ln-i"><use href="#ln-i-calendar"/></svg><span class="ln-lbl" data-i18n="cal.title">Calendar</span></button>
       <button class="ln-item" type="button" data-ln-go="fazioni" title="Factions" data-i18n-title="ln.view.fazioni"><svg class="ln-i"><use href="#ln-i-flag"/></svg><span class="ln-lbl" data-i18n="ln.view.fazioni">Factions</span></button>
       <button class="ln-item" type="button" id="ln-handouts" title="Documents" data-i18n-title="handout.title"><svg class="ln-i"><use href="#ln-i-mail"/></svg><span class="ln-lbl" data-i18n="handout.title">Documents</span><span class="ln-badge" id="ln-badge-handouts" hidden></span></button>
@@ -5441,6 +5494,7 @@
         <button class="ln-item" type="button" id="ln-region-more" data-ln-proxy="ln-region" hidden><svg class="ln-i"><use href="#ln-i-compass"/></svg><span class="ln-lbl" data-i18n="region.title">Region map</span></button>
         <button class="ln-item" type="button" id="ln-clocks-more" data-ln-proxy="ln-clocks" hidden><svg class="ln-i"><use href="#ln-i-clock"/></svg><span class="ln-lbl" data-i18n="clock.title">Clocks</span></button>
         <button class="ln-item" type="button" id="ln-beast-more" data-ln-proxy="ln-beast" hidden><svg class="ln-i"><use href="#ln-i-beast"/></svg><span class="ln-lbl" data-i18n="beast.title">Bestiary</span></button>
+        <button class="ln-item" type="button" id="ln-people-more" data-ln-proxy="ln-people" hidden><svg class="ln-i"><use href="#ln-i-people"/></svg><span class="ln-lbl" data-i18n="people.title">People met</span></button>
         <button class="ln-item" type="button" id="ln-comp-more" data-ln-proxy="ln-comp" hidden><svg class="ln-i"><use href="#ln-i-paw"/></svg><span class="ln-lbl" data-i18n="comp.title">Companions</span></button>
         <button class="ln-item" type="button" id="ln-book-more" data-ln-proxy="ln-book" hidden><svg class="ln-i"><use href="#ln-i-book"/></svg><span class="ln-lbl" data-i18n="book.title">Campaign book</span></button>
         <button class="ln-item" type="button" id="ln-cal-more" data-ln-proxy="ln-cal" hidden><svg class="ln-i"><use href="#ln-i-calendar"/></svg><span class="ln-lbl" data-i18n="cal.title">Calendar</span></button>
@@ -10573,6 +10627,7 @@ function connect() {
     if (payload.book && typeof window._onBook === 'function') window._onBook(payload.book, true);
     if ((payload.companions || payload.companion_event) && typeof window._onCompanions === 'function') window._onCompanions(payload.companions, payload.companion_event);
     if ((payload.bestiary || payload.bestiary_event) && typeof window._onBestiary === 'function') window._onBestiary(payload.bestiary, payload.bestiary_event);
+    if ((payload.people || payload.people_event) && typeof window._onPeople === 'function') window._onPeople(payload.people, payload.people_event);
     if (payload.quest_event && payload.quest_event.name) {
       const qe = payload.quest_event;
       _showToast('📜 ' + _t('quest.toast.' + qe.what, { name: qe.name }, qe.name), qe.what === 'updated' ? 4500 : 6500);
@@ -10970,6 +11025,125 @@ function _beastRows(c) {
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   fetch('/bestiary').then(r => r.ok ? r.json() : []).then(d => window._onBestiary(d)).catch(() => {});
+})();
+
+// ── People met (people.py) ────────────────────────────────────────────
+// The party's own notebook of the people it has met. _personRows turns a page
+// into what the panel draws and counts what is on it, so a page that grew can
+// be told from one already read.
+function _personRows(p) {
+  p = p || {};
+  const meta = [['where', p.where], ['seen', p.seen], ['faction', p.faction],
+                ['attitude', p.attitude], ['status', p.status === 'alive' ? '' : p.status]]
+    .filter(r => r[1]).map(r => ({ key: r[0], value: String(r[1]) }));
+  const facts = p.facts || [], said = p.said || [];
+  return { role: p.role || '', meta: meta, facts: facts, said: said,
+           sig: [facts.length, said.length, p.status || '', p.seen || '', p.name || ''].join(':') };
+}
+// ── end people rows ──
+
+(function _initPeople() {
+  const modal = document.getElementById('people-modal');
+  if (!modal) return;
+  const list = document.getElementById('people-list');
+  const page = document.getElementById('people-page');
+  const back = document.getElementById('people-back');
+  const title = document.getElementById('people-title');
+  const filter = document.getElementById('people-filter');
+  let people = [], openId = '';
+  let seen = {};
+  try { seen = JSON.parse(localStorage.getItem('dnd-people-seen') || '{}') || {}; } catch (_) {}
+
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+  const isNew = p => seen[p.id] !== _personRows(p).sig;
+  function remember(p) {
+    seen[p.id] = _personRows(p).sig;
+    try { localStorage.setItem('dnd-people-seen', JSON.stringify(seen)); } catch (_) {}
+  }
+  function triggers() {
+    const has = people.length > 0;
+    ['ln-people', 'ln-people-more', 'ph-people-opt'].forEach(id => { const e = document.getElementById(id); if (e) e.hidden = !has; });
+    const badge = document.getElementById('ln-badge-people');
+    if (badge) badge.hidden = !people.some(isNew);
+    if (!has) modal.classList.remove('open');
+  }
+  const word = (kind, value) => _t('people.' + kind + '.' + value, null, value);
+
+  function drawPage(p) {
+    page.textContent = '';
+    const rows = _personRows(p);
+    if (rows.role) page.appendChild(el('p', 'people-role', rows.role));
+    if (rows.meta.length) {
+      const dl = el('dl');
+      rows.meta.forEach(m => {
+        dl.appendChild(el('dt', '', _t('people.' + m.key, null, m.key)));
+        dl.appendChild(el('dd', '', m.key === 'attitude' ? word('att', m.value) : m.key === 'status' ? word('st', m.value) : m.value));
+      });
+      page.appendChild(dl);
+    }
+    if (rows.facts.length) {
+      page.appendChild(el('h4', '', _t('people.facts', null, 'What you know')));
+      const ul = el('ul');
+      rows.facts.forEach(f => ul.appendChild(el('li', '', f)));
+      page.appendChild(ul);
+    }
+    if (rows.said.length) {
+      page.appendChild(el('h4', '', _t('people.said', null, 'What they told you')));
+      rows.said.forEach(s => page.appendChild(el('blockquote', '', s)));
+    }
+    if (!rows.facts.length && !rows.said.length) {
+      page.appendChild(el('p', 'people-none', _t('people.nothing', null, 'You have met. You know nothing more yet.')));
+    }
+  }
+
+  function render() {
+    const p = openId ? people.find(x => x.id === openId) : null;
+    back.hidden = !p;
+    list.hidden = !!p;
+    filter.hidden = !!p || people.length < 9;
+    list.textContent = '';
+    page.textContent = '';
+    if (p) {
+      title.textContent = p.name;
+      drawPage(p);
+      remember(p);
+      triggers();
+      return;
+    }
+    title.textContent = _t('people.title', null, 'People met');
+    if (!people.length) { list.appendChild(el('p', 'people-empty', _t('people.empty', null, 'Nobody met yet.'))); return; }
+    const want = filter.hidden ? '' : filter.value.trim().toLowerCase();
+    const shown = people.filter(x => !want || (x.name + ' ' + x.role + ' ' + x.faction).toLowerCase().includes(want));
+    if (!shown.length) { list.appendChild(el('p', 'people-empty', _t('people.noMatch', null, 'Nobody by that name.'))); return; }
+    shown.forEach(x => {
+      const item = el('button', 'people-item st-' + (x.status || 'alive'));
+      item.type = 'button';
+      const text = el('span');
+      text.appendChild(el('b', '', x.name));
+      text.appendChild(el('small', '', [x.role, x.status && x.status !== 'alive' ? word('st', x.status) : (x.seen || x.where)].filter(Boolean).join(' · ')));
+      item.appendChild(text);
+      if (isNew(x)) item.appendChild(el('em', '', _t('people.new', null, 'New')));
+      item.addEventListener('click', () => { openId = x.id; render(); });
+      list.appendChild(item);
+    });
+  }
+
+  window._onPeople = function (next, event) {
+    if (Array.isArray(next)) { people = next; triggers(); if (modal.classList.contains('open')) render(); }
+    if (event && event.name) {
+      _showToast('👤 ' + (event.new ? _t('people.toastNew', { name: event.name }, 'You meet: ' + event.name)
+                                    : _t('people.toastMore', { name: event.name }, 'You learn more about: ' + event.name)), 5000);
+    }
+  };
+  const open = () => { openId = ''; filter.value = ''; modal.classList.add('open'); render(); };
+  const close = () => modal.classList.remove('open');
+  ['ln-people', 'ph-people-opt'].forEach(id => { const e = document.getElementById(id); if (e) e.addEventListener('click', open); });
+  back.addEventListener('click', () => { openId = ''; render(); });
+  filter.addEventListener('input', render);
+  document.getElementById('people-close').addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  fetch('/people').then(r => r.ok ? r.json() : []).then(d => window._onPeople(d)).catch(() => {});
 })();
 
 // ── Companions (companion.py) ─────────────────────────────────────────
