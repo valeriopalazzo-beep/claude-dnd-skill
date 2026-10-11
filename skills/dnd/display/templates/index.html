@@ -1400,7 +1400,7 @@
   .beast-item span{ flex:1; min-width:0; }
   .beast-item small{ display:block; font-size:14px; font-weight:500; color:var(--ln-text-muted, #b9ab92); }
   .beast-item em{ flex:none; font-style:normal; padding:2px 9px; border-radius:999px; font-size:12px; font-weight:800;
-    background:var(--ln-accent, #f2b544); color:#1a140c; }
+    background:var(--ln-accent, #f2b544); color:var(--ln-on-accent, #1a140c); }
   .beast-empty{ margin:30px 8px; text-align:center; font-size:16px; color:var(--ln-text-muted, #b9ab92); }
   #beast-page{ padding:16px 18px; border-radius:12px; font-size:16.5px; line-height:1.45;
     background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
@@ -1480,7 +1480,7 @@
   .pz-input{ width:100%; margin:0 0 12px; padding:13px 14px; border-radius:10px; font:inherit; font-size:18px; color:inherit;
     background:rgba(0,0,0,.3); border:1px solid var(--ln-line-strong, rgba(255,255,255,.3)); }
   .pz-go{ display:block; width:100%; padding:15px 12px; border:0; border-radius:12px; cursor:pointer; font:inherit;
-    font-size:20px; font-weight:800; color:#17110a; background:var(--ln-accent, #f2b544); }
+    font-size:20px; font-weight:800; color:var(--ln-on-accent, #17110a); background:var(--ln-accent, #f2b544); }
   .pz-go:disabled{ opacity:.5; }
   .pz-state{ margin:12px 0 0; font-weight:700; color:var(--ln-accent, #f2b544); }
   .pz-state.solved{ font-size:21px; color:#6cc070; }
@@ -1517,7 +1517,7 @@
     display:flex; flex-direction:column; align-items:center; gap:1px; -webkit-tap-highlight-color:transparent; }
   .cal-day small{ font-size:11px; line-height:1; min-height:11px; letter-spacing:1px; }
   .cal-day.past{ opacity:.5; }
-  .cal-day.today{ background:var(--ln-accent, #f2b544); color:#1a140c; border-color:transparent; }
+  .cal-day.today{ background:var(--ln-accent, #f2b544); color:var(--ln-on-accent, #1a140c); border-color:transparent; }
   .cal-day.sel{ outline:2px solid var(--ln-accent, #f2b544); outline-offset:1px; }
   .cal-day .cal-dot{ color:#e2574c; }
   .cal-day.today .cal-dot{ color:#7a1d15; }
@@ -1528,6 +1528,13 @@
     border-top:1px solid var(--ln-line, rgba(255,255,255,.1)); cursor:pointer; }
   #cal-coming div:first-of-type{ border-top:0; }
   #cal-coming em{ flex:none; font-style:normal; font-size:14.5px; font-weight:700; color:var(--ln-accent, #f2b544); }
+
+  /* The overlays above (and the handouts one) keep a dark backdrop in every theme, so what is drawn straight
+     on it — title, back/close, "nothing yet", weekday names — cannot take the theme's ink: Lanterna's light
+     theme makes --ln-text dark, and it vanished. */
+  #handout-head, #region-head, #clock-head, #beast-head, #comp-head, #puzzle-head, #cal-head{ color:#ECE4D2; }
+  #handout-modal .handout-empty, #clock-modal .clock-empty, #beast-modal .beast-empty, #comp-modal .comp-empty,
+  #cal-grid .cal-dow{ color:#b9ab92; }
 
   /* ── Milestones (sidebar — Bardic Inspiration / Hero Coin / Fate Token / etc.) ── */
   .sb-milestones { margin-top: 6px; }
