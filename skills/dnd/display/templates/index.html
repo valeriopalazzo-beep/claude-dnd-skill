@@ -10573,6 +10573,10 @@ function connect() {
     if (payload.book && typeof window._onBook === 'function') window._onBook(payload.book, true);
     if ((payload.companions || payload.companion_event) && typeof window._onCompanions === 'function') window._onCompanions(payload.companions, payload.companion_event);
     if ((payload.bestiary || payload.bestiary_event) && typeof window._onBestiary === 'function') window._onBestiary(payload.bestiary, payload.bestiary_event);
+    if (payload.quest_event && payload.quest_event.name) {
+      const qe = payload.quest_event;
+      _showToast('📜 ' + _t('quest.toast.' + qe.what, { name: qe.name }, qe.name), qe.what === 'updated' ? 4500 : 6500);
+    }
     if ((payload.clocks || payload.clock_event) && typeof window._onClocks === 'function') window._onClocks(payload.clocks, payload.clock_event);
     if (payload.death_save && typeof window._onDeathSaveResult === 'function') window._onDeathSaveResult(payload.death_save);
     if (payload.effect_expired) {

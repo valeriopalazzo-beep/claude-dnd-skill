@@ -810,6 +810,35 @@ python3 ${CLAUDE_SKILL_DIR}/display/clock.py clear
 
 ---
 
+## Quests — `display/quests.py`
+
+The party's quests, kept with the campaign in `<campaign>/quests.json`. Every change is saved and sent to the Quests panel of every screen; loading the campaign (`push_stats.py --set-campaign`) brings them back, so the list is never rebuilt by hand.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/display/quests.py add "La veglia di Oderico" --giver "Padre Oderico" --location "Cimitero della Collina"     --summary "Vegliare una notte con il prete sulla Collina." --reward "Cose mai dette a nessuno"     --objective "Vegliare una notte sulla Collina" --clue "Si alzano solo i morti col martellino"
+python3 ${CLAUDE_SKILL_DIR}/display/quests.py add "Il sesto nome" --status threat --deadline "Luna piena: la notte del 16"
+python3 ${CLAUDE_SKILL_DIR}/display/quests.py set "veglia" --summary "…" --deadline "Stanotte"   # "" empties a field; --name renames
+python3 ${CLAUDE_SKILL_DIR}/display/quests.py objective "veglia" "Leggere i registri col martello"
+python3 ${CLAUDE_SKILL_DIR}/display/quests.py done "veglia" "vegliare"            # tick a step; undo unticks it
+python3 ${CLAUDE_SKILL_DIR}/display/quests.py clue "veglia" "Stanotte ci sarà anche Ser Bertrand"
+python3 ${CLAUDE_SKILL_DIR}/display/quests.py drop "veglia" --objective "registri"  # or --clue
+python3 ${CLAUDE_SKILL_DIR}/display/quests.py resolve "veglia"                    # also: fail, reopen, threat
+python3 ${CLAUDE_SKILL_DIR}/display/quests.py remove "veglia"
+python3 ${CLAUDE_SKILL_DIR}/display/quests.py list
+python3 ${CLAUDE_SKILL_DIR}/display/quests.py show "veglia"
+python3 ${CLAUDE_SKILL_DIR}/display/quests.py push                                # send them again, e.g. after a --clear
+python3 ${CLAUDE_SKILL_DIR}/display/quests.py import                              # take in the quests the display is showing
+```
+
+- Status is `active` (default), `threat`, `resolved` or `failed`. The panel lists open quests first.
+- A quest, an objective or a clue can be named by any part of its text that means one only. A wrong name changes nothing. What is already there is not added twice.
+- `import` is for a campaign whose quests were pushed by hand until now: it copies the ones the display holds into the file, skipping those already there.
+- `--campaign NAME` (before the subcommand) works on another campaign; only the campaign on the display talks to the display.
+
+**How to keep it:** one quest per thing the party has agreed to do or is threatened by. Give every quest a `--summary` (what it is and why it matters) and add `--giver`, `--location`, `--reward`, `--deadline` when the characters know them. Tick an objective the moment it is achieved, add a clue the moment it is heard, change the summary when the situation turns. **Only what the party knows** — every player reads this panel. `state.md → ## Active Quests` stays your own working summary; update both at `/dm:dnd save`.
+
+---
+
 ## Bestiary — `display/bestiary.py`
 
 The party's own notebook of the creatures it has met: it starts empty and holds only what the characters have found out. Words only — no pictures. Every screen has a **Bestiary** panel; numbers the party has not earned yet show as `?`.

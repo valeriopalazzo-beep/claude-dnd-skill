@@ -231,6 +231,8 @@ The display question is skipped, because `/dm:dnd load` asks it. The graph and c
    The quest panel only appears when at least one quest is present — do not skip this push.
 
    **Quest details — always fill them.** Players tap a quest on the display to read its detail, so a bare name/status list is not enough. Every quest gets a `summary` (1–2 sentences: what it is and why it matters), plus `giver`, `location`, `reward`, `deadline` when known, `objectives` (concrete steps, `done: true` once achieved) and `clues` (the leads the party has gathered). Build them from `state.md → ## Active Quests`, `## Open Threads & Rumours` and `## Recent Events`, in the campaign's language. **Write only what the party knows** — every player can read the display, so never put DM secrets, hidden motives or unrevealed truths there. Re-push the full `--quests` list whenever a quest changes: a new lead, an objective achieved, a new quest, a status change.
+
+   **Quests kept with the campaign (`quests.py`).** Keep the quests in `<campaign>/quests.json` instead of rebuilding that list by hand: if the file exists, leave `--quests` out of the call above — `push_stats.py --set-campaign` brings them back by itself, and `python3 ${CLAUDE_SKILL_DIR}/display/quests.py push` sends them again after a mid-session `--clear`. If the campaign has none yet, create it now: `quests.py import` takes in whatever the display is still showing, and `quests.py add …` writes the rest from `state.md → ## Active Quests`. From then on change quests only with `quests.py` (`add`, `set`, `objective`, `done`, `clue`, `resolve`, `fail`): each change is saved and reaches every screen at once. Syntax: `SKILL-scripts.md` → *Quests*.
 7. **Pull scene-context from the campaign graph.** Always run, even if you suspect `graph.json` doesn't exist — the script exits cleanly with a notice when uninitialized.
    ```bash
    python3 ${CLAUDE_SKILL_DIR}/scripts/campaign_graph.py scene-context \
@@ -829,7 +831,7 @@ Pinned facts are never rewritten wholesale at `/dm:dnd save` the way Live State 
 Read and display world.md.
 
 ## `/dm:dnd quests`
-Read `state.md` → display Active Quests and Open Threads sections.
+Read `state.md` → display Active Quests and Open Threads sections. When the campaign keeps a `quests.json`, `display/quests.py list` (and `show "<quest>"`) prints what the players' Quests panel holds.
 
 ---
 

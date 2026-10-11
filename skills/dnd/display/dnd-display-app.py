@@ -506,6 +506,8 @@ _DM_ENDPOINTS = {
     "clocks_changed",
     # The bestiary: bestiary.py writes it, everyone reads it.
     "bestiary_changed",
+    # Quests: quests.py keeps them with the campaign, everyone reads them.
+    "quests_changed",
     # Companions: companion.py keeps them, everyone sees them.
     "companions_changed",
     # The campaign book: campaign_book.py makes it, everyone may download it.
@@ -2706,6 +2708,53 @@ def bestiary_changed():
     return "", 204
 
 
+# ─── Quests (quests.py) ──────────────────────────────────────────────────────
+# quests.py keeps the party's quests in <campaign>/quests.json. They reach the
+# screens inside the stats, like the ones pushed by hand; POST /quests says the
+# file changed, and loading a campaign that has the file brings them back.
+import quests as _quests
+
+
+def _campaign_quests() -> Optional[list]:
+    """The active campaign's quests as the panel wants them; None when it keeps no quests.json."""
+    camp = re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]
+    if not camp:
+        return None
+    try:
+        path = _find_campaign(camp) / "quests.json"
+        return _quests.public_view(_quests.load(str(path))) if path.is_file() else None
+    except Exception:
+        return None
+
+
+def _adopt_campaign_quests() -> Optional[dict]:
+    """Put the campaign's quests in the stats. Returns the stats to broadcast, or None."""
+    rows = _campaign_quests()
+    if rows is None:
+        return None
+    with _stats_lock:
+        _current_stats["quests"] = rows
+        snapshot = dict(_current_stats)
+    _persist_stats()
+    return snapshot
+
+
+@app.route("/quests", methods=["POST"])
+def quests_changed():
+    """quests.py changed a quest: send every screen the list, and what happened."""
+    data = request.get_json(silent=True) or {}
+    payload = {}
+    snapshot = _adopt_campaign_quests()
+    if snapshot is not None:
+        payload["stats"] = snapshot
+    event = data.get("event")
+    if isinstance(event, dict) and event.get("name") and event.get("what") in ("new", "updated", "resolved", "failed"):
+        payload["quest_event"] = {"name": str(event["name"])[:80], "what": event["what"]}
+    if payload:
+        _broadcast(payload)
+    return "", 204
+
+
 # ─── Companions (companion.py) ───────────────────────────────────────────────
 # Animals and followers travelling with the party, kept by companion.py in
 # <campaign>/companions.json. They are not players: they hang on their owner's
@@ -3226,6 +3275,15 @@ def stats():
                         "companions": _public_companions(), "region_changed": _time.time()})
         except Exception:
             pass
+        # The quests kept with the campaign come back with it, unless this same
+        # call brings its own list.
+        if "quests" not in data:
+            try:
+                if _adopt_campaign_quests() is not None:
+                    with _stats_lock:
+                        current = dict(_current_stats)
+            except Exception:
+                pass
         # Resolve and stash the ruleset for this campaign so the sidebar badge
         # can render. Defaults to '2014' for legacy campaigns predating the
         # ruleset field. Wrapped in try/except so a missing paths import or

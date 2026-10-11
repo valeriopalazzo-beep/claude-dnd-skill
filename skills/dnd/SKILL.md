@@ -533,6 +533,12 @@ This fires a green-bordered block in the companion feed showing each character's
 
 ---
 
+## Quests
+
+The Quests panel is the party's own record of what it has taken on, and it must be right at every moment of play. Keep it with `display/quests.py`, which stores the quests in the campaign (`quests.json`) and updates every screen at each change: `add "<quest>" --summary … --giver … --location …` when the party takes one on, `objective` / `done` as steps appear and are achieved, `clue` for each lead gathered, `set` when the situation changes, `resolve` or `fail` when it ends. Do it in the same turn the fiction changes, without being asked, and write only what the characters know. Syntax: `SKILL-scripts.md` → *Quests*.
+
+---
+
 ## Bestiary
 
 The players have a Bestiary panel that fills up with what their characters learn. Open a page with `display/bestiary.py meet "<creature>"` the first time a kind of creature appears, and add to it as things are found out in play — `learn "<creature>" "note"`, `--resist` / `--immune` / `--weak`, `--stat ac|hp|…` for a real number the party has earned, `defeat` after the fight. It records what the characters know, so never write there what they have not seen. Syntax: `SKILL-scripts.md` → *Bestiary*.
