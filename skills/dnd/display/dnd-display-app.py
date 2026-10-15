@@ -502,6 +502,8 @@ _DM_ENDPOINTS = {
     "rest_set",
     # Asking the table a question; answering is the players'.
     "vote_set",
+    # The recap at the start of a session.
+    "recap_set",
     # Where the party is — sets everyone's background and music.
     "set_scene",
     # Documents the party finds: the DM hands them out, everyone may read them.
@@ -3067,6 +3069,59 @@ def spellbook_drop(character):
     _broadcast({"stats": snapshot})
     _spellbook.casts_add({"character": name, "spell": dropped, "dropped": True})
     return jsonify(_spell_view(character, text, lang)), 200
+
+
+# ─── "Previously on…" (recap.py) ─────────────────────────────────────────────
+# The DM's recap at the start of a session, as a full-screen card on every
+# screen; the narrator reads it where narration is on. Kept until cleared so a
+# player who joins later finds it too.
+RECAP_FILE = rt("recap.json")
+
+
+def _recap_now() -> Optional[dict]:
+    try:
+        with open(RECAP_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return None
+    if not isinstance(data, dict) or not data.get("text") or data.get("campaign", "") != _active_campaign():
+        return None
+    return data
+
+
+@app.route("/recap", methods=["GET"])
+def recap_get():
+    if not _token_ok():
+        return "Forbidden", 403
+    return jsonify({"recap": _recap_now()}), 200
+
+
+@app.route("/recap", methods=["POST"])
+def recap_set():
+    """Show a recap — {"text", "title"} — or {"clear": true}."""
+    if not _token_ok():
+        return "Forbidden", 403
+    data = request.get_json(silent=True) or {}
+    if data.get("clear"):
+        try:
+            os.remove(RECAP_FILE)
+        except OSError:
+            pass
+        _broadcast({"recap": None})
+        return jsonify({"recap": None}), 200
+    text = re.sub(r"[`\\$<>]", "", str(data.get("text", ""))).strip()[:4000]
+    title = re.sub(r"[`\\$<>]", "", str(data.get("title", ""))).strip()[:120]
+    if not text:
+        return jsonify({"error": "no text"}), 400
+    recap = {"id": secrets.token_hex(4), "title": title, "text": text, "campaign": _active_campaign(), "at": _time.time()}
+    try:
+        with open(RECAP_FILE + ".tmp", "w", encoding="utf-8") as f:
+            json.dump(recap, f, ensure_ascii=False)
+        os.replace(RECAP_FILE + ".tmp", RECAP_FILE)
+    except OSError as e:
+        return jsonify({"error": str(e)}), 500
+    _broadcast({"recap": recap, "recap_new": True})
+    return jsonify({"recap": recap}), 200
 
 
 # ─── Votes (vote.py) ─────────────────────────────────────────────────────────

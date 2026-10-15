@@ -273,7 +273,7 @@ The display question is skipped, because `/dm:dnd load` asks it. The graph and c
 
    6. Re-run scene-context (now populated). Then proceed to step 6 (recap).
 
-8. Deliver one in-character paragraph recapping current situation — where the party is, what's at stake, what was last happening. **Attendance:** if `absent:` names anyone, give each benched PC one in-fiction line explaining why they're not in the scene (see SKILL.md → *Absent players*). If a PC who was absent last session (`## Recent Events → Absent: …`) is back, write them back in with one line, and give their player a two-sentence out-of-character catch-up on what they missed.
+8. Deliver one in-character paragraph recapping current situation — where the party is, what's at stake, what was last happening. **With the display running**, this paragraph is the table's *Previously on…* card: send it with `python3 ${CLAUDE_SKILL_DIR}/display/recap.py << 'DNDEND'` … `DNDEND` (120–220 words, in the table's language, blank lines between paragraphs; with a split party say where each group stands) instead of `send.py` — it opens full screen on every screen and the narrator reads it where narration is on. Then go on with the first scene through `send.py` as usual. **Attendance:** if `absent:` names anyone, give each benched PC one in-fiction line explaining why they're not in the scene (see SKILL.md → *Absent players*). If a PC who was absent last session (`## Recent Events → Absent: …`) is back, write them back in with one line, and give their player a two-sentence out-of-character catch-up on what they missed.
 9. Enter active DM mode — no `/dm:dnd` prefix needed from this point.
 
 ---
@@ -817,7 +817,7 @@ DNDEND
 ---
 
 ## `/dm:dnd recap`
-Read session-log.md. Deliver 3–5 sentence in-character narrator recap of the most recent session entry.
+Read session-log.md. Deliver 3–5 sentence in-character narrator recap of the most recent session entry. With the display running, send it with `display/recap.py` (see `/dm:dnd load` step 8) so it shows as the *Previously on…* card.
 
 ## `/dm:dnd pin [<fact> | list | remove <fact-or-number>]`
 

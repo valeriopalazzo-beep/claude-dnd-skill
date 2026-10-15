@@ -374,6 +374,26 @@ If `check_input.py` returns output, prepend it to the player's terminal input wh
 
 ---
 
+## Previously on… — `display/recap.py`
+
+The recap at the start of a session, as a full-screen card on every screen.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/display/recap.py << 'DNDEND'
+La compagnia si è divisa all'alba…
+
+Sulla collina, Hernio e Lyra…
+DNDEND
+python3 ${CLAUDE_SKILL_DIR}/display/recap.py --title "Nelle puntate precedenti di Corona di Cenere…" < recap.txt
+python3 ${CLAUDE_SKILL_DIR}/display/recap.py show     # what is on the screens
+python3 ${CLAUDE_SKILL_DIR}/display/recap.py clear    # take it away
+```
+
+- The title is *Previously on…* in each screen's language unless `--title` gives one. Blank lines separate paragraphs; 4000 characters at most, 120–220 words read best.
+- The card opens by itself on every screen when it arrives, and at load on a device that has not seen it yet (for half a day). *Listen* reads it with the narrator's voice, and it reads by itself where *Auto Narrate* is on. The menu opens it again while it is there. It is not added to the story, so a replay does not repeat it.
+
+---
+
 ## Votes — `display/vote.py`
 
 A question on the players' phones; the table decides.

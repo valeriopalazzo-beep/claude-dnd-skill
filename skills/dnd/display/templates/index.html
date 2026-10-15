@@ -1528,6 +1528,23 @@
   .spell-note{ margin:0; color:var(--ln-text-muted, #cdbfa6); font-style:italic; }
   .spell-empty{ margin:30px 8px; text-align:center; font-size:16px; color:#b9ab92; }
 
+  /* ══ "Previously on…" (recap.py) — the story so far, full screen ══ */
+  #recap-modal{ display:none; position:fixed; inset:0; z-index:10540; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    background:radial-gradient(ellipse at 50% 0%, rgba(60,40,18,.97), rgba(8,6,4,.98) 70%); }
+  #recap-modal.open{ display:flex; align-items:flex-start; justify-content:center; padding:24px 16px 32px; }
+  #recap-panel{ width:min(680px, 100%); margin:auto 0; color:#ECE4D2; text-align:center; animation:recap-in .9s ease both; }
+  @keyframes recap-in{ from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:none; } }
+  #recap-title{ margin:0 0 6px; font-family:'Cinzel','Alegreya',serif; font-size:clamp(24px, 5vw, 38px); font-weight:700;
+    letter-spacing:.04em; color:#f2c35c; text-shadow:0 2px 18px rgba(242,181,68,.35); }
+  #recap-rule{ width:120px; height:2px; margin:10px auto 22px; background:linear-gradient(90deg, transparent, #f2b544, transparent); }
+  #recap-text{ text-align:left; font-family:'Alegreya','Alegreya Sans',serif; font-size:clamp(18px, 2.6vw, 22px); line-height:1.6; }
+  #recap-text p{ margin:0 0 14px; }
+  #recap-actions{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; align-items:center; margin-top:18px; }
+  #recap-actions .tts-play-btn{ width:52px; height:52px; border-radius:999px; }
+  #recap-listen-lbl{ cursor:pointer; font-size:17px; font-weight:700; color:#f2c35c; }
+  #recap-go{ padding:13px 26px; border-radius:12px; cursor:pointer; font:inherit; font-size:18px; font-weight:800;
+    color:#1a140c; background:#f2b544; border:0; }
+
   /* ══ Voice input — speak the action instead of typing it (the browser's speech recognition) ══ */
   .mic-btn{ flex:none; width:40px; height:40px; padding:0; border-radius:999px; cursor:pointer; font-size:19px; line-height:1;
     color:rgba(220,185,100,1); background:rgba(20,14,6,0.6); border:1px solid rgba(180,140,60,0.48); }
@@ -5264,6 +5281,7 @@
   <div id="ph-set-menu" role="menu">
     <button class="ph-set-opt" id="ph-puzzle-opt" type="button" hidden><span data-i18n="puzzle.title">Puzzle</span><strong>🧩</strong></button>
     <button class="ph-set-opt" id="ph-shop-opt" type="button" hidden><span data-i18n="shop.title">Shop</span><strong>🛒</strong></button>
+    <button class="ph-set-opt" id="ph-recap-opt" type="button" hidden><span data-i18n="recap.menu">Previously on…</span><strong>📜</strong></button>
     <button class="ph-set-opt" id="ph-vote-opt" type="button" hidden><span data-i18n="vote.title">Vote</span><strong>🗳</strong></button>
     <button class="ph-set-opt" id="ph-rest-opt" type="button" hidden><span data-i18n="rest.title">Rest</span><strong>🏕</strong></button>
     <button class="ph-set-opt" id="ph-theme-opt" type="button"><span data-i18n="ph.theme">Theme</span><strong id="ph-theme-val">Dark</strong></button>
@@ -5513,6 +5531,20 @@
   </div>
 </div>
 
+<!-- "Previously on…": the DM's recap at the start of a session (recap.py) -->
+<div id="recap-modal">
+  <div id="recap-panel" role="dialog" aria-labelledby="recap-title">
+    <h2 id="recap-title" data-i18n="recap.title">Previously on…</h2>
+    <div id="recap-rule"></div>
+    <div id="recap-text"></div>
+    <div id="recap-actions">
+      <span id="recap-listen-wrap" hidden><button id="recap-listen" class="tts-play-btn" type="button" aria-label="Listen"></button>
+        <span id="recap-listen-lbl" data-i18n="recap.listen">Listen</span></span>
+      <button id="recap-go" type="button" data-i18n="recap.go">On with the story</button>
+    </div>
+  </div>
+</div>
+
 <!-- Votes: the party decides on their phones (vote.py) -->
 <div id="vote-modal">
   <div id="vote-panel" role="dialog" aria-labelledby="vote-title">
@@ -5632,6 +5664,7 @@
   <symbol id="ln-i-people" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M15 4h6v5h-3l-2 2V9h-1z"/></symbol>
   <symbol id="ln-i-timeline" viewBox="0 0 24 24"><path d="M6 3v18"/><circle cx="6" cy="6" r="2"/><circle cx="6" cy="13" r="2"/><circle cx="6" cy="19" r="1.4"/><path d="M11 6h9M11 13h7M11 19h5"/></symbol>
   <symbol id="ln-i-spell" viewBox="0 0 24 24"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.200-.800z"/><path d="M5 15.500l.6 1.500 1.500.600-1.500.600L5 19.700l-.600-1.500-1.500-.600 1.500-.600z"/></symbol>
+  <symbol id="ln-i-recap" viewBox="0 0 24 24"><path d="M6 3h11a2 2 0 0 1 2 2v13"/><path d="M6 3a2 2 0 0 0-2 2v1h4V5a2 2 0 0 0-2-2z"/><path d="M8 5v14a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1H12v1a2 2 0 0 1-4 0"/><path d="M11 9h5M11 13h5"/></symbol>
   <symbol id="ln-i-vote" viewBox="0 0 24 24"><path d="M4 14h16v7H4z"/><path d="M8 14V6l4-3 4 3v8"/><path d="M10 9l1.5 1.5L14 8"/></symbol>
   <symbol id="ln-i-sword" viewBox="0 0 24 24"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/></symbol>
   <symbol id="ln-i-rest" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M6 21l6-9 6 9"/><path d="M12 12V9"/><path d="M15.5 4.5a3.5 3.5 0 1 1-4.2 4.2 2.8 2.8 0 0 0 4.2-4.2z"/></symbol>
@@ -5662,6 +5695,7 @@
       <button class="ln-item" type="button" data-ln-go="mappa" title="Map" data-i18n-title="ln.view.mappa"><svg class="ln-i"><use href="#ln-i-map"/></svg><span class="ln-lbl" data-i18n="ln.view.mappa">Map</span><span class="ln-badge" id="ln-badge-map" data-i18n="ln.badge.new" hidden>New</span></button>
       <button class="ln-item" type="button" id="ln-puzzle" title="Puzzle" data-i18n-title="puzzle.title" hidden><svg class="ln-i"><use href="#ln-i-puzzle"/></svg><span class="ln-lbl" data-i18n="puzzle.title">Puzzle</span><span class="ln-badge alert">!</span></button>
       <button class="ln-item" type="button" id="ln-shop" title="Shop" data-i18n-title="shop.title" hidden><svg class="ln-i"><use href="#ln-i-coins"/></svg><span class="ln-lbl" data-i18n="shop.title">Shop</span><span class="ln-badge" data-i18n="shop.open">Open</span></button>
+      <button class="ln-item" type="button" id="ln-recap" title="Previously on…" data-i18n-title="recap.menu" hidden><svg class="ln-i"><use href="#ln-i-recap"/></svg><span class="ln-lbl" data-i18n="recap.menu">Previously on…</span></button>
       <button class="ln-item" type="button" id="ln-vote" title="Vote" data-i18n-title="vote.title" hidden><svg class="ln-i"><use href="#ln-i-vote"/></svg><span class="ln-lbl" data-i18n="vote.title">Vote</span><span class="ln-badge alert">!</span></button>
       <button class="ln-item" type="button" id="ln-rest" title="Rest" data-i18n-title="rest.title" hidden><svg class="ln-i"><use href="#ln-i-rest"/></svg><span class="ln-lbl" data-i18n="rest.title">Rest</span><span class="ln-badge alert">!</span></button>
       <div class="ln-slot" id="ln-help-slot"></div>
@@ -5753,6 +5787,7 @@
         <button class="ln-item" type="button" data-ln-go="mappa"><svg class="ln-i"><use href="#ln-i-map"/></svg><span class="ln-lbl" data-i18n="ln.view.mappa">Map</span></button>
         <button class="ln-item" type="button" id="ln-puzzle-more" data-ln-proxy="ln-puzzle" hidden><svg class="ln-i"><use href="#ln-i-puzzle"/></svg><span class="ln-lbl" data-i18n="puzzle.title">Puzzle</span></button>
         <button class="ln-item" type="button" id="ln-shop-more" data-ln-proxy="ln-shop" hidden><svg class="ln-i"><use href="#ln-i-coins"/></svg><span class="ln-lbl" data-i18n="shop.title">Shop</span></button>
+        <button class="ln-item" type="button" id="ln-recap-more" data-ln-proxy="ln-recap" hidden><svg class="ln-i"><use href="#ln-i-recap"/></svg><span class="ln-lbl" data-i18n="recap.menu">Previously on…</span></button>
         <button class="ln-item" type="button" id="ln-vote-more" data-ln-proxy="ln-vote" hidden><svg class="ln-i"><use href="#ln-i-vote"/></svg><span class="ln-lbl" data-i18n="vote.title">Vote</span></button>
         <button class="ln-item" type="button" id="ln-rest-more" data-ln-proxy="ln-rest" hidden><svg class="ln-i"><use href="#ln-i-rest"/></svg><span class="ln-lbl" data-i18n="rest.title">Rest</span></button>
         <button class="ln-item" type="button" data-ln-go="fazioni"><svg class="ln-i"><use href="#ln-i-flag"/></svg><span class="ln-lbl" data-i18n="ln.view.fazioni">Factions</span></button>
@@ -10919,6 +10954,7 @@ function connect() {
     if (payload.stats && typeof window._onAttackStats === 'function') window._onAttackStats(payload.stats);
     if (payload.attack && typeof window._onAttack === 'function') window._onAttack(payload.attack);
     if (payload.vote_event && typeof window._onVote === 'function') window._onVote(payload.vote_event);
+    if ('recap' in payload && typeof window._onRecap === 'function') window._onRecap(payload);
     if (payload.timeline && typeof window._onTimeline === 'function') window._onTimeline(payload.timeline);
     if (payload.quest_event && payload.quest_event.name) {
       const qe = payload.quest_event;
@@ -12305,6 +12341,76 @@ function _spellRows(book, spellName) {
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   loadCasters();
+})();
+
+// ── "Previously on…" (recap.py) ──────────────────────────────────────
+// The DM's recap as a full-screen card. It opens by itself when it arrives,
+// and at load when this device has not seen it yet and it is less than half a
+// day old; the menu opens it again while it is there. Where narration is on,
+// the narrator reads it, as it would read a block of the story.
+function _recapParagraphs(text) {
+  return String(text || '').replace(/\r\n/g, '\n').split(/\n\s*\n/).map(p => p.replace(/\s+/g, ' ').trim()).filter(Boolean);
+}
+function _recapShouldOpen(recap, seenId, nowSec) {
+  return !!(recap && recap.id && recap.id !== seenId && (nowSec - (recap.at || 0)) < 12 * 3600);
+}
+// ── end recap helpers ──
+
+(function _initRecap() {
+  const modal = document.getElementById('recap-modal');
+  if (!modal) return;
+  const $ = id => document.getElementById(id);
+  let recap = null;
+  const SEEN = 'dnd-recap-seen';
+  const seen = () => { try { return localStorage.getItem(SEEN) || ''; } catch (_) { return ''; } };
+  const markSeen = () => { try { if (recap) localStorage.setItem(SEEN, recap.id); } catch (_) {} };
+  const canSpeak = () => (typeof _TTS_AVAILABLE !== 'undefined' && _TTS_AVAILABLE) || (typeof _TTS_HAS_BROWSER !== 'undefined' && _TTS_HAS_BROWSER);
+
+  function triggers() {
+    ['ln-recap', 'ln-recap-more', 'ph-recap-opt'].forEach(id => { const e = $(id); if (e) e.hidden = !recap; });
+    if (!recap) modal.classList.remove('open');
+  }
+  function listen() {
+    const btn = $('recap-listen');
+    if (typeof _TTS_AVAILABLE !== 'undefined' && !_TTS_AVAILABLE) { _ttsBrowserSpeak(btn, $('recap-text').textContent); return; }
+    _ttsPlayBlock(btn, $('recap-text'));
+  }
+  function open(autoplay) {
+    if (!recap) return;
+    $('recap-title').textContent = recap.title || _t('recap.title', null, 'Previously on…');
+    const box = $('recap-text');
+    box.textContent = '';
+    _recapParagraphs(recap.text).forEach(p => { const el = document.createElement('p'); el.textContent = p; box.appendChild(el); });
+    const btn = $('recap-listen');
+    if (btn && !btn.innerHTML) btn.innerHTML = _SVG_SPEAKER;
+    $('recap-listen-wrap').hidden = !canSpeak();
+    modal.classList.add('open');
+    modal.scrollTop = 0;
+    markSeen();
+    if (autoplay && canSpeak() && typeof _ttsAutoNarrate !== 'undefined' && _ttsAutoNarrate) setTimeout(listen, 400);
+  }
+  function close() {
+    modal.classList.remove('open');
+    const btn = $('recap-listen');
+    if (btn && btn.classList.contains('tts-playing')) _ttsStopActive();
+  }
+
+  window._onRecap = function (payload) {
+    recap = payload.recap || null;
+    triggers();
+    if (recap && payload.recap_new) open(true);
+  };
+  $('recap-listen').addEventListener('click', e => { e.stopPropagation(); listen(); });
+  $('recap-listen-lbl').addEventListener('click', e => { e.stopPropagation(); listen(); });
+  $('recap-go').addEventListener('click', close);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && modal.classList.contains('open')) close(); });
+  ['ln-recap', 'ph-recap-opt'].forEach(id => { const e = $(id); if (e) e.addEventListener('click', () => open(false)); });
+  fetch('/recap', { headers: _authHeaders() }).then(r => r.ok ? r.json() : null).then(d => {
+    if (!d) return;
+    recap = d.recap || null;
+    triggers();
+    if (_recapShouldOpen(recap, seen(), Date.now() / 1000)) open(false);
+  }).catch(() => {});
 })();
 
 // ── Voice input ──────────────────────────────────────────────────────
