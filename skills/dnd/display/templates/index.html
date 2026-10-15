@@ -10009,6 +10009,10 @@ function _effectiveTheme(theme) {
   const slider = document.getElementById('vb-slider');
   const val = document.getElementById('vb-val');
   if (!slider || !val) return;
+  // The length is the DM's to set (the server refuses it to a player, 403):
+  // a player's screen hides the row and never sends it.
+  const login = (document.querySelector('meta[name="dnd-login"]') || {}).content || '';
+  if (window._IS_PLAYER || login === 'player') return;
   const stored = parseInt(localStorage.getItem('dnd-narration-words') || '', 10);
   if (stored >= 250 && stored <= 2500) slider.value = String(stored);
   function label() { val.textContent = _t('settings.narration.value', { n: slider.value }); }
