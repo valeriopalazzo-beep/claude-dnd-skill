@@ -712,6 +712,9 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/lookup.py feature "sneak attack"
 python3 ${CLAUDE_SKILL_DIR}/scripts/lookup.py condition "poisoned"
 python3 ${CLAUDE_SKILL_DIR}/scripts/lookup.py monster "goblin"
 python3 ${CLAUDE_SKILL_DIR}/scripts/lookup.py monster "dragon" --all   # all fuzzy matches
+python3 ${CLAUDE_SKILL_DIR}/scripts/lookup.py rule "opportunity attacks"     # rules of play, one heading per card
+python3 ${CLAUDE_SKILL_DIR}/scripts/lookup.py rule "attacco di opportunità"  # Italian names work too (data/i18n/it/rules.json)
+python3 ${CLAUDE_SKILL_DIR}/scripts/lookup.py rule "reaction" --all          # every heading that matches
 
 # Programmatic (used by display companion /srd-lookup endpoint):
 from lookup import lookup, lookup_record, lookup_with_level, suggest
@@ -722,7 +725,9 @@ suggest("poisonned", category="condition")            # → [("Poisoned", "condi
 
 **Did-you-mean recovery.** A mistyped name doesn't dead-end. When a lookup misses, the CLI prints a `Did you mean: …?` line and the display's SRD modal offers tappable near-miss chips — both powered by `suggest()`, which fuzzy-matches the query against real names (`poisonned` → Poisoned, `fireballl` → Fireball, `gobblin` → Goblin). Suggestions respect the category when one is given, and search all categories otherwise. Use the suggested name rather than guessing at a spelling.
 
-**When to use:** combat (monster stat blocks before using them); spellcasting (range, components, duration, at-higher-levels); conditions (rule text before applying); loot and equipment; NPC generation (monster stat block as mechanical base). The display companion's character sheet modal handles lookups automatically during play — these CLI calls are for DM reference outside the UI.
+**Rules of play (`rule`).** The SRD 5.1 rule sections — the order of combat, actions, movement and position, making an attack (opportunity attacks, two-weapon fighting, grappling, shoving), cover, damage and healing (death saves), mounted and underwater combat, ability checks, the environment (falling, suffocating, vision), resting, spellcasting (casting time, concentration, areas), objects, poisons, traps, diseases, madness — one record per heading, the card headed by where it sits (`_Making an Attack › Melee Attacks_`). A name that repeats elsewhere carries its parent: `Reactions` is the combat rule, `Reactions (Casting Time)` the spell one. 2014 text; a 2024 dataset carries it as a 2014 fallback until 5e-bits ships 2024 rule sections. Not part of the uncategorized search — ask for `rule` explicitly.
+
+**When to use:** combat (monster stat blocks before using them; any turn rule you are not certain of — `rule` before ruling); spellcasting (range, components, duration, at-higher-levels); conditions (rule text before applying); loot and equipment; NPC generation (monster stat block as mechanical base). The display companion's character sheet modal handles lookups automatically during play — these CLI calls are for DM reference outside the UI.
 
 ---
 

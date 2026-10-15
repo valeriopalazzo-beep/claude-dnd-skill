@@ -8,6 +8,7 @@ Usage (CLI):
     python3 lookup.py feature "cunning action"
     python3 lookup.py condition "poisoned"
     python3 lookup.py monster "goblin"
+    python3 lookup.py rule "opportunity attacks"   # rules of play (combat, movement, resting...)
     python3 lookup.py <any> "name"       # search across all categories
 
 Flags:
@@ -81,6 +82,8 @@ CATEGORY_MAP = {
     "feature":     "features",
     "features":    "features",
     "feat":        "features",
+    "rule":        "rules",
+    "rules":       "rules",
 }
 
 ALL_CATEGORIES = ["spells", "equipment", "magic_items", "conditions", "monsters",
@@ -257,6 +260,7 @@ def _score(query: str, record: dict) -> int:
         return 0
     names = [_norm(record.get("name", "")), record.get("index", "")]
     names += record.get("_alt_names", [])
+    names += [_norm(a) for a in record.get("aliases", []) if isinstance(a, str)]
     names = [n for n in names if n]
     if q in names:
         return 3
@@ -467,6 +471,16 @@ def _fmt_feature(r: dict, L: dict = _EN) -> str:
     return "\n".join(lines)
 
 
+def _fmt_rule(r: dict, L: dict = _EN) -> str:
+    """A rule of play: the heading, where it sits in the SRD, then its text."""
+    lines = [f"## {_title(r)}"]
+    path = [p for p in (r.get("path") or []) if p]
+    if path:
+        lines.append(f"_{' › '.join(path)}_")
+    lines += ["", r.get("description", "")]
+    return "\n".join(lines)
+
+
 FORMATTERS = {
     "spells":      _fmt_spell,
     "equipment":   _fmt_equipment,
@@ -474,6 +488,7 @@ FORMATTERS = {
     "conditions":  _fmt_condition,
     "monsters":    _fmt_monster,
     "features":    _fmt_feature,
+    "rules":       _fmt_rule,
 }
 
 

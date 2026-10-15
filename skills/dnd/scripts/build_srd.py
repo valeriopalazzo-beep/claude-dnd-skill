@@ -60,6 +60,12 @@ BITS_FILES_2014 = {
     # the flow said "apply racial bonuses" and nothing could check it.
     "races":       "5e-SRD-Races.json",
     "subraces":    "5e-SRD-Subraces.json",
+    # The rules of play themselves (SRD 5.1 "Rule Sections": combat, movement,
+    # actions, cover, damage, resting, spellcasting...). Absent until
+    # 2026-10-15, so the action economy, opportunity attacks and the rest
+    # could only be ruled from memory. Split per heading by
+    # _norm_rule_sections so "Opportunity Attacks" is its own record.
+    "rules":       "5e-SRD-Rule-Sections.json",
 }
 
 # 2024 file roster — partial upstream coverage as of 2026-05.
@@ -95,7 +101,9 @@ FVTT_ACTORS_2024_PATH = "packs/_source/actors24"
 #              carry _augmented_from_2014: true.
 # v2 candidate: pull from foundryvtt/dnd5e packs/_source/actors24/ (466
 # files) for native 2024 monsters once a normaliser is written.
-RULESET_2024_FALLBACK: tuple = ("monsters",)
+#   rules    — 5e-bits has no 2024 rule sections (as of 2026-10); the 2014
+#              text keeps the turn structure available, tagged as 2014.
+RULESET_2024_FALLBACK: tuple = ("monsters", "rules")
 
 
 def _bits_url(ruleset: str) -> str:
@@ -1544,6 +1552,136 @@ def _norm_subrace(r: dict) -> dict:
     }
 
 
+# Extra names a DM types for a rule, keyed by the last part of the record
+# index. The heading itself, and its singular when it ends in -s, are
+# always searchable; these cover the other words people use.
+RULE_ALIASES = {
+    "opportunity-attacks":         ["attack of opportunity", "AoO"],
+    "grappling":                   ["grapple", "escape a grapple"],
+    "shoving-a-creature":          ["shove", "push"],
+    "being-prone":                 ["prone", "stand up", "standing up"],
+    "two-weapon-fighting":         ["dual wielding", "off-hand attack"],
+    "death-saving-throws":         ["death save", "death saves"],
+    "squeezing-into-a-smaller-space": ["squeeze"],
+    "moving-around-other-creatures": ["move through a creature", "hostile space"],
+    "unseen-attackers-and-targets": ["unseen attacker", "invisible attacker"],
+    "ranged-attacks-in-close-combat": ["ranged attack in melee"],
+    "rolling-1-or-20":             ["natural 20", "natural 1"],
+    "jumping":                     ["jump", "long jump", "high jump"],
+    "falling":                     ["fall damage"],
+    "suffocating":                 ["suffocation", "holding breath"],
+    "knocking-a-creature-out":     ["knock out", "nonlethal damage"],
+    "climbing-swimming-and-crawling": ["climb", "swim", "crawl"],
+    "interacting-with-objects-around-you": ["object interaction", "draw a weapon"],
+    "typical-difficulty-classes":  ["DC", "difficulty class"],
+    "passive-checks":              ["passive perception"],
+    "combining-magical-effects":   ["stacking"],
+    "cover":                       ["half cover", "three-quarters cover", "total cover"],
+    "the-order-of-combat":         ["combat", "round", "turn"],
+    "lifting-and-carrying":        ["carrying capacity", "encumbrance"],
+    "temporary-hit-points":        ["temp hp"],
+    "travel-pace":                 ["pace", "forced march"],
+}
+
+
+def _norm_rule_sections(records: list) -> list:
+    """Split each SRD rule section into one record per heading.
+
+    A section is one markdown text (`## Making an Attack`, `### Melee
+    Attacks`, `#### Opportunity Attacks`, ...). Each heading becomes a
+    record holding its text down to the next heading of the same or a
+    higher level, so a lookup returns the rule asked for, not 10 KB around
+    it; the top heading keeps the whole section. `path` is the chain of
+    headings above it.
+
+    Names stay as printed unless two headings would answer the same query
+    ("Reactions" in combat and under Casting Time, "Initiative" under
+    Dexterity): the shallowest one keeps the plain name, the others get
+    their parent in brackets — "Reactions (Casting Time)".
+    """
+    out: list = []
+    for sec in records:
+        if not isinstance(sec, dict):
+            continue
+        text = sec.get("desc") or ""
+        if isinstance(text, list):
+            text = "\n\n".join(text)
+        lines = text.splitlines()
+        heads = [(i, len(m.group(1)), m.group(2).strip())
+                 for i, ln in enumerate(lines)
+                 for m in [re.match(r"^(#{2,6})\s+(.+?)\s*#*$", ln)] if m]
+        if not heads:
+            heads = [(-1, 2, sec.get("name", ""))]
+        stack: list = []   # [(level, heading, slug)]
+        for n, (i, level, heading) in enumerate(heads):
+            end = len(lines)
+            for j, lv, _ in heads[n + 1:]:
+                if lv <= level:
+                    end = j
+                    break
+            while stack and stack[-1][0] >= level:
+                stack.pop()
+            parents = [h for _, h, _ in stack]
+            slug = _slugify(heading)
+            base = sec.get("index") or _slugify(sec.get("name", ""))
+            if n == 0:
+                index = base
+                top_slug = slug
+            else:
+                chain = [s for _, _, s in stack] + [slug]
+                if chain[0] == top_slug and len(chain) > 1:
+                    chain = chain[1:]
+                index = base + "/" + "/".join(chain)
+            body = "\n".join(lines[i + 1:end]).strip()
+            # Sub-headings inside the text read as bold lines in the card
+            body = re.sub(r"^#{2,6}\s+(.+?)\s*#*$", r"**\1**", body, flags=re.M)
+            out.append({
+                "name":        heading,
+                "index":       index,
+                "section":     sec.get("name", ""),
+                "path":        parents,
+                "level":       level,
+                "description": body,
+            })
+            stack.append((level, heading, slug))
+
+    def _key(name: str) -> str:
+        k = _slugify(name)
+        return k[:-1] if k.endswith("s") and not k.endswith("ss") else k
+
+    # A heading that repeats its parent's ("Travel Pace" under "Travel
+    # Pace", usually a table caption) adds nothing: the parent has its text.
+    out = [r for r in out if not (r["path"] and r["path"][-1] == r["name"])]
+
+    groups: dict = {}
+    for r in out:
+        groups.setdefault(_key(r["name"]), []).append(r)
+    for same in groups.values():
+        if len(same) < 2:
+            continue
+        top = min(r["level"] for r in same)
+        keepers = [r for r in same if r["level"] == top]
+        # Equal depth in different sections: the earlier one (the SRD's own
+        # order: combat before spellcasting) keeps the plain name. Equal
+        # depth in one section ("Attack Rolls and Damage" under Strength and
+        # under Dexterity): none does.
+        if len({r["section"] for r in keepers}) > 1:
+            keepers = keepers[:1]
+        for r in same:
+            if (len(keepers) > 1 or r is not keepers[0]) and r["path"]:
+                r["name"] = f"{r['name']} ({r['path'][-1]})"
+
+    for r in out:
+        last = r["index"].rsplit("/", 1)[-1]
+        aliases = list(RULE_ALIASES.get(last, []))
+        plain = r["name"]
+        if "(" not in plain and re.search(r"[^s]s$", plain):
+            aliases.insert(0, plain[:-1])
+        r["aliases"] = aliases
+        del r["level"]
+    return out
+
+
 # ─── FoundryVTT normaliser ────────────────────────────────────────────────────
 
 def _parse_scale_tables(class_doc: dict) -> dict:
@@ -1675,6 +1813,11 @@ def _build_5ebits(ruleset: str = DEFAULT_RULESET) -> tuple[dict, list[str]]:
         "backgrounds":               lambda r: r,
         "feats":                     lambda r: r,
     }
+    # Normalisers that turn the whole file into a different number of
+    # records (one rule section → one record per heading).
+    NORM_ALL = {
+        "rules":       _norm_rule_sections,
+    }
 
     categories: dict = {}
 
@@ -1683,7 +1826,9 @@ def _build_5ebits(ruleset: str = DEFAULT_RULESET) -> tuple[dict, list[str]]:
     for key, filename in primary_files.items():
         print(f"  5e-bits[{ruleset}]  {key} …", end="", flush=True)
         records = _load_bits_records(filename)
-        if key in NORM:
+        if key in NORM_ALL:
+            normed = [r for r in NORM_ALL[key](records) if r.get("name")]
+        elif key in NORM:
             normed = [NORM[key](r) for r in records if isinstance(r, dict)]
             normed = [r for r in normed if r.get("name")]
         else:
@@ -1736,12 +1881,15 @@ def _build_5ebits(ruleset: str = DEFAULT_RULESET) -> tuple[dict, list[str]]:
             if key == "monsters" and foundry_monster_count >= 100:
                 continue
             filename = BITS_FILES_2014.get(key)
-            if not filename or key not in NORM:
+            if not filename or (key not in NORM and key not in NORM_ALL):
                 continue
             print(f"  5e-bits[2014 augment for {key}] …",
                   end="", flush=True)
             records = _load_bits_records(filename)
-            normed_2014 = [NORM[key](r) for r in records if isinstance(r, dict)]
+            if key in NORM_ALL:
+                normed_2014 = NORM_ALL[key](records)
+            else:
+                normed_2014 = [NORM[key](r) for r in records if isinstance(r, dict)]
             normed_2014 = [r for r in normed_2014 if r.get("name")]
             # Tag each augmenter with provenance
             for r in normed_2014:

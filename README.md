@@ -736,7 +736,7 @@ ${CLAUDE_SKILL_DIR}/
 ├── SKILL-commands.md         # /dm:dnd command procedures
 ├── README.md                 # This file
 ├── data/
-│   ├── dnd5e_srd.json        # Bundled 5e SRD dataset (1467 records — spells, features, equipment, monsters, races)
+│   ├── dnd5e_srd.json        # Bundled 5e SRD dataset (1708 records — spells, features, equipment, monsters, races, rules of play)
 │   └── dnd5e_supplemental.json  # Non-SRD content (Xanathar's, subclass features, etc.)
 ├── scripts/
 │   ├── dice.py
@@ -805,7 +805,7 @@ Each campaign declares its ruleset on the `state.md` header line: `**Ruleset:** 
 
 ### 2014 dataset (default)
 
-`data/dnd5e_srd.json` — built from `5e-bits/5e-database` (`main` branch, 2014 SRD) and `foundryvtt/dnd5e` (`master` branch). 1,467 records: 319 spells, 237 equipment, 362 magic items, 15 conditions, 334 monsters, 9 races, 4 subraces, 187 features.
+`data/dnd5e_srd.json` — built from `5e-bits/5e-database` (`main` branch, 2014 SRD) and `foundryvtt/dnd5e` (`master` branch). 1,708 records: 319 spells, 237 equipment, 362 magic items, 15 conditions, 334 monsters, 9 races, 4 subraces, 187 features, 241 rules of play (SRD rule sections, one per heading).
 
 ### 2024 dataset (opt-in)
 

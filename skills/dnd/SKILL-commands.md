@@ -534,7 +534,7 @@ Exit the current session **without saving any state changes**. Use this when an 
 - `sync --check` → check upstream without rebuilding
 - `status` → `python3 ${CLAUDE_SKILL_DIR}/scripts/build_srd.py --status` — show current dataset metadata
 
-Dataset is bundled at `${CLAUDE_SKILL_DIR}/data/dnd5e_srd.json` (1467 records: spells, equipment, magic items, conditions, monsters, races, subraces, class features). No download required at runtime. Run `sync` only when you want to pull new upstream content.
+Dataset is bundled at `${CLAUDE_SKILL_DIR}/data/dnd5e_srd.json` (1708 records: spells, equipment, magic items, conditions, monsters, races, subraces, class features, rules of play). No download required at runtime. Run `sync` only when you want to pull new upstream content.
 
 ---
 
