@@ -1,0 +1,360 @@
+{
+ "features": {
+  "barbarian/rage": {
+   "name": "Ira",
+   "description": "In battaglia, combatti con ferocia primordiale. Nel tuo turno, puoi entrare in ira con un'azione bonus. Mentre sei in ira, ottieni i seguenti benefici se non indossi un'armatura pesante:\n\n- Hai vantaggio alle prove di Forza e ai tiri salvezza su Forza.\n\n- Quando effettui un attacco con arma da mischia usando Forza, ottieni un bonus di +2 al tiro per i danni. Questo bonus aumenta con il livello.\n\n- Hai resistenza ai danni contundenti, perforanti e taglienti.\n\nSe sei in grado di lanciare incantesimi, non puoi lanciarli né concentrarti su di essi mentre sei in ira.\n\nLa tua ira dura 1 minuto. Termina prima se vieni reso privo di sensi o se il tuo turno finisce e non hai attaccato una creatura ostile dall'ultimo tuo turno né subito danni da allora. Puoi anche terminare la tua ira nel tuo turno con un'azione bonus.\n\nUna volta che sei entrato in ira il numero massimo di volte consentito dal tuo livello da barbaro, devi finire un riposo lungo prima di poter entrare in ira di nuovo. Puoi entrare in ira 2 volte al 1° livello, 3 al 3°, 4 al 6°, 5 al 12° e 6 al 17°."
+  },
+  "barbarian/barbarian-unarmored-defense": {
+   "name": "Difesa Senza Armatura",
+   "description": "Finché non indossi alcuna armatura, la tua Classe Armatura è pari a 10 + il tuo modificatore di Destrezza + il tuo modificatore di Costituzione. Puoi usare uno scudo e ottenere comunque questo beneficio."
+  },
+  "barbarian/reckless-attack": {
+   "name": "Attacco Irruento",
+   "description": "A partire dal 2° livello, puoi mettere da parte ogni preoccupazione per la difesa per attaccare con feroce disperazione. Quando effettui il tuo primo attacco nel tuo turno, puoi decidere di attaccare in modo irruento. Farlo ti dà vantaggio ai tiri per colpire con armi da mischia che usano Forza durante questo turno, ma i tiri per colpire contro di te hanno vantaggio fino al tuo turno successivo."
+  },
+  "barbarian/danger-sense": {
+   "name": "Percezione del Pericolo",
+   "description": "Al 2° livello, ottieni un senso straordinario di quando le cose nei paraggi non sono come dovrebbero, il che ti dà un vantaggio quando schivi il pericolo. Hai vantaggio ai tiri salvezza su Destrezza contro effetti che puoi vedere, come trappole e incantesimi. Per ottenere questo beneficio, non devi essere accecato, assordato o incapacitato."
+  },
+  "barbarian/primal-path": {
+   "name": "Cammino Primordiale",
+   "description": "Al 3° livello scegli un cammino che plasma la natura della tua ira. Scegli il Cammino del Berserker o il Cammino del Combattente Totemico, entrambi descritti alla fine della descrizione della classe. La tua scelta ti concede privilegi al 3° livello e di nuovo al 6°, 10° e 14° livello."
+  },
+  "barbarian/frenzy": {
+   "name": "Frenesia",
+   "description": "A partire da quando scegli questo cammino al 3° livello, puoi entrare in frenesia quando vai in ira. Se lo fai, per la durata della tua ira puoi effettuare un singolo attacco con arma da mischia come azione bonus in ciascuno dei tuoi turni successivi a questo. Quando la tua ira termina, subisci un livello di indebolimento (come descritto nell'appendice A)."
+  },
+  "barbarian/barbarian-ability-score-improvement-1": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "barbarian/barbarian-extra-attack": {
+   "name": "Attacco Extra",
+   "description": "A partire dal 5° livello, puoi attaccare due volte, invece di una, ogni volta che effettui l'azione di Attacco nel tuo turno."
+  },
+  "barbarian/fast-movement": {
+   "name": "Movimento Veloce",
+   "description": "A partire dal 5° livello, la tua velocità aumenta di 3 m finché non indossi un'armatura pesante."
+  },
+  "barbarian/mindless-rage": {
+   "name": "Ira Incontenibile",
+   "description": "A partire dal 6° livello, non puoi essere affascinato o spaventato mentre sei in ira. Se sei affascinato o spaventato quando entri in ira, l'effetto è sospeso per la durata dell'ira."
+  },
+  "barbarian/primal-path-improvement-1": {
+   "name": "Privilegio del Cammino",
+   "description": "Al 3° livello scegli un cammino che plasma la natura della tua ira. Scegli il Cammino del Berserker o il Cammino del Combattente Totemico, entrambi descritti alla fine della descrizione della classe. La tua scelta ti concede privilegi al 3° livello e di nuovo al 6°, 10° e 14° livello."
+  },
+  "barbarian/feral-instinct": {
+   "name": "Istinto Ferino",
+   "description": "Al 7° livello, i tuoi istinti sono così affinati che hai vantaggio ai tiri di iniziativa.\n\nInoltre, se sei sorpreso all'inizio del combattimento e non sei incapacitato, puoi agire normalmente nel tuo primo turno, ma solo se entri in ira prima di fare qualsiasi altra cosa in quel turno."
+  },
+  "barbarian/barbarian-ability-score-improvement-2": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "barbarian/brutal-critical-1-die": {
+   "name": "Critico Brutale (1 dado)",
+   "description": "A partire dal 9° livello, puoi tirare un dado di danno dell'arma aggiuntivo quando determini i danni extra di un colpo critico con un attacco in mischia. Questo valore sale a due dadi aggiuntivi al 13° livello e a tre dadi aggiuntivi al 17° livello."
+  },
+  "barbarian/intimidating-presence": {
+   "name": "Presenza Intimidatoria",
+   "description": "A partire dal 10° livello, puoi usare la tua azione per spaventare qualcuno con la tua presenza minacciosa. Quando lo fai, scegli una creatura che puoi vedere entro 9 m da te. Se la creatura può vederti o sentirti, deve superare un tiro salvezza su Saggezza (CD pari a 8 + il tuo bonus di competenza + il tuo modificatore di Carisma) o essere spaventata da te fino alla fine del tuo turno successivo. Nei turni seguenti, puoi usare la tua azione per estendere la durata di questo effetto sulla creatura spaventata fino alla fine del tuo turno successivo. Questo effetto termina se la creatura finisce il suo turno fuori dalla linea di vista o a più di 18 m da te.\n\nSe la creatura supera il tiro salvezza, non puoi usare questo privilegio su quella creatura di nuovo per 24 ore."
+  },
+  "barbarian/primal-path-improvement-2": {
+   "name": "Privilegio del Cammino",
+   "description": "Al 3° livello scegli un cammino che plasma la natura della tua ira. Scegli il Cammino del Berserker o il Cammino del Combattente Totemico, entrambi descritti alla fine della descrizione della classe. La tua scelta ti concede privilegi al 3° livello e di nuovo al 6°, 10° e 14° livello."
+  },
+  "barbarian/relentless-rage": {
+   "name": "Ira Implacabile",
+   "description": "A partire dall'11° livello, la tua ira può tenerti in combattimento nonostante ferite gravissime. Se scendi a 0 punti ferita mentre sei in ira e non muori sul colpo, puoi effettuare un tiro salvezza su Costituzione con CD 10. Se hai successo, scendi invece a 1 punto ferita.\n\nOgni volta che usi questo privilegio dopo la prima, la CD aumenta di 5. Quando finisci un riposo breve o lungo, la CD torna a 10."
+  },
+  "barbarian/barbarian-ability-score-improvement-3": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "barbarian/brutal-critical-2-dice": {
+   "name": "Critico Brutale (2 dadi)",
+   "description": "A partire dal 9° livello, puoi tirare un dado di danno dell'arma aggiuntivo quando determini i danni extra di un colpo critico con un attacco in mischia. Questo valore sale a due dadi aggiuntivi al 13° livello e a tre dadi aggiuntivi al 17° livello."
+  },
+  "barbarian/retaliation": {
+   "name": "Ritorsione",
+   "description": "A partire dal 14° livello, quando subisci danni da una creatura che si trova entro 1,5 m da te, puoi usare la tua reazione per effettuare un attacco con arma da mischia contro quella creatura."
+  },
+  "barbarian/primal-path-improvement-3": {
+   "name": "Privilegio del Cammino",
+   "description": "Al 3° livello scegli un cammino che plasma la natura della tua ira. Scegli il Cammino del Berserker o il Cammino del Combattente Totemico, entrambi descritti alla fine della descrizione della classe. La tua scelta ti concede privilegi al 3° livello e di nuovo al 6°, 10° e 14° livello."
+  },
+  "barbarian/persistent-rage": {
+   "name": "Ira Persistente",
+   "description": "A partire dal 15° livello, la tua ira è così feroce che termina prima solo se perdi i sensi o se scegli di terminarla."
+  },
+  "barbarian/barbarian-ability-score-improvement-4": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "barbarian/brutal-critical-3-dice": {
+   "name": "Critico Brutale (3 dadi)",
+   "description": "A partire dal 9° livello, puoi tirare un dado di danno dell'arma aggiuntivo quando determini i danni extra di un colpo critico con un attacco in mischia. Questo valore sale a due dadi aggiuntivi al 13° livello e a tre dadi aggiuntivi al 17° livello."
+  },
+  "barbarian/indomitable-might": {
+   "name": "Potenza Indomabile",
+   "description": "A partire dal 18° livello, se il tuo totale per una prova di Forza è inferiore al tuo punteggio di Forza, puoi usare quel punteggio al posto del totale."
+  },
+  "barbarian/barbarian-ability-score-improvement-5": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "barbarian/primal-champion": {
+   "name": "Campione Primordiale",
+   "description": "Al 20° livello, incarni il potere della natura selvaggia. I tuoi punteggi di Forza e Costituzione aumentano di 4. Il tuo massimo per quei punteggi è ora 24."
+  },
+  "bard/spellcasting-bard": {
+   "name": "Incantesimi: Bardo",
+   "description": "Hai imparato a sciogliere e rimodellare il tessuto della realtà in armonia con i tuoi desideri e la tua musica. I tuoi incantesimi fanno parte del tuo vasto repertorio, una magia che puoi adattare a situazioni diverse."
+  },
+  "bard/bardic-inspiration-d6": {
+   "name": "Ispirazione Bardica (d6)",
+   "description": "Puoi ispirare gli altri con parole o musica trascinanti. Per farlo, usi un'azione bonus nel tuo turno per scegliere una creatura diversa da te entro 18 m da te che possa sentirti. Quella creatura ottiene un dado di Ispirazione Bardica, un d6. Una sola volta nei successivi 10 minuti, la creatura può tirare il dado e sommare il numero ottenuto a una prova di caratteristica, a un tiro per colpire o a un tiro salvezza che effettua. La creatura può aspettare di aver tirato il d20 prima di decidere se usare il dado di Ispirazione Bardica, ma deve decidere prima che il DM dica se il tiro ha successo o fallisce. Una volta tirato, il dado di Ispirazione Bardica è perso. Una creatura può avere un solo dado di Ispirazione Bardica alla volta.\n\nPuoi usare questo privilegio un numero di volte pari al tuo modificatore di Carisma (minimo una volta). Recuperi tutti gli usi spesi quando finisci un riposo lungo.\n\nIl tuo dado di Ispirazione Bardica cambia quando raggiungi certi livelli in questa classe. Il dado diventa un d8 al 5° livello, un d10 al 10° livello e un d12 al 15° livello."
+  },
+  "bard/jack-of-all-trades": {
+   "name": "Factotum",
+   "description": "A partire dal 2° livello, puoi sommare metà del tuo bonus di competenza, arrotondato per difetto, a qualsiasi prova di caratteristica che effettui e che non includa già il tuo bonus di competenza."
+  },
+  "bard/song-of-rest-d6": {
+   "name": "Canto di Riposo (d6)",
+   "description": "A partire dal 2° livello, puoi usare musica o oratoria rilassanti per aiutare a rinvigorire i tuoi alleati feriti durante un riposo breve. Se tu o una qualsiasi creatura amica che possa sentire la tua esibizione recuperate punti ferita alla fine del riposo breve spendendo uno o più Dadi Vita, ciascuna di quelle creature recupera 1d6 punti ferita extra.\n\nI punti ferita extra aumentano quando raggiungi certi livelli in questa classe: a 1d8 al 9° livello, a 1d10 al 13° livello e a 1d12 al 17° livello."
+  },
+  "bard/bard-college": {
+   "name": "Collegio Bardico",
+   "description": "Al 3° livello, approfondisci le tecniche avanzate di un collegio bardico a tua scelta, come il Collegio della Sapienza. La tua scelta ti concede privilegi al 3° livello e di nuovo al 6° e al 14° livello."
+  },
+  "bard/bonus-proficiencies": {
+   "name": "Competenze Bonus",
+   "description": "Quando entri nel Collegio della Sapienza al 3° livello, ottieni competenza in tre abilità a tua scelta."
+  },
+  "bard/cutting-words": {
+   "name": "Parole Taglienti",
+   "description": "Sempre al 3° livello, impari a usare il tuo spirito per distrarre, confondere e comunque minare la sicurezza e la competenza degli altri.\n\nQuando una creatura che puoi vedere entro 18 m da te effettua un tiro per colpire, una prova di caratteristica o un tiro per i danni, puoi usare la tua reazione per spendere uno dei tuoi usi di Ispirazione Bardica, tirando un dado di Ispirazione Bardica e sottraendo il numero ottenuto dal tiro della creatura.\n\nPuoi scegliere di usare questo privilegio dopo che la creatura ha effettuato il suo tiro, ma prima che il DM determini se il tiro per colpire o la prova di caratteristica ha successo o fallisce, oppure prima che la creatura infligga i suoi danni. La creatura è immune se non può sentirti o se è immune a essere affascinata."
+  },
+  "bard/bard-expertise-1": {
+   "name": "Maestria",
+   "description": "Al 3° livello, scegli due delle tue competenze nelle abilità. Il tuo bonus di competenza è raddoppiato per qualsiasi prova di caratteristica che effettui usando una delle competenze scelte. Al 10° livello, puoi scegliere altre due competenze nelle abilità per ottenere questo beneficio."
+  },
+  "bard/bard-ability-score-improvement-1": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "bard/bardic-inspiration-d8": {
+   "name": "Ispirazione Bardica (d8)",
+   "description": "Puoi ispirare gli altri con parole o musica trascinanti. Per farlo, usi un'azione bonus nel tuo turno per scegliere una creatura diversa da te entro 18 m da te che possa sentirti. Quella creatura ottiene un dado di Ispirazione Bardica, un d6. Una sola volta nei successivi 10 minuti, la creatura può tirare il dado e sommare il numero ottenuto a una prova di caratteristica, a un tiro per colpire o a un tiro salvezza che effettua. La creatura può aspettare di aver tirato il d20 prima di decidere se usare il dado di Ispirazione Bardica, ma deve decidere prima che il DM dica se il tiro ha successo o fallisce. Una volta tirato, il dado di Ispirazione Bardica è perso. Una creatura può avere un solo dado di Ispirazione Bardica alla volta.\n\nPuoi usare questo privilegio un numero di volte pari al tuo modificatore di Carisma (minimo una volta). Recuperi tutti gli usi spesi quando finisci un riposo lungo.\n\nIl tuo dado di Ispirazione Bardica cambia quando raggiungi certi livelli in questa classe. Il dado diventa un d8 al 5° livello, un d10 al 10° livello e un d12 al 15° livello."
+  },
+  "bard/font-of-inspiration": {
+   "name": "Fonte di Ispirazione",
+   "description": "A partire da quando raggiungi il 5° livello, recuperi tutti i tuoi usi spesi di Ispirazione Bardica quando finisci un riposo breve o lungo."
+  },
+  "bard/countercharm": {
+   "name": "Controfascino",
+   "description": "Al 6° livello, ottieni la capacità di usare note musicali o parole di potere per interrompere gli effetti che influenzano la mente. Con un'azione, puoi iniziare un'esibizione che dura fino alla fine del tuo turno successivo. Durante quel periodo, tu e qualsiasi creatura amica entro 9 m da te avete vantaggio ai tiri salvezza contro l'essere spaventati o affascinati. Una creatura deve poterti sentire per ottenere questo beneficio. L'esibizione termina prima se sei incapacitato o silenziato o se la termini volontariamente (non richiede azione)."
+  },
+  "bard/bard-college-improvement-1": {
+   "name": "Privilegio del Collegio Bardico",
+   "description": "Al 3° livello, approfondisci le tecniche avanzate di un collegio bardico a tua scelta, come il Collegio della Sapienza. La tua scelta ti concede privilegi al 3° livello e di nuovo al 6° e al 14° livello."
+  },
+  "bard/additional-magical-secrets": {
+   "name": "Segreti Magici Aggiuntivi",
+   "description": "Al 6° livello, impari due incantesimi a tua scelta da qualsiasi classe. Un incantesimo che scegli deve essere di un livello che puoi lanciare, come indicato nella tabella del Bardo, oppure un trucchetto. Gli incantesimi scelti contano come incantesimi da bardo per te ma non contano nel numero di incantesimi da bardo che conosci."
+  },
+  "bard/bard-ability-score-improvement-2": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "bard/song-of-rest-d8": {
+   "name": "Canto di Riposo (d8)",
+   "description": "A partire dal 2° livello, puoi usare musica o oratoria rilassanti per aiutare a rinvigorire i tuoi alleati feriti durante un riposo breve. Se tu o una qualsiasi creatura amica che possa sentire la tua esibizione recuperate punti ferita alla fine del riposo breve spendendo uno o più Dadi Vita, ciascuna di quelle creature recupera 1d6 punti ferita extra.\n\nI punti ferita extra aumentano quando raggiungi certi livelli in questa classe: a 1d8 al 9° livello, a 1d10 al 13° livello e a 1d12 al 17° livello."
+  },
+  "bard/bardic-inspiration-d10": {
+   "name": "Ispirazione Bardica (d10)",
+   "description": "Puoi ispirare gli altri con parole o musica trascinanti. Per farlo, usi un'azione bonus nel tuo turno per scegliere una creatura diversa da te entro 18 m da te che possa sentirti. Quella creatura ottiene un dado di Ispirazione Bardica, un d6. Una sola volta nei successivi 10 minuti, la creatura può tirare il dado e sommare il numero ottenuto a una prova di caratteristica, a un tiro per colpire o a un tiro salvezza che effettua. La creatura può aspettare di aver tirato il d20 prima di decidere se usare il dado di Ispirazione Bardica, ma deve decidere prima che il DM dica se il tiro ha successo o fallisce. Una volta tirato, il dado di Ispirazione Bardica è perso. Una creatura può avere un solo dado di Ispirazione Bardica alla volta.\n\nPuoi usare questo privilegio un numero di volte pari al tuo modificatore di Carisma (minimo una volta). Recuperi tutti gli usi spesi quando finisci un riposo lungo.\n\nIl tuo dado di Ispirazione Bardica cambia quando raggiungi certi livelli in questa classe. Il dado diventa un d8 al 5° livello, un d10 al 10° livello e un d12 al 15° livello."
+  },
+  "bard/bard-expertise-2": {
+   "name": "Maestria",
+   "description": "Al 3° livello, scegli due delle tue competenze nelle abilità. Il tuo bonus di competenza è raddoppiato per qualsiasi prova di caratteristica che effettui usando una delle competenze scelte. Al 10° livello, puoi scegliere altre due competenze nelle abilità per ottenere questo beneficio."
+  },
+  "bard/magical-secrets-1": {
+   "name": "Segreti Magici",
+   "description": "Al 10° livello, hai saccheggiato conoscenze magiche da un ampio spettro di discipline. Scegli due incantesimi di qualsiasi classe, compresa questa. Un incantesimo che scegli deve essere di un livello che puoi lanciare, come indicato nella tabella del Bardo, oppure un trucchetto.\n\nGli incantesimi scelti contano come incantesimi da bardo per te e sono inclusi nel numero della colonna Incantesimi Conosciuti della tabella del Bardo.\n\nImpari due incantesimi aggiuntivi di qualsiasi classe al 14° livello e di nuovo al 18° livello."
+  },
+  "bard/bard-ability-score-improvement-3": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "bard/song-of-rest-d10": {
+   "name": "Canto di Riposo (d10)",
+   "description": "A partire dal 2° livello, puoi usare musica o oratoria rilassanti per aiutare a rinvigorire i tuoi alleati feriti durante un riposo breve. Se tu o una qualsiasi creatura amica che possa sentire la tua esibizione recuperate punti ferita alla fine del riposo breve spendendo uno o più Dadi Vita, ciascuna di quelle creature recupera 1d6 punti ferita extra.\n\nI punti ferita extra aumentano quando raggiungi certi livelli in questa classe: a 1d8 al 9° livello, a 1d10 al 13° livello e a 1d12 al 17° livello."
+  },
+  "bard/magical-secrets-2": {
+   "name": "Segreti Magici",
+   "description": "Al 10° livello, hai saccheggiato conoscenze magiche da un ampio spettro di discipline. Scegli due incantesimi di qualsiasi classe, compresa questa. Un incantesimo che scegli deve essere di un livello che puoi lanciare, come indicato nella tabella del Bardo, oppure un trucchetto.\n\nGli incantesimi scelti contano come incantesimi da bardo per te e sono inclusi nel numero della colonna Incantesimi Conosciuti della tabella del Bardo.\n\nImpari due incantesimi aggiuntivi di qualsiasi classe al 14° livello e di nuovo al 18° livello."
+  },
+  "bard/bard-college-improvement-2": {
+   "name": "Privilegio del Collegio Bardico",
+   "description": "Al 3° livello, approfondisci le tecniche avanzate di un collegio bardico a tua scelta, come il Collegio della Sapienza. La tua scelta ti concede privilegi al 3° livello e di nuovo al 6° e al 14° livello."
+  },
+  "bard/peerless-skill": {
+   "name": "Abilità Impareggiabile",
+   "description": "A partire dal 14° livello, quando effettui una prova di caratteristica, puoi spendere un uso di Ispirazione Bardica. Tira un dado di Ispirazione Bardica e somma il numero ottenuto alla tua prova di caratteristica. Puoi scegliere di farlo dopo aver tirato il dado per la prova di caratteristica, ma prima che il DM ti dica se hai successo o fallisci."
+  },
+  "bard/bardic-inspiration-d12": {
+   "name": "Ispirazione Bardica (d12)",
+   "description": "Puoi ispirare gli altri con parole o musica trascinanti. Per farlo, usi un'azione bonus nel tuo turno per scegliere una creatura diversa da te entro 18 m da te che possa sentirti. Quella creatura ottiene un dado di Ispirazione Bardica, un d6. Una sola volta nei successivi 10 minuti, la creatura può tirare il dado e sommare il numero ottenuto a una prova di caratteristica, a un tiro per colpire o a un tiro salvezza che effettua. La creatura può aspettare di aver tirato il d20 prima di decidere se usare il dado di Ispirazione Bardica, ma deve decidere prima che il DM dica se il tiro ha successo o fallisce. Una volta tirato, il dado di Ispirazione Bardica è perso. Una creatura può avere un solo dado di Ispirazione Bardica alla volta.\n\nPuoi usare questo privilegio un numero di volte pari al tuo modificatore di Carisma (minimo una volta). Recuperi tutti gli usi spesi quando finisci un riposo lungo.\n\nIl tuo dado di Ispirazione Bardica cambia quando raggiungi certi livelli in questa classe. Il dado diventa un d8 al 5° livello, un d10 al 10° livello e un d12 al 15° livello."
+  },
+  "bard/bard-ability-score-improvement-4": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "bard/song-of-rest-d12": {
+   "name": "Canto di Riposo (d12)",
+   "description": "A partire dal 2° livello, puoi usare musica o oratoria rilassanti per aiutare a rinvigorire i tuoi alleati feriti durante un riposo breve. Se tu o una qualsiasi creatura amica che possa sentire la tua esibizione recuperate punti ferita alla fine del riposo breve spendendo uno o più Dadi Vita, ciascuna di quelle creature recupera 1d6 punti ferita extra.\n\nI punti ferita extra aumentano quando raggiungi certi livelli in questa classe: a 1d8 al 9° livello, a 1d10 al 13° livello e a 1d12 al 17° livello."
+  },
+  "bard/magical-secrets-3": {
+   "name": "Segreti Magici",
+   "description": "Al 10° livello, hai saccheggiato conoscenze magiche da un ampio spettro di discipline. Scegli due incantesimi di qualsiasi classe, compresa questa. Un incantesimo che scegli deve essere di un livello che puoi lanciare, come indicato nella tabella del Bardo, oppure un trucchetto.\n\nGli incantesimi scelti contano come incantesimi da bardo per te e sono inclusi nel numero della colonna Incantesimi Conosciuti della tabella del Bardo.\n\nImpari due incantesimi aggiuntivi di qualsiasi classe al 14° livello e di nuovo al 18° livello."
+  },
+  "bard/bard-ability-score-improvement-5": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "bard/superior-inspiration": {
+   "name": "Ispirazione Superiore",
+   "description": "Al 20° livello, quando tiri l'iniziativa e non hai più usi di Ispirazione Bardica, ne recuperi uno."
+  },
+  "cleric/spellcasting-cleric": {
+   "name": "Incantesimi: Chierico",
+   "description": "Come tramite del potere divino, puoi lanciare incantesimi da chierico."
+  },
+  "cleric/divine-domain": {
+   "name": "Dominio Divino",
+   "description": "Scegli un dominio legato alla tua divinità, come Conoscenza, Vita, Luce, Natura, Tempesta, Inganno o Guerra. Nell'SRD con licenza Open Game è descritto solo il dominio della Vita. Altri domini sono descritti nei manuali ufficiali o nei prodotti di altri editori.\n\nIl tuo dominio ti concede incantesimi di dominio e altri privilegi quando lo scegli al 1° livello. Ti concede anche modi aggiuntivi di usare Incanalare Divinità quando ottieni quel privilegio al 2° livello, e benefici ulteriori al 6°, all'8° e al 17° livello."
+  },
+  "cleric/domain-spells-1": {
+   "name": "Incantesimi di Dominio",
+   "description": "Ogni dominio ha una lista di incantesimi (i suoi incantesimi di dominio) che ottieni ai livelli da chierico indicati nella descrizione del dominio. Una volta ottenuto un incantesimo di dominio, lo hai sempre preparato, e non conta nel numero di incantesimi che puoi preparare ogni giorno.\n\nSe hai un incantesimo di dominio che non compare nella lista degli incantesimi del chierico, quell'incantesimo è comunque un incantesimo da chierico per te."
+  },
+  "cleric/bonus-proficiency": {
+   "name": "Competenza Bonus",
+   "description": "Quando scegli questo dominio al 1° livello, ottieni competenza nelle armature pesanti."
+  },
+  "cleric/disciple-of-life": {
+   "name": "Discepolo della Vita",
+   "description": "Sempre a partire dal 1° livello, i tuoi incantesimi curativi sono più efficaci. Ogni volta che usi un incantesimo di 1° livello o superiore per ripristinare punti ferita a una creatura, la creatura recupera punti ferita aggiuntivi pari a 2 + il livello dell'incantesimo."
+  },
+  "cleric/channel-divinity-1-rest": {
+   "name": "Incanalare Divinità (1/riposo)",
+   "description": "Al 2° livello, ottieni la capacità di incanalare energia divina direttamente dalla tua divinità, usandola per alimentare effetti magici. Inizi con due di questi effetti: Scacciare Non Morti e un effetto determinato dal tuo dominio. Alcuni domini ti concedono effetti aggiuntivi man mano che avanzi di livello, come indicato nella descrizione del dominio.\n\nQuando usi Incanalare Divinità, scegli quale effetto creare. Devi poi finire un riposo breve o lungo per usare di nuovo Incanalare Divinità.\n\nAlcuni effetti di Incanalare Divinità richiedono tiri salvezza. Quando usi un tale effetto di questa classe, la CD è pari alla CD del tiro salvezza dei tuoi incantesimi da chierico.\n\nA partire dal 6° livello puoi usare Incanalare Divinità due volte tra un riposo e l'altro, e a partire dal 18° livello puoi usarlo tre volte tra un riposo e l'altro. Quando finisci un riposo breve o lungo, recuperi i tuoi usi spesi."
+  },
+  "cleric/channel-divinity-turn-undead": {
+   "name": "Incanalare Divinità: Scacciare Non Morti",
+   "description": "Con un'azione, presenti il tuo simbolo sacro e pronunci una preghiera di biasimo contro i non morti. Ogni non morto che può vederti o sentirti entro 9 m da te deve effettuare un tiro salvezza su Saggezza. Se la creatura fallisce il tiro salvezza, è scacciata per 1 minuto o finché subisce dei danni.\n\nUna creatura scacciata deve spendere i suoi turni cercando di allontanarsi da te il più possibile, e non può spostarsi volontariamente in uno spazio entro 9 m da te. Inoltre non può effettuare reazioni. Per la sua azione, può usare solo l'azione di Scatto o cercare di sfuggire a un effetto che le impedisce di muoversi. Se non c'è nessun posto dove muoversi, la creatura può usare l'azione di Schivata."
+  },
+  "cleric/divine-domain-improvement-1": {
+   "name": "Privilegio del Dominio Divino",
+   "description": "Scegli un dominio legato alla tua divinità, come Conoscenza, Vita, Luce, Natura, Tempesta, Inganno o Guerra. Nell'SRD con licenza Open Game è descritto solo il dominio della Vita. Altri domini sono descritti nei manuali ufficiali o nei prodotti di altri editori.\n\nIl tuo dominio ti concede incantesimi di dominio e altri privilegi quando lo scegli al 1° livello. Ti concede anche modi aggiuntivi di usare Incanalare Divinità quando ottieni quel privilegio al 2° livello, e benefici ulteriori al 6°, all'8° e al 17° livello."
+  },
+  "cleric/channel-divinity-preserve-life": {
+   "name": "Incanalare Divinità: Preservare Vita",
+   "description": "A partire dal 2° livello, puoi usare Incanalare Divinità per curare i gravemente feriti.\n\nCon un'azione, presenti il tuo simbolo sacro ed evochi energia curativa che può ripristinare un numero di punti ferita pari a cinque volte il tuo livello da chierico.\n\nScegli qualsiasi creatura entro 9 m da te e dividi tra loro quei punti ferita. Questo privilegio non può riportare una creatura a più della metà del suo massimo di punti ferita. Non puoi usare questo privilegio su un non morto o su un costrutto."
+  },
+  "cleric/domain-spells-2": {
+   "name": "Incantesimi di Dominio",
+   "description": "Ogni dominio ha una lista di incantesimi (i suoi incantesimi di dominio) che ottieni ai livelli da chierico indicati nella descrizione del dominio. Una volta ottenuto un incantesimo di dominio, lo hai sempre preparato, e non conta nel numero di incantesimi che puoi preparare ogni giorno.\n\nSe hai un incantesimo di dominio che non compare nella lista degli incantesimi del chierico, quell'incantesimo è comunque un incantesimo da chierico per te."
+  },
+  "cleric/cleric-ability-score-improvement-1": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "cleric/domain-spells-3": {
+   "name": "Incantesimi di Dominio",
+   "description": "Ogni dominio ha una lista di incantesimi (i suoi incantesimi di dominio) che ottieni ai livelli da chierico indicati nella descrizione del dominio. Una volta ottenuto un incantesimo di dominio, lo hai sempre preparato, e non conta nel numero di incantesimi che puoi preparare ogni giorno.\n\nSe hai un incantesimo di dominio che non compare nella lista degli incantesimi del chierico, quell'incantesimo è comunque un incantesimo da chierico per te."
+  },
+  "cleric/destroy-undead-cr-1-2-or-below": {
+   "name": "Distruggere Non Morti (GS 1/2 o inferiore)",
+   "description": "A partire dal 5° livello, quando un non morto fallisce il tiro salvezza contro il tuo privilegio Scacciare Non Morti, la creatura viene distrutta all'istante se il suo grado di sfida è pari o inferiore a una certa soglia."
+  },
+  "cleric/channel-divinity-2-rest": {
+   "name": "Incanalare Divinità (2/riposo)",
+   "description": "A partire dal 6° livello puoi usare Incanalare Divinità due volte tra un riposo e l'altro, e a partire dal 18° livello puoi usarlo tre volte tra un riposo e l'altro. Quando finisci un riposo breve o lungo, recuperi i tuoi usi spesi."
+  },
+  "cleric/divine-domain-improvement-2": {
+   "name": "Privilegio del Dominio Divino",
+   "description": "Scegli un dominio legato alla tua divinità, come Conoscenza, Vita, Luce, Natura, Tempesta, Inganno o Guerra. Nell'SRD con licenza Open Game è descritto solo il dominio della Vita. Altri domini sono descritti nei manuali ufficiali o nei prodotti di altri editori.\n\nIl tuo dominio ti concede incantesimi di dominio e altri privilegi quando lo scegli al 1° livello. Ti concede anche modi aggiuntivi di usare Incanalare Divinità quando ottieni quel privilegio al 2° livello, e benefici ulteriori al 6°, all'8° e al 17° livello."
+  },
+  "cleric/blessed-healer": {
+   "name": "Guaritore Benedetto",
+   "description": "A partire dal 6° livello, gli incantesimi curativi che lanci sugli altri curano anche te. Quando lanci un incantesimo di 1° livello o superiore che ripristina punti ferita a una creatura diversa da te, recuperi punti ferita pari a 2 + il livello dell'incantesimo."
+  },
+  "cleric/domain-spells-4": {
+   "name": "Incantesimi di Dominio",
+   "description": "Ogni dominio ha una lista di incantesimi (i suoi incantesimi di dominio) che ottieni ai livelli da chierico indicati nella descrizione del dominio. Una volta ottenuto un incantesimo di dominio, lo hai sempre preparato, e non conta nel numero di incantesimi che puoi preparare ogni giorno.\n\nSe hai un incantesimo di dominio che non compare nella lista degli incantesimi del chierico, quell'incantesimo è comunque un incantesimo da chierico per te."
+  },
+  "cleric/cleric-ability-score-improvement-2": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "cleric/destroy-undead-cr-1-or-below": {
+   "name": "Distruggere Non Morti (GS 1 o inferiore)",
+   "description": "A partire dal 5° livello, quando un non morto fallisce il tiro salvezza contro il tuo privilegio Scacciare Non Morti, la creatura viene distrutta all'istante se il suo grado di sfida è pari o inferiore a una certa soglia."
+  },
+  "cleric/divine-domain-improvement-3": {
+   "name": "Privilegio del Dominio Divino",
+   "description": "Scegli un dominio legato alla tua divinità, come Conoscenza, Vita, Luce, Natura, Tempesta, Inganno o Guerra. Nell'SRD con licenza Open Game è descritto solo il dominio della Vita. Altri domini sono descritti nei manuali ufficiali o nei prodotti di altri editori.\n\nIl tuo dominio ti concede incantesimi di dominio e altri privilegi quando lo scegli al 1° livello. Ti concede anche modi aggiuntivi di usare Incanalare Divinità quando ottieni quel privilegio al 2° livello, e benefici ulteriori al 6°, all'8° e al 17° livello."
+  },
+  "cleric/divine-strike": {
+   "name": "Colpo Divino",
+   "description": "All'8° livello, ottieni la capacità di infondere energia divina nei tuoi colpi con l'arma. Una volta in ciascuno dei tuoi turni, quando colpisci una creatura con un attacco con arma, puoi far infliggere all'attacco 1d8 danni radiosi extra al bersaglio. Quando raggiungi il 14° livello, i danni extra aumentano a 2d8."
+  },
+  "cleric/domain-spells-5": {
+   "name": "Incantesimi di Dominio",
+   "description": "Ogni dominio ha una lista di incantesimi (i suoi incantesimi di dominio) che ottieni ai livelli da chierico indicati nella descrizione del dominio. Una volta ottenuto un incantesimo di dominio, lo hai sempre preparato, e non conta nel numero di incantesimi che puoi preparare ogni giorno.\n\nSe hai un incantesimo di dominio che non compare nella lista degli incantesimi del chierico, quell'incantesimo è comunque un incantesimo da chierico per te."
+  },
+  "cleric/divine-intervention": {
+   "name": "Intervento Divino",
+   "description": "A partire dal 10° livello, puoi invocare l'intervento della tua divinità in tuo favore quando il bisogno è grande.\n\nImplorare l'aiuto della tua divinità richiede di usare la tua azione. Descrivi l'assistenza che cerchi e tira i dadi percentuali. Se ottieni un numero pari o inferiore al tuo livello da chierico, la tua divinità interviene. Il DM sceglie la natura dell'intervento; l'effetto di qualsiasi incantesimo da chierico o incantesimo di dominio del chierico sarebbe appropriato.\n\nSe la tua divinità interviene, non puoi usare di nuovo questo privilegio per 7 giorni. Altrimenti, puoi usarlo di nuovo dopo aver finito un riposo lungo.\n\nAl 20° livello, la tua richiesta di intervento riesce automaticamente, senza bisogno di tirare."
+  },
+  "cleric/destroy-undead-cr-2-or-below": {
+   "name": "Distruggere Non Morti (GS 2 o inferiore)",
+   "description": "A partire dal 5° livello, quando un non morto fallisce il tiro salvezza contro il tuo privilegio Scacciare Non Morti, la creatura viene distrutta all'istante se il suo grado di sfida è pari o inferiore a una certa soglia."
+  },
+  "cleric/cleric-ability-score-improvement-3": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "cleric/destroy-undead-cr-3-or-below": {
+   "name": "Distruggere Non Morti (GS 3 o inferiore)",
+   "description": "A partire dal 5° livello, quando un non morto fallisce il tiro salvezza contro il tuo privilegio Scacciare Non Morti, la creatura viene distrutta all'istante se il suo grado di sfida è pari o inferiore a una certa soglia."
+  },
+  "cleric/cleric-ability-score-improvement-4": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "cleric/destroy-undead-cr-4-or-below": {
+   "name": "Distruggere Non Morti (GS 4 o inferiore)",
+   "description": "A partire dal 5° livello, quando un non morto fallisce il tiro salvezza contro il tuo privilegio Scacciare Non Morti, la creatura viene distrutta all'istante se il suo grado di sfida è pari o inferiore a una certa soglia."
+  },
+  "cleric/divine-domain-improvement-4": {
+   "name": "Privilegio del Dominio Divino",
+   "description": "Scegli un dominio legato alla tua divinità, come Conoscenza, Vita, Luce, Natura, Tempesta, Inganno o Guerra. Nell'SRD con licenza Open Game è descritto solo il dominio della Vita. Altri domini sono descritti nei manuali ufficiali o nei prodotti di altri editori.\n\nIl tuo dominio ti concede incantesimi di dominio e altri privilegi quando lo scegli al 1° livello. Ti concede anche modi aggiuntivi di usare Incanalare Divinità quando ottieni quel privilegio al 2° livello, e benefici ulteriori al 6°, all'8° e al 17° livello."
+  },
+  "cleric/supreme-healing": {
+   "name": "Guarigione Suprema",
+   "description": "A partire dal 17° livello, quando normalmente tireresti uno o più dadi per ripristinare punti ferita con un incantesimo, usi invece il valore massimo possibile per ciascun dado. Per esempio, invece di ripristinare 2d6 punti ferita a una creatura, ne ripristini 12."
+  },
+  "cleric/channel-divinity-3-rest": {
+   "name": "Incanalare Divinità (3/riposo)",
+   "description": "A partire dal 6° livello puoi usare Incanalare Divinità due volte tra un riposo e l'altro, e a partire dal 18° livello puoi usarlo tre volte tra un riposo e l'altro. Quando finisci un riposo breve o lungo, recuperi i tuoi usi spesi."
+  },
+  "cleric/cleric-ability-score-improvement-5": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  }
+ }
+}

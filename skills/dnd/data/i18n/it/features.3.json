@@ -1,0 +1,360 @@
+{
+ "features": {
+  "monk/purity-of-body": {
+   "name": "Purezza del Corpo",
+   "description": "Al 10° livello, la tua padronanza del ki che scorre in te ti rende immune alle malattie e al veleno."
+  },
+  "monk/monastic-tradition-improvement-2": {
+   "name": "Privilegio della Tradizione Monastica",
+   "description": "Quando raggiungi il 3° livello, ti impegni in una tradizione monastica, come la Via della Mano Aperta. La tua tradizione ti concede privilegi al 3° livello e di nuovo al 6°, all'11° e al 17° livello."
+  },
+  "monk/tranquility": {
+   "name": "Tranquillità",
+   "description": "A partire dall'11° livello, puoi entrare in una meditazione speciale che ti circonda con un'aura di pace. Al termine di un riposo lungo, ottieni l'effetto di un incantesimo santuario che dura fino all'inizio del tuo prossimo riposo lungo (l'incantesimo può terminare prima, come di norma). La CD del tiro salvezza dell'incantesimo è pari a 8 + il tuo modificatore di Saggezza + il tuo bonus di competenza."
+  },
+  "monk/monk-ability-score-improvement-3": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, al 12°, al 16° e al 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure puoi aumentare di 1 due punteggi di caratteristica a tua scelta. Come di norma, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "monk/tongue-of-the-sun-and-moon": {
+   "name": "Lingua del Sole e della Luna",
+   "description": "A partire dal 13° livello, impari a toccare il ki delle altre menti in modo da comprendere tutti i linguaggi parlati. Inoltre, qualsiasi creatura che sia in grado di comprendere un linguaggio può comprendere ciò che dici."
+  },
+  "monk/diamond-soul": {
+   "name": "Anima Adamantina",
+   "description": "A partire dal 14° livello, la tua padronanza del ki ti concede competenza in tutti i tiri salvezza.\n\nInoltre, ogni volta che effettui un tiro salvezza e lo fallisci, puoi spendere 1 punto ki per ritirarlo e usare il secondo risultato."
+  },
+  "monk/monk-timeless-body": {
+   "name": "Corpo Senza Tempo",
+   "description": "Al 15° livello, il tuo ki ti sostiene in modo che tu non subisca alcuna fragilità della vecchiaia, e non puoi essere invecchiato magicamente. Puoi comunque morire di vecchiaia. Inoltre, non hai più bisogno di cibo né di acqua."
+  },
+  "monk/monk-ability-score-improvement-4": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, al 12°, al 16° e al 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure puoi aumentare di 1 due punteggi di caratteristica a tua scelta. Come di norma, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "monk/monastic-tradition-improvement-3": {
+   "name": "Privilegio della Tradizione Monastica",
+   "description": "Quando raggiungi il 3° livello, ti impegni in una tradizione monastica, come la Via della Mano Aperta. La tua tradizione ti concede privilegi al 3° livello e di nuovo al 6°, all'11° e al 17° livello."
+  },
+  "monk/quivering-palm": {
+   "name": "Palmo Tremante",
+   "description": "Al 17° livello, ottieni la capacità di innescare vibrazioni letali nel corpo di qualcuno. Quando colpisci una creatura con un colpo senz'armi, puoi spendere 3 punti ki per dare inizio a queste vibrazioni impercettibili, che durano per un numero di giorni pari al tuo livello da monaco. Le vibrazioni sono innocue a meno che tu non usi la tua azione per farle cessare. Per farlo, tu e il bersaglio dovete trovarvi sullo stesso piano di esistenza. Quando usi questa azione, la creatura deve effettuare un tiro salvezza su Costituzione. Se fallisce, è ridotta a 0 punti ferita. Se lo supera, subisce 10d10 danni necrotici.\n\nPuoi avere una sola creatura alla volta sotto l'effetto di questo privilegio. Puoi scegliere di far cessare le vibrazioni in modo innocuo senza usare un'azione."
+  },
+  "monk/empty-body": {
+   "name": "Corpo Vuoto",
+   "description": "A partire dal 18° livello, puoi usare la tua azione per spendere 4 punti ki e diventare invisibile per 1 minuto. Durante quel tempo, hai anche resistenza a tutti i danni tranne i danni da forza.\n\nInoltre, puoi spendere 8 punti ki per lanciare l'incantesimo proiezione astrale, senza bisogno di componenti materiali. Quando lo fai, non puoi portare con te altre creature."
+  },
+  "monk/monk-ability-score-improvement-5": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, al 12°, al 16° e al 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure puoi aumentare di 1 due punteggi di caratteristica a tua scelta. Come di norma, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "monk/perfect-self": {
+   "name": "Perfezione Interiore",
+   "description": "Al 20° livello, quando tiri per l'iniziativa e non hai più punti ki, recuperi 4 punti ki."
+  },
+  "paladin/divine-sense": {
+   "name": "Percezione del Divino",
+   "description": "La presenza di un male potente si registra ai tuoi sensi come un odore nauseabondo, e un bene potente risuona come musica celestiale alle tue orecchie. Con un'azione, puoi aprire la tua consapevolezza per individuare tali forze. Fino alla fine del tuo prossimo turno, conosci la posizione di qualsiasi celestiale, immondo o non morto entro 18 metri da te che non si trovi dietro copertura totale. Conosci il tipo (celestiale, immondo o non morto) di qualsiasi essere di cui percepisci la presenza, ma non la sua identità. Entro lo stesso raggio, individui anche la presenza di qualsiasi luogo o oggetto che sia stato consacrato o dissacrato, come con l'incantesimo santificare.\n\nPuoi usare questo privilegio un numero di volte pari a 1 + il tuo modificatore di Carisma. Quando termini un riposo lungo, recuperi tutti gli usi spesi."
+  },
+  "paladin/lay-on-hands": {
+   "name": "Imposizione delle Mani",
+   "description": "Il tuo tocco benedetto può guarire le ferite. Hai una riserva di potere curativo che si ricostituisce quando effettui un riposo lungo. Con quella riserva, puoi ripristinare un totale di punti ferita pari al tuo livello da paladino x 5.\n\nCon un'azione, puoi toccare una creatura e attingere potere dalla riserva per ripristinarle un numero di punti ferita, fino alla quantità massima rimasta nella tua riserva.\n\nIn alternativa, puoi spendere 5 punti ferita dalla tua riserva di guarigione per curare il bersaglio da una malattia o neutralizzare un veleno che lo affligge. Puoi curare più malattie e neutralizzare più veleni con un solo uso di Imposizione delle Mani, spendendo punti ferita separatamente per ciascuno.\n\nQuesto privilegio non ha effetto su non morti e costrutti."
+  },
+  "paladin/paladin-fighting-style": {
+   "name": "Stile di Combattimento",
+   "description": "Al 2° livello, adotti uno stile di combattimento come tua specialità. Scegli una delle seguenti opzioni. Non puoi scegliere un'opzione di Stile di Combattimento più di una volta, anche se in seguito avrai di nuovo la possibilità di scegliere."
+  },
+  "paladin/fighting-style-defense": {
+   "name": "Stile di Combattimento: Difesa",
+   "description": "Finché indossi un'armatura, ottieni un bonus di +1 alla CA."
+  },
+  "paladin/fighting-style-dueling": {
+   "name": "Stile di Combattimento: Duellare",
+   "description": "Quando impugni un'arma da mischia in una mano e nessun'altra arma, ottieni un bonus di +2 ai tiri per i danni con quell'arma."
+  },
+  "paladin/fighting-style-great-weapon-fighting": {
+   "name": "Stile di Combattimento: Combattere con Armi Possenti",
+   "description": "Quando ottieni 1 o 2 su un dado dei danni per un attacco che effettui con un'arma da mischia che impugni a due mani, puoi ritirare il dado e devi usare il nuovo risultato. L'arma deve avere la proprietà a due mani o versatile perché tu ottenga questo beneficio."
+  },
+  "paladin/fighting-style-protection": {
+   "name": "Stile di Combattimento: Protezione",
+   "description": "Quando una creatura che puoi vedere attacca un bersaglio diverso da te che si trova entro 1,5 metri da te, puoi usare la tua reazione per imporre svantaggio al tiro per colpire. Devi impugnare uno scudo."
+  },
+  "paladin/spellcasting-paladin": {
+   "name": "Incantesimi: Paladino",
+   "description": "Al 2° livello, hai imparato ad attingere alla magia divina attraverso la meditazione e la preghiera per lanciare incantesimi come fa un chierico."
+  },
+  "paladin/divine-smite": {
+   "name": "Punizione Divina",
+   "description": "A partire dal 2° livello, quando colpisci una creatura con un attacco con arma da mischia, puoi spendere uno slot incantesimo per infliggere danni radiosi al bersaglio, in aggiunta ai danni dell'arma. I danni extra sono 2d8 per uno slot incantesimo di 1° livello, più 1d8 per ogni livello dell'incantesimo superiore al 1°, fino a un massimo di 5d8. I danni aumentano di 1d8 se il bersaglio è un non morto o un immondo."
+  },
+  "paladin/divine-health": {
+   "name": "Salute Divina",
+   "description": "Al 3° livello, la magia divina che scorre in te ti rende immune alle malattie."
+  },
+  "paladin/sacred-oath": {
+   "name": "Giuramento Sacro",
+   "description": "Quando raggiungi il 3° livello, pronunci il giuramento che ti lega per sempre come paladino. Fino a questo momento sei stato in una fase preparatoria, impegnato nel cammino ma non ancora vincolato da un giuramento. Ora scegli un giuramento, come il Giuramento di Devozione.\n\nLa tua scelta ti concede privilegi al 3° livello e di nuovo al 7°, al 15° e al 20° livello. Questi privilegi includono gli incantesimi di giuramento e il privilegio Incanalare Divinità."
+  },
+  "paladin/oath-spells": {
+   "name": "Incantesimi di Giuramento",
+   "description": "Ogni giuramento ha un elenco di incantesimi associati. Ottieni accesso a questi incantesimi ai livelli specificati nella descrizione del giuramento. Una volta ottenuto l'accesso a un incantesimo di giuramento, lo hai sempre preparato. Gli incantesimi di giuramento non contano ai fini del numero di incantesimi che puoi preparare ogni giorno.\n\nSe ottieni un incantesimo di giuramento che non compare nella lista degli incantesimi del paladino, l'incantesimo è comunque un incantesimo da paladino per te."
+  },
+  "paladin/channel-divinity": {
+   "name": "Incanalare Divinità",
+   "description": "Il tuo giuramento ti permette di incanalare energia divina per alimentare effetti magici. Ogni opzione di Incanalare Divinità fornita dal tuo giuramento spiega come usarla.\n\nQuando usi Incanalare Divinità, scegli quale opzione usare. Devi poi terminare un riposo breve o lungo per usare di nuovo Incanalare Divinità.\n\nAlcuni effetti di Incanalare Divinità richiedono tiri salvezza. Quando usi un effetto di questo tipo da questa classe, la CD è pari alla tua CD del tiro salvezza degli incantesimi da paladino."
+  },
+  "paladin/channel-divinity-sacred-weapon": {
+   "name": "Incanalare Divinità: Arma Consacrata",
+   "description": "Con un'azione, puoi infondere un'arma che stai impugnando con energia positiva, usando Incanalare Divinità. Per 1 minuto, aggiungi il tuo modificatore di Carisma ai tiri per colpire effettuati con quell'arma (con un bonus minimo di +1). L'arma emette anche luce intensa in un raggio di 6 metri e luce fioca per altri 6 metri oltre quello. Se l'arma non è già magica, diventa magica per la durata.\n\nPuoi far terminare questo effetto durante il tuo turno come parte di qualsiasi altra azione. Se non impugni o non porti più quest'arma, o se cadi privo di sensi, questo effetto termina."
+  },
+  "paladin/channel-divinity-turn-the-unholy": {
+   "name": "Incanalare Divinità: Scacciare i Sacrileghi",
+   "description": "Con un'azione, presenti il tuo simbolo sacro e pronunci una preghiera di condanna contro immondi e non morti, usando Incanalare Divinità. Ogni immondo o non morto che può vederti o sentirti entro 9 metri da te deve effettuare un tiro salvezza su Saggezza. Se la creatura fallisce il tiro salvezza, è scacciata per 1 minuto o finché subisce danni.\n\nUna creatura scacciata deve spendere i suoi turni cercando di allontanarsi da te il più possibile, e non può spostarsi volontariamente in uno spazio entro 9 metri da te. Inoltre non può effettuare reazioni. Per la sua azione, può usare solo l'azione Scatto o cercare di liberarsi da un effetto che le impedisce di muoversi. Se non c'è nessun posto dove muoversi, la creatura può usare l'azione Schivata."
+  },
+  "paladin/paladin-ability-score-improvement-1": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, al 12°, al 16° e al 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure puoi aumentare di 1 due punteggi di caratteristica a tua scelta. Come di norma, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "paladin/paladin-extra-attack": {
+   "name": "Attacco Extra",
+   "description": "A partire dal 5° livello, puoi attaccare due volte, invece di una, ogni volta che effettui l'azione di Attacco nel tuo turno."
+  },
+  "paladin/aura-of-protection": {
+   "name": "Aura di Protezione",
+   "description": "A partire dal 6° livello, ogni volta che tu o una creatura amica entro 3 metri da te dovete effettuare un tiro salvezza, la creatura ottiene un bonus al tiro salvezza pari al tuo modificatore di Carisma (con un bonus minimo di +1). Devi essere cosciente per concedere questo bonus.\n\nAl 18° livello, il raggio di questa aura aumenta a 9 metri."
+  },
+  "paladin/sacred-oath-improvement-1": {
+   "name": "Privilegio del Giuramento Sacro",
+   "description": "Quando raggiungi il 3° livello, pronunci il giuramento che ti lega per sempre come paladino. Fino a questo momento sei stato in una fase preparatoria, impegnato nel cammino ma non ancora vincolato da un giuramento. Ora scegli un giuramento, come il Giuramento di Devozione.\n\nLa tua scelta ti concede privilegi al 3° livello e di nuovo al 7°, al 15° e al 20° livello. Questi privilegi includono gli incantesimi di giuramento e il privilegio Incanalare Divinità."
+  },
+  "paladin/aura-of-devotion": {
+   "name": "Aura di Devozione",
+   "description": "A partire dal 7° livello, tu e le creature amiche entro 3 metri da te non potete essere affascinati finché sei cosciente.\n\nAl 18° livello, il raggio di questa aura aumenta a 9 metri."
+  },
+  "paladin/paladin-ability-score-improvement-2": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, al 12°, al 16° e al 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure puoi aumentare di 1 due punteggi di caratteristica a tua scelta. Come di norma, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "paladin/aura-of-courage": {
+   "name": "Aura di Coraggio",
+   "description": "A partire dal 10° livello, tu e le creature amiche entro 3 metri da te non potete essere spaventati finché sei cosciente.\n\nAl 18° livello, il raggio di questa aura aumenta a 9 metri."
+  },
+  "paladin/improved-divine-smite": {
+   "name": "Punizione Divina Migliorata",
+   "description": "All'11° livello, sei così pervaso di giusta potenza che tutti i tuoi colpi con armi da mischia portano con sé potere divino. Ogni volta che colpisci una creatura con un'arma da mischia, la creatura subisce 1d8 danni radiosi extra. Se usi anche la tua Punizione Divina con un attacco, aggiungi questi danni ai danni extra della tua Punizione Divina."
+  },
+  "paladin/paladin-ability-score-improvement-3": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, al 12°, al 16° e al 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure puoi aumentare di 1 due punteggi di caratteristica a tua scelta. Come di norma, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "paladin/cleansing-touch": {
+   "name": "Tocco Purificatore",
+   "description": "A partire dal 14° livello, puoi usare la tua azione per far terminare un incantesimo su di te o su una creatura consenziente che tocchi.\n\nPuoi usare questo privilegio un numero di volte pari al tuo modificatore di Carisma (minimo una volta). Recuperi gli usi spesi quando termini un riposo lungo."
+  },
+  "paladin/sacred-oath-improvement-2": {
+   "name": "Privilegio del Giuramento Sacro",
+   "description": "Quando raggiungi il 3° livello, pronunci il giuramento che ti lega per sempre come paladino. Fino a questo momento sei stato in una fase preparatoria, impegnato nel cammino ma non ancora vincolato da un giuramento. Ora scegli un giuramento, come il Giuramento di Devozione.\n\nLa tua scelta ti concede privilegi al 3° livello e di nuovo al 7°, al 15° e al 20° livello. Questi privilegi includono gli incantesimi di giuramento e il privilegio Incanalare Divinità."
+  },
+  "paladin/purity-of-spirit": {
+   "name": "Purezza di Spirito",
+   "description": "A partire dal 15° livello, sei sempre sotto gli effetti di un incantesimo protezione dal bene e dal male."
+  },
+  "paladin/paladin-ability-score-improvement-4": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, al 12°, al 16° e al 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure puoi aumentare di 1 due punteggi di caratteristica a tua scelta. Come di norma, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "paladin/aura-improvements": {
+   "name": "Miglioramenti delle Aure",
+   "description": "Al 18° livello, il raggio delle tue aure aumenta a 9 metri."
+  },
+  "paladin/paladin-ability-score-improvement-5": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, al 12°, al 16° e al 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure puoi aumentare di 1 due punteggi di caratteristica a tua scelta. Come di norma, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "paladin/sacred-oath-improvement-3": {
+   "name": "Privilegio del Giuramento Sacro",
+   "description": "Quando raggiungi il 3° livello, pronunci il giuramento che ti lega per sempre come paladino. Fino a questo momento sei stato in una fase preparatoria, impegnato nel cammino ma non ancora vincolato da un giuramento. Ora scegli un giuramento, come il Giuramento di Devozione.\n\nLa tua scelta ti concede privilegi al 3° livello e di nuovo al 7°, al 15° e al 20° livello. Questi privilegi includono gli incantesimi di giuramento e il privilegio Incanalare Divinità."
+  },
+  "paladin/holy-nimbus": {
+   "name": "Nube Sacra",
+   "description": "Al 20° livello, con un'azione, puoi emanare un'aura di luce solare. Per 1 minuto, una luce intensa risplende da te in un raggio di 9 metri, e una luce fioca risplende per altri 9 metri oltre quello.\n\nOgni volta che una creatura nemica inizia il suo turno nella luce intensa, la creatura subisce 10 danni radiosi.\n\nInoltre, per la durata, hai vantaggio ai tiri salvezza contro gli incantesimi lanciati da immondi o non morti."
+  },
+  "ranger/favored-enemy-1-type": {
+   "name": "Nemico Prescelto (1 tipo)",
+   "description": "A partire dal 1° livello, hai una notevole esperienza nello studiare, seguire, cacciare e persino parlare con un certo tipo di nemico.\n\nScegli un tipo di nemico prescelto: aberrazioni, bestie, celestiali, costrutti, draghi, elementali, folletti, immondi, giganti, mostruosità, melme, vegetali o non morti. In alternativa, puoi scegliere due razze di umanoidi (come gnoll e orchi) come nemici prescelti.\n\nHai vantaggio alle prove di Saggezza (Sopravvivenza) per seguire le tracce dei tuoi nemici prescelti, così come alle prove di Intelligenza per ricordare informazioni su di loro.\n\nQuando ottieni questo privilegio, impari anche un linguaggio a tua scelta parlato dai tuoi nemici prescelti, sempre che ne parlino uno.\n\nScegli un ulteriore nemico prescelto, insieme a un linguaggio associato, al 6° e al 14° livello. Man mano che sali di livello, le tue scelte dovrebbero riflettere i tipi di mostri che hai incontrato nelle tue avventure."
+  },
+  "ranger/natural-explorer-1-terrain-type": {
+   "name": "Esploratore Nato (1 tipo di terreno)",
+   "description": "Hai particolare familiarità con un tipo di ambiente naturale e sei abile nel viaggiare e sopravvivere in tali regioni. Scegli un tipo di terreno prescelto: artico, costa, deserto, foresta, prateria, montagna o palude. Quando effettui una prova di Intelligenza o di Saggezza relativa al tuo terreno prescelto, il tuo bonus di competenza è raddoppiato se stai usando un'abilità in cui hai competenza.\n\nMentre viaggi per un'ora o più nel tuo terreno prescelto, ottieni i seguenti benefici:\n\n- Il terreno difficile non rallenta il viaggio del tuo gruppo.\n\n- Il tuo gruppo non può perdersi, se non con mezzi magici.\n\n- Anche quando sei impegnato in un'altra attività durante il viaggio (come cercare cibo, orientarti o seguire tracce), resti all'erta ai pericoli.\n\n- Se viaggi da solo, puoi muoverti furtivamente a passo normale.\n\n- Quando cerchi cibo, ne trovi il doppio del normale.\n\n- Mentre segui le tracce di altre creature, scopri anche il loro numero esatto, le loro taglie e da quanto tempo sono passate per la zona.\n\nScegli ulteriori tipi di terreno prescelto al 6° e al 10° livello."
+  },
+  "ranger/ranger-fighting-style": {
+   "name": "Stile di Combattimento",
+   "description": "Al 2° livello, adotti un particolare stile di combattimento come tua specialità. Scegli una delle seguenti opzioni. Non puoi scegliere un'opzione di Stile di Combattimento più di una volta, anche se in seguito avrai di nuovo la possibilità di scegliere."
+  },
+  "ranger/ranger-fighting-style-archery": {
+   "name": "Stile di Combattimento: Tiro",
+   "description": "Ottieni un bonus di +2 ai tiri per colpire che effettui con armi a distanza."
+  },
+  "ranger/ranger-fighting-style-defense": {
+   "name": "Stile di Combattimento: Difesa",
+   "description": "Finché indossi un'armatura, ottieni un bonus di +1 alla CA."
+  },
+  "ranger/ranger-fighting-style-dueling": {
+   "name": "Stile di Combattimento: Duellare",
+   "description": "Quando impugni un'arma da mischia in una mano e nessun'altra arma, ottieni un bonus di +2 ai tiri per i danni con quell'arma."
+  },
+  "ranger/ranger-fighting-style-two-weapon-fighting": {
+   "name": "Stile di Combattimento: Combattere con Due Armi",
+   "description": "Quando combatti con due armi, puoi aggiungere il tuo modificatore di caratteristica ai danni del secondo attacco."
+  },
+  "ranger/spellcasting-ranger": {
+   "name": "Incantesimi: Ranger",
+   "description": "Una volta raggiunto il 2° livello, hai imparato a usare l'essenza magica della natura per lanciare incantesimi, in modo molto simile a un druido."
+  },
+  "ranger/ranger-archetype": {
+   "name": "Archetipo Ranger",
+   "description": "Al 3° livello, scegli un archetipo a cui aspiri a ispirarti, come il Cacciatore. La tua scelta ti concede privilegi al 3° livello e di nuovo al 7°, all'11° e al 15° livello."
+  },
+  "ranger/hunters-prey": {
+   "name": "Preda del Cacciatore",
+   "description": "Al 3° livello, ottieni uno dei seguenti privilegi a tua scelta.\n\nSterminatore di Colossi\n\nUccisore di Giganti\n\nDevastatore dell'Orda"
+  },
+  "ranger/hunters-prey-colossus-slayer": {
+   "name": "Preda del Cacciatore: Sterminatore di Colossi",
+   "description": "La tua tenacia può logorare i nemici più potenti. Quando colpisci una creatura con un attacco con arma, la creatura subisce 1d8 danni extra se ha meno del suo massimo di punti ferita. Puoi infliggere questi danni extra una sola volta per turno."
+  },
+  "ranger/hunters-prey-giant-killer": {
+   "name": "Preda del Cacciatore: Uccisore di Giganti",
+   "description": "Quando una creatura Grande o più grande entro 1,5 metri da te ti colpisce o ti manca con un attacco, puoi usare la tua reazione per attaccare quella creatura subito dopo il suo attacco, a patto che tu possa vederla."
+  },
+  "ranger/hunters-prey-horde-breaker": {
+   "name": "Preda del Cacciatore: Devastatore dell'Orda",
+   "description": "Una volta in ciascuno dei tuoi turni in cui effettui un attacco con arma, puoi effettuare un altro attacco con la stessa arma contro una creatura diversa che si trovi entro 1,5 metri dal bersaglio originale e entro la gittata della tua arma."
+  },
+  "ranger/primeval-awareness": {
+   "name": "Consapevolezza Primordiale",
+   "description": "A partire dal 3° livello, puoi usare la tua azione e spendere uno slot incantesimo da ranger per concentrare la tua consapevolezza sulla regione intorno a te. Per 1 minuto per livello dello slot incantesimo che spendi, puoi percepire se i seguenti tipi di creature sono presenti entro 1,5 chilometri da te (o fino a 9 chilometri se ti trovi nel tuo terreno prescelto): aberrazioni, celestiali, draghi, elementali, folletti, immondi e non morti. Questo privilegio non rivela la posizione né il numero delle creature."
+  },
+  "ranger/ranger-ability-score-improvement-1": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, al 12°, al 16° e al 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure puoi aumentare di 1 due punteggi di caratteristica a tua scelta. Come di norma, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "ranger/ranger-extra-attack": {
+   "name": "Attacco Extra",
+   "description": "A partire dal 5° livello, puoi attaccare due volte, invece di una, ogni volta che effettui l'azione di Attacco nel tuo turno."
+  },
+  "ranger/favored-enemy-2-types": {
+   "name": "Nemico Prescelto (2 tipi)",
+   "description": "A partire dal 1° livello, hai una notevole esperienza nello studiare, seguire, cacciare e persino parlare con un certo tipo di nemico.\n\nScegli un tipo di nemico prescelto: aberrazioni, bestie, celestiali, costrutti, draghi, elementali, folletti, immondi, giganti, mostruosità, melme, vegetali o non morti. In alternativa, puoi scegliere due razze di umanoidi (come gnoll e orchi) come nemici prescelti.\n\nHai vantaggio alle prove di Saggezza (Sopravvivenza) per seguire le tracce dei tuoi nemici prescelti, così come alle prove di Intelligenza per ricordare informazioni su di loro.\n\nQuando ottieni questo privilegio, impari anche un linguaggio a tua scelta parlato dai tuoi nemici prescelti, sempre che ne parlino uno.\n\nScegli un ulteriore nemico prescelto, insieme a un linguaggio associato, al 6° e al 14° livello. Man mano che sali di livello, le tue scelte dovrebbero riflettere i tipi di mostri che hai incontrato nelle tue avventure."
+  },
+  "ranger/natural-explorer-2-terrain-types": {
+   "name": "Esploratore Nato (2 tipi di terreno)",
+   "description": "Hai particolare familiarità con un tipo di ambiente naturale e sei abile nel viaggiare e sopravvivere in tali regioni. Scegli un tipo di terreno prescelto: artico, costa, deserto, foresta, prateria, montagna o palude. Quando effettui una prova di Intelligenza o di Saggezza relativa al tuo terreno prescelto, il tuo bonus di competenza è raddoppiato se stai usando un'abilità in cui hai competenza.\n\nMentre viaggi per un'ora o più nel tuo terreno prescelto, ottieni i seguenti benefici:\n\n- Il terreno difficile non rallenta il viaggio del tuo gruppo.\n\n- Il tuo gruppo non può perdersi, se non con mezzi magici.\n\n- Anche quando sei impegnato in un'altra attività durante il viaggio (come cercare cibo, orientarti o seguire tracce), resti all'erta ai pericoli.\n\n- Se viaggi da solo, puoi muoverti furtivamente a passo normale.\n\n- Quando cerchi cibo, ne trovi il doppio del normale.\n\n- Mentre segui le tracce di altre creature, scopri anche il loro numero esatto, le loro taglie e da quanto tempo sono passate per la zona.\n\nScegli ulteriori tipi di terreno prescelto al 6° e al 10° livello."
+  },
+  "ranger/ranger-archetype-improvement-1": {
+   "name": "Privilegio dell'Archetipo Ranger",
+   "description": "Al 3° livello, scegli un archetipo a cui aspiri a ispirarti, come il Cacciatore. La tua scelta ti concede privilegi al 3° livello e di nuovo al 7°, all'11° e al 15° livello."
+  },
+  "ranger/defensive-tactics": {
+   "name": "Tattiche Difensive",
+   "description": "Al 7° livello, ottieni uno dei seguenti privilegi a tua scelta.\n\nSfuggire all'Orda\n\nDifesa dal Multiattacco\n\nVolontà d'Acciaio"
+  },
+  "ranger/defensive-tactics-escape-the-horde": {
+   "name": "Tattiche Difensive: Sfuggire all'Orda",
+   "description": "Gli attacchi di opportunità contro di te sono effettuati con svantaggio."
+  },
+  "ranger/defensive-tactics-multiattack-defense": {
+   "name": "Tattiche Difensive: Difesa dal Multiattacco",
+   "description": "Quando una creatura ti colpisce con un attacco, ottieni un bonus di +4 alla CA contro tutti gli attacchi successivi effettuati da quella creatura per il resto del turno."
+  },
+  "ranger/defensive-tactics-steel-will": {
+   "name": "Tattiche Difensive: Volontà d'Acciaio",
+   "description": "Hai vantaggio ai tiri salvezza contro l'essere spaventato."
+  },
+  "ranger/ranger-ability-score-improvement-2": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, al 12°, al 16° e al 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure puoi aumentare di 1 due punteggi di caratteristica a tua scelta. Come di norma, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "ranger/ranger-lands-stride": {
+   "name": "Andatura sul Territorio",
+   "description": "A partire dall'8° livello, muoverti attraverso terreno difficile non magico non ti costa movimento extra. Puoi anche attraversare piante non magiche senza essere rallentato da esse e senza subire danni da esse se hanno spine, aculei o un pericolo simile.\n\nInoltre, hai vantaggio ai tiri salvezza contro le piante create o manipolate magicamente per impedire il movimento, come quelle create dall'incantesimo intralciare."
+  },
+  "ranger/natural-explorer-3-terrain-types": {
+   "name": "Esploratore Nato (3 tipi di terreno)",
+   "description": "Hai particolare familiarità con un tipo di ambiente naturale e sei abile nel viaggiare e sopravvivere in tali regioni. Scegli un tipo di terreno prescelto: artico, costa, deserto, foresta, prateria, montagna o palude. Quando effettui una prova di Intelligenza o di Saggezza relativa al tuo terreno prescelto, il tuo bonus di competenza è raddoppiato se stai usando un'abilità in cui hai competenza.\n\nMentre viaggi per un'ora o più nel tuo terreno prescelto, ottieni i seguenti benefici:\n\n- Il terreno difficile non rallenta il viaggio del tuo gruppo.\n\n- Il tuo gruppo non può perdersi, se non con mezzi magici.\n\n- Anche quando sei impegnato in un'altra attività durante il viaggio (come cercare cibo, orientarti o seguire tracce), resti all'erta ai pericoli.\n\n- Se viaggi da solo, puoi muoverti furtivamente a passo normale.\n\n- Quando cerchi cibo, ne trovi il doppio del normale.\n\n- Mentre segui le tracce di altre creature, scopri anche il loro numero esatto, le loro taglie e da quanto tempo sono passate per la zona.\n\nScegli ulteriori tipi di terreno prescelto al 6° e al 10° livello."
+  },
+  "ranger/hide-in-plain-sight": {
+   "name": "Nascondersi in Piena Vista",
+   "description": "A partire dal 10° livello, puoi dedicare 1 minuto a creare un mimetismo per te stesso. Devi avere accesso a fango fresco, terriccio, piante, fuliggine e altri materiali presenti in natura con cui creare il tuo mimetismo.\n\nUna volta mimetizzato in questo modo, puoi cercare di nasconderti appiattendoti contro una superficie solida, come un albero o un muro, che sia alta e larga almeno quanto te. Ottieni un bonus di +10 alle prove di Destrezza (Furtività) finché rimani lì senza muoverti né compiere azioni. Una volta che ti muovi o compi un'azione o una reazione, devi mimetizzarti di nuovo per ottenere questo beneficio."
+  },
+  "ranger/ranger-archetype-improvement-2": {
+   "name": "Privilegio dell'Archetipo Ranger",
+   "description": "Al 3° livello, scegli un archetipo a cui aspiri a ispirarti, come il Cacciatore. La tua scelta ti concede privilegi al 3° livello e di nuovo al 7°, all'11° e al 15° livello."
+  },
+  "ranger/multiattack": {
+   "name": "Multiattacco",
+   "description": "All'11° livello, ottieni uno dei seguenti privilegi a tua scelta.\n\nRaffica\n\nAttacco Turbinante"
+  },
+  "ranger/multiattack-volley": {
+   "name": "Multiattacco: Raffica",
+   "description": "Puoi usare la tua azione per effettuare un attacco a distanza contro un qualsiasi numero di creature entro 3 metri da un punto che puoi vedere entro la gittata della tua arma. Devi avere munizioni per ogni bersaglio, come di norma, e effettui un tiro per colpire separato per ciascun bersaglio."
+  },
+  "ranger/multiattack-whirlwind-attack": {
+   "name": "Multiattacco: Attacco Turbinante",
+   "description": "Puoi usare la tua azione per effettuare un attacco in mischia contro un qualsiasi numero di creature entro 1,5 metri da te, con un tiro per colpire separato per ciascun bersaglio."
+  },
+  "ranger/ranger-ability-score-improvement-3": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, al 12°, al 16° e al 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure puoi aumentare di 1 due punteggi di caratteristica a tua scelta. Come di norma, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "ranger/favored-enemy-3-enemies": {
+   "name": "Nemico Prescelto (3 nemici)",
+   "description": "A partire dal 1° livello, hai una notevole esperienza nello studiare, seguire, cacciare e persino parlare con un certo tipo di nemico.\n\nScegli un tipo di nemico prescelto: aberrazioni, bestie, celestiali, costrutti, draghi, elementali, folletti, immondi, giganti, mostruosità, melme, vegetali o non morti. In alternativa, puoi scegliere due razze di umanoidi (come gnoll e orchi) come nemici prescelti.\n\nHai vantaggio alle prove di Saggezza (Sopravvivenza) per seguire le tracce dei tuoi nemici prescelti, così come alle prove di Intelligenza per ricordare informazioni su di loro.\n\nQuando ottieni questo privilegio, impari anche un linguaggio a tua scelta parlato dai tuoi nemici prescelti, sempre che ne parlino uno.\n\nScegli un ulteriore nemico prescelto, insieme a un linguaggio associato, al 6° e al 14° livello. Man mano che sali di livello, le tue scelte dovrebbero riflettere i tipi di mostri che hai incontrato nelle tue avventure."
+  },
+  "ranger/vanish": {
+   "name": "Svanire",
+   "description": "A partire dal 14° livello, puoi usare l'azione Nascondersi come azione bonus nel tuo turno. Inoltre, non puoi essere seguito con mezzi non magici, a meno che tu non scelga di lasciare una pista."
+  },
+  "ranger/ranger-archetype-improvement-3": {
+   "name": "Privilegio dell'Archetipo Ranger",
+   "description": "Al 3° livello, scegli un archetipo a cui aspiri a ispirarti, come il Cacciatore. La tua scelta ti concede privilegi al 3° livello e di nuovo al 7°, all'11° e al 15° livello."
+  },
+  "ranger/superior-hunters-defense": {
+   "name": "Difesa del Cacciatore Superiore",
+   "description": "Al 15° livello, ottieni uno dei seguenti privilegi a tua scelta.\n\nElusione\n\nOpporsi alla Marea\n\nSchivata Prodigiosa"
+  },
+  "ranger/superior-hunters-defense-evasion": {
+   "name": "Difesa del Cacciatore Superiore: Elusione",
+   "description": "Quando sei soggetto a un effetto, come il soffio infuocato di un drago rosso o un incantesimo fulmine, che ti permette di effettuare un tiro salvezza su Destrezza per subire solo metà dei danni, invece non subisci alcun danno se superi il tiro salvezza, e subisci solo metà dei danni se lo fallisci."
+  },
+  "ranger/superior-hunters-defense-stand-against-the-tide": {
+   "name": "Difesa del Cacciatore Superiore: Opporsi alla Marea",
+   "description": "Quando una creatura ostile ti manca con un attacco in mischia, puoi usare la tua reazione per costringere quella creatura a ripetere lo stesso attacco contro un'altra creatura (diversa da se stessa) a tua scelta."
+  },
+  "ranger/superior-hunters-defense-uncanny-dodge": {
+   "name": "Difesa del Cacciatore Superiore: Schivata Prodigiosa",
+   "description": "Quando un attaccante che puoi vedere ti colpisce con un attacco, puoi usare la tua reazione per dimezzare i danni dell'attacco contro di te."
+  },
+  "ranger/ranger-ability-score-improvement-4": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, al 12°, al 16° e al 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure puoi aumentare di 1 due punteggi di caratteristica a tua scelta. Come di norma, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "ranger/feral-senses": {
+   "name": "Sensi Ferini",
+   "description": "Al 18° livello, ottieni sensi soprannaturali che ti aiutano a combattere creature che non puoi vedere. Quando attacchi una creatura che non puoi vedere, la tua incapacità di vederla non impone svantaggio ai tuoi tiri per colpire contro di essa.\n\nSei inoltre consapevole della posizione di qualsiasi creatura invisibile entro 9 metri da te, a patto che la creatura non sia nascosta a te e che tu non sia accecato o assordato."
+  },
+  "ranger/ranger-ability-score-improvement-5": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, al 12°, al 16° e al 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure puoi aumentare di 1 due punteggi di caratteristica a tua scelta. Come di norma, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "ranger/foe-slayer": {
+   "name": "Sterminatore di Nemici",
+   "description": "Al 20° livello, diventi un cacciatore senza pari dei tuoi nemici. Una volta in ciascuno dei tuoi turni, puoi aggiungere il tuo modificatore di Saggezza al tiro per colpire o al tiro per i danni di un attacco che effettui contro uno dei tuoi nemici prescelti. Puoi scegliere di usare questo privilegio prima o dopo il tiro, ma prima che vengano applicati gli effetti del tiro."
+  },
+  "rogue/rogue-expertise-1": {
+   "name": "Maestria",
+   "description": "Al 1° livello, scegli due delle tue competenze in abilità, oppure una delle tue competenze in abilità e la tua competenza con gli arnesi da scasso. Il tuo bonus di competenza è raddoppiato per qualsiasi prova di caratteristica che effettui che usi una delle competenze scelte.\n\nAl 6° livello, puoi scegliere altre due delle tue competenze (in abilità o con gli arnesi da scasso) per ottenere questo beneficio."
+  }
+ }
+}

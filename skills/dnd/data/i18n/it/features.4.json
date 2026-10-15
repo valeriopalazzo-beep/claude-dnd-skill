@@ -1,0 +1,360 @@
+{
+ "features": {
+  "rogue/sneak-attack": {
+   "name": "Attacco Furtivo",
+   "description": "Dal 1° livello sai come colpire in modo subdolo e sfruttare la distrazione di un nemico. Una volta per turno puoi infliggere 1d6 danni extra a una creatura che colpisci con un attacco, se hai vantaggio al tiro per colpire. L'attacco deve usare un'arma con la proprietà accurata o un'arma a distanza.\n\nNon hai bisogno del vantaggio al tiro per colpire se un altro nemico del bersaglio si trova entro 1,5 m da esso, quel nemico non è incapacitato e tu non hai svantaggio al tiro per colpire.\n\nL'ammontare dei danni extra aumenta man mano che guadagni livelli in questa classe, come mostrato nella colonna Attacco Furtivo della tabella del Ladro."
+  },
+  "rogue/thieves-cant": {
+   "name": "Gergo Ladresco",
+   "description": "Durante il tuo addestramento da ladro hai imparato il gergo ladresco, un misto segreto di dialetto, termini tecnici e codici che ti permette di nascondere messaggi in conversazioni all'apparenza normali. Solo un'altra creatura che conosce il gergo ladresco comprende tali messaggi. Occorre un tempo quattro volte maggiore per trasmettere un messaggio simile rispetto a esprimere la stessa idea in modo semplice.\n\nInoltre comprendi un insieme di segni e simboli segreti usati per trasmettere messaggi brevi e semplici, ad esempio se un'area è pericolosa o è il territorio di una gilda di ladri, se c'è del bottino nelle vicinanze, o se le persone di una zona sono facili prede o offriranno un rifugio sicuro ai ladri in fuga."
+  },
+  "rogue/cunning-action": {
+   "name": "Azione Scaltra",
+   "description": "Dal 2° livello la tua rapidità di pensiero e la tua agilità ti permettono di muoverti e agire velocemente. Puoi usare un'azione bonus in ciascuno dei tuoi turni di combattimento. Questa azione può essere usata solo per effettuare l'azione di Scatto, Disimpegno o Nascondersi."
+  },
+  "rogue/roguish-archetype": {
+   "name": "Archetipo Ladresco",
+   "description": "Al 3° livello scegli un archetipo che emuli nell'esercizio delle tue abilità da ladro, come il Furfante. Nel materiale originale sono disponibili altri archetipi. La scelta dell'archetipo ti concede privilegi al 3° livello e poi di nuovo al 9°, 13° e 17° livello."
+  },
+  "rogue/fast-hands": {
+   "name": "Mani Veloci",
+   "description": "Dal 3° livello puoi usare l'azione bonus concessa dalla tua Azione Scaltra per effettuare una prova di Destrezza (Rapidità di Mano), usare i tuoi arnesi da scasso per disarmare una trappola o aprire una serratura, oppure effettuare l'azione di Usare un Oggetto."
+  },
+  "rogue/second-story-work": {
+   "name": "Lavoro al Secondo Piano",
+   "description": "Quando scegli questo archetipo al 3° livello, ottieni la capacità di arrampicarti più in fretta del normale; arrampicarti non ti costa più movimento extra.\n\nInoltre, quando effettui un salto in corsa, la distanza che copri aumenta di 30 cm per ogni punto del tuo modificatore di Destrezza."
+  },
+  "rogue/rogue-ability-score-improvement-1": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 10°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "rogue/uncanny-dodge": {
+   "name": "Schivata Prodigiosa",
+   "description": "Dal 5° livello, quando un aggressore che puoi vedere ti colpisce con un attacco, puoi usare la tua reazione per dimezzare i danni dell'attacco contro di te."
+  },
+  "rogue/rogue-expertise-2": {
+   "name": "Maestria",
+   "description": "Al 1° livello scegli due delle tue competenze nelle abilità, oppure una delle tue competenze nelle abilità e la tua competenza con gli arnesi da scasso. Il tuo bonus di competenza è raddoppiato per ogni prova di caratteristica che effettui usando una delle competenze scelte.\n\nAl 6° livello puoi scegliere altre due delle tue competenze (nelle abilità o con gli arnesi da scasso) per ottenere questo beneficio"
+  },
+  "rogue/rogue-evasion": {
+   "name": "Elusione",
+   "description": "Dal 7° livello puoi schivare con agilità certi effetti ad area, come il soffio infuocato di un drago rosso o l'incantesimo tempesta di ghiaccio. Quando sei soggetto a un effetto che ti permette di effettuare un tiro salvezza su Destrezza per subire solo metà dei danni, invece non subisci alcun danno se superi il tiro salvezza, e subisci solo metà dei danni se lo fallisci."
+  },
+  "rogue/rogue-ability-score-improvement-2": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 10°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "rogue/roguish-archetype-improvement-1": {
+   "name": "Privilegio Archetipo Ladresco",
+   "description": "Al 3° livello scegli un archetipo che emuli nell'esercizio delle tue abilità da ladro, come il Furfante. Nel materiale originale sono disponibili altri archetipi. La scelta dell'archetipo ti concede privilegi al 3° livello e poi di nuovo al 9°, 13° e 17° livello."
+  },
+  "rogue/supreme-sneak": {
+   "name": "Furtività Suprema",
+   "description": "Dal 9° livello hai vantaggio a una prova di Destrezza (Furtività) se nello stesso turno ti muovi di non più della metà della tua velocità."
+  },
+  "rogue/rogue-ability-score-improvement-3": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 10°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "rogue/reliable-talent": {
+   "name": "Dote Affidabile",
+   "description": "All'11° livello hai affinato le abilità che hai scelto fino quasi alla perfezione. Ogni volta che effettui una prova di caratteristica che ti permette di aggiungere il tuo bonus di competenza, puoi considerare un risultato di 9 o meno sul d20 come un 10."
+  },
+  "rogue/rogue-ability-score-improvement-4": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 10°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "rogue/roguish-archetype-improvement-2": {
+   "name": "Privilegio Archetipo Ladresco",
+   "description": "Al 3° livello scegli un archetipo che emuli nell'esercizio delle tue abilità da ladro, come il Furfante. Nel materiale originale sono disponibili altri archetipi. La scelta dell'archetipo ti concede privilegi al 3° livello e poi di nuovo al 9°, 13° e 17° livello."
+  },
+  "rogue/use-magic-device": {
+   "name": "Usare Oggetto Magico",
+   "description": "Al 13° livello hai appreso abbastanza sul funzionamento della magia da poter improvvisare l'uso di oggetti anche quando non sono destinati a te. Ignori tutti i requisiti di classe, razza e livello per l'uso degli oggetti magici."
+  },
+  "rogue/blindsense": {
+   "name": "Percezione Cieca",
+   "description": "Dal 14° livello, se sei in grado di udire, sei consapevole della posizione di qualsiasi creatura nascosta o invisibile entro 3 m da te."
+  },
+  "rogue/slippery-mind": {
+   "name": "Mente Sfuggente",
+   "description": "Al 15° livello hai acquisito una maggiore forza mentale. Ottieni competenza nei tiri salvezza su Saggezza."
+  },
+  "rogue/rogue-ability-score-improvement-5": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 10°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "rogue/roguish-archetype-improvement-3": {
+   "name": "Privilegio Archetipo Ladresco",
+   "description": "Al 3° livello scegli un archetipo che emuli nell'esercizio delle tue abilità da ladro, come il Furfante. Nel materiale originale sono disponibili altri archetipi. La scelta dell'archetipo ti concede privilegi al 3° livello e poi di nuovo al 9°, 13° e 17° livello."
+  },
+  "rogue/thiefs-reflexes": {
+   "name": "Riflessi da Furfante",
+   "description": "Quando raggiungi il 17° livello sei diventato abile nel tendere imboscate e nello sfuggire rapidamente al pericolo. Puoi effettuare due turni durante il primo round di qualsiasi combattimento. Effettui il primo turno alla tua iniziativa normale e il secondo alla tua iniziativa meno 10. Non puoi usare questo privilegio quando sei sorpreso."
+  },
+  "rogue/elusive": {
+   "name": "Inafferrabile",
+   "description": "Dal 18° livello sei così sfuggente che gli aggressori raramente ottengono il sopravvento su di te. Nessun tiro per colpire ha vantaggio contro di te finché non sei incapacitato."
+  },
+  "rogue/rogue-ability-score-improvement-6": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 10°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "rogue/stroke-of-luck": {
+   "name": "Colpo di Fortuna",
+   "description": "Al 20° livello hai un'incredibile capacità di riuscire quando ne hai bisogno. Se il tuo attacco manca un bersaglio entro gittata, puoi trasformare il mancato in un colpo andato a segno. In alternativa, se fallisci una prova di caratteristica, puoi considerare il risultato del d20 come un 20.\n\nUna volta usato questo privilegio, non puoi usarlo di nuovo finché non termini un riposo breve o lungo."
+  },
+  "sorcerer/spellcasting-sorcerer": {
+   "name": "Incantesimi: Stregone",
+   "description": "Un evento del tuo passato, o della vita di un genitore o di un antenato, ha lasciato in te un segno indelebile, infondendoti magia arcana. Questa fonte di magia, qualunque sia la sua origine, alimenta i tuoi incantesimi."
+  },
+  "sorcerer/sorcerous-origin": {
+   "name": "Origine Stregonesca",
+   "description": "Scegli un'origine stregonesca, che descrive la fonte del tuo potere magico innato, come la Discendenza Draconica.\n\nLa tua scelta ti concede privilegi quando la scegli al 1° livello e poi di nuovo al 6°, 14° e 18° livello."
+  },
+  "sorcerer/dragon-ancestor": {
+   "name": "Antenato Draconico",
+   "description": "Al 1° livello scegli un tipo di drago come tuo antenato. Il tipo di danno associato a ciascun drago è usato dai privilegi che ottieni più avanti.\n\nPuoi parlare, leggere e scrivere in Draconico. Inoltre, ogni volta che effettui una prova di Carisma interagendo con i draghi, il tuo bonus di competenza è raddoppiato, se si applica alla prova."
+  },
+  "sorcerer/dragon-ancestor-black---acid-damage": {
+   "name": "Antenato Draconico: Nero - Danni da Acido",
+   "description": "Al 1° livello scegli un tipo di drago come tuo antenato. Il tipo di danno associato a ciascun drago è usato dai privilegi che ottieni più avanti.\n\nPuoi parlare, leggere e scrivere in Draconico. Inoltre, ogni volta che effettui una prova di Carisma interagendo con i draghi, il tuo bonus di competenza è raddoppiato, se si applica alla prova."
+  },
+  "sorcerer/dragon-ancestor-blue---lightning-damage": {
+   "name": "Antenato Draconico: Blu - Danni da Fulmine",
+   "description": "Al 1° livello scegli un tipo di drago come tuo antenato. Il tipo di danno associato a ciascun drago è usato dai privilegi che ottieni più avanti.\n\nPuoi parlare, leggere e scrivere in Draconico. Inoltre, ogni volta che effettui una prova di Carisma interagendo con i draghi, il tuo bonus di competenza è raddoppiato, se si applica alla prova."
+  },
+  "sorcerer/dragon-ancestor-brass---fire-damage": {
+   "name": "Antenato Draconico: Ottone - Danni da Fuoco",
+   "description": "Al 1° livello scegli un tipo di drago come tuo antenato. Il tipo di danno associato a ciascun drago è usato dai privilegi che ottieni più avanti.\n\nPuoi parlare, leggere e scrivere in Draconico. Inoltre, ogni volta che effettui una prova di Carisma interagendo con i draghi, il tuo bonus di competenza è raddoppiato, se si applica alla prova."
+  },
+  "sorcerer/dragon-ancestor-bronze---lightning-damage": {
+   "name": "Antenato Draconico: Bronzo - Danni da Fulmine",
+   "description": "Al 1° livello scegli un tipo di drago come tuo antenato. Il tipo di danno associato a ciascun drago è usato dai privilegi che ottieni più avanti.\n\nPuoi parlare, leggere e scrivere in Draconico. Inoltre, ogni volta che effettui una prova di Carisma interagendo con i draghi, il tuo bonus di competenza è raddoppiato, se si applica alla prova."
+  },
+  "sorcerer/dragon-ancestor-copper---acid-damage": {
+   "name": "Antenato Draconico: Rame - Danni da Acido",
+   "description": "Al 1° livello scegli un tipo di drago come tuo antenato. Il tipo di danno associato a ciascun drago è usato dai privilegi che ottieni più avanti.\n\nPuoi parlare, leggere e scrivere in Draconico. Inoltre, ogni volta che effettui una prova di Carisma interagendo con i draghi, il tuo bonus di competenza è raddoppiato, se si applica alla prova."
+  },
+  "sorcerer/dragon-ancestor-gold---fire-damage": {
+   "name": "Antenato Draconico: Oro - Danni da Fuoco",
+   "description": "Al 1° livello scegli un tipo di drago come tuo antenato. Il tipo di danno associato a ciascun drago è usato dai privilegi che ottieni più avanti.\n\nPuoi parlare, leggere e scrivere in Draconico. Inoltre, ogni volta che effettui una prova di Carisma interagendo con i draghi, il tuo bonus di competenza è raddoppiato, se si applica alla prova."
+  },
+  "sorcerer/dragon-ancestor-green---poison-damage": {
+   "name": "Antenato Draconico: Verde - Danni da Veleno",
+   "description": "Al 1° livello scegli un tipo di drago come tuo antenato. Il tipo di danno associato a ciascun drago è usato dai privilegi che ottieni più avanti.\n\nPuoi parlare, leggere e scrivere in Draconico. Inoltre, ogni volta che effettui una prova di Carisma interagendo con i draghi, il tuo bonus di competenza è raddoppiato, se si applica alla prova."
+  },
+  "sorcerer/dragon-ancestor-red---fire-damage": {
+   "name": "Antenato Draconico: Rosso - Danni da Fuoco",
+   "description": "Al 1° livello scegli un tipo di drago come tuo antenato. Il tipo di danno associato a ciascun drago è usato dai privilegi che ottieni più avanti.\n\nPuoi parlare, leggere e scrivere in Draconico. Inoltre, ogni volta che effettui una prova di Carisma interagendo con i draghi, il tuo bonus di competenza è raddoppiato, se si applica alla prova."
+  },
+  "sorcerer/dragon-ancestor-silver---cold-damage": {
+   "name": "Antenato Draconico: Argento - Danni da Freddo",
+   "description": "Al 1° livello scegli un tipo di drago come tuo antenato. Il tipo di danno associato a ciascun drago è usato dai privilegi che ottieni più avanti.\n\nPuoi parlare, leggere e scrivere in Draconico. Inoltre, ogni volta che effettui una prova di Carisma interagendo con i draghi, il tuo bonus di competenza è raddoppiato, se si applica alla prova."
+  },
+  "sorcerer/dragon-ancestor-white---cold-damage": {
+   "name": "Antenato Draconico: Bianco - Danni da Freddo",
+   "description": "Al 1° livello scegli un tipo di drago come tuo antenato. Il tipo di danno associato a ciascun drago è usato dai privilegi che ottieni più avanti.\n\nPuoi parlare, leggere e scrivere in Draconico. Inoltre, ogni volta che effettui una prova di Carisma interagendo con i draghi, il tuo bonus di competenza è raddoppiato, se si applica alla prova."
+  },
+  "sorcerer/draconic-resilience": {
+   "name": "Resilienza Draconica",
+   "description": "Mentre la magia scorre nel tuo corpo, fa emergere tratti fisici dei tuoi antenati draconici. Al 1° livello i tuoi punti ferita massimi aumentano di 1, e aumentano di nuovo di 1 ogni volta che guadagni un livello in questa classe.\n\nInoltre, parti della tua pelle sono coperte da un sottile strato di scaglie simili a quelle di un drago. Quando non indossi un'armatura, la tua CA è pari a 13 + il tuo modificatore di Destrezza."
+  },
+  "sorcerer/font-of-magic": {
+   "name": "Fonte di Magia",
+   "description": "Al 2° livello attingi a una profonda sorgente di magia dentro di te. Questa sorgente è rappresentata dai punti stregoneria, che ti permettono di creare una varietà di effetti magici.\n\nPunti Stregoneria\n\nHai 2 punti stregoneria, e ne ottieni altri raggiungendo livelli più alti, come mostrato nella colonna Punti Stregoneria della tabella dello Stregone. Non puoi mai avere più punti stregoneria di quelli indicati dalla tabella per il tuo livello. Recuperi tutti i punti stregoneria spesi quando termini un riposo lungo."
+  },
+  "sorcerer/flexible-casting-creating-spell-slots": {
+   "name": "Incantesimi Flessibili: Creare Slot Incantesimo",
+   "description": "Puoi trasformare i punti stregoneria non spesi in uno slot incantesimo, come azione bonus nel tuo turno. La tabella Creare Slot Incantesimo mostra il costo per creare uno slot di un dato livello. Puoi creare slot incantesimo di livello non superiore al 5°. \n\nQualsiasi slot incantesimo creato con questo privilegio svanisce quando termini un riposo lungo."
+  },
+  "sorcerer/flexible-casting-converting-spell-slot": {
+   "name": "Incantesimi Flessibili: Convertire uno Slot Incantesimo",
+   "description": "Come azione bonus nel tuo turno, puoi spendere uno slot incantesimo e ottenere un numero di punti stregoneria pari al livello dello slot.."
+  },
+  "sorcerer/metamagic-1": {
+   "name": "Metamagia",
+   "description": "Al 3° livello ottieni la capacità di piegare i tuoi incantesimi alle tue necessità. Ottieni due delle seguenti opzioni di Metamagia a tua scelta. Ne ottieni un'altra al 10° e al 17° livello.\n\nQuando lanci un incantesimo puoi usare una sola opzione di Metamagia su di esso, salvo diversa indicazione."
+  },
+  "sorcerer/metamagic-careful-spell": {
+   "name": "Metamagia: Incantesimo Preciso",
+   "description": "Quando lanci un incantesimo che costringe altre creature a effettuare un tiro salvezza, puoi proteggere alcune di esse dalla piena forza dell'incantesimo. Per farlo, spendi 1 punto stregoneria e scegli un numero di quelle creature fino al tuo modificatore di Carisma (minimo una creatura). Una creatura scelta supera automaticamente il suo tiro salvezza contro l'incantesimo."
+  },
+  "sorcerer/metamagic-distant-spell": {
+   "name": "Metamagia: Incantesimo Distante",
+   "description": "Quando lanci un incantesimo con gittata di 1,5 m o superiore, puoi spendere 1 punto stregoneria per raddoppiare la gittata dell'incantesimo.\n\nQuando lanci un incantesimo con gittata di contatto, puoi spendere 1 punto stregoneria per portare la gittata dell'incantesimo a 9 m."
+  },
+  "sorcerer/metamagic-empowered-spell": {
+   "name": "Metamagia: Incantesimo Potenziato",
+   "description": "Quando tiri i danni di un incantesimo, puoi spendere 1 punto stregoneria per ritirare un numero di dadi dei danni fino al tuo modificatore di Carisma (minimo uno). Devi usare i nuovi risultati.\n\nPuoi usare Incantesimo Potenziato anche se hai già usato un'altra opzione di Metamagia durante il lancio dell'incantesimo."
+  },
+  "sorcerer/metamagic-extended-spell": {
+   "name": "Metamagia: Incantesimo Esteso",
+   "description": "Quando lanci un incantesimo con durata di 1 minuto o più, puoi spendere 1 punto stregoneria per raddoppiarne la durata, fino a una durata massima di 24 ore."
+  },
+  "sorcerer/metamagic-heightened-spell": {
+   "name": "Metamagia: Incantesimo Intensificato",
+   "description": "Quando lanci un incantesimo che costringe una creatura a effettuare un tiro salvezza per resistere ai suoi effetti, puoi spendere 3 punti stregoneria per dare a un bersaglio dell'incantesimo svantaggio al primo tiro salvezza effettuato contro l'incantesimo."
+  },
+  "sorcerer/metamagic-quickened-spell": {
+   "name": "Metamagia: Incantesimo Rapido",
+   "description": "Quando lanci un incantesimo con tempo di lancio di 1 azione, puoi spendere 2 punti stregoneria per cambiare il tempo di lancio in 1 azione bonus per questo lancio."
+  },
+  "sorcerer/metamagic-subtle-spell": {
+   "name": "Metamagia: Incantesimo Celato",
+   "description": "Quando lanci un incantesimo, puoi spendere 1 punto stregoneria per lanciarlo senza componenti somatiche né verbali."
+  },
+  "sorcerer/metamagic-twinned-spell": {
+   "name": "Metamagia: Incantesimo Raddoppiato",
+   "description": "Quando lanci un incantesimo che ha come bersaglio una sola creatura e non ha gittata personale, puoi spendere un numero di punti stregoneria pari al livello dell'incantesimo per avere come bersaglio una seconda creatura entro gittata con lo stesso incantesimo (1 punto stregoneria se l'incantesimo è un trucchetto).\n\nPer essere idoneo, un incantesimo deve essere incapace di avere come bersaglio più di una creatura al livello attuale dell'incantesimo. Ad esempio, dardo incantato e raggio rovente non sono idonei, ma raggio di gelo lo è."
+  },
+  "sorcerer/sorcerer-ability-score-improvement-1": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "sorcerer/sorcerous-origin-improvement-1": {
+   "name": "Privilegio Origine Stregonesca",
+   "description": "Scegli un'origine stregonesca, che descrive la fonte del tuo potere magico innato, come la Discendenza Draconica.\n\nLa tua scelta ti concede privilegi quando la scegli al 1° livello e poi di nuovo al 6°, 14° e 18° livello."
+  },
+  "sorcerer/elemental-affinity": {
+   "name": "Affinità Elementale",
+   "description": "Dal 6° livello, quando lanci un incantesimo che infligge danni del tipo associato alla tua discendenza draconica, puoi aggiungere il tuo modificatore di Carisma a un tiro per i danni di quell'incantesimo. Allo stesso tempo, puoi spendere 1 punto stregoneria per ottenere resistenza a quel tipo di danni per 1 ora."
+  },
+  "sorcerer/sorcerer-ability-score-improvement-2": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "sorcerer/metamagic-2": {
+   "name": "Metamagia",
+   "description": "Al 3° livello ottieni la capacità di piegare i tuoi incantesimi alle tue necessità. Ottieni due delle seguenti opzioni di Metamagia a tua scelta. Ne ottieni un'altra al 10° e al 17° livello.\n\nQuando lanci un incantesimo puoi usare una sola opzione di Metamagia su di esso, salvo diversa indicazione."
+  },
+  "sorcerer/sorcerer-ability-score-improvement-3": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "sorcerer/sorcerous-origin-improvement-2": {
+   "name": "Privilegio Origine Stregonesca",
+   "description": "Scegli un'origine stregonesca, che descrive la fonte del tuo potere magico innato, come la Discendenza Draconica.\n\nLa tua scelta ti concede privilegi quando la scegli al 1° livello e poi di nuovo al 6°, 14° e 18° livello."
+  },
+  "sorcerer/dragon-wings": {
+   "name": "Ali di Drago",
+   "description": "Al 14° livello ottieni la capacità di far spuntare dalla schiena un paio di ali di drago, ottenendo una velocità di volo pari alla tua velocità attuale. Puoi creare queste ali come azione bonus nel tuo turno. Durano finché non le congedi come azione bonus nel tuo turno.\n\nNon puoi manifestare le ali mentre indossi un'armatura, a meno che l'armatura non sia fatta per accoglierle, e i vestiti non fatti per accogliere le tue ali potrebbero venire distrutti quando le manifesti."
+  },
+  "sorcerer/sorcerer-ability-score-improvement-4": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "sorcerer/metamagic-3": {
+   "name": "Metamagia",
+   "description": "Al 3° livello ottieni la capacità di piegare i tuoi incantesimi alle tue necessità. Ottieni due delle seguenti opzioni di Metamagia a tua scelta. Ne ottieni un'altra al 10° e al 17° livello.\n\nQuando lanci un incantesimo puoi usare una sola opzione di Metamagia su di esso, salvo diversa indicazione."
+  },
+  "sorcerer/sorcerous-origin-improvement-3": {
+   "name": "Privilegio Origine Stregonesca",
+   "description": "Scegli un'origine stregonesca, che descrive la fonte del tuo potere magico innato, come la Discendenza Draconica.\n\nLa tua scelta ti concede privilegi quando la scegli al 1° livello e poi di nuovo al 6°, 14° e 18° livello."
+  },
+  "sorcerer/draconic-presence": {
+   "name": "Presenza Draconica",
+   "description": "Dal 18° livello puoi incanalare la presenza terrificante del tuo antenato drago, facendo sì che coloro che ti circondano restino ammirati o spaventati. Come azione, puoi spendere 5 punti stregoneria per attingere a questo potere ed emanare un'aura di soggezione o di paura (a tua scelta) fino a una distanza di 18 m. Per 1 minuto o finché non perdi la concentrazione (come se stessi lanciando un incantesimo che richiede concentrazione), ogni creatura ostile che inizia il proprio turno in questa aura deve superare un tiro salvezza su Saggezza o essere affascinata (se hai scelto la soggezione) o spaventata (se hai scelto la paura) finché l'aura non termina. Una creatura che supera questo tiro salvezza è immune alla tua aura per 24 ore."
+  },
+  "sorcerer/sorcerer-ability-score-improvement-5": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "sorcerer/sorcerous-restoration": {
+   "name": "Ripristino Stregonesco",
+   "description": "Al 20° livello recuperi 4 punti stregoneria spesi ogni volta che termini un riposo breve."
+  },
+  "warlock/otherworldly-patron": {
+   "name": "Patrono Ultraterreno",
+   "description": "Al 1° livello hai stretto un patto con un essere ultraterreno a tua scelta, come l'Immondo. La tua scelta ti concede privilegi al 1° livello e poi di nuovo al 6°, 10° e 14° livello."
+  },
+  "warlock/dark-ones-blessing": {
+   "name": "Benedizione dell'Oscuro",
+   "description": "Dal 1° livello, quando porti una creatura ostile a 0 punti ferita, ottieni punti ferita temporanei pari al tuo modificatore di Carisma + il tuo livello da warlock (minimo 1)."
+  },
+  "warlock/pact-magic": {
+   "name": "Magia del Patto",
+   "description": "La tua ricerca arcana e la magia che il tuo patrono ti ha concesso ti hanno dato dimestichezza con gli incantesimi."
+  },
+  "warlock/eldritch-invocations": {
+   "name": "Suppliche Occulte",
+   "description": "Nello studio del sapere occulto hai portato alla luce le suppliche occulte, frammenti di conoscenza proibita che ti infondono una duratura capacità magica.\n\nAl 2° livello ottieni due suppliche occulte a tua scelta. Le opzioni di suppliche sono descritte alla fine della descrizione della classe. Quando raggiungi certi livelli da warlock, ottieni suppliche aggiuntive a tua scelta, come mostrato nella colonna Suppliche Conosciute della tabella del Warlock.\n\nInoltre, quando guadagni un livello in questa classe, puoi scegliere una delle suppliche che conosci e sostituirla con un'altra supplica che potresti imparare a quel livello."
+  },
+  "warlock/eldritch-invocation-agonizing-blast": {
+   "name": "Supplica Occulta: Deflagrazione Agonizzante",
+   "description": "Quando lanci deflagrazione occulta, aggiungi il tuo modificatore di Carisma ai danni che infligge a segno."
+  },
+  "warlock/eldritch-invocation-armor-of-shadows": {
+   "name": "Supplica Occulta: Armatura delle Ombre",
+   "description": "Puoi lanciare armatura magica su te stesso a volontà, senza spendere uno slot incantesimo né componenti materiali."
+  },
+  "warlock/eldritch-invocation-beast-speech": {
+   "name": "Supplica Occulta: Lingue delle Bestie",
+   "description": "Puoi lanciare parlare con gli animali a volontà, senza spendere uno slot incantesimo."
+  },
+  "warlock/eldritch-invocation-beguiling-influence": {
+   "name": "Supplica Occulta: Influenza Seducente",
+   "description": "Ottieni competenza nelle abilità Inganno e Persuasione."
+  },
+  "warlock/eldritch-invocation-book-of-ancient-secrets": {
+   "name": "Supplica Occulta: Libro degli Antichi Segreti",
+   "description": "Ora puoi inscrivere rituali magici nel tuo Libro delle Ombre. Scegli due incantesimi di 1° livello con il descrittore rituale dalla lista di incantesimi di qualsiasi classe (i due non devono provenire dalla stessa lista). Gli incantesimi compaiono nel libro e non contano ai fini del numero di incantesimi che conosci. Con il tuo Libro delle Ombre in mano, puoi lanciare gli incantesimi scelti come rituali. Non puoi lanciare quegli incantesimi se non come rituali, a meno che tu non li abbia appresi in qualche altro modo. Puoi anche lanciare come rituale un incantesimo da warlock che conosci, se ha il descrittore rituale.\n\nNelle tue avventure puoi aggiungere altri incantesimi rituali al tuo Libro delle Ombre. Quando trovi un incantesimo simile, puoi aggiungerlo al libro se il livello dell'incantesimo è pari o inferiore alla metà del tuo livello da warlock (arrotondato per eccesso) e se puoi dedicare il tempo a trascriverlo. Per ogni livello dell'incantesimo, il processo di trascrizione richiede 2 ore e costa 50 mo per gli inchiostri rari necessari a inscriverlo."
+  },
+  "warlock/eldritch-invocation-devils-sight": {
+   "name": "Supplica Occulta: Vista del Diavolo",
+   "description": "Vedi normalmente nell'oscurità, sia magica sia non magica, fino a una distanza di 36 m."
+  },
+  "warlock/eldritch-invocation-eldritch-sight": {
+   "name": "Supplica Occulta: Vista dell'Occulto",
+   "description": "Puoi lanciare individuazione del magico a volontà, senza spendere uno slot incantesimo."
+  },
+  "warlock/eldritch-invocation-eldritch-spear": {
+   "name": "Supplica Occulta: Lancia Occulta",
+   "description": "Quando lanci deflagrazione occulta, la sua gittata è di 90 m."
+  },
+  "warlock/eldritch-invocation-eyes-of-the-rune-keeper": {
+   "name": "Supplica Occulta: Occhi del Custode delle Rune",
+   "description": "Puoi leggere qualsiasi forma di scrittura."
+  },
+  "warlock/eldritch-invocation-fiendish-vigor": {
+   "name": "Supplica Occulta: Vigore Immondo",
+   "description": "Puoi lanciare vita falsata su te stesso a volontà come incantesimo di 1° livello, senza spendere uno slot incantesimo né componenti materiali."
+  },
+  "warlock/eldritch-invocation-gaze-of-two-minds": {
+   "name": "Supplica Occulta: Sguardo delle Due Menti",
+   "description": "Puoi usare la tua azione per toccare un umanoide consenziente e percepire attraverso i suoi sensi fino alla fine del tuo turno successivo. Finché la creatura si trova sullo stesso piano di esistenza in cui sei tu, puoi usare la tua azione nei turni successivi per mantenere questo collegamento, estendendo la durata fino alla fine del tuo turno successivo. Mentre percepisci attraverso i sensi dell'altra creatura, benefici di qualsiasi senso speciale posseduto da quella creatura, e sei accecato e assordato rispetto a ciò che ti circonda."
+  },
+  "warlock/eldritch-invocation-mask-of-many-faces": {
+   "name": "Supplica Occulta: Maschera dei Molti Volti",
+   "description": "Puoi lanciare camuffare se stesso a volontà, senza spendere uno slot incantesimo."
+  },
+  "warlock/eldritch-invocation-misty-visions": {
+   "name": "Supplica Occulta: Visioni Nebbiose",
+   "description": "Puoi lanciare immagine silenziosa a volontà, senza spendere uno slot incantesimo né componenti materiali."
+  },
+  "warlock/eldritch-invocation-repelling-blast": {
+   "name": "Supplica Occulta: Deflagrazione Respingente",
+   "description": "Quando colpisci una creatura con deflagrazione occulta, puoi spingere la creatura fino a 3 m via da te in linea retta."
+  },
+  "warlock/eldritch-invocation-thief-of-five-fates": {
+   "name": "Supplica Occulta: Ladro dei Cinque Fati",
+   "description": "Puoi lanciare anatema una volta usando uno slot incantesimo da warlock. Non puoi farlo di nuovo finché non termini un riposo lungo."
+  },
+  "warlock/eldritch-invocation-voice-of-the-chain-master": {
+   "name": "Supplica Occulta: Voce del Signore delle Catene",
+   "description": "Puoi comunicare telepaticamente con il tuo famiglio e percepire attraverso i suoi sensi finché siete sullo stesso piano di esistenza.\n\nInoltre, mentre percepisci attraverso i sensi del tuo famiglio, puoi anche parlare attraverso di esso con la tua voce, anche se il tuo famiglio normalmente è incapace di parlare."
+  },
+  "warlock/eldritch-invocation-mire-the-mind": {
+   "name": "Supplica Occulta: Fardello Mentale",
+   "description": "Puoi lanciare lentezza una volta usando uno slot incantesimo da warlock. Non puoi farlo di nuovo finché non termini un riposo lungo."
+  },
+  "warlock/eldritch-invocation-one-with-shadows": {
+   "name": "Supplica Occulta: Tutt'uno con le Ombre",
+   "description": "Quando ti trovi in un'area di luce fioca o di oscurità, puoi usare la tua azione per diventare invisibile finché non ti muovi o effettui un'azione o una reazione."
+  },
+  "warlock/eldritch-invocation-sign-of-ill-omen": {
+   "name": "Supplica Occulta: Presagio di Sventura",
+   "description": "Puoi lanciare scagliare maledizione una volta usando uno slot incantesimo da warlock. Non puoi farlo di nuovo finché non termini un riposo lungo."
+  }
+ }
+}

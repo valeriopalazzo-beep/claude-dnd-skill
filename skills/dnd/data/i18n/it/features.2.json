@@ -1,0 +1,360 @@
+{
+ "features": {
+  "cleric/divine-intervention-improvement": {
+   "name": "Intervento Divino Migliorato",
+   "description": "Al 20° livello, la tua richiesta di intervento riesce automaticamente, senza bisogno di alcun tiro."
+  },
+  "druid/spellcasting-druid": {
+   "name": "Incantesimi: Druido",
+   "description": "Attingendo all'essenza divina della natura stessa, puoi lanciare incantesimi per piegare quell'essenza al tuo volere."
+  },
+  "druid/druidic": {
+   "name": "Druidico",
+   "description": "Conosci il Druidico, la lingua segreta dei druidi. Puoi parlarlo e usarlo per lasciare messaggi nascosti. Tu e gli altri che conoscono questa lingua notate automaticamente un simile messaggio. Gli altri ne notano la presenza con una prova di Saggezza (Percezione) con CD 15 riuscita, ma non possono decifrarlo senza la magia."
+  },
+  "druid/wild-shape-cr-1-4-or-below-no-flying-or-swim-speed": {
+   "name": "Forma Selvatica (GS 1/4 o inferiore, senza velocità di volo o di nuoto)",
+   "description": "A partire dal 2° livello, puoi usare la tua azione per assumere magicamente la forma di una bestia che hai già visto. Puoi usare questo privilegio due volte. Recuperi gli usi spesi quando termini un riposo breve o lungo.\n\nIl tuo livello da druido determina in quali bestie puoi trasformarti, come indicato nella tabella delle Forme Bestiali. Al 2° livello, per esempio, puoi trasformarti in qualsiasi bestia con un grado di sfida pari o inferiore a 1/4 che non abbia una velocità di volo o di nuoto.\n\nPuoi restare in forma di bestia per un numero di ore pari alla metà del tuo livello da druido (arrotondato per difetto). Poi torni alla tua forma normale, a meno che tu non spenda un altro uso di questo privilegio. Puoi tornare alla tua forma normale prima del tempo usando un'azione bonus nel tuo turno. Torni automaticamente alla forma normale se cadi privo di sensi, scendi a 0 punti ferita o muori.\n\nFinché sei trasformato, si applicano le seguenti regole:\n\n- Le tue statistiche di gioco sono sostituite da quelle della bestia, ma conservi allineamento, personalità e punteggi di Intelligenza, Saggezza e Carisma. Conservi anche tutte le tue competenze nelle abilità e nei tiri salvezza, oltre a ottenere quelle della creatura. Se la creatura ha la tua stessa competenza e il bonus indicato nel suo profilo è più alto del tuo, usa il bonus della creatura al posto del tuo. Se la creatura ha azioni leggendarie o azioni di tana, non puoi usarle.\n\n- Quando ti trasformi, assumi i punti ferita e i Dadi Vita della bestia. Quando torni alla tua forma normale, riottieni il numero di punti ferita che avevi prima della trasformazione. Tuttavia, se torni normale perché sei sceso a 0 punti ferita, i danni in eccesso passano alla tua forma normale. Per esempio, se subisci 10 danni in forma animale e ti resta solo 1 punto ferita, torni normale e subisci 9 danni. Finché i danni in eccesso non riducono la tua forma normale a 0 punti ferita, non cadi privo di sensi.\n\n- Non puoi lanciare incantesimi, e la tua capacità di parlare o di compiere qualsiasi azione che richieda l'uso delle mani è limitata alle capacità della tua forma di bestia. Trasformarti, però, non interrompe la tua concentrazione su un incantesimo che hai già lanciato, né ti impedisce di compiere azioni che fanno parte di un incantesimo già lanciato, come invocare il fulmine.\n\n- Conservi i benefici di qualsiasi privilegio della tua classe, della tua razza o di altra fonte e puoi usarli se la nuova forma è fisicamente in grado di farlo. Tuttavia, non puoi usare i tuoi sensi speciali, come la scurovisione, a meno che anche la nuova forma non abbia quel senso.\n\n- Scegli tu se il tuo equipaggiamento cade a terra nel tuo spazio, si fonde con la nuova forma o viene indossato da essa. L'equipaggiamento indossato funziona normalmente, ma il DM decide se per la nuova forma sia pratico indossare un oggetto, in base alla forma e alla taglia della creatura. Il tuo equipaggiamento non cambia taglia o forma per adattarsi alla nuova forma, e qualsiasi equipaggiamento che la nuova forma non possa indossare deve cadere a terra o fondersi con essa. L'equipaggiamento che si fonde con la forma non ha alcun effetto finché non lasci quella forma."
+  },
+  "druid/druid-circle": {
+   "name": "Circolo Druidico",
+   "description": "Al 2° livello scegli di identificarti con un circolo di druidi, come il Circolo della Terra. La tua scelta ti conferisce privilegi al 2° livello e di nuovo al 6°, 10° e 14° livello."
+  },
+  "druid/circle-of-the-land": {
+   "name": "Circolo della Terra",
+   "description": "Il Circolo della Terra è composto da mistici e saggi che custodiscono antiche conoscenze e antichi riti attraverso una vasta tradizione orale. Questi druidi si riuniscono in sacri cerchi di alberi o di pietre erette per sussurrare in Druidico segreti primordiali. I membri più saggi del circolo presiedono come sommi sacerdoti le comunità che si attengono alla Vecchia Fede e fanno da consiglieri ai governanti di quei popoli. Come membro di questo circolo, la tua magia è influenzata dalla terra in cui sei stato iniziato ai misteriosi riti del circolo."
+  },
+  "druid/circle-of-the-land-arctic": {
+   "name": "Circolo della Terra: Artico",
+   "description": "Il Circolo della Terra è composto da mistici e saggi che custodiscono antiche conoscenze e antichi riti attraverso una vasta tradizione orale. Questi druidi si riuniscono in sacri cerchi di alberi o di pietre erette per sussurrare in Druidico segreti primordiali. I membri più saggi del circolo presiedono come sommi sacerdoti le comunità che si attengono alla Vecchia Fede e fanno da consiglieri ai governanti di quei popoli. Come membro di questo circolo, la tua magia è influenzata dalla terra in cui sei stato iniziato ai misteriosi riti del circolo."
+  },
+  "druid/circle-of-the-land-coast": {
+   "name": "Circolo della Terra: Costa",
+   "description": "Il Circolo della Terra è composto da mistici e saggi che custodiscono antiche conoscenze e antichi riti attraverso una vasta tradizione orale. Questi druidi si riuniscono in sacri cerchi di alberi o di pietre erette per sussurrare in Druidico segreti primordiali. I membri più saggi del circolo presiedono come sommi sacerdoti le comunità che si attengono alla Vecchia Fede e fanno da consiglieri ai governanti di quei popoli. Come membro di questo circolo, la tua magia è influenzata dalla terra in cui sei stato iniziato ai misteriosi riti del circolo."
+  },
+  "druid/circle-of-the-land-desert": {
+   "name": "Circolo della Terra: Deserto",
+   "description": "Il Circolo della Terra è composto da mistici e saggi che custodiscono antiche conoscenze e antichi riti attraverso una vasta tradizione orale. Questi druidi si riuniscono in sacri cerchi di alberi o di pietre erette per sussurrare in Druidico segreti primordiali. I membri più saggi del circolo presiedono come sommi sacerdoti le comunità che si attengono alla Vecchia Fede e fanno da consiglieri ai governanti di quei popoli. Come membro di questo circolo, la tua magia è influenzata dalla terra in cui sei stato iniziato ai misteriosi riti del circolo."
+  },
+  "druid/circle-of-the-land-forest": {
+   "name": "Circolo della Terra: Foresta",
+   "description": "Il Circolo della Terra è composto da mistici e saggi che custodiscono antiche conoscenze e antichi riti attraverso una vasta tradizione orale. Questi druidi si riuniscono in sacri cerchi di alberi o di pietre erette per sussurrare in Druidico segreti primordiali. I membri più saggi del circolo presiedono come sommi sacerdoti le comunità che si attengono alla Vecchia Fede e fanno da consiglieri ai governanti di quei popoli. Come membro di questo circolo, la tua magia è influenzata dalla terra in cui sei stato iniziato ai misteriosi riti del circolo."
+  },
+  "druid/circle-of-the-land-grassland": {
+   "name": "Circolo della Terra: Prateria",
+   "description": "Il Circolo della Terra è composto da mistici e saggi che custodiscono antiche conoscenze e antichi riti attraverso una vasta tradizione orale. Questi druidi si riuniscono in sacri cerchi di alberi o di pietre erette per sussurrare in Druidico segreti primordiali. I membri più saggi del circolo presiedono come sommi sacerdoti le comunità che si attengono alla Vecchia Fede e fanno da consiglieri ai governanti di quei popoli. Come membro di questo circolo, la tua magia è influenzata dalla terra in cui sei stato iniziato ai misteriosi riti del circolo."
+  },
+  "druid/circle-of-the-land-mountain": {
+   "name": "Circolo della Terra: Montagna",
+   "description": "Il Circolo della Terra è composto da mistici e saggi che custodiscono antiche conoscenze e antichi riti attraverso una vasta tradizione orale. Questi druidi si riuniscono in sacri cerchi di alberi o di pietre erette per sussurrare in Druidico segreti primordiali. I membri più saggi del circolo presiedono come sommi sacerdoti le comunità che si attengono alla Vecchia Fede e fanno da consiglieri ai governanti di quei popoli. Come membro di questo circolo, la tua magia è influenzata dalla terra in cui sei stato iniziato ai misteriosi riti del circolo."
+  },
+  "druid/circle-of-the-land-swamp": {
+   "name": "Circolo della Terra: Palude",
+   "description": "Il Circolo della Terra è composto da mistici e saggi che custodiscono antiche conoscenze e antichi riti attraverso una vasta tradizione orale. Questi druidi si riuniscono in sacri cerchi di alberi o di pietre erette per sussurrare in Druidico segreti primordiali. I membri più saggi del circolo presiedono come sommi sacerdoti le comunità che si attengono alla Vecchia Fede e fanno da consiglieri ai governanti di quei popoli. Come membro di questo circolo, la tua magia è influenzata dalla terra in cui sei stato iniziato ai misteriosi riti del circolo."
+  },
+  "druid/bonus-cantrip": {
+   "name": "Trucchetto Bonus",
+   "description": "Quando scegli questo circolo al 2° livello, impari un ulteriore trucchetto da druido a tua scelta."
+  },
+  "druid/natural-recovery": {
+   "name": "Recupero Naturale",
+   "description": "A partire dal 2° livello, puoi recuperare parte della tua energia magica sedendoti in meditazione e comunicando con la natura. Durante un riposo breve, scegli gli slot incantesimo spesi da recuperare. Gli slot possono avere un livello combinato pari o inferiore alla metà del tuo livello da druido (arrotondato per eccesso), e nessuno degli slot può essere di 6° livello o superiore. Non puoi usare di nuovo questo privilegio finché non termini un riposo lungo.\n\nPer esempio, quando sei un druido di 4° livello, puoi recuperare fino a due livelli di slot incantesimo. Puoi recuperare uno slot di 2° livello oppure due slot di 1° livello."
+  },
+  "druid/circle-spells-1": {
+   "name": "Incantesimi del Circolo",
+   "description": "Il tuo legame mistico con la terra ti infonde la capacità di lanciare determinati incantesimi. Al 3°, 5°, 7° e 9° livello ottieni l'accesso a incantesimi del circolo legati alla terra in cui sei diventato druido.\n\nScegli quella terra (artica, costiera, desertica, forestale, prateria, montana o paludosa) e consulta la relativa lista di incantesimi.\n\nUna volta ottenuto l'accesso a un incantesimo del circolo, lo hai sempre preparato e non conta ai fini del numero di incantesimi che puoi preparare ogni giorno. Se ottieni l'accesso a un incantesimo che non compare nella lista degli incantesimi del druido, esso è comunque un incantesimo da druido per te."
+  },
+  "druid/wild-shape-cr-1-2-or-below-no-flying-speed": {
+   "name": "Forma Selvatica (GS 1/2 o inferiore, senza velocità di volo)",
+   "description": "A partire dal 2° livello, puoi usare la tua azione per assumere magicamente la forma di una bestia che hai già visto. Puoi usare questo privilegio due volte. Recuperi gli usi spesi quando termini un riposo breve o lungo.\n\nIl tuo livello da druido determina in quali bestie puoi trasformarti, come indicato nella tabella delle Forme Bestiali. Al 2° livello, per esempio, puoi trasformarti in qualsiasi bestia con un grado di sfida pari o inferiore a 1/4 che non abbia una velocità di volo o di nuoto.\n\nPuoi restare in forma di bestia per un numero di ore pari alla metà del tuo livello da druido (arrotondato per difetto). Poi torni alla tua forma normale, a meno che tu non spenda un altro uso di questo privilegio. Puoi tornare alla tua forma normale prima del tempo usando un'azione bonus nel tuo turno. Torni automaticamente alla forma normale se cadi privo di sensi, scendi a 0 punti ferita o muori.\n\nFinché sei trasformato, si applicano le seguenti regole:\n\n- Le tue statistiche di gioco sono sostituite da quelle della bestia, ma conservi allineamento, personalità e punteggi di Intelligenza, Saggezza e Carisma. Conservi anche tutte le tue competenze nelle abilità e nei tiri salvezza, oltre a ottenere quelle della creatura. Se la creatura ha la tua stessa competenza e il bonus indicato nel suo profilo è più alto del tuo, usa il bonus della creatura al posto del tuo. Se la creatura ha azioni leggendarie o azioni di tana, non puoi usarle.\n\n- Quando ti trasformi, assumi i punti ferita e i Dadi Vita della bestia. Quando torni alla tua forma normale, riottieni il numero di punti ferita che avevi prima della trasformazione. Tuttavia, se torni normale perché sei sceso a 0 punti ferita, i danni in eccesso passano alla tua forma normale. Per esempio, se subisci 10 danni in forma animale e ti resta solo 1 punto ferita, torni normale e subisci 9 danni. Finché i danni in eccesso non riducono la tua forma normale a 0 punti ferita, non cadi privo di sensi.\n\n- Non puoi lanciare incantesimi, e la tua capacità di parlare o di compiere qualsiasi azione che richieda l'uso delle mani è limitata alle capacità della tua forma di bestia. Trasformarti, però, non interrompe la tua concentrazione su un incantesimo che hai già lanciato, né ti impedisce di compiere azioni che fanno parte di un incantesimo già lanciato, come invocare il fulmine.\n\n- Conservi i benefici di qualsiasi privilegio della tua classe, della tua razza o di altra fonte e puoi usarli se la nuova forma è fisicamente in grado di farlo. Tuttavia, non puoi usare i tuoi sensi speciali, come la scurovisione, a meno che anche la nuova forma non abbia quel senso.\n\n- Scegli tu se il tuo equipaggiamento cade a terra nel tuo spazio, si fonde con la nuova forma o viene indossato da essa. L'equipaggiamento indossato funziona normalmente, ma il DM decide se per la nuova forma sia pratico indossare un oggetto, in base alla forma e alla taglia della creatura. Il tuo equipaggiamento non cambia taglia o forma per adattarsi alla nuova forma, e qualsiasi equipaggiamento che la nuova forma non possa indossare deve cadere a terra o fondersi con essa. L'equipaggiamento che si fonde con la forma non ha alcun effetto finché non lasci quella forma."
+  },
+  "druid/druid-ability-score-improvement-1": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, con questo privilegio non puoi portare un punteggio di caratteristica oltre 20."
+  },
+  "druid/circle-spells-2": {
+   "name": "Incantesimi del Circolo",
+   "description": "Il tuo legame mistico con la terra ti infonde la capacità di lanciare determinati incantesimi. Al 3°, 5°, 7° e 9° livello ottieni l'accesso a incantesimi del circolo legati alla terra in cui sei diventato druido.\n\nScegli quella terra (artica, costiera, desertica, forestale, prateria, montana o paludosa) e consulta la relativa lista di incantesimi.\n\nUna volta ottenuto l'accesso a un incantesimo del circolo, lo hai sempre preparato e non conta ai fini del numero di incantesimi che puoi preparare ogni giorno. Se ottieni l'accesso a un incantesimo che non compare nella lista degli incantesimi del druido, esso è comunque un incantesimo da druido per te."
+  },
+  "druid/druid-circle-improvement-1": {
+   "name": "Privilegio del Circolo Druidico",
+   "description": "Al 2° livello scegli di identificarti con un circolo di druidi, come il Circolo della Terra. La tua scelta ti conferisce privilegi al 2° livello e di nuovo al 6°, 10° e 14° livello."
+  },
+  "druid/druid-lands-stride": {
+   "name": "Andatura sul Territorio",
+   "description": "A partire dal 6° livello, muoverti attraverso terreno difficile non magico non ti costa movimento extra. Puoi anche attraversare piante non magiche senza essere rallentato da esse e senza subire danni da esse se hanno spine, aculei o un pericolo simile.\n\nInoltre, hai vantaggio ai tiri salvezza contro piante create o manipolate magicamente per ostacolare il movimento, come quelle create dall'incantesimo intralciare."
+  },
+  "druid/circle-spells-3": {
+   "name": "Incantesimi del Circolo",
+   "description": "Il tuo legame mistico con la terra ti infonde la capacità di lanciare determinati incantesimi. Al 3°, 5°, 7° e 9° livello ottieni l'accesso a incantesimi del circolo legati alla terra in cui sei diventato druido.\n\nScegli quella terra (artica, costiera, desertica, forestale, prateria, montana o paludosa) e consulta la relativa lista di incantesimi.\n\nUna volta ottenuto l'accesso a un incantesimo del circolo, lo hai sempre preparato e non conta ai fini del numero di incantesimi che puoi preparare ogni giorno. Se ottieni l'accesso a un incantesimo che non compare nella lista degli incantesimi del druido, esso è comunque un incantesimo da druido per te."
+  },
+  "druid/wild-shape-cr-1-or-below": {
+   "name": "Forma Selvatica (GS 1 o inferiore)",
+   "description": "A partire dal 2° livello, puoi usare la tua azione per assumere magicamente la forma di una bestia che hai già visto. Puoi usare questo privilegio due volte. Recuperi gli usi spesi quando termini un riposo breve o lungo.\n\nIl tuo livello da druido determina in quali bestie puoi trasformarti, come indicato nella tabella delle Forme Bestiali. Al 2° livello, per esempio, puoi trasformarti in qualsiasi bestia con un grado di sfida pari o inferiore a 1/4 che non abbia una velocità di volo o di nuoto.\n\nPuoi restare in forma di bestia per un numero di ore pari alla metà del tuo livello da druido (arrotondato per difetto). Poi torni alla tua forma normale, a meno che tu non spenda un altro uso di questo privilegio. Puoi tornare alla tua forma normale prima del tempo usando un'azione bonus nel tuo turno. Torni automaticamente alla forma normale se cadi privo di sensi, scendi a 0 punti ferita o muori.\n\nFinché sei trasformato, si applicano le seguenti regole:\n\n- Le tue statistiche di gioco sono sostituite da quelle della bestia, ma conservi allineamento, personalità e punteggi di Intelligenza, Saggezza e Carisma. Conservi anche tutte le tue competenze nelle abilità e nei tiri salvezza, oltre a ottenere quelle della creatura. Se la creatura ha la tua stessa competenza e il bonus indicato nel suo profilo è più alto del tuo, usa il bonus della creatura al posto del tuo. Se la creatura ha azioni leggendarie o azioni di tana, non puoi usarle.\n\n- Quando ti trasformi, assumi i punti ferita e i Dadi Vita della bestia. Quando torni alla tua forma normale, riottieni il numero di punti ferita che avevi prima della trasformazione. Tuttavia, se torni normale perché sei sceso a 0 punti ferita, i danni in eccesso passano alla tua forma normale. Per esempio, se subisci 10 danni in forma animale e ti resta solo 1 punto ferita, torni normale e subisci 9 danni. Finché i danni in eccesso non riducono la tua forma normale a 0 punti ferita, non cadi privo di sensi.\n\n- Non puoi lanciare incantesimi, e la tua capacità di parlare o di compiere qualsiasi azione che richieda l'uso delle mani è limitata alle capacità della tua forma di bestia. Trasformarti, però, non interrompe la tua concentrazione su un incantesimo che hai già lanciato, né ti impedisce di compiere azioni che fanno parte di un incantesimo già lanciato, come invocare il fulmine.\n\n- Conservi i benefici di qualsiasi privilegio della tua classe, della tua razza o di altra fonte e puoi usarli se la nuova forma è fisicamente in grado di farlo. Tuttavia, non puoi usare i tuoi sensi speciali, come la scurovisione, a meno che anche la nuova forma non abbia quel senso.\n\n- Scegli tu se il tuo equipaggiamento cade a terra nel tuo spazio, si fonde con la nuova forma o viene indossato da essa. L'equipaggiamento indossato funziona normalmente, ma il DM decide se per la nuova forma sia pratico indossare un oggetto, in base alla forma e alla taglia della creatura. Il tuo equipaggiamento non cambia taglia o forma per adattarsi alla nuova forma, e qualsiasi equipaggiamento che la nuova forma non possa indossare deve cadere a terra o fondersi con essa. L'equipaggiamento che si fonde con la forma non ha alcun effetto finché non lasci quella forma."
+  },
+  "druid/druid-ability-score-improvement-2": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, con questo privilegio non puoi portare un punteggio di caratteristica oltre 20."
+  },
+  "druid/circle-spells-4": {
+   "name": "Incantesimi del Circolo",
+   "description": "Il tuo legame mistico con la terra ti infonde la capacità di lanciare determinati incantesimi. Al 3°, 5°, 7° e 9° livello ottieni l'accesso a incantesimi del circolo legati alla terra in cui sei diventato druido.\n\nScegli quella terra (artica, costiera, desertica, forestale, prateria, montana o paludosa) e consulta la relativa lista di incantesimi.\n\nUna volta ottenuto l'accesso a un incantesimo del circolo, lo hai sempre preparato e non conta ai fini del numero di incantesimi che puoi preparare ogni giorno. Se ottieni l'accesso a un incantesimo che non compare nella lista degli incantesimi del druido, esso è comunque un incantesimo da druido per te."
+  },
+  "druid/druid-circle-improvement-2": {
+   "name": "Privilegio del Circolo Druidico",
+   "description": "Al 2° livello scegli di identificarti con un circolo di druidi, come il Circolo della Terra. La tua scelta ti conferisce privilegi al 2° livello e di nuovo al 6°, 10° e 14° livello."
+  },
+  "druid/natures-ward": {
+   "name": "Interdizione della Natura",
+   "description": "Quando raggiungi il 10° livello, non puoi essere affascinato né spaventato da elementali o folletti, e sei immune al veleno e alle malattie."
+  },
+  "druid/druid-ability-score-improvement-3": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, con questo privilegio non puoi portare un punteggio di caratteristica oltre 20."
+  },
+  "druid/druid-circle-improvement-3": {
+   "name": "Privilegio del Circolo Druidico",
+   "description": "Al 2° livello scegli di identificarti con un circolo di druidi, come il Circolo della Terra. La tua scelta ti conferisce privilegi al 2° livello e di nuovo al 6°, 10° e 14° livello."
+  },
+  "druid/natures-sanctuary": {
+   "name": "Rifugio della Natura",
+   "description": "Quando raggiungi il 14° livello, le creature del mondo naturale percepiscono il tuo legame con la natura e diventano caute nell'attaccarti. Quando una bestia o una creatura vegetale ti attacca, quella creatura deve effettuare un tiro salvezza su Saggezza contro la CD del tiro salvezza dei tuoi incantesimi da druido. Se fallisce il tiro salvezza, la creatura deve scegliere un bersaglio diverso, oppure l'attacco manca automaticamente. Se supera il tiro salvezza, la creatura è immune a questo effetto per 24 ore. La creatura è consapevole di questo effetto prima di effettuare il suo attacco contro di te."
+  },
+  "druid/druid-ability-score-improvement-4": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, con questo privilegio non puoi portare un punteggio di caratteristica oltre 20."
+  },
+  "druid/druid-timeless-body": {
+   "name": "Corpo Senza Tempo",
+   "description": "A partire dal 18° livello, la magia primordiale che padroneggi ti fa invecchiare più lentamente. Ogni 10 anni che passano, il tuo corpo invecchia di soli 1 anno."
+  },
+  "druid/beast-spells": {
+   "name": "Incantesimi Bestiali",
+   "description": "A partire dal 18° livello, puoi lanciare molti dei tuoi incantesimi da druido in qualsiasi forma assunta con Forma Selvatica. Puoi eseguire le componenti somatiche e verbali di un incantesimo da druido mentre sei in forma di bestia, ma non sei in grado di fornire componenti materiali."
+  },
+  "druid/druid-ability-score-improvement-5": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, con questo privilegio non puoi portare un punteggio di caratteristica oltre 20."
+  },
+  "druid/archdruid": {
+   "name": "Arcidruido",
+   "description": "Al 20° livello, puoi usare la tua Forma Selvatica un numero illimitato di volte.\n\nInoltre, puoi ignorare le componenti verbali e somatiche dei tuoi incantesimi da druido, così come qualsiasi componente materiale che non abbia un costo e non sia consumata da un incantesimo. Ottieni questo beneficio sia nella tua forma normale sia nella tua forma di bestia derivata da Forma Selvatica."
+  },
+  "fighter/fighter-fighting-style": {
+   "name": "Stile di Combattimento",
+   "description": "Adotti un particolare stile di combattimento come tua specialità. Scegli una delle seguenti opzioni. Non puoi scegliere più di una volta un'opzione di Stile di Combattimento, anche se in seguito hai la possibilità di scegliere di nuovo."
+  },
+  "fighter/fighter-fighting-style-archery": {
+   "name": "Stile di Combattimento: Tiro",
+   "description": "Ottieni un bonus di +2 ai tiri per colpire che effettui con armi a distanza."
+  },
+  "fighter/fighter-fighting-style-defense": {
+   "name": "Stile di Combattimento: Difesa",
+   "description": "Finché indossi un'armatura, ottieni un bonus di +1 alla CA."
+  },
+  "fighter/fighter-fighting-style-dueling": {
+   "name": "Stile di Combattimento: Duellare",
+   "description": "Quando impugni un'arma da mischia in una mano e nessun'altra arma, ottieni un bonus di +2 ai tiri per i danni con quell'arma."
+  },
+  "fighter/fighter-fighting-style-great-weapon-fighting": {
+   "name": "Stile di Combattimento: Combattere con Armi Possenti",
+   "description": "Quando ottieni un 1 o un 2 su un dado di danno per un attacco che effettui con un'arma da mischia che impugni con due mani, puoi ritirare il dado e devi usare il nuovo risultato, anche se è un 1 o un 2. L'arma deve avere la proprietà a due mani o versatile perché tu possa ottenere questo beneficio."
+  },
+  "fighter/fighter-fighting-style-protection": {
+   "name": "Stile di Combattimento: Protezione",
+   "description": "Quando una creatura che puoi vedere attacca un bersaglio diverso da te che si trova entro 1,5 metri da te, puoi usare la tua reazione per imporre svantaggio al tiro per colpire. Devi impugnare uno scudo."
+  },
+  "fighter/fighter-fighting-style-two-weapon-fighting": {
+   "name": "Stile di Combattimento: Combattere con Due Armi",
+   "description": "Quando combatti con due armi, puoi aggiungere il tuo modificatore di caratteristica ai danni del secondo attacco."
+  },
+  "fighter/second-wind": {
+   "name": "Recuperare Energie",
+   "description": "Disponi di una riserva limitata di vigore a cui puoi attingere per proteggerti dai danni. Nel tuo turno, puoi usare un'azione bonus per recuperare punti ferita pari a 1d10 + il tuo livello da guerriero. Una volta usato questo privilegio, devi terminare un riposo breve o lungo prima di poterlo usare di nuovo."
+  },
+  "fighter/action-surge-1-use": {
+   "name": "Azione Impetuosa (1 uso)",
+   "description": "A partire dal 2° livello, puoi spingerti per un momento oltre i tuoi normali limiti. Nel tuo turno, puoi compiere un'azione aggiuntiva oltre alla tua azione normale e a un'eventuale azione bonus.\n\nUna volta usato questo privilegio, devi terminare un riposo breve o lungo prima di poterlo usare di nuovo. A partire dal 17° livello, puoi usarlo due volte prima di un riposo, ma solo una volta nello stesso turno."
+  },
+  "fighter/martial-archetype": {
+   "name": "Archetipo Marziale",
+   "description": "Al 3° livello scegli un archetipo che ti sforzi di emulare nei tuoi stili e nelle tue tecniche di combattimento, come il Campione. L'archetipo che scegli ti conferisce privilegi al 3° livello e di nuovo al 7°, 10°, 15° e 18° livello."
+  },
+  "fighter/improved-critical": {
+   "name": "Critico Migliorato",
+   "description": "A partire da quando scegli questo archetipo al 3° livello, i tuoi attacchi con arma infliggono un colpo critico con un tiro di 19 o 20."
+  },
+  "fighter/fighter-ability-score-improvement-1": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo al 6°, 8°, 12°, 14°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, con questo privilegio non puoi portare un punteggio di caratteristica oltre 20."
+  },
+  "fighter/extra-attack-1": {
+   "name": "Attacco Extra",
+   "description": "A partire dal 5° livello, puoi attaccare due volte, anziché una, ogni volta che compi l'azione di Attacco nel tuo turno. Il numero di attacchi aumenta a tre quando raggiungi l'11° livello in questa classe e a quattro quando raggiungi il 20° livello in questa classe."
+  },
+  "fighter/fighter-ability-score-improvement-2": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo al 6°, 8°, 12°, 14°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, con questo privilegio non puoi portare un punteggio di caratteristica oltre 20."
+  },
+  "fighter/remarkable-athlete": {
+   "name": "Atleta Straordinario",
+   "description": "A partire dal 7° livello, puoi aggiungere metà del tuo bonus di competenza (arrotondato per eccesso) a qualsiasi prova di Forza, Destrezza o Costituzione che effettui e che non usi già il tuo bonus di competenza. Inoltre, quando effettui un salto in lungo con rincorsa, la distanza che puoi coprire aumenta di 30 cm per ogni punto del tuo modificatore di Forza."
+  },
+  "fighter/martial-archetype-improvement-1": {
+   "name": "Privilegio dell'Archetipo Marziale",
+   "description": "Al 3° livello scegli un archetipo che ti sforzi di emulare nei tuoi stili e nelle tue tecniche di combattimento, come il Campione. L'archetipo che scegli ti conferisce privilegi al 3° livello e di nuovo al 7°, 10°, 15° e 18° livello."
+  },
+  "fighter/fighter-ability-score-improvement-3": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo al 6°, 8°, 12°, 14°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, con questo privilegio non puoi portare un punteggio di caratteristica oltre 20."
+  },
+  "fighter/indomitable-1-use": {
+   "name": "Indomito (1 uso)",
+   "description": "A partire dal 9° livello, puoi ritirare un tiro salvezza che hai fallito. Se lo fai, devi usare il nuovo tiro, e non puoi usare di nuovo questo privilegio finché non termini un riposo lungo. Puoi usare questo privilegio due volte tra un riposo lungo e l'altro a partire dal 13° livello e tre volte tra un riposo lungo e l'altro a partire dal 17° livello."
+  },
+  "fighter/additional-fighting-style": {
+   "name": "Stile di Combattimento Aggiuntivo",
+   "description": "Al 10° livello, puoi scegliere una seconda opzione dal privilegio di classe Stile di Combattimento."
+  },
+  "fighter/martial-archetype-improvement-2": {
+   "name": "Privilegio dell'Archetipo Marziale",
+   "description": "Al 3° livello scegli un archetipo che ti sforzi di emulare nei tuoi stili e nelle tue tecniche di combattimento, come il Campione. L'archetipo che scegli ti conferisce privilegi al 3° livello e di nuovo al 7°, 10°, 15° e 18° livello."
+  },
+  "fighter/extra-attack-2": {
+   "name": "Attacco Extra (2)",
+   "description": "A partire dal 5° livello, puoi attaccare due volte, anziché una, ogni volta che compi l'azione di Attacco nel tuo turno. Il numero di attacchi aumenta a tre quando raggiungi l'11° livello in questa classe e a quattro quando raggiungi il 20° livello in questa classe."
+  },
+  "fighter/fighter-ability-score-improvement-4": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo al 6°, 8°, 12°, 14°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, con questo privilegio non puoi portare un punteggio di caratteristica oltre 20."
+  },
+  "fighter/indomitable-2-uses": {
+   "name": "Indomito (2 usi)",
+   "description": "A partire dal 9° livello, puoi ritirare un tiro salvezza che hai fallito. Se lo fai, devi usare il nuovo tiro, e non puoi usare di nuovo questo privilegio finché non termini un riposo lungo. Puoi usare questo privilegio due volte tra un riposo lungo e l'altro a partire dal 13° livello e tre volte tra un riposo lungo e l'altro a partire dal 17° livello."
+  },
+  "fighter/fighter-ability-score-improvement-5": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo al 6°, 8°, 12°, 14°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, con questo privilegio non puoi portare un punteggio di caratteristica oltre 20."
+  },
+  "fighter/superior-critical": {
+   "name": "Critico Superiore",
+   "description": "A partire dal 15° livello, i tuoi attacchi con arma infliggono un colpo critico con un tiro di 18-20."
+  },
+  "fighter/martial-archetype-improvement-3": {
+   "name": "Privilegio dell'Archetipo Marziale",
+   "description": "Al 3° livello scegli un archetipo che ti sforzi di emulare nei tuoi stili e nelle tue tecniche di combattimento, come il Campione. L'archetipo che scegli ti conferisce privilegi al 3° livello e di nuovo al 7°, 10°, 15° e 18° livello."
+  },
+  "fighter/fighter-ability-score-improvement-6": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo al 6°, 8°, 12°, 14°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, con questo privilegio non puoi portare un punteggio di caratteristica oltre 20."
+  },
+  "fighter/action-surge-2-uses": {
+   "name": "Azione Impetuosa (2 usi)",
+   "description": "A partire dal 2° livello, puoi spingerti per un momento oltre i tuoi normali limiti. Nel tuo turno, puoi compiere un'azione aggiuntiva oltre alla tua azione normale e a un'eventuale azione bonus.\n\nUna volta usato questo privilegio, devi terminare un riposo breve o lungo prima di poterlo usare di nuovo. A partire dal 17° livello, puoi usarlo due volte prima di un riposo, ma solo una volta nello stesso turno."
+  },
+  "fighter/indomitable-3-uses": {
+   "name": "Indomito (3 usi)",
+   "description": "A partire dal 9° livello, puoi ritirare un tiro salvezza che hai fallito. Se lo fai, devi usare il nuovo tiro, e non puoi usare di nuovo questo privilegio finché non termini un riposo lungo. Puoi usare questo privilegio due volte tra un riposo lungo e l'altro a partire dal 13° livello e tre volte tra un riposo lungo e l'altro a partire dal 17° livello."
+  },
+  "fighter/martial-archetype-improvement-4": {
+   "name": "Privilegio dell'Archetipo Marziale",
+   "description": "Al 3° livello scegli un archetipo che ti sforzi di emulare nei tuoi stili e nelle tue tecniche di combattimento, come il Campione. L'archetipo che scegli ti conferisce privilegi al 3° livello e di nuovo al 7°, 10°, 15° e 18° livello."
+  },
+  "fighter/survivor": {
+   "name": "Sopravvissuto",
+   "description": "Al 18° livello, raggiungi il culmine della resilienza in battaglia. All'inizio di ciascuno dei tuoi turni, recuperi punti ferita pari a 5 + il tuo modificatore di Costituzione se ti restano non più della metà dei tuoi punti ferita. Non ottieni questo beneficio se hai 0 punti ferita."
+  },
+  "fighter/fighter-ability-score-improvement-7": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo al 6°, 8°, 12°, 14°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, con questo privilegio non puoi portare un punteggio di caratteristica oltre 20."
+  },
+  "fighter/extra-attack-3": {
+   "name": "Attacco Extra (3)",
+   "description": "A partire dal 5° livello, puoi attaccare due volte, anziché una, ogni volta che compi l'azione di Attacco nel tuo turno. Il numero di attacchi aumenta a tre quando raggiungi l'11° livello in questa classe e a quattro quando raggiungi il 20° livello in questa classe."
+  },
+  "monk/monk-unarmored-defense": {
+   "name": "Difesa Senza Armatura",
+   "description": "A partire dal 1° livello, finché non indossi armatura e non impugni uno scudo, la tua CA è pari a 10 + il tuo modificatore di Destrezza + il tuo modificatore di Saggezza."
+  },
+  "monk/martial-arts": {
+   "name": "Arti Marziali",
+   "description": "Al 1° livello, la tua pratica delle arti marziali ti dà la padronanza di stili di combattimento che usano colpi senz'armi e armi da monaco, ovvero le spade corte e qualsiasi arma semplice da mischia che non abbia la proprietà a due mani o pesante.\n\nOttieni i seguenti benefici finché sei senz'armi o impugni solo armi da monaco e non indossi armatura né impugni uno scudo:\n\n- Puoi usare Destrezza anziché Forza per i tiri per colpire e per i danni dei tuoi colpi senz'armi e delle tue armi da monaco.\n\n- Puoi tirare un d4 al posto dei normali danni del tuo colpo senz'armi o della tua arma da monaco. Questo dado cambia man mano che ottieni livelli da monaco, come indicato nella colonna Arti Marziali della tabella del Monaco.\n\n- Quando nel tuo turno usi l'azione di Attacco con un colpo senz'armi o un'arma da monaco, puoi effettuare un colpo senz'armi come azione bonus. Per esempio, se compi l'azione di Attacco e attacchi con un bastone ferrato, puoi anche effettuare un colpo senz'armi come azione bonus, ammesso che in questo turno tu non abbia già usato un'azione bonus.\n\nCerti monasteri usano forme specializzate delle armi da monaco. Per esempio, potresti usare una clava formata da due pezzi di legno uniti da una corta catena (detta nunchaku) oppure una falce con una lama più corta e più dritta (detta kama). Qualunque nome tu dia a un'arma da monaco, puoi usare le statistiche di gioco fornite per quell'arma."
+  },
+  "monk/ki": {
+   "name": "Ki",
+   "description": "A partire dal 2° livello, il tuo addestramento ti permette di incanalare l'energia mistica del ki. Il tuo accesso a questa energia è rappresentato da un certo numero di punti ki. Il tuo livello da monaco determina il numero di punti che possiedi, come indicato nella colonna Punti Ki della tabella del Monaco.\n\nPuoi spendere questi punti per alimentare vari privilegi del ki. All'inizio conosci tre di questi privilegi: Raffica di Colpi, Difesa Paziente e Passo del Vento. Impari altri privilegi del ki man mano che ottieni livelli in questa classe.\n\nQuando spendi un punto ki, esso non è disponibile finché non termini un riposo breve o lungo, al termine del quale riassorbi in te tutto il ki speso. Devi dedicare almeno 30 minuti del riposo alla meditazione per recuperare i tuoi punti ki.\n\nAlcuni dei tuoi privilegi del ki richiedono che il bersaglio effettui un tiro salvezza per resistere agli effetti del privilegio. La CD del tiro salvezza si calcola come segue:\n\nCD del tiro salvezza del ki = 8 + il tuo bonus di competenza + il tuo modificatore di Saggezza"
+  },
+  "monk/flurry-of-blows": {
+   "name": "Raffica di Colpi",
+   "description": "Subito dopo aver compiuto l'azione di Attacco nel tuo turno, puoi spendere 1 punto ki per effettuare due colpi senz'armi come azione bonus."
+  },
+  "monk/patient-defense": {
+   "name": "Difesa Paziente",
+   "description": "Puoi spendere 1 punto ki per compiere l'azione di Schivata come azione bonus nel tuo turno."
+  },
+  "monk/step-of-the-wind": {
+   "name": "Passo del Vento",
+   "description": "Puoi spendere 1 punto ki per compiere l'azione di Disimpegno o di Scatto come azione bonus nel tuo turno, e la tua distanza di salto è raddoppiata per quel turno."
+  },
+  "monk/unarmored-movement-1": {
+   "name": "Movimento Senza Armatura",
+   "description": "A partire dal 2° livello, la tua velocità aumenta di 3 metri finché non indossi armatura né impugni uno scudo. Questo bonus aumenta quando raggiungi determinati livelli da monaco, come indicato nella tabella del Monaco.\n\nAl 9° livello ottieni la capacità di muoverti lungo superfici verticali e attraverso i liquidi nel tuo turno senza cadere durante il movimento."
+  },
+  "monk/monastic-tradition": {
+   "name": "Tradizione Monastica",
+   "description": "Quando raggiungi il 3° livello, ti impegni in una tradizione monastica, come la Via della Mano Aperta. La tua tradizione ti conferisce privilegi al 3° livello e di nuovo al 6°, 11° e 17° livello."
+  },
+  "monk/deflect-missiles": {
+   "name": "Deviare Proiettili",
+   "description": "A partire dal 3° livello, puoi usare la tua reazione per deviare o afferrare il proiettile quando vieni colpito da un attacco con arma a distanza. Quando lo fai, i danni che subisci dall'attacco sono ridotti di 1d10 + il tuo modificatore di Destrezza + il tuo livello da monaco.\n\nSe riduci i danni a 0, puoi afferrare il proiettile se è abbastanza piccolo da essere tenuto in una mano e hai almeno una mano libera. Se afferri un proiettile in questo modo, puoi spendere 1 punto ki per effettuare un attacco a distanza con l'arma o il pezzo di munizione che hai appena afferrato, come parte della stessa reazione. Effettui questo attacco con competenza, a prescindere dalle tue competenze nelle armi, e il proiettile conta come arma da monaco per l'attacco, che ha una gittata normale di 6 metri e una gittata lunga di 18 metri."
+  },
+  "monk/open-hand-technique": {
+   "name": "Tecnica della Mano Aperta",
+   "description": "A partire da quando scegli questa tradizione al 3° livello, puoi manipolare il ki del tuo nemico mentre incanali il tuo. Ogni volta che colpisci una creatura con uno degli attacchi concessi dalla tua Raffica di Colpi, puoi imporre a quel bersaglio uno dei seguenti effetti:\n\n- Deve superare un tiro salvezza su Destrezza o cadere prono.\n\n- Deve effettuare un tiro salvezza su Forza. Se fallisce, puoi spingerlo fino a 4,5 metri lontano da te.\n\n- Non può effettuare reazioni fino alla fine del tuo prossimo turno."
+  },
+  "monk/monk-ability-score-improvement-1": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, con questo privilegio non puoi portare un punteggio di caratteristica oltre 20."
+  },
+  "monk/slow-fall": {
+   "name": "Caduta Lenta",
+   "description": "A partire dal 4° livello, puoi usare la tua reazione quando cadi per ridurre i danni da caduta che subisci di una quantità pari a cinque volte il tuo livello da monaco."
+  },
+  "monk/monk-extra-attack": {
+   "name": "Attacco Extra",
+   "description": "A partire dal 5° livello, puoi attaccare due volte, anziché una, ogni volta che compi l'azione di Attacco nel tuo turno."
+  },
+  "monk/stunning-strike": {
+   "name": "Colpo Stordente",
+   "description": "A partire dal 5° livello, puoi interferire con il flusso del ki nel corpo di un avversario. Quando colpisci un'altra creatura con un attacco con arma da mischia, puoi spendere 1 punto ki per tentare un colpo stordente. Il bersaglio deve superare un tiro salvezza su Costituzione o essere stordito fino alla fine del tuo prossimo turno."
+  },
+  "monk/ki-empowered-strikes": {
+   "name": "Colpi Ki Potenziati",
+   "description": "A partire dal 6° livello, i tuoi colpi senz'armi contano come magici ai fini di superare la resistenza e l'immunità ad attacchi e danni non magici."
+  },
+  "monk/monastic-tradition-improvement-1": {
+   "name": "Privilegio della Tradizione Monastica",
+   "description": "Quando raggiungi il 3° livello, ti impegni in una tradizione monastica, come la Via della Mano Aperta. La tua tradizione ti conferisce privilegi al 3° livello e di nuovo al 6°, 11° e 17° livello."
+  },
+  "monk/wholeness-of-body": {
+   "name": "Integrità del Corpo",
+   "description": "Al 6° livello, ottieni la capacità di curare te stesso. Come azione, puoi recuperare punti ferita pari a tre volte il tuo livello da monaco. Devi terminare un riposo lungo prima di poter usare di nuovo questo privilegio."
+  },
+  "monk/monk-evasion": {
+   "name": "Elusione",
+   "description": "Al 7° livello, la tua agilità istintiva ti permette di schivare determinati effetti ad area, come il soffio di fulmine di un drago blu o un incantesimo palla di fuoco. Quando sei soggetto a un effetto che ti permette di effettuare un tiro salvezza su Destrezza per subire solo metà dei danni, invece non subisci alcun danno se superi il tiro salvezza, e subisci solo metà dei danni se lo fallisci."
+  },
+  "monk/stillness-of-mind": {
+   "name": "Mente Lucida",
+   "description": "A partire dal 7° livello, puoi usare la tua azione per porre fine a un effetto su di te che ti sta rendendo affascinato o spaventato."
+  },
+  "monk/monk-ability-score-improvement-2": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, con questo privilegio non puoi portare un punteggio di caratteristica oltre 20."
+  },
+  "monk/unarmored-movement-2": {
+   "name": "Movimento Senza Armatura",
+   "description": "A partire dal 2° livello, la tua velocità aumenta di 3 metri finché non indossi armatura né impugni uno scudo. Questo bonus aumenta quando raggiungi determinati livelli da monaco, come indicato nella tabella del Monaco.\n\nAl 9° livello ottieni la capacità di muoverti lungo superfici verticali e attraverso i liquidi nel tuo turno senza cadere durante il movimento."
+  }
+ }
+}

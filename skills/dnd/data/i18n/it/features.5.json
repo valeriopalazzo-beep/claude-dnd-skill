@@ -1,0 +1,360 @@
+{
+ "features": {
+  "warlock/eldritch-invocation-thirsting-blade": {
+   "name": "Supplica Occulta: Lama Assetata",
+   "description": "Puoi attaccare due volte con la tua arma del patto, invece che una, ogni volta che compi l'azione di Attacco durante il tuo turno."
+  },
+  "warlock/otherworldly-patron-improvement-1": {
+   "name": "Privilegio del Patrono Ultraterreno",
+   "description": "Al 1° livello hai stretto un patto con un essere ultraterreno a tua scelta, come l'Immondo. La tua scelta ti concede privilegi al 1° livello e poi di nuovo al 6°, 10° e 14° livello."
+  },
+  "warlock/eldritch-invocation-bewitching-whispers": {
+   "name": "Supplica Occulta: Sussurri Stregati",
+   "description": "Puoi lanciare *compulsione* una volta usando uno slot incantesimo da warlock. Non puoi farlo di nuovo finché non completi un riposo lungo."
+  },
+  "warlock/eldritch-invocation-dreadful-word": {
+   "name": "Supplica Occulta: Parola Temibile",
+   "description": "Puoi lanciare *confusione* una volta usando uno slot incantesimo da warlock. Non puoi farlo di nuovo finché non completi un riposo lungo."
+  },
+  "warlock/eldritch-invocation-sculptor-of-flesh": {
+   "name": "Supplica Occulta: Scultore della Carne",
+   "description": "Puoi lanciare *metamorfosi* una volta usando uno slot incantesimo da warlock. Non puoi farlo di nuovo finché non completi un riposo lungo."
+  },
+  "warlock/eldritch-invocation-ascendant-step": {
+   "name": "Supplica Occulta: Passo Ascendente",
+   "description": "Puoi lanciare *levitazione* su te stesso a volontà, senza spendere uno slot incantesimo né componenti materiali."
+  },
+  "warlock/eldritch-invocation-minions-of-chaos": {
+   "name": "Supplica Occulta: Servitori del Caos",
+   "description": "Puoi lanciare *evoca elementale* una volta usando uno slot incantesimo da warlock. Non puoi farlo di nuovo finché non completi un riposo lungo."
+  },
+  "warlock/eldritch-invocation-otherworldly-leap": {
+   "name": "Supplica Occulta: Balzo Ultraterreno",
+   "description": "Puoi lanciare *saltare* su te stesso a volontà, senza spendere uno slot incantesimo né componenti materiali."
+  },
+  "warlock/eldritch-invocation-whispers-of-the-grave": {
+   "name": "Supplica Occulta: Sussurri dalla Tomba",
+   "description": "Puoi lanciare *parlare con i morti* a volontà, senza spendere uno slot incantesimo."
+  },
+  "warlock/otherworldly-patron-improvement-2": {
+   "name": "Privilegio del Patrono Ultraterreno",
+   "description": "Al 1° livello hai stretto un patto con un essere ultraterreno a tua scelta, come l'Immondo. La tua scelta ti concede privilegi al 1° livello e poi di nuovo al 6°, 10° e 14° livello."
+  },
+  "warlock/eldritch-invocation-lifedrinker": {
+   "name": "Supplica Occulta: Succhiavita",
+   "description": "Quando colpisci una creatura con la tua arma del patto, la creatura subisce danni necrotici extra pari al tuo modificatore di Carisma (minimo 1)."
+  },
+  "warlock/otherworldly-patron-improvement-3": {
+   "name": "Privilegio del Patrono Ultraterreno",
+   "description": "Al 1° livello hai stretto un patto con un essere ultraterreno a tua scelta, come l'Immondo. La tua scelta ti concede privilegi al 1° livello e poi di nuovo al 6°, 10° e 14° livello."
+  },
+  "warlock/eldritch-invocation-chains-of-carceri": {
+   "name": "Supplica Occulta: Catene di Carceri",
+   "description": "Puoi lanciare *blocca mostri* a volontà, prendendo di mira un celestiale, un immondo o un elementale, senza spendere uno slot incantesimo né componenti materiali. Devi completare un riposo lungo prima di poter usare di nuovo questa supplica sulla stessa creatura."
+  },
+  "warlock/eldritch-invocation-master-of-myriad-forms": {
+   "name": "Supplica Occulta: Maestro di Mille Forme",
+   "description": "Puoi lanciare *alterare se stesso* a volontà, senza spendere uno slot incantesimo."
+  },
+  "warlock/eldritch-invocation-visions-of-distant-realms": {
+   "name": "Supplica Occulta: Visione dei Reami Lontani",
+   "description": "Puoi lanciare *occhio arcano* a volontà, senza spendere uno slot incantesimo."
+  },
+  "warlock/eldritch-invocation-witch-sight": {
+   "name": "Supplica Occulta: Vista Stregata",
+   "description": "Puoi vedere la vera forma di qualsiasi mutaforma o creatura celata da illusione o da magia di trasmutazione finché la creatura si trova entro 9 metri da te e in linea di vista."
+  },
+  "warlock/pact-boon": {
+   "name": "Dono del Patto",
+   "description": "Al 3° livello il tuo patrono ultraterreno ti concede un dono per il tuo leale servizio. Ottieni uno dei seguenti privilegi a tua scelta."
+  },
+  "warlock/pact-of-the-chain": {
+   "name": "Patto della Catena",
+   "description": "Impari l'incantesimo *trova famiglio* e puoi lanciarlo come rituale. L'incantesimo non conta ai fini del numero di incantesimi che conosci.\n\nQuando lanci l'incantesimo, puoi scegliere una delle forme normali per il tuo famiglio oppure una delle seguenti forme speciali: imp, pseudodrago, quasit o spiritello.\n\nInoltre, quando compi l'azione di Attacco, puoi rinunciare a uno dei tuoi attacchi per permettere al tuo famiglio di effettuare un attacco con la sua reazione.\n\nIl tuo famiglio è più astuto di un famiglio comune. La sua forma abituale può essere un riflesso del tuo patrono, con imp e quasit legati all'Immondo."
+  },
+  "warlock/pact-of-the-blade": {
+   "name": "Patto della Lama",
+   "description": "Puoi usare la tua azione per creare un'arma del patto nella tua mano vuota. Puoi scegliere la forma di quest'arma da mischia ogni volta che la crei. Ne hai competenza finché la impugni. Quest'arma conta come magica ai fini di superare la resistenza e l'immunità agli attacchi e ai danni non magici.\n\nLa tua arma del patto scompare se si trova a più di 1,5 metri da te per 1 minuto o più. Scompare anche se usi di nuovo questo privilegio, se la congedi (non richiede azione) o se muori.\n\nPuoi trasformare un'arma magica nella tua arma del patto eseguendo un rituale speciale mentre impugni l'arma. Esegui il rituale nell'arco di 1 ora, che può essere svolta durante un riposo breve. Puoi poi congedare l'arma, facendola passare in uno spazio extradimensionale, e questa appare ogni volta che in seguito crei la tua arma del patto. Non puoi influenzare in questo modo un artefatto o un'arma senziente. L'arma cessa di essere la tua arma del patto se muori, se esegui il rituale di 1 ora su un'arma diversa o se usi un rituale di 1 ora per spezzare il tuo legame con essa. L'arma appare ai tuoi piedi se si trova nello spazio extradimensionale quando il legame si spezza.\n\nSe servi l'Immondo, la tua arma potrebbe essere un'ascia di metallo nero adornata da fiamme decorative."
+  },
+  "warlock/pact-of-the-tome": {
+   "name": "Patto del Tomo",
+   "description": "Il tuo patrono ti dona un grimorio chiamato Libro delle Ombre. Quando ottieni questo privilegio, scegli tre trucchetti dalla lista degli incantesimi di qualsiasi classe (i tre non devono provenire dalla stessa lista). Finché il libro è con te, puoi lanciare quei trucchetti a volontà. Non contano ai fini del numero di trucchetti che conosci. Se non compaiono nella lista degli incantesimi del warlock, sono comunque incantesimi da warlock per te.\n\nSe perdi il tuo Libro delle Ombre, puoi eseguire una cerimonia di 1 ora per ricevere un sostituto dal tuo patrono. Questa cerimonia può essere eseguita durante un riposo breve o lungo e distrugge il libro precedente. Il libro si riduce in cenere quando muori.\n\nIl tuo Libro delle Ombre potrebbe essere un pesante tomo rilegato in pelle di demone e borchiato di ferro, che contiene incantesimi di evocazione e una ricchezza di sapere proibito sulle regioni sinistre del cosmo, dono dell'Immondo."
+  },
+  "warlock/warlock-ability-score-improvement-1": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "warlock/dark-ones-own-luck": {
+   "name": "Fortuna dell'Oscuro",
+   "description": "A partire dal 6° livello, puoi invocare il tuo patrono perché alteri il destino a tuo favore. Quando effettui una prova di caratteristica o un tiro salvezza, puoi usare questo privilegio per aggiungere 1d10 al tuo tiro. Puoi farlo dopo aver visto il tiro iniziale ma prima che si verifichi qualsiasi effetto del tiro.\n\nUna volta usato questo privilegio, non puoi usarlo di nuovo finché non completi un riposo breve o lungo."
+  },
+  "warlock/warlock-ability-score-improvement-2": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "warlock/fiendish-resilience": {
+   "name": "Resilienza Immonda",
+   "description": "A partire dal 10° livello, quando completi un riposo breve o lungo puoi scegliere un tipo di danno. Ottieni resistenza a quel tipo di danno finché non ne scegli uno diverso con questo privilegio. I danni inflitti da armi magiche o da armi d'argento ignorano questa resistenza."
+  },
+  "warlock/mystic-arcanum-6th-level": {
+   "name": "Arcanum Mistico (6° livello)",
+   "description": "All'11° livello il tuo patrono ti concede un segreto magico chiamato arcanum. Scegli un incantesimo di 6° livello dalla lista degli incantesimi del warlock come tuo arcanum.\n\nPuoi lanciare il tuo incantesimo arcanum una volta senza spendere uno slot incantesimo. Devi completare un riposo lungo prima di poterlo fare di nuovo.\n\nAi livelli superiori ottieni altri incantesimi da warlock a tua scelta che possono essere lanciati in questo modo: un incantesimo di 7° livello al 13° livello, uno di 8° livello al 15° livello e uno di 9° livello al 17° livello. Recuperi tutti gli usi del tuo Arcanum Mistico quando completi un riposo lungo."
+  },
+  "warlock/warlock-ability-score-improvement-3": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "warlock/mystic-arcanum-7th-level": {
+   "name": "Arcanum Mistico (7° livello)",
+   "description": "All'11° livello il tuo patrono ti concede un segreto magico chiamato arcanum. Scegli un incantesimo di 6° livello dalla lista degli incantesimi del warlock come tuo arcanum.\n\nPuoi lanciare il tuo incantesimo arcanum una volta senza spendere uno slot incantesimo. Devi completare un riposo lungo prima di poterlo fare di nuovo.\n\nAi livelli superiori ottieni altri incantesimi da warlock a tua scelta che possono essere lanciati in questo modo: un incantesimo di 7° livello al 13° livello, uno di 8° livello al 15° livello e uno di 9° livello al 17° livello. Recuperi tutti gli usi del tuo Arcanum Mistico quando completi un riposo lungo."
+  },
+  "warlock/hurl-through-hell": {
+   "name": "Scagliare all'Inferno",
+   "description": "A partire dal 14° livello, quando colpisci una creatura con un attacco, puoi usare questo privilegio per trasportarla all'istante attraverso i piani inferiori. La creatura scompare e viene scagliata attraverso un paesaggio da incubo.\n\nAlla fine del tuo turno successivo, il bersaglio ritorna nello spazio che occupava in precedenza, o nello spazio libero più vicino. Se il bersaglio non è un immondo, subisce 10d10 danni psichici mentre barcolla per la sua orribile esperienza.\n\nUna volta usato questo privilegio, non puoi usarlo di nuovo finché non completi un riposo lungo."
+  },
+  "warlock/mystic-arcanum-8th-level": {
+   "name": "Arcanum Mistico (8° livello)",
+   "description": "All'11° livello il tuo patrono ti concede un segreto magico chiamato arcanum. Scegli un incantesimo di 6° livello dalla lista degli incantesimi del warlock come tuo arcanum.\n\nPuoi lanciare il tuo incantesimo arcanum una volta senza spendere uno slot incantesimo. Devi completare un riposo lungo prima di poterlo fare di nuovo.\n\nAi livelli superiori ottieni altri incantesimi da warlock a tua scelta che possono essere lanciati in questo modo: un incantesimo di 7° livello al 13° livello, uno di 8° livello al 15° livello e uno di 9° livello al 17° livello. Recuperi tutti gli usi del tuo Arcanum Mistico quando completi un riposo lungo."
+  },
+  "warlock/warlock-ability-score-improvement-4": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "warlock/mystic-arcanum-9th-level": {
+   "name": "Arcanum Mistico (9° livello)",
+   "description": "All'11° livello il tuo patrono ti concede un segreto magico chiamato arcanum. Scegli un incantesimo di 6° livello dalla lista degli incantesimi del warlock come tuo arcanum.\n\nPuoi lanciare il tuo incantesimo arcanum una volta senza spendere uno slot incantesimo. Devi completare un riposo lungo prima di poterlo fare di nuovo.\n\nAi livelli superiori ottieni altri incantesimi da warlock a tua scelta che possono essere lanciati in questo modo: un incantesimo di 7° livello al 13° livello, uno di 8° livello al 15° livello e uno di 9° livello al 17° livello. Recuperi tutti gli usi del tuo Arcanum Mistico quando completi un riposo lungo."
+  },
+  "warlock/warlock-ability-score-improvement-5": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "warlock/eldritch-master": {
+   "name": "Maestro dell'Occulto",
+   "description": "Al 20° livello puoi attingere alla tua riserva interiore di potere mistico mentre implori il tuo patrono per recuperare gli slot incantesimo spesi. Puoi trascorrere 1 minuto a implorare l'aiuto del tuo patrono per recuperare tutti gli slot incantesimo spesi del tuo privilegio Magia del Patto.\n\nUna volta recuperati gli slot incantesimo con questo privilegio, devi completare un riposo lungo prima di poterlo fare di nuovo."
+  },
+  "wizard/spellcasting-wizard": {
+   "name": "Incantesimi: Mago",
+   "description": "In quanto studente di magia arcana, possiedi un libro degli incantesimi che contiene incantesimi che mostrano i primi barlumi del tuo vero potere."
+  },
+  "wizard/arcane-recovery": {
+   "name": "Recupero Arcano",
+   "description": "Hai imparato a recuperare parte della tua energia magica studiando il tuo libro degli incantesimi. Una volta al giorno, quando completi un riposo breve, puoi scegliere slot incantesimo spesi da recuperare. Gli slot incantesimo possono avere un livello combinato pari o inferiore a metà del tuo livello da mago (arrotondato per eccesso), e nessuno degli slot può essere di 6° livello o superiore.\n\nAd esempio, se sei un mago di 4° livello, puoi recuperare fino a due livelli di slot incantesimo. Puoi recuperare uno slot incantesimo di 2° livello oppure due slot incantesimo di 1° livello."
+  },
+  "wizard/arcane-tradition": {
+   "name": "Tradizione Arcana",
+   "description": "Quando raggiungi il 2° livello, scegli una tradizione arcana, che plasma la tua pratica della magia attraverso una delle otto scuole, come l'Invocazione.\n\nLa tua scelta ti concede privilegi al 2° livello e poi di nuovo al 6°, 10° e 14° livello."
+  },
+  "wizard/evocation-savant": {
+   "name": "Erudito dell'Invocazione",
+   "description": "A partire da quando scegli questa scuola al 2° livello, l'oro e il tempo che devi spendere per copiare un incantesimo di invocazione nel tuo libro degli incantesimi sono dimezzati."
+  },
+  "wizard/sculpt-spells": {
+   "name": "Plasmare Incantesimi",
+   "description": "A partire dal 2° livello, puoi creare sacche di relativa sicurezza all'interno degli effetti dei tuoi incantesimi di invocazione. Quando lanci un incantesimo di invocazione che influenza altre creature che puoi vedere, puoi sceglierne un numero pari a 1 + il livello dell'incantesimo. Le creature scelte superano automaticamente i loro tiri salvezza contro l'incantesimo e non subiscono danni se normalmente ne subirebbero la metà con un tiro salvezza superato."
+  },
+  "wizard/wizard-ability-score-improvement-1": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "wizard/arcane-tradition-improvement-1": {
+   "name": "Privilegio della Tradizione Arcana",
+   "description": "Quando raggiungi il 2° livello, scegli una tradizione arcana, che plasma la tua pratica della magia attraverso una delle otto scuole, come l'Invocazione.\n\nLa tua scelta ti concede privilegi al 2° livello e poi di nuovo al 6°, 10° e 14° livello."
+  },
+  "wizard/potent-cantrip": {
+   "name": "Trucchetto Potente",
+   "description": "A partire dal 6° livello, i tuoi trucchetti che infliggono danni colpiscono persino le creature che evitano il peso maggiore dell'effetto. Quando una creatura supera un tiro salvezza contro il tuo trucchetto, subisce metà dei danni del trucchetto (se presenti) ma non subisce alcun effetto aggiuntivo dal trucchetto."
+  },
+  "wizard/wizard-ability-score-improvement-2": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "wizard/arcane-tradition-improvement-2": {
+   "name": "Privilegio della Tradizione Arcana",
+   "description": "Quando raggiungi il 2° livello, scegli una tradizione arcana, che plasma la tua pratica della magia attraverso una delle otto scuole, come l'Invocazione.\n\nLa tua scelta ti concede privilegi al 2° livello e poi di nuovo al 6°, 10° e 14° livello."
+  },
+  "wizard/empowered-evocation": {
+   "name": "Invocazione Potente",
+   "description": "A partire dal 10° livello, puoi aggiungere il tuo modificatore di Intelligenza a un tiro per i danni di qualsiasi incantesimo di invocazione da mago che lanci."
+  },
+  "wizard/wizard-ability-score-improvement-3": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "wizard/arcane-tradition-improvement-3": {
+   "name": "Privilegio della Tradizione Arcana",
+   "description": "Quando raggiungi il 2° livello, scegli una tradizione arcana, che plasma la tua pratica della magia attraverso una delle otto scuole, come l'Invocazione.\n\nLa tua scelta ti concede privilegi al 2° livello e poi di nuovo al 6°, 10° e 14° livello."
+  },
+  "wizard/overchannel": {
+   "name": "Saturazione Magica",
+   "description": "A partire dal 14° livello, puoi aumentare la potenza dei tuoi incantesimi più semplici. Quando lanci un incantesimo da mago dal 1° al 5° livello che infligge danni, puoi infliggere il massimo dei danni con quell'incantesimo.\n\nLa prima volta che lo fai, non subisci alcun effetto negativo. Se usi di nuovo questo privilegio prima di completare un riposo lungo, subisci 2d12 danni necrotici per ogni livello dell'incantesimo, subito dopo averlo lanciato. Ogni volta che usi di nuovo questo privilegio prima di completare un riposo lungo, i danni necrotici per livello dell'incantesimo aumentano di 1d12. Questi danni ignorano resistenza e immunità."
+  },
+  "wizard/wizard-ability-score-improvement-4": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "wizard/spell-mastery": {
+   "name": "Maestria negli Incantesimi",
+   "description": "Al 18° livello hai raggiunto una tale maestria su certi incantesimi da poterli lanciare a volontà. Scegli un incantesimo da mago di 1° livello e uno di 2° livello che siano nel tuo libro degli incantesimi. Puoi lanciare quegli incantesimi al loro livello più basso senza spendere uno slot incantesimo quando li hai preparati. Se vuoi lanciare uno dei due a un livello superiore, devi spendere uno slot incantesimo come di consueto.\n\nTrascorrendo 8 ore di studio, puoi scambiare uno o entrambi gli incantesimi scelti con incantesimi diversi degli stessi livelli."
+  },
+  "wizard/wizard-ability-score-improvement-5": {
+   "name": "Aumento dei Punteggi di Caratteristica",
+   "description": "Quando raggiungi il 4° livello, e di nuovo all'8°, 12°, 16° e 19° livello, puoi aumentare di 2 un punteggio di caratteristica a tua scelta, oppure aumentare di 1 due punteggi di caratteristica a tua scelta. Come di consueto, non puoi aumentare un punteggio di caratteristica oltre 20 con questo privilegio."
+  },
+  "wizard/signature-spell": {
+   "name": "Incantesimi Personali",
+   "description": "Quando raggiungi il 20° livello, ottieni la maestria su due potenti incantesimi e puoi lanciarli con poco sforzo. Scegli due incantesimi da mago di 3° livello nel tuo libro degli incantesimi come tuoi incantesimi personali. Hai sempre questi incantesimi preparati, non contano ai fini del numero di incantesimi che hai preparato, e puoi lanciare ciascuno di essi una volta al 3° livello senza spendere uno slot incantesimo. Quando lo fai, non puoi farlo di nuovo finché non completi un riposo breve o lungo.\n\nSe vuoi lanciare uno dei due a un livello superiore, devi spendere uno slot incantesimo come di consueto."
+  },
+  "darkvision": {
+   "name": "Scurovisione",
+   "description": "Hai una vista superiore in condizioni di oscurità e di luce fioca. Puoi vedere in luce fioca entro 18 metri da te come se fosse luce intensa, e nell'oscurità come se fosse luce fioca. Nell'oscurità non puoi distinguere i colori, solo sfumature di grigio."
+  },
+  "dwarven-resilience": {
+   "name": "Resilienza Nanica",
+   "description": "Hai vantaggio ai tiri salvezza contro il veleno e hai resistenza ai danni da veleno."
+  },
+  "dwarven-combat-training": {
+   "name": "Addestramento da Combattimento Nanico",
+   "description": "Hai competenza con l'ascia da battaglia, l'accetta, il martello leggero e il martello da guerra."
+  },
+  "tool-proficiency": {
+   "name": "Competenza negli Strumenti",
+   "description": "Ottieni competenza negli strumenti da artigiano a tua scelta: strumenti da fabbro, scorte da mescitore o strumenti da costruttore."
+  },
+  "stonecunning": {
+   "name": "Esperto Minatore",
+   "description": "Ogni volta che effettui una prova di Intelligenza (Storia) relativa all'origine di una struttura in pietra, sei considerato competente nell'abilità Storia e aggiungi il doppio del tuo bonus di competenza alla prova, invece del normale bonus di competenza."
+  },
+  "dwarven-toughness": {
+   "name": "Robustezza Nanica",
+   "description": "I tuoi punti ferita massimi aumentano di 1, e aumentano di 1 ogni volta che ottieni un livello."
+  },
+  "keen-senses": {
+   "name": "Sensi Acuti",
+   "description": "Hai competenza nell'abilità Percezione."
+  },
+  "fey-ancestry": {
+   "name": "Retaggio Fatato",
+   "description": "Hai vantaggio ai tiri salvezza contro l'essere affascinato, e la magia non può addormentarti."
+  },
+  "trance": {
+   "name": "Trance",
+   "description": "Gli elfi non hanno bisogno di dormire. Meditano invece profondamente, restando semicoscienti, per 4 ore al giorno. (La parola in Comune per tale meditazione è \"trance\".) Mentre mediti, puoi sognare in un certo modo; tali sogni sono in realtà esercizi mentali diventati riflessi dopo anni di pratica. Dopo aver riposato in questo modo, ottieni lo stesso beneficio che un umano ottiene da 8 ore di sonno."
+  },
+  "elf-weapon-training": {
+   "name": "Addestramento nelle Armi Elfiche",
+   "description": "Hai competenza con la spada lunga, la spada corta, l'arco corto e l'arco lungo."
+  },
+  "high-elf-cantrip": {
+   "name": "Trucchetto",
+   "description": "Conosci un trucchetto a tua scelta dalla lista degli incantesimi del mago. Intelligenza è la tua caratteristica da incantatore per esso."
+  },
+  "extra-language": {
+   "name": "Linguaggio Extra",
+   "description": "Puoi parlare, leggere e scrivere un linguaggio extra a tua scelta."
+  },
+  "lucky": {
+   "name": "Fortunato",
+   "description": "Quando ottieni un 1 sul d20 in un tiro per colpire, una prova di caratteristica o un tiro salvezza, puoi ritirare il dado e devi usare il nuovo tiro."
+  },
+  "brave": {
+   "name": "Coraggioso",
+   "description": "Hai vantaggio ai tiri salvezza contro l'essere spaventato."
+  },
+  "halfling-nimbleness": {
+   "name": "Agilità Halfling",
+   "description": "Puoi attraversare lo spazio di qualsiasi creatura di taglia più grande della tua."
+  },
+  "naturally-stealthy": {
+   "name": "Furtività Innata",
+   "description": "Puoi tentare di nasconderti anche quando sei oscurato soltanto da una creatura di almeno una taglia più grande della tua."
+  },
+  "draconic-ancestry": {
+   "name": "Discendenza Draconica",
+   "description": "Hai una discendenza draconica. Scegli un tipo di drago dalla tabella della Discendenza Draconica. La tua arma a soffio e la tua resistenza ai danni sono determinate dal tipo di drago, come mostrato nella tabella."
+  },
+  "draconic-ancestry-black": {
+   "name": "Discendenza Draconica (Nero)",
+   "description": "Hai una discendenza draconica. Scegli un tipo di drago dalla tabella della Discendenza Draconica. La tua arma a soffio e la tua resistenza ai danni sono determinate dal tipo di drago, come mostrato nella tabella."
+  },
+  "draconic-ancestry-blue": {
+   "name": "Discendenza Draconica (Blu)",
+   "description": "Hai una discendenza draconica. Scegli un tipo di drago dalla tabella della Discendenza Draconica. La tua arma a soffio e la tua resistenza ai danni sono determinate dal tipo di drago, come mostrato nella tabella."
+  },
+  "draconic-ancestry-brass": {
+   "name": "Discendenza Draconica (Ottone)",
+   "description": "Hai una discendenza draconica. Scegli un tipo di drago dalla tabella della Discendenza Draconica. La tua arma a soffio e la tua resistenza ai danni sono determinate dal tipo di drago, come mostrato nella tabella."
+  },
+  "draconic-ancestry-bronze": {
+   "name": "Discendenza Draconica (Bronzo)",
+   "description": "Hai una discendenza draconica. Scegli un tipo di drago dalla tabella della Discendenza Draconica. La tua arma a soffio e la tua resistenza ai danni sono determinate dal tipo di drago, come mostrato nella tabella."
+  },
+  "draconic-ancestry-copper": {
+   "name": "Discendenza Draconica (Rame)",
+   "description": "Hai una discendenza draconica. Scegli un tipo di drago dalla tabella della Discendenza Draconica. La tua arma a soffio e la tua resistenza ai danni sono determinate dal tipo di drago, come mostrato nella tabella."
+  },
+  "draconic-ancestry-gold": {
+   "name": "Discendenza Draconica (Oro)",
+   "description": "Hai una discendenza draconica. Scegli un tipo di drago dalla tabella della Discendenza Draconica. La tua arma a soffio e la tua resistenza ai danni sono determinate dal tipo di drago, come mostrato nella tabella."
+  },
+  "draconic-ancestry-green": {
+   "name": "Discendenza Draconica (Verde)",
+   "description": "Hai una discendenza draconica. Scegli un tipo di drago dalla tabella della Discendenza Draconica. La tua arma a soffio e la tua resistenza ai danni sono determinate dal tipo di drago, come mostrato nella tabella."
+  },
+  "draconic-ancestry-red": {
+   "name": "Discendenza Draconica (Rosso)",
+   "description": "Hai una discendenza draconica. Scegli un tipo di drago dalla tabella della Discendenza Draconica. La tua arma a soffio e la tua resistenza ai danni sono determinate dal tipo di drago, come mostrato nella tabella."
+  },
+  "draconic-ancestry-silver": {
+   "name": "Discendenza Draconica (Argento)",
+   "description": "Hai una discendenza draconica. Scegli un tipo di drago dalla tabella della Discendenza Draconica. La tua arma a soffio e la tua resistenza ai danni sono determinate dal tipo di drago, come mostrato nella tabella."
+  },
+  "draconic-ancestry-white": {
+   "name": "Discendenza Draconica (Bianco)",
+   "description": "Hai una discendenza draconica. Scegli un tipo di drago dalla tabella della Discendenza Draconica. La tua arma a soffio e la tua resistenza ai danni sono determinate dal tipo di drago, come mostrato nella tabella."
+  },
+  "breath-weapon": {
+   "name": "Arma a Soffio",
+   "description": "Puoi usare la tua azione per esalare energia distruttiva. La tua discendenza draconica determina la dimensione, la forma e il tipo di danno dell'esalazione.\n\nQuando usi la tua arma a soffio, ogni creatura nell'area dell'esalazione deve effettuare un tiro salvezza, il cui tipo è determinato dalla tua discendenza draconica. La CD di questo tiro salvezza è pari a 8 + il tuo modificatore di Costituzione + il tuo bonus di competenza. Una creatura subisce 2d6 danni se fallisce il tiro salvezza, e la metà di quei danni se lo supera. I danni aumentano a 3d6 al 6° livello, a 4d6 all'11° livello e a 5d6 al 16° livello.\n\nDopo aver usato la tua arma a soffio, non puoi usarla di nuovo finché non completi un riposo breve o lungo."
+  },
+  "damage-resistance": {
+   "name": "Resistenza ai Danni",
+   "description": "Hai resistenza al tipo di danno associato alla tua discendenza draconica."
+  },
+  "gnome-cunning": {
+   "name": "Astuzia Gnomesca",
+   "description": "Hai vantaggio a tutti i tiri salvezza su Intelligenza, Saggezza e Carisma contro la magia."
+  },
+  "artificers-lore": {
+   "name": "Conoscenze dell'Artefice",
+   "description": "Ogni volta che effettui una prova di Intelligenza (Storia) relativa a oggetti magici, oggetti alchemici o congegni tecnologici, puoi aggiungere il doppio del tuo bonus di competenza, invece di qualsiasi bonus di competenza che normalmente applichi."
+  },
+  "tinker": {
+   "name": "Inventore",
+   "description": "Hai competenza negli strumenti da artigiano (strumenti da inventore). Usando quegli strumenti, puoi spendere 1 ora e materiali per un valore di 10 mo per costruire un congegno meccanico Minuscolo (CA 5, 1 PF). Il congegno smette di funzionare dopo 24 ore (a meno che tu non spenda 1 ora a ripararlo per mantenerlo funzionante), o quando usi la tua azione per smontarlo; in quel momento puoi recuperare i materiali usati per crearlo. Puoi avere fino a tre di tali congegni attivi alla volta.\n\nQuando crei un congegno, scegli una delle seguenti opzioni:\n\nGiocattolo a Molla: Questo giocattolo è un animale, un mostro o una persona meccanici, come una rana, un topo, un uccello, un drago o un soldato. Quando viene posato a terra, il giocattolo si sposta di 1,5 metri sul terreno a ciascuno dei tuoi turni in una direzione casuale. Emette rumori adatti alla creatura che rappresenta.\n\nAccendifuoco: Il congegno produce una fiamma in miniatura, che puoi usare per accendere una candela, una torcia o un fuoco da campo. Usare il congegno richiede la tua azione.\n\nCarillon: Quando viene aperto, questo carillon suona una singola melodia a volume moderato. Il carillon smette di suonare quando raggiunge la fine della melodia o quando viene chiuso."
+  },
+  "skill-versatility": {
+   "name": "Versatilità nelle Abilità",
+   "description": "Ottieni competenza in due abilità a tua scelta."
+  },
+  "menacing": {
+   "name": "Minaccioso",
+   "description": "Ottieni competenza nell'abilità Intimidire."
+  },
+  "relentless-endurance": {
+   "name": "Tenacia Implacabile",
+   "description": "Quando sei ridotto a 0 punti ferita ma non ucciso sul colpo, puoi scendere invece a 1 punto ferita. Non puoi usare di nuovo questo privilegio finché non completi un riposo lungo."
+  },
+  "savage-attacks": {
+   "name": "Attacchi Selvaggi",
+   "description": "Quando metti a segno un colpo critico con un attacco con arma da mischia, puoi tirare uno dei dadi di danno dell'arma una volta in più e aggiungerlo ai danni extra del colpo critico."
+  },
+  "hellish-resistance": {
+   "name": "Resistenza Infernale",
+   "description": "Hai resistenza ai danni da fuoco."
+  },
+  "infernal-legacy": {
+   "name": "Eredità Infernale",
+   "description": "Conosci il trucchetto *taumaturgia*. Quando raggiungi il 3° livello, puoi lanciare l'incantesimo *intimorire infernale* come incantesimo di 2° livello una volta con questo tratto e recuperi la capacità di farlo quando completi un riposo lungo. Quando raggiungi il 5° livello, puoi lanciare l'incantesimo *oscurità* una volta con questo tratto e recuperi la capacità di farlo quando completi un riposo lungo. Carisma è la tua caratteristica da incantatore per questi incantesimi."
+  }
+ }
+}

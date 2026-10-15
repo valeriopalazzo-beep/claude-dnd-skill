@@ -543,6 +543,34 @@
    "Charmed, Paralyzed, Poisoned": "affascinato, paralizzato, avvelenato",
    "Exhaustion, Grappled, Paralyzed, Poisoned, Prone, Restrained, Unconscious": "indebolimento, afferrato, paralizzato, avvelenato, prono, trattenuto, privo di sensi",
    "Charmed, Exhaustion, Grappled, Paralyzed, Petrified, Poisoned, Prone, Restrained": "affascinato, indebolimento, afferrato, paralizzato, pietrificato, avvelenato, prono, trattenuto"
+  },
+  "subclass": {
+   "Berserker": "Berserker",
+   "Champion": "Campione",
+   "Devotion": "Devozione",
+   "Draconic": "Discendenza Draconica",
+   "Evocation": "Invocazione",
+   "Fiend": "Immondo",
+   "Hunter": "Cacciatore",
+   "Land": "Circolo della Terra",
+   "Life": "Vita",
+   "Lore": "Sapienza",
+   "Open Hand": "Mano Aperta",
+   "Thief": "Furfante"
+  },
+  "races": {
+   "Dragonborn": "Dragonide",
+   "Dwarf": "Nano",
+   "Elf": "Elfo",
+   "Gnome": "Gnomo",
+   "Half-Elf": "Mezzelfo",
+   "Half-Orc": "Mezzorco",
+   "Halfling": "Halfling",
+   "High Elf": "Alto Elfo",
+   "Hill Dwarf": "Nano delle Colline",
+   "Lightfoot Halfling": "Halfling Piedelesto",
+   "Rock Gnome": "Gnomo delle Rocce",
+   "Tiefling": "Tiefling"
   }
  }
 }
