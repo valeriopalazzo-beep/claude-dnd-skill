@@ -465,6 +465,10 @@ def _fmt_monster(r: dict, L: dict = _EN) -> str:
 
 def _fmt_feature(r: dict, L: dict = _EN) -> str:
     cls_s   = r.get("class") or ""   # race traits carry class: null
+    if r.get("subclass"):            # 2014 subclass features: "cleric (Life)"
+        cls_s = f"{cls_s} ({r['subclass']})"
+    elif not cls_s and r.get("races"):
+        cls_s = ", ".join(r["races"])
     lvl_s   = L["feature_level"].format(n=r["level_req"]) if r.get("level_req") else ""
     src_s   = f"{cls_s}{lvl_s}".strip() or r.get("type", "")
     lines   = [f"## {_title(r)}  [{src_s}]", "", r.get("description", "")]

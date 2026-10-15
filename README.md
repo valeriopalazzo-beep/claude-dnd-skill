@@ -805,7 +805,7 @@ Each campaign declares its ruleset on the `state.md` header line: `**Ruleset:** 
 
 ### 2014 dataset (default)
 
-`data/dnd5e_srd.json` — built from `5e-bits/5e-database` (`main` branch, 2014 SRD) and `foundryvtt/dnd5e` (`master` branch). 1,708 records: 319 spells, 237 equipment, 362 magic items, 15 conditions, 334 monsters, 9 races, 4 subraces, 187 features, 241 rules of play (SRD rule sections, one per heading).
+`data/dnd5e_srd.json` — built from `5e-bits/5e-database` (`main` branch, `src/2014/en`, 2014 SRD). 1,966 records: 319 spells, 237 equipment, 362 magic items, 15 conditions, 334 monsters, 9 races, 4 subraces, 445 features (407 class and subclass features, 38 racial traits — SRD 5.1, not the 2024 text), 241 rules of play (SRD rule sections, one per heading).
 
 ### 2024 dataset (opt-in)
 

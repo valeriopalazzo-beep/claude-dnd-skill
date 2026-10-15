@@ -3,15 +3,16 @@
 build_srd.py — build the bundled dnd5e_srd.json from two upstream sources
 
 Sources:
-  • 5e-bits/5e-database  (MIT + OGL)    — spells, equipment, magic items, conditions, monsters
-  • foundryvtt/dnd5e     (MIT + CC-BY-4.0) — class features, racial traits (2024 SRD)
+  • 5e-bits/5e-database  (MIT + OGL)    — spells, equipment, magic items, conditions, monsters,
+                                          and for 2014 the class features and racial traits
+  • foundryvtt/dnd5e     (MIT + CC-BY-4.0) — 2024 class features, racial traits, spells, monsters
 
 Output: data/dnd5e_srd.json
 
 Usage:
     python3 build_srd.py             # build/rebuild the dataset
     python3 build_srd.py --status    # show current dataset metadata
-    python3 build_srd.py --no-fvtt   # skip FoundryVTT features (faster, spells/items only)
+    python3 build_srd.py --no-fvtt   # skip FoundryVTT (2024 features, spells and monsters)
 """
 
 from __future__ import annotations  # PEP 604 annotations on Python 3.9
@@ -66,6 +67,12 @@ BITS_FILES_2014 = {
     # could only be ruled from memory. Split per heading by
     # _norm_rule_sections so "Opportunity Attacks" is its own record.
     "rules":       "5e-SRD-Rule-Sections.json",
+    # Class features (subclass ones included) and racial traits, SRD 5.1.
+    # Until 2026-10-15 a 2014 build took them from foundry's classes24, i.e.
+    # the 2024 text: Weapon Mastery and Epic Boon were there, Ki, Divine
+    # Smite and Pact Boon were not. Both files land in "features".
+    "features":    "5e-SRD-Features.json",
+    "traits":      "5e-SRD-Traits.json",
 }
 
 # 2024 file roster — partial upstream coverage as of 2026-05.
@@ -267,6 +274,34 @@ def _join_desc(desc) -> str:
     if isinstance(desc, list):
         return "\n\n".join(str(d) for d in desc)
     return str(desc) if desc else ""
+
+
+def _norm_bits_feature(r: dict) -> dict:
+    """A 2014 class feature from 5e-bits, in the shape _norm_feature gives
+    the 2024 ones, plus the subclass it belongs to (None for the base class)."""
+    return {
+        "name":        r.get("name", ""),
+        "index":       r.get("index", _slugify(r.get("name", ""))),
+        "description": _join_desc(r.get("desc")),
+        "class":       (r.get("class") or {}).get("index"),
+        "subclass":    (r.get("subclass") or {}).get("name"),
+        "level_req":   r.get("level"),
+        "type":        "class",
+    }
+
+
+def _norm_bits_trait(r: dict) -> dict:
+    """A 2014 racial trait from 5e-bits, with the races and subraces that have it."""
+    owners = [x.get("name", "") for x in (r.get("races") or []) + (r.get("subraces") or [])]
+    return {
+        "name":        r.get("name", ""),
+        "index":       r.get("index", _slugify(r.get("name", ""))),
+        "description": _join_desc(r.get("desc")),
+        "class":       None,
+        "races":       [o for o in owners if o],
+        "level_req":   None,
+        "type":        "race",
+    }
 
 
 # ─── FoundryVTT 2024 spell normaliser ─────────────────────────────────────────
@@ -1807,6 +1842,8 @@ def _build_5ebits(ruleset: str = DEFAULT_RULESET) -> tuple[dict, list[str]]:
         "monsters":    _norm_monster,
         "races":       _norm_race,
         "subraces":    _norm_subrace,
+        "features":    _norm_bits_feature,
+        "traits":      _norm_bits_trait,
         # 2024-only categories — keep raw shape (no custom normaliser yet);
         # they pass through as-is so lookup.py can consume them.
         "weapon_mastery_properties": lambda r: r,
@@ -1837,6 +1874,10 @@ def _build_5ebits(ruleset: str = DEFAULT_RULESET) -> tuple[dict, list[str]]:
             normed = [r for r in records if isinstance(r, dict) and r.get("name")]
         categories[key] = normed
         print(f" {len(normed)} records")
+
+    # Racial traits are looked up as features (`lookup.py feature darkvision`).
+    if "traits" in categories:
+        categories["features"] = categories.get("features", []) + categories.pop("traits")
 
     # Pass 1.5 — for ruleset=2024, merge native foundry monsters from
     # packs/_source/actors24/. Foundry takes precedence on slug collision
@@ -2062,15 +2103,18 @@ def cmd_build(skip_fvtt: bool = False,
         else:
             categories["spells"] = _build_fvtt_spells_2024()
 
-    print()
-    print("── foundryvtt/dnd5e (class features) ───────────────────────────")
     fvtt_sha = _latest_sha(FVTT_COMMITS)
-    if skip_fvtt:
-        print("  skipped (--no-fvtt)")
-        features = []
-    else:
-        features, _ = _build_fvtt()
-    categories["features"] = features
+    # 2014 features came with the 5e-bits files above; foundry's classes24
+    # holds the 2024 text, so it only feeds a 2024 build.
+    if ruleset == RULESET_2024:
+        print()
+        print("── foundryvtt/dnd5e (class features) ───────────────────────────")
+        if skip_fvtt:
+            print("  skipped (--no-fvtt)")
+            features = []
+        else:
+            features, _ = _build_fvtt()
+        categories["features"] = features
 
     counts = {k: len(v) for k, v in categories.items()}
     total  = sum(counts.values())
