@@ -461,11 +461,10 @@ def _send_date(cal: dict) -> None:
     """Push the current date announcement to the display."""
     msg = f"📅 {_format_date(cal)}"
     try:
-        proc = subprocess.Popen(
-            [sys.executable, SEND_PY, "--dice"],
-            stdin=subprocess.PIPE, capture_output=True, timeout=3,
-        )
-        proc.communicate(input=msg.encode())
+        # run(), not Popen(): Popen takes neither capture_output nor timeout,
+        # and the TypeError it raised was swallowed below, so nothing was sent.
+        subprocess.run([sys.executable, SEND_PY, "--dice"],
+                       input=msg.encode("utf-8"), capture_output=True, timeout=3)
     except Exception:
         pass
 

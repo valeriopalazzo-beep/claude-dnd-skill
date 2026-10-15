@@ -192,11 +192,10 @@ def _push_death_save(entity_name: str, action: str) -> None:
 def _send_announce(msg: str) -> None:
     """Send a one-line announcement to the display companion."""
     try:
-        proc = subprocess.Popen(
-            [sys.executable, SEND_PY, "--dice"],
-            stdin=subprocess.PIPE, capture_output=True, timeout=3,
-        )
-        proc.communicate(input=msg.encode())
+        # run(), not Popen(): Popen takes neither capture_output nor timeout,
+        # and the TypeError it raised was swallowed below, so nothing was sent.
+        subprocess.run([sys.executable, SEND_PY, "--dice"],
+                       input=msg.encode("utf-8"), capture_output=True, timeout=3)
     except Exception:
         pass
 
