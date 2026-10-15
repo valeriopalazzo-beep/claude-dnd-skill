@@ -254,6 +254,37 @@ def _split_paragraphs(text: str, limit: int = CHUNK_LIMIT) -> list:
 _DURATION_RE = re.compile(r"^(\d+)\s*([rmh])$", re.IGNORECASE)
 
 
+def _format_roll_result(result: dict, dc=None, label: str = "") -> str:
+    """One line for the DM: who rolled what, the dice, and against the DC.
+
+    'Ajeje: 17 (1d20+3: [14] +3) — Stealth — DC 15: success'."""
+    mod = int(result.get("modifier") or 0)
+    spec = str(result.get("spec") or "")
+    dice = result.get("both") or result.get("rolls") or []
+    detail = "[" + ", ".join(str(d) for d in dice) + "]"
+    if result.get("both"):
+        detail += f" keep {(result.get('kept') or ['?'])[0]} ({result.get('advantage')})"
+    if mod:
+        detail += f" {mod:+d}"
+    line = f"{result.get('character', '?')}: {result.get('total')} ({spec}{f'{mod:+d}' if mod else ''}: {detail})"
+    natural = result.get("natural")
+    if natural == 20:
+        line += " — natural 20"
+    elif natural == 1:
+        line += " — natural 1"
+    if label:
+        line += f" — {label}"
+    if isinstance(dc, int) and isinstance(result.get("total"), int):
+        line += f" — DC {dc}: {'success' if result['total'] >= dc else 'failure'}"
+    return line
+
+
+def _print_roll_results(status: dict) -> None:
+    """The rolls of a request, one line each on stdout."""
+    for r in status.get("results") or []:
+        print(_format_roll_result(r, status.get("dc"), status.get("label") or ""), flush=True)
+
+
 def _duration_fields(text: str) -> "dict | None":
     """'3r' / '10m' / '1h' → the duration fields of a timed effect or condition."""
     m = _DURATION_RE.match((text or "").strip())
@@ -487,7 +518,9 @@ def main() -> None:
         help='Optional DC; displayed informationally on the phone.')
     parser.add_argument("--wait", action="store_true",
         help='With --dice-request: block until every prescribed character has rolled '
-             '(polls /dice-request/<id>). Exits non-zero on timeout.')
+             '(polls /dice-request/<id>), then print each result on stdout, one line per '
+             'character ("Ajeje: 17 (1d20+3: [14] +3) — Stealth — DC 15: success"). '
+             'Exits non-zero on timeout, after printing the rolls that did arrive.')
     parser.add_argument("--wait-timeout", type=int, default=120, metavar="SECONDS",
         help='Timeout for --wait (default 120s). On timeout, prints still-pending '
              'characters to stderr and exits 2.')
@@ -616,6 +649,7 @@ def main() -> None:
                 poll_headers = {"X-DND-Token": _token} if _token else {}
                 deadline = time.time() + max(1, args.wait_timeout)
                 last_pending: list = list(pending)
+                st: dict = {}
                 print(f"send.py: waiting for rolls from: {', '.join(pending)}", file=sys.stderr)
                 while time.time() < deadline:
                     try:
@@ -628,6 +662,7 @@ def main() -> None:
                         continue
                     if st.get("complete"):
                         print(f"send.py: all rolls received.", file=sys.stderr)
+                        _print_roll_results(st)
                         break
                     remaining = st.get("pending") or []
                     if remaining != last_pending:
@@ -635,6 +670,7 @@ def main() -> None:
                         last_pending = list(remaining)
                     time.sleep(0.5)
                 else:
+                    _print_roll_results(st)     # what did arrive is still worth having
                     print(f"send.py: timeout after {args.wait_timeout}s — still pending: "
                           f"{', '.join(last_pending)}", file=sys.stderr)
                     sys.exit(2)

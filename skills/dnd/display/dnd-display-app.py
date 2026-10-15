@@ -1778,6 +1778,19 @@ _input_lock = threading.Lock()
 # send.py --wait polls GET /dice-request/<id> to know when the DM can move on.
 _dice_pending: dict = {}
 _dice_pending_lock = threading.Lock()
+# What each prescribed character rolled, by request: request_id → {label, dc,
+# results: [...]}, kept after the request is complete so send.py --wait can
+# print the numbers. Bounded: the oldest requests are forgotten first.
+_dice_results: dict = {}
+_DICE_RESULTS_MAX = 100
+
+
+def _dice_results_entry(request_id: str):
+    """The results gathered for a request, or None. Call with _dice_pending_lock held."""
+    entry = _dice_results.get(request_id)
+    if entry is None:
+        return None
+    return {"label": entry["label"], "dc": entry["dc"], "results": [dict(r) for r in entry["results"]]}
 
 
 def _dice_pending_snapshot() -> list:
@@ -4247,6 +4260,13 @@ def player_dice():
                     pending_changed = True
                     if not entry["chars"]:
                         _dice_pending.pop(req_id, None)
+                    got = _dice_results.get(req_id)
+                    if got is not None:
+                        got["results"].append({
+                            "character": character, "spec": spec, "modifier": modifier, "advantage": adv,
+                            "rolls": rolls, "kept": kept, "both": both, "total": total,
+                            "natural": kept[0] if spec == "1d20" else None,
+                        })
     if pending_changed:
         _broadcast({"dice_pending": _dice_pending_snapshot()})
 
@@ -4316,6 +4336,9 @@ def dice_request():
                 "meta": {"spec": spec, "modifier": modifier, "advantage": adv, "label": label, "dc": dc_val},
                 "started_at": time.time(),
             }
+            _dice_results[request_id] = {"label": label, "dc": dc_val, "results": []}
+            while len(_dice_results) > _DICE_RESULTS_MAX:
+                _dice_results.pop(next(iter(_dice_results)))
         _broadcast({"dice_pending": _dice_pending_snapshot()})
 
     # Targets with no live phone bound → the main display should roll on-screen.
@@ -4353,13 +4376,15 @@ def dice_request_status(request_id):
         return "Forbidden", 403
     with _dice_pending_lock:
         entry = _dice_pending.get(request_id)
+        got = _dice_results_entry(request_id) or {}
         if entry is None or not entry["chars"]:
-            return jsonify({"complete": True, "pending": []}), 200
+            return jsonify({"complete": True, "pending": [], **got}), 200
         return jsonify({
             "complete": False,
             "pending": sorted(entry["chars"]),
             "label": entry["meta"].get("label", ""),
             "started_at": entry["started_at"],
+            **got,
         }), 200
 
 
