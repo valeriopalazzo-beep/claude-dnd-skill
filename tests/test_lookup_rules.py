@@ -150,6 +150,25 @@ class BundledRulesLookupTests(unittest.TestCase):
         self.assertIn("Making an Attack › Melee Attacks", text)
         self.assertIn("Disengage", text)
 
+    def test_every_rule_has_an_italian_card(self):
+        lookup._load_ruleset("2014")
+        rules = lookup._data_by_rs["2014"]["rules"]
+        missing = [r["index"] for r in rules if lookup._localize(r, "it") is None]
+        self.assertEqual(missing, [])
+
+    def test_italian_card_is_translated_with_the_original_name(self):
+        text = lookup.lookup_translated("attacco di opportunità", "it",
+                                        category="rule", ruleset="2014")
+        self.assertTrue(text.startswith("## Attacchi di opportunità (Opportunity Attacks)"))
+        self.assertIn("Effettuare un attacco › Attacchi in mischia", text)
+        self.assertIn("Disimpegno", text)
+        self.assertNotIn("Disengage", text)
+
+    def test_italian_rules_use_metres(self):
+        text = lookup.lookup_translated("squeeze", "it", category="rule", ruleset="2014")
+        self.assertIn("1,5 metri", text)
+        self.assertNotIn("feet", text)
+
     def test_rules_stay_out_of_the_uncategorized_search(self):
         # The display's free search sends no category: "Shield" is still the
         # item or the spell, never a rule heading.
