@@ -38,6 +38,7 @@ from runtime_paths import rt          # writable runtime dir (update-safe)
 QUEUE_FILE = rt(".input_queue")
 NARRATION_TARGET = rt("narration_target")  # set by the display's Narration slider
 ROLL_PREFS = rt("roll_prefs.json")         # per-character roll overrides (Settings → Rolls)
+STATS_FILE = rt("stats.json")              # the party the display is showing now
 
 
 def _narration_directive():
@@ -53,15 +54,31 @@ def _narration_directive():
     return ""
 
 
+def _party():
+    """Lower-cased names of the characters at the table, or None when unknown."""
+    try:
+        import json
+        with open(STATS_FILE, encoding="utf-8") as f:
+            players = json.load(f).get("players") or []
+        names = {str(p.get("name", "")).strip().lower() for p in players if isinstance(p, dict)}
+        return {n for n in names if n} or None
+    except Exception:
+        return None
+
+
 def _roll_directives():
-    """One [[<Char> roll mode: …]] line per per-character override, or '' if none."""
+    """One [[<Char> roll mode: …]] line per per-character override, or '' if none.
+
+    roll_prefs.json outlives a campaign: only the characters at the table now
+    are reported, so a character of another campaign does not reach the DM."""
     try:
         if os.path.exists(ROLL_PREFS):
             import json
             with open(ROLL_PREFS, encoding="utf-8") as f:
                 prefs = json.load(f)
+            party = _party()
             lines = [f"[[{c} roll mode: {m}]]" for c, m in prefs.items()
-                     if m in ("auto", "players")]
+                     if m in ("auto", "players") and (party is None or str(c).strip().lower() in party)]
             return "\n".join(lines)
     except Exception:
         pass
