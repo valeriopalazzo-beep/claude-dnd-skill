@@ -9356,7 +9356,10 @@ let _musicCombat = false;
 let _musicCtx = null, _musicMaster = null;
 let _musicDecks = [];          // two {el, g} decks for crossfades
 let _musicCur = null;          // {deck, key, list, idx}
-let _musicAmb = null;          // {el, g, id}
+let _musicAmb = null;          // {el, g, id} — the place layer (the inn's chatter, the fire…)
+let _musicWx = null;           // {el, g, id} — the weather layer (rain, storm, wind)
+let _ambChoice = { place: 'auto', weather: 'auto' };   // ambience.py: auto | none | a sound
+let _ambWeatherKey = '';       // calendar.py's weather of the day
 let _musicFading = false;
 let _musicDucked = false;
 const _MUSIC_FADE = 3.0;       // seconds
@@ -9419,25 +9422,50 @@ function _musicPlay(key, list, idx) {
   setTimeout(() => { _musicFading = false; }, _MUSIC_FADE * 1000);
 }
 
+function _musicLayer(deck, id, level) {
+  if (deck && deck.id === id) return deck;
+  if (deck && deck.id) { _musicFadeOut(deck); deck.id = null; }
+  if (!id) return deck;
+  if (!deck) deck = _musicDeck();             // one deck per layer, reused
+  deck.id = id;
+  deck.el.loop = true;
+  deck.el.src = '/music/' + id + '.mp3';
+  const p = deck.el.play();
+  if (p) p.catch(() => {});
+  _musicRamp(deck.g, level, _MUSIC_FADE);
+  return deck;
+}
+
 function _musicSetAmbience(id) {
   if (!_musicReady()) return;
-  if (_musicAmb && _musicAmb.id === id) return;
-  if (_musicAmb) { _musicFadeOut(_musicAmb); _musicAmb.id = null; }
-  if (!id) return;
-  if (!_musicAmb) _musicAmb = _musicDeck();   // one ambience deck, reused
-  _musicAmb.id = id;
-  _musicAmb.el.loop = true;
-  _musicAmb.el.src = '/music/' + id + '.mp3';
-  const p = _musicAmb.el.play();
-  if (p) p.catch(() => {});
-  _musicRamp(_musicAmb.g, 0.55, _MUSIC_FADE);
+  _musicAmb = _musicLayer(_musicAmb, id, 0.55);
 }
+
+// Which ambient sounds go under the music now: the DM's choice, else the
+// scene (place) and the calendar's weather — not heard under ground.
+function _ambiencePick(cat, choice, scene, weatherKey, combat) {
+  cat = cat || {}; choice = choice || {};
+  const sounds = cat.sounds || {};
+  const pick = (layer, auto) => {
+    const c = choice[layer] || 'auto';
+    if (c === 'none') return null;
+    if (c !== 'auto') return sounds[c] || null;
+    return auto || null;
+  };
+  const sheltered = (cat.sheltered || []).indexOf(scene) >= 0;
+  return {
+    place: combat ? null : pick('place', (cat.ambience || {})[scene]),
+    weather: pick('weather', sheltered ? null : (cat.weather || {})[weatherKey]),
+  };
+}
+// ── end ambience pick ──
 
 // Decide what should play now and move there.
 function _musicApply() {
   if (!_musicOn) {
     if (_musicCur) { _musicFadeOut(_musicCur.deck); _musicCur = null; }
     if (_musicAmb) { _musicFadeOut(_musicAmb); _musicAmb.id = null; }
+    if (_musicWx) { _musicFadeOut(_musicWx); _musicWx.id = null; }
     return;
   }
   const key = _musicCombat ? 'combat' : _musicScene;
@@ -9446,8 +9474,24 @@ function _musicApply() {
     if (list.length) _musicPlay(key, list, Math.floor(Math.random() * list.length));
     else if (_musicCur) { _musicFadeOut(_musicCur.deck); _musicCur = null; }
   }
-  _musicSetAmbience(_musicCombat ? null : ((_musicCat.ambience || {})[_musicScene] || null));
+  const amb = _ambiencePick(_musicCat, _ambChoice, _musicScene, _ambWeatherKey, _musicCombat);
+  _musicSetAmbience(amb.place);
+  if (_musicReady()) _musicWx = _musicLayer(_musicWx, amb.weather, 0.5);
 }
+
+// The calendar's weather and the DM's ambience.py choice move the layers.
+window._ambWeather = function (wt) {
+  const key = String((wt && wt.weather_key) || '');
+  if (key === _ambWeatherKey) return;
+  _ambWeatherKey = key;
+  if (_musicCtx) _musicApply();
+};
+window._onAmbience = function (state) {
+  _ambChoice = Object.assign({ place: 'auto', weather: 'auto' }, state || {});
+  if (_musicCtx) _musicApply();
+};
+fetch('/ambience', { headers: _authHeaders() }).then(r => r.ok ? r.json() : null)
+  .then(d => { if (d && d.ambience) window._onAmbience(d.ambience); }).catch(() => {});
 
 function _musicSetScene(name) {
   if (!name || name === _musicScene) return;
@@ -9482,6 +9526,7 @@ function _musicUnlock() {
   if (_musicCtx.state === 'suspended') _musicCtx.resume().catch(() => {});
   if (_musicCur && _musicCur.deck.el.paused && _musicOn) _musicCur.deck.el.play().catch(() => {});
   if (_musicAmb && _musicAmb.id && _musicAmb.el.paused) _musicAmb.el.play().catch(() => {});
+  if (_musicWx && _musicWx.id && _musicWx.el.paused) _musicWx.el.play().catch(() => {});
   if (!_musicCur) _musicApply();
   if (_musicCtx.state === 'running') {
     ['pointerdown', 'keydown', 'touchend'].forEach(e => document.removeEventListener(e, _musicUnlock, true));
@@ -10784,6 +10829,7 @@ function updateWorldClock(wt) {
   skyRenderer.setState(wt);
   window._worldTime = wt;
   if (typeof window._onWorldTime === 'function') window._onWorldTime(wt);
+  if (typeof window._ambWeather === 'function') window._ambWeather(wt);
 }
 
 // Ruleset badge — '5e 2014' (subdued) or '5e 2024' (amber/gold accent)
@@ -10955,6 +11001,7 @@ function connect() {
     if (payload.attack && typeof window._onAttack === 'function') window._onAttack(payload.attack);
     if (payload.vote_event && typeof window._onVote === 'function') window._onVote(payload.vote_event);
     if ('recap' in payload && typeof window._onRecap === 'function') window._onRecap(payload);
+    if (payload.ambience && typeof window._onAmbience === 'function') window._onAmbience(payload.ambience);
     if (payload.timeline && typeof window._onTimeline === 'function') window._onTimeline(payload.timeline);
     if (payload.quest_event && payload.quest_event.name) {
       const qe = payload.quest_event;

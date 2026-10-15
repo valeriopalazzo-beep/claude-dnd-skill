@@ -54,7 +54,7 @@ class MusicTests(unittest.TestCase):
         self.assertEqual(cat["scenes"]["tavern"], ["old_tower_inn"])
         self.assertEqual(cat["scenes"]["combat"], ["battle_theme_a"])
         self.assertEqual(cat["scenes"]["crypt"], [])
-        self.assertEqual(cat["ambience"], {"tavern": "tavern_chatter"})
+        self.assertEqual(cat["ambience"], {"tavern": "tavern_chatter", "city": "tavern_chatter"})   # the crowd, built
 
     def test_every_scene_has_music(self):
         self.assertEqual(set(self.app.SCENES) | {"combat"}, set(self.app._music.SCENE_MUSIC))

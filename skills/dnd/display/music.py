@@ -96,6 +96,44 @@ TRACKS: dict[str, dict] = {
         "url": "https://assets.mixkit.co/active_storage/sfx/444/444-preview.mp3",
         "page": "https://mixkit.co/free-sound-effects/restaurant/",
     },
+    # Ambient sounds under the music: the weather and the place. "loop" makes
+    # build_music.py stitch the end into the start (no fades) and lengthen a
+    # short loop, so the browser's looping never pulses or clicks.
+    "amb_rain": {
+        "title": "Rain (loopable) — 1", "author": "Ylmir", "license": "CC0", "loop": True, "gain": 0.7,
+        "url": "https://opengameart.org/sites/default/files/Rain%20OGG.zip", "member": "1.ogg",
+        "page": "https://opengameart.org/content/rain-loopable",
+    },
+    "amb_storm": {
+        "title": "Rain and Thunders (Dark Rainy Night)", "author": "kindland", "license": "CC0", "loop": True, "gain": 0.7,
+        "url": "https://opengameart.org/sites/default/files/Dark_Rainy_Night%28ambience%29.ogg",
+        "page": "https://opengameart.org/content/rain-and-thunders",
+    },
+    "amb_wind": {
+        "title": "Wind Whoosh Loop", "author": "SketchMan3", "license": "CC0", "loop": True, "gain": 0.6,
+        "url": "https://opengameart.org/sites/default/files/wind%20woosh%20loop.ogg",
+        "page": "https://opengameart.org/content/wind-whoosh-loop",
+    },
+    "amb_fire": {
+        "title": "Fireplace Sound loop", "author": "PagDev", "license": "CC0", "loop": True, "gain": 0.7,
+        "url": "https://opengameart.org/sites/default/files/fire.wav",
+        "page": "https://opengameart.org/content/fireplace-sound-loop",
+    },
+    "amb_river": {
+        "title": "Sea and river wave sounds (short)", "author": "RandomMind", "license": "CC0", "loop": True, "gain": 0.6,
+        "url": "https://opengameart.org/sites/default/files/VistulaShort_0.mp3",
+        "page": "https://opengameart.org/content/sea-and-river-wave-sounds",
+    },
+    "amb_night": {
+        "title": "Crickets Ambient Noise (loopable)", "author": "Wolfgang_", "license": "CC0", "loop": True, "gain": 0.5,
+        "url": "https://opengameart.org/sites/default/files/crickets_1.mp3",
+        "page": "https://opengameart.org/content/crickets-ambient-noise-loopable",
+    },
+    "amb_cave": {
+        "title": "Loopable Dungeon Ambience", "author": "JaggedStone", "license": "CC0", "loop": True, "gain": 0.7,
+        "url": "https://opengameart.org/sites/default/files/dungeon_ambient_1_0.ogg",
+        "page": "https://opengameart.org/content/loopable-dungeon-ambience",
+    },
 }
 
 # Display scene (SCENES in dnd-display-app.py) → tracks to rotate through.
@@ -120,9 +158,41 @@ SCENE_MUSIC: dict[str, list[str]] = {
     "combat": ["battle_theme_a", "determined_pursuit"],
 }
 
-# A second, quieter layer under the music (people talking in the inn).
+# A second, quieter layer under the music: the sound of the place.
 SCENE_AMBIENCE: dict[str, str] = {
     "tavern": "tavern_chatter",
+    "city": "tavern_chatter",
+    "night": "amb_night",
+    "swamp": "amb_night",
+    "ocean": "amb_river",
+    "mine": "amb_cave",
+    "cave": "amb_cave",
+    "dungeon": "amb_cave",
+    "crypt": "amb_cave",
+    "fire": "amb_fire",
+}
+
+# A third layer: the weather of the campaign calendar (calendar.py weather keys).
+WEATHER_AMBIENCE: dict[str, str] = {
+    "rain": "amb_rain",
+    "storm": "amb_storm",
+    "windy": "amb_wind",
+    "snow": "amb_wind",
+}
+
+# Under ground the weather is not heard.
+SHELTERED: tuple = ("mine", "cave", "dungeon", "crypt")
+
+# The names the DM uses with ambience.py, and the layer each one goes to.
+SOUNDS: dict[str, dict] = {
+    "rain": {"id": "amb_rain", "layer": "weather"},
+    "storm": {"id": "amb_storm", "layer": "weather"},
+    "wind": {"id": "amb_wind", "layer": "weather"},
+    "fire": {"id": "amb_fire", "layer": "place"},
+    "river": {"id": "amb_river", "layer": "place"},
+    "night": {"id": "amb_night", "layer": "place"},
+    "cave": {"id": "amb_cave", "layer": "place"},
+    "crowd": {"id": "tavern_chatter", "layer": "place"},
 }
 
 
@@ -149,4 +219,7 @@ def catalog() -> dict:
     return {
         "scenes": {s: [t for t in ids if t in built] for s, ids in SCENE_MUSIC.items()},
         "ambience": {s: t for s, t in SCENE_AMBIENCE.items() if t in built},
+        "weather": {w: t for w, t in WEATHER_AMBIENCE.items() if t in built},
+        "sounds": {n: s["id"] for n, s in SOUNDS.items() if s["id"] in built},
+        "sheltered": list(SHELTERED),
     }

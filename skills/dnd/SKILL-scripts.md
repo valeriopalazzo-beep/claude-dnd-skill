@@ -350,6 +350,7 @@ If `check_input.py` returns output, prepend it to the player's terminal input wh
 **When to push stats:**
 - `/dm:dnd load` → `--replace-players --json` (full stats) + `--spell-slots` + `--factions` + `--scene` (where the party is), then `calendar.py -c <campaign> push` for the clock and the calendar (`--world-time` by hand only when the campaign has no calendar)
 - Party arrives somewhere new (inn, town, castle, mine, crypt, forest, ship…) → `--scene NAME`, before narrating the arrival. It sets the music too, so push it every time the place really changes — not for a room inside the same place. Combat music is automatic with `--turn-order` / `--turn-clear`.
+- **Ambient sounds** play under the music by themselves: the place's (`--scene`: chatter in an inn or a town, crickets at night or in a swamp, the river by the sea, drips in caves, mines, dungeons and crypts, the crackle of `fire`) and the weather's (the calendar's rain, storm, wind or snow — not under ground). When the fiction differs, set them by hand: `python3 ${CLAUDE_SKILL_DIR}/display/ambience.py rain|storm|wind` (weather) or `fire|river|night|cave|crowd` (place) — a campfire in the forest, a storm that the calendar did not roll — `ambience.py none [place|weather]` to silence, `ambience.py auto` to give it back to the scene and the calendar. They follow each device's music switch and volume.
 - HP change → `--player NAME --hp <current> <max>`
 - Temp HP gained/lost → `--player NAME --temp-hp N` (0 to clear)
 - XP awarded → `--player NAME --xp <current> <next>`

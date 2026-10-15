@@ -20,6 +20,7 @@ import os
 import ssl
 import sys
 import urllib.request
+import zipfile
 from math import gcd
 
 import numpy as np
@@ -33,6 +34,8 @@ SR = 44100
 TARGET_RMS_DB = -20.0
 PEAK_DB = -1.0
 FADE_S = 1.5
+LOOP_XFADE_S = 2.0      # an ambient loop's end is blended into its start
+LOOP_MIN_S = 90.0       # a short loop is repeated up to this length
 
 
 def _ssl_context():
@@ -55,7 +58,20 @@ def download(url: str, dest: str) -> None:
     os.replace(dest + ".part", dest)
 
 
-def prepare(src: str, dest: str, gain: float) -> float:
+def make_loop(x: "np.ndarray", sr: int = SR) -> "np.ndarray":
+    """A seamless loop: the last seconds are blended into the first (equal power),
+    then the result is repeated until it lasts LOOP_MIN_S — fewer restarts, and
+    the browser's tiny gap at an MP3's end comes rarely."""
+    n = min(int(sr * LOOP_XFADE_S), len(x) // 3)
+    if n > 0:
+        t = np.linspace(0, np.pi / 2, n)[:, None]
+        head, tail = x[:n], x[-n:]
+        x = np.concatenate([tail * np.cos(t) + head * np.sin(t), x[n:-n]])
+    reps = max(1, int(np.ceil(LOOP_MIN_S * sr / max(len(x), 1))))
+    return np.tile(x, (reps, 1)) if reps > 1 else x
+
+
+def prepare(src: str, dest: str, gain: float, loop: bool = False) -> float:
     x, sr = sf.read(src, always_2d=True, dtype="float64")
     if x.shape[1] == 1:
         x = np.repeat(x, 2, axis=1)
@@ -71,16 +87,19 @@ def prepare(src: str, dest: str, gain: float) -> float:
     peak = np.abs(x).max()
     if peak > 10 ** (PEAK_DB / 20):
         x *= 10 ** (PEAK_DB / 20) / peak
-    n = min(int(SR * FADE_S), len(x) // 4)
-    ramp = np.linspace(0, 1, n)[:, None]
-    x[:n] *= ramp
-    x[-n:] *= ramp[::-1]
+    if loop:
+        x = make_loop(x)
+    else:
+        n = min(int(SR * FADE_S), len(x) // 4)
+        ramp = np.linspace(0, 1, n)[:, None]
+        x[:n] *= ramp
+        x[-n:] *= ramp[::-1]
     sf.write(dest, x.astype(np.float32), SR, format="MP3", subtype="MPEG_LAYER_III")
     return len(x) / SR
 
 
 def credits(out_dir) -> None:
-    lines = ["# Background music — credits", "",
+    lines = ["# Background music and ambient sounds — credits", "",
              "Downloaded and converted by build_music.py. Not redistributed with the plugin.", "",
              "| Track | Author | License | Source |", "|---|---|---|---|"]
     for tid, t in music.TRACKS.items():
@@ -101,12 +120,19 @@ def main() -> int:
         if dest.exists() and not args.force:
             print(f"{tid:20s} already built")
             continue
-        ext = os.path.splitext(t["url"].split("?")[0])[1] or ".bin"
+        ext = os.path.splitext(t.get("member") or t["url"].split("?")[0])[1] or ".bin"
         src = str(src_dir / f"{tid}{ext}")
         try:
             if not os.path.exists(src):
-                download(t["url"], src)
-            secs = prepare(src, str(dest), float(t.get("gain", 1.0)))
+                if t.get("member"):        # a pack: keep only the file we use
+                    pack = str(src_dir / f"{tid}.zip")
+                    download(t["url"], pack)
+                    with zipfile.ZipFile(pack) as z, open(src, "wb") as f:
+                        f.write(z.read(t["member"]))
+                    os.remove(pack)
+                else:
+                    download(t["url"], src)
+            secs = prepare(src, str(dest), float(t.get("gain", 1.0)), bool(t.get("loop")))
             print(f"{tid:20s} {secs / 60:4.1f} min  {dest.stat().st_size / 1e6:4.1f} MB")
         except Exception as e:  # keep going: one broken link must not stop the rest
             failed += 1

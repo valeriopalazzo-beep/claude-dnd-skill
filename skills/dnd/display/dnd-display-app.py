@@ -504,6 +504,8 @@ _DM_ENDPOINTS = {
     "vote_set",
     # The recap at the start of a session.
     "recap_set",
+    # The ambient sounds under the music.
+    "ambience_set",
     # Where the party is — sets everyone's background and music.
     "set_scene",
     # Documents the party finds: the DM hands them out, everyone may read them.
@@ -3851,6 +3853,56 @@ def music_track(track_id):
     if path is None:
         return "Not found", 404
     return send_file(path, mimetype="audio/mpeg", conditional=True, max_age=86400)
+
+
+# Ambient sounds under the music (ambience.py): each layer is "auto" (the
+# scene / the calendar's weather decide), "none", or a sound the DM chose.
+AMBIENCE_FILE = rt("ambience.json")
+
+
+def _ambience_now() -> dict:
+    try:
+        with open(AMBIENCE_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        data = {}
+    sounds = set(_music.SOUNDS) if _music else set()
+    out = {}
+    for layer in ("place", "weather"):
+        v = str(data.get(layer, "auto")) if isinstance(data, dict) else "auto"
+        out[layer] = v if v in ("auto", "none") or v in sounds else "auto"
+    return out
+
+
+@app.route("/ambience", methods=["GET"])
+def ambience_get():
+    if not _token_ok():
+        return "Forbidden", 403
+    return jsonify({"ambience": _ambience_now()}), 200
+
+
+@app.route("/ambience", methods=["POST"])
+def ambience_set():
+    """{"place": "fire"|"auto"|"none", "weather": "rain"|"auto"|"none"} — either or both."""
+    if not _token_ok():
+        return "Forbidden", 403
+    data = request.get_json(silent=True) or {}
+    state = _ambience_now()
+    for layer in ("place", "weather"):
+        if layer not in data:
+            continue
+        v = str(data[layer]).strip().lower()
+        ok = v in ("auto", "none") or (_music and v in _music.SOUNDS and _music.SOUNDS[v]["layer"] == layer)
+        if not ok:
+            return jsonify({"error": f"{v!r} is not a {layer} sound"}), 400
+        state[layer] = v
+    try:
+        with open(AMBIENCE_FILE, "w", encoding="utf-8") as f:
+            json.dump(state, f)
+    except OSError:
+        pass
+    _broadcast({"ambience": state})
+    return jsonify({"ambience": state}), 200
 
 
 def _in_combat() -> bool:
