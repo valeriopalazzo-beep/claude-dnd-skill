@@ -1528,6 +1528,40 @@
   .spell-note{ margin:0; color:var(--ln-text-muted, #cdbfa6); font-style:italic; }
   .spell-empty{ margin:30px 8px; text-align:center; font-size:16px; color:#b9ab92; }
 
+  /* ══ Attacks (attacks.py) — weapon, target, roll: to hit and damage in one tap ══ */
+  #atk-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
+    align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  #atk-modal.open{ display:flex; }
+  #atk-panel{ width:min(560px, 100%); margin:auto 0; color:var(--ln-text, #ECE4D2); font-family:'Alegreya Sans','Syne',sans-serif; }
+  #atk-head{ display:flex; align-items:center; gap:10px; margin-bottom:12px; color:#ECE4D2; }
+  #atk-head h2{ flex:1; min-width:0; margin:0; font-size:22px; line-height:1.15; }
+  #atk-head button{ flex:none; width:40px; height:40px; border-radius:999px; cursor:pointer; font-size:16px;
+    background:rgba(0,0,0,.35); color:inherit; border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #atk-body{ display:flex; flex-direction:column; gap:10px; }
+  .atk-label{ margin:6px 2px 0; font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; color:#b9ab92; }
+  .atk-chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .atk-chips button{ padding:8px 14px; border-radius:999px; cursor:pointer; font:inherit; font-size:15.5px; font-weight:700;
+    color:#ECE4D2; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.3); }
+  .atk-chips button.sel{ color:#1a140c; background:#f2b544; border-color:#f2b544; }
+  .atk-target{ width:100%; box-sizing:border-box; padding:10px 12px; border-radius:10px; font:inherit; font-size:16px;
+    color:inherit; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.3); }
+  .atk-weapon{ display:flex; align-items:center; gap:12px; width:100%; padding:11px 15px; text-align:left; cursor:pointer;
+    border-radius:12px; font:inherit; font-size:18px; font-weight:700; color:inherit;
+    background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
+  .atk-weapon.sel{ border-color:var(--ln-accent, #f2b544); box-shadow:0 0 0 2px var(--ln-accent, #f2b544) inset; }
+  .atk-weapon span{ flex:1; min-width:0; }
+  .atk-weapon small{ display:block; font-size:14px; font-weight:500; color:var(--ln-text-muted, #b9ab92); }
+  .atk-weapon b{ flex:none; font-size:20px; color:var(--ln-accent, #f2b544); }
+  .atk-go{ display:block; width:100%; padding:15px 12px; border-radius:12px; cursor:pointer; font:inherit; font-size:20px; font-weight:800;
+    color:var(--ln-on-accent, #1a140c); background:var(--ln-accent, #f2b544); border:0; }
+  .atk-go:disabled{ opacity:.45; cursor:default; }
+  .atk-result{ padding:14px 16px; border-radius:12px; text-align:center; background:var(--ln-surface, #1d1813);
+    border:2px solid var(--ln-accent, #f2b544); }
+  .atk-result .big{ font-size:28px; font-weight:800; }
+  .atk-result .crit{ color:#ffd76a; font-weight:800; }
+  .atk-result .fumble{ color:#e88; font-weight:800; }
+  .atk-note{ margin:0; text-align:center; color:var(--ln-text-muted, #cdbfa6); font-size:15px; }
+
   /* ══ Rests (rest.py) — Hit Dice on a short rest, everything back on a long one ══ */
   #rest-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
     align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
@@ -5196,6 +5230,7 @@
     <button class="ph-set-opt" id="ph-cal-opt" type="button" hidden><span data-i18n="cal.title">Calendar</span><strong>📅</strong></button>
     <button class="ph-set-opt" id="ph-timeline-opt" type="button" hidden><span data-i18n="tl.title">Timeline</span><strong>🕰</strong></button>
     <button class="ph-set-opt" id="ph-book-opt" type="button" hidden><span data-i18n="book.title">Campaign book</span><strong>📕</strong></button>
+    <button class="ph-set-opt" id="ph-attack-opt" type="button" hidden><span data-i18n="atk.title">Attacks</span><strong>⚔</strong></button>
     <button class="ph-set-opt" id="ph-spells-opt" type="button" hidden><span data-i18n="spell.title">Spellbook</span><strong>✨</strong></button>
     <button class="ph-set-opt" id="ph-comp-opt" type="button" hidden><span data-i18n="comp.title">Companions</span><strong>🐾</strong></button>
     <button class="ph-set-opt" id="ph-beast-opt" type="button" hidden><span data-i18n="beast.title">Bestiary</span><strong>📖</strong></button>
@@ -5435,6 +5470,17 @@
   </div>
 </div>
 
+<!-- Attacks: weapon, target, advantage — one roll for to hit and damage (scripts/attacks.py) -->
+<div id="atk-modal">
+  <div id="atk-panel" role="dialog" aria-labelledby="atk-title">
+    <div id="atk-head">
+      <h2 id="atk-title" data-i18n="atk.title">Attacks</h2>
+      <button id="atk-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
+    </div>
+    <div id="atk-body"></div>
+  </div>
+</div>
+
 <!-- Rests: Hit Dice on a short rest, everything back on a long one (scripts/rest.py) -->
 <div id="rest-modal">
   <div id="rest-panel" role="dialog" aria-labelledby="rest-title">
@@ -5532,6 +5578,7 @@
   <symbol id="ln-i-people" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M15 4h6v5h-3l-2 2V9h-1z"/></symbol>
   <symbol id="ln-i-timeline" viewBox="0 0 24 24"><path d="M6 3v18"/><circle cx="6" cy="6" r="2"/><circle cx="6" cy="13" r="2"/><circle cx="6" cy="19" r="1.4"/><path d="M11 6h9M11 13h7M11 19h5"/></symbol>
   <symbol id="ln-i-spell" viewBox="0 0 24 24"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.200-.800z"/><path d="M5 15.500l.6 1.500 1.500.600-1.500.600L5 19.700l-.600-1.500-1.500-.600 1.500-.600z"/></symbol>
+  <symbol id="ln-i-sword" viewBox="0 0 24 24"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/></symbol>
   <symbol id="ln-i-rest" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M6 21l6-9 6 9"/><path d="M12 12V9"/><path d="M15.5 4.5a3.5 3.5 0 1 1-4.2 4.2 2.8 2.8 0 0 0 4.2-4.2z"/></symbol>
   <symbol id="ln-i-paw" viewBox="0 0 24 24"><circle cx="6.5" cy="10" r="2"/><circle cx="10" cy="5.5" r="2"/><circle cx="14" cy="5.5" r="2"/><circle cx="17.5" cy="10" r="2"/><path d="M12 12c-3 0-5.5 2.6-5.5 5.2 0 1.7 1.3 2.8 2.9 2.8 1 0 1.7-.5 2.6-.5s1.6.5 2.6.5c1.6 0 2.9-1.1 2.9-2.8C17.500 14.6 15 12 12 12z"/></symbol>
   <symbol id="ln-i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M12 7v6m0 0-2.5-2.5M12 13l2.5-2.5"/></symbol>
@@ -5567,6 +5614,7 @@
       <div class="ln-h" data-i18n="ln.group.party">Party</div>
       <button class="ln-item" type="button" data-ln-go="personaggi" data-phone title="Characters" data-i18n-title="ln.view.personaggi"><svg class="ln-i"><use href="#ln-i-party"/></svg><span class="ln-lbl" data-i18n="ln.view.personaggi">Characters</span><span class="ln-badge alert" id="ln-badge-combat" hidden></span></button>
       <button class="ln-item" type="button" data-ln-go="scheda" data-phone title="My character" data-i18n-title="ln.view.scheda"><svg class="ln-i"><use href="#ln-i-me"/></svg><span class="ln-lbl"><span class="ln-long" data-i18n="ln.view.scheda">My character</span><span class="ln-short" data-i18n="ln.view.schedaShort">Me</span></span></button>
+      <button class="ln-item" type="button" id="ln-attack" title="Attacks" data-i18n-title="atk.title" hidden><svg class="ln-i"><use href="#ln-i-sword"/></svg><span class="ln-lbl" data-i18n="atk.title">Attacks</span></button>
       <button class="ln-item" type="button" id="ln-spells" title="Spellbook" data-i18n-title="spell.title" hidden><svg class="ln-i"><use href="#ln-i-spell"/></svg><span class="ln-lbl" data-i18n="spell.title">Spellbook</span></button>
       <button class="ln-item" type="button" id="ln-comp" title="Companions" data-i18n-title="comp.title" hidden><svg class="ln-i"><use href="#ln-i-paw"/></svg><span class="ln-lbl" data-i18n="comp.title">Companions</span></button>
     </div>
@@ -5656,6 +5704,7 @@
         <button class="ln-item" type="button" id="ln-clocks-more" data-ln-proxy="ln-clocks" hidden><svg class="ln-i"><use href="#ln-i-clock"/></svg><span class="ln-lbl" data-i18n="clock.title">Clocks</span></button>
         <button class="ln-item" type="button" id="ln-beast-more" data-ln-proxy="ln-beast" hidden><svg class="ln-i"><use href="#ln-i-beast"/></svg><span class="ln-lbl" data-i18n="beast.title">Bestiary</span></button>
         <button class="ln-item" type="button" id="ln-people-more" data-ln-proxy="ln-people" hidden><svg class="ln-i"><use href="#ln-i-people"/></svg><span class="ln-lbl" data-i18n="people.title">People met</span></button>
+        <button class="ln-item" type="button" id="ln-attack-more" data-ln-proxy="ln-attack" hidden><svg class="ln-i"><use href="#ln-i-sword"/></svg><span class="ln-lbl" data-i18n="atk.title">Attacks</span></button>
         <button class="ln-item" type="button" id="ln-spells-more" data-ln-proxy="ln-spells" hidden><svg class="ln-i"><use href="#ln-i-spell"/></svg><span class="ln-lbl" data-i18n="spell.title">Spellbook</span></button>
         <button class="ln-item" type="button" id="ln-comp-more" data-ln-proxy="ln-comp" hidden><svg class="ln-i"><use href="#ln-i-paw"/></svg><span class="ln-lbl" data-i18n="comp.title">Companions</span></button>
         <button class="ln-item" type="button" id="ln-book-more" data-ln-proxy="ln-book" hidden><svg class="ln-i"><use href="#ln-i-book"/></svg><span class="ln-lbl" data-i18n="book.title">Campaign book</span></button>
@@ -10810,6 +10859,8 @@ function connect() {
     if (payload.stats && typeof window._onSpellStats === 'function') window._onSpellStats(payload.stats);
     if (payload.spell_cast && typeof window._onSpellCast === 'function') window._onSpellCast(payload.spell_cast);
     if (('rest' in payload || payload.rest_event) && typeof window._onRest === 'function') window._onRest(payload);
+    if (payload.stats && typeof window._onAttackStats === 'function') window._onAttackStats(payload.stats);
+    if (payload.attack && typeof window._onAttack === 'function') window._onAttack(payload.attack);
     if (payload.timeline && typeof window._onTimeline === 'function') window._onTimeline(payload.timeline);
     if (payload.quest_event && payload.quest_event.name) {
       const qe = payload.quest_event;
@@ -12196,6 +12247,186 @@ function _spellRows(book, spellName) {
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   loadCasters();
+})();
+
+// ── Attacks (scripts/attacks.py) ──────────────────────────────────────
+// The sheet's Attacks table, from the server: _attackChoices lists what one
+// attack offers — its damage and the others its notes give, and the extra dice.
+function _attackChoices(attack) {
+  attack = attack || {};
+  const b = attack.bonus;
+  const damages = [];
+  if (attack.damage) damages.push({ alt: 0, label: '', text: attack.damage.text });
+  (attack.alts || []).forEach((a, i) => damages.push({ alt: i + 1, label: a.label || '', text: a.dice.text }));
+  const ex = (attack.extras || [])[0];
+  return {
+    bonusText: b === null || b === undefined ? '' : (b >= 0 ? '+' + b : String(b)),
+    damages: damages,
+    extra: ex ? { label: ex.label || '', text: ex.dice.text } : null,
+    canRoll: b !== null && b !== undefined,
+  };
+}
+// ── end attack choices ──
+
+(function _initAttacks() {
+  const modal = document.getElementById('atk-modal');
+  if (!modal) return;
+  const $ = id => document.getElementById(id);
+  const body = $('atk-body'), title = $('atk-title');
+  const qp = new URLSearchParams(location.search);
+  const mine = String(window._LOGIN_CHAR || qp.get('char') || qp.get('character') || '').trim();
+  let fighters = [], who = '', data = null, pick = '', target = '', adv = 'normal', alt = 0, extra = false, busy = false, last = null;
+
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+  const same = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+
+  function triggers() {
+    const has = fighters.length > 0;
+    ['ln-attack', 'ln-attack-more', 'ph-attack-opt'].forEach(id => { const e = $(id); if (e) e.hidden = !has; });
+    if (!has) modal.classList.remove('open');
+  }
+  function loadFighters() {
+    return fetch('/attacks', { headers: _authHeaders() }).then(r => r.ok ? r.json() : []).then(d => {
+      fighters = Array.isArray(d) ? d : [];
+      if (mine) fighters = fighters.filter(c => same(c.character, mine));
+      triggers();
+    }).catch(() => {});
+  }
+  function loadData() {
+    if (!who) return Promise.resolve();
+    return fetch('/attacks/' + encodeURIComponent(who), { headers: _authHeaders() })
+      .then(r => r.ok ? r.json() : null).then(d => {
+        if (!d) return;
+        data = d;
+        if (target && (d.targets || []).indexOf(target) < 0 && !modal.dataset.typed) target = '';
+        render();
+      }).catch(() => {});
+  }
+  function chips(items, selected, onPick) {
+    const box = el('div', 'atk-chips');
+    items.forEach(it => {
+      const b = el('button', it.value === selected ? 'sel' : '', it.label);
+      b.type = 'button';
+      b.addEventListener('click', () => onPick(it.value));
+      box.appendChild(b);
+    });
+    return box;
+  }
+
+  function roll(attack) {
+    busy = true; render();
+    const headers = Object.assign({ 'Content-Type': 'application/json', 'X-DND-Device': _deviceId }, _authHeaders());
+    fetch('/attacks/' + encodeURIComponent(who) + '/roll', {
+      method: 'POST', headers,
+      body: JSON.stringify({ attack: attack.name, target: target, advantage: adv, alt: alt, extra: extra, lang: window._LANG || 'en' }),
+    }).then(r => r.json().then(d => ({ ok: r.ok, status: r.status, d })).catch(() => ({ ok: false, status: r.status, d: {} })))
+      .then(({ ok, status, d }) => {
+        busy = false;
+        if (ok && d.result) {
+          last = d.result;
+          if (navigator.vibrate) navigator.vibrate(d.result.crit ? [40, 60, 40] : 30);
+        } else {
+          _showToast('⚔ ' + (status === 202 ? _t('atk.pending', null, 'Waiting for the DM to approve this device.')
+                                            : _t('atk.failed', null, 'Could not roll — ask the DM.')), 5000);
+        }
+        render();
+      })
+      .catch(() => { busy = false; _showToast('⚔ ' + _t('atk.failed', null, 'Could not roll — ask the DM.'), 5000); render(); });
+  }
+
+  function render() {
+    body.textContent = '';
+    title.textContent = who ? _t('atk.titleOf', { name: who }, who + ': attacks') : _t('atk.title', null, 'Attacks');
+    if (!mine && fighters.length > 1) {
+      body.appendChild(chips(fighters.map(f => ({ value: f.character, label: f.character })), who,
+        v => { who = v; data = null; pick = ''; last = null; render(); loadData(); }));
+    }
+    if (!data) return;
+    if (last) {
+      const res = el('div', 'atk-result');
+      res.appendChild(el('div', 'big', _t('atk.toHit', { n: last.to_hit }, last.to_hit + ' to hit')));
+      if (last.crit) res.appendChild(el('div', 'crit', _t('atk.crit', null, 'Critical hit!')));
+      if (last.fumble) res.appendChild(el('div', 'fumble', _t('atk.fumble', null, 'Natural 1')));
+      if (last.damage !== null && last.damage !== undefined) res.appendChild(el('div', 'big', _t('atk.damage', { n: last.damage }, last.damage + ' damage')));
+      res.appendChild(el('p', 'atk-note', _t('atk.sent', null, 'Sent to the DM as your action.')));
+      body.appendChild(res);
+    }
+    const attacks = data.attacks || [];
+    if (!attacks.length) { body.appendChild(el('p', 'atk-note', _t('atk.empty', null, 'No attacks on the sheet.'))); return; }
+
+    body.appendChild(el('div', 'atk-label', _t('atk.target', null, 'Target')));
+    const targets = data.targets || [];
+    if (targets.length) body.appendChild(chips(targets.map(t => ({ value: t, label: t })), target, v => { target = target === v ? '' : v; delete modal.dataset.typed; render(); }));
+    const input = el('input', 'atk-target');
+    input.type = 'text'; input.maxLength = 40;
+    input.placeholder = _t('atk.targetPh', null, 'Who? (optional)');
+    if (!targets.includes(target)) input.value = target;
+    input.addEventListener('input', () => { target = input.value.trim(); modal.dataset.typed = '1'; });
+    body.appendChild(input);
+
+    body.appendChild(el('div', 'atk-label', _t('atk.weapon', null, 'Weapon')));
+    attacks.forEach(a => {
+      const c = _attackChoices(a);
+      const btn = el('button', 'atk-weapon' + (pick === a.name ? ' sel' : ''));
+      btn.type = 'button';
+      const text = el('span', '', a.name);
+      text.appendChild(el('small', '', [a.damage ? a.damage.text : '', a.type, a.notes].filter(Boolean).join(' · ')));
+      btn.appendChild(text);
+      btn.appendChild(el('b', '', c.bonusText));
+      btn.disabled = !c.canRoll;
+      btn.addEventListener('click', () => { pick = a.name; alt = 0; extra = false; last = null; render(); });
+      body.appendChild(btn);
+      if (pick !== a.name) return;
+      if (c.damages.length > 1) {
+        body.appendChild(chips(c.damages.map(d => ({ value: d.alt, label: (d.label ? d.label + ' ' : '') + d.text })), alt, v => { alt = v; render(); }));
+      }
+      if (c.extra) {
+        body.appendChild(chips([{ value: true, label: '+' + c.extra.text + (c.extra.label ? ' ' + c.extra.label : '') }], extra, () => { extra = !extra; render(); }));
+      }
+      body.appendChild(chips([
+        { value: 'normal', label: _t('atk.normal', null, 'Normal') },
+        { value: 'advantage', label: _t('atk.adv', null, 'Advantage') },
+        { value: 'disadvantage', label: _t('atk.dis', null, 'Disadvantage') },
+      ], adv, v => { adv = v; render(); }));
+      const go = el('button', 'atk-go', _t('atk.go', null, '⚔ Attack'));
+      go.type = 'button';
+      go.disabled = busy;
+      go.addEventListener('click', () => roll(a));
+      body.appendChild(go);
+    });
+  }
+
+  function open() {
+    if (!who || !fighters.some(f => same(f.character, who))) {
+      const own = fighters.find(f => same(f.character, mine));
+      who = own ? own.character : (fighters[0] ? fighters[0].character : '');
+      data = null; pick = '';
+    }
+    last = null; adv = 'normal';
+    modal.classList.add('open');
+    render();
+    loadData();
+  }
+  const close = () => modal.classList.remove('open');
+
+  let partySig = '', turnSig = '';
+  window._onAttackStats = function (stats) {
+    const sig = ((stats && stats.players) || []).map(p => p.name).join('|');
+    if (sig !== partySig) { partySig = sig; loadFighters(); }
+    const order = stats && stats.turn_order && stats.turn_order.order;
+    const tsig = Array.isArray(order) ? order.map(e => (e && e.name) || e).join('|') : '';
+    if (tsig !== turnSig) { turnSig = tsig; if (modal.classList.contains('open')) loadData(); }
+  };
+  window._onAttack = function (a) {
+    if (!a || !a.character || (mine && same(a.character, mine))) return;
+    _showToast('⚔ ' + (a.target ? _t('atk.toast', { name: a.character, target: a.target }, a.character + ' attacks ' + a.target)
+                                 : _t('atk.toastNoTarget', { name: a.character }, a.character + ' attacks')), 4000);
+  };
+  ['ln-attack', 'ph-attack-opt'].forEach(id => { const e = $(id); if (e) e.addEventListener('click', open); });
+  $('atk-close').addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  loadFighters();
 })();
 
 // ── Rests (scripts/rest.py) ───────────────────────────────────────────

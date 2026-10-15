@@ -3067,6 +3067,122 @@ def spellbook_drop(character):
     return jsonify(_spell_view(character, text, lang)), 200
 
 
+# ─── Attacks (scripts/attacks.py) ────────────────────────────────────────────
+# A player picks a weapon from the sheet's Attacks table, a target and
+# advantage; the server rolls to hit and for damage in one go, puts the line in
+# the story and stages it as the player's action for the DM, already rolled.
+import attacks as _attacks
+
+
+def _attack_targets() -> list:
+    """The creatures of the initiative order that are not in the party."""
+    with _stats_lock:
+        party = {_sheet_key(p.get("name", "")) for p in _current_stats.get("players", [])}
+        to = _current_stats.get("turn_order") if isinstance(_current_stats.get("turn_order"), dict) else {}
+        order = list(to.get("order") or [])
+    out = []
+    for e in order:
+        name = str(e.get("name", "") if isinstance(e, dict) else e).strip()
+        if name and _sheet_key(name) not in party and name not in out:
+            out.append(name)
+    return out
+
+
+def _attack_sheet(character: str):
+    """(name, attacks) of a character this screen may attack with, or (None, an error response)."""
+    if not _token_ok() or _is_other_character(character):
+        return None, ("Forbidden", 403)
+    path, safe, _camp = _find_sheet_file(character)
+    if not safe:
+        return None, ("Bad character name", 400)
+    if not path:
+        return None, (jsonify({"error": "no sheet"}), 404)
+    try:
+        with open(path, encoding="utf-8") as f:
+            rows = _attacks.read_attacks(f.read())
+    except OSError as e:
+        return None, (jsonify({"error": str(e)}), 500)
+    name = (_live_player(character) or {}).get("name") or character
+    return name, rows
+
+
+@app.route("/attacks", methods=["GET"])
+def attacks_list():
+    """The characters this screen may attack with: every one at the table for the DM, a player's own."""
+    if not _token_ok():
+        return "Forbidden", 403
+    with _stats_lock:
+        names = [str(p.get("name", "")) for p in _current_stats.get("players", []) if p.get("name")]
+    if g.role == "player":
+        names = [n for n in names if n.lower() == (g.character or "").lower()] or [g.character or ""]
+    out = []
+    for name in names:
+        path, _safe, _camp = _find_sheet_file(name)
+        if not path:
+            continue
+        try:
+            with open(path, encoding="utf-8") as f:
+                count = len(_attacks.read_attacks(f.read()))
+        except OSError:
+            continue
+        if count:
+            out.append({"character": name, "attacks": count})
+    return jsonify(out), 200
+
+
+@app.route("/attacks/<character>", methods=["GET"])
+def attacks_get(character):
+    name, rows = _attack_sheet(character)
+    if name is None:
+        return rows
+    return jsonify({"character": name, "attacks": rows, "targets": _attack_targets()}), 200
+
+
+@app.route("/attacks/<character>/roll", methods=["POST"])
+def attacks_roll(character):
+    """Roll an attack: {"attack", "target", "advantage", "alt", "extra"}. The result is in the
+    story at once and staged as the character's action, ready, for the DM."""
+    if not _rate_ok(request.remote_addr):
+        return "Too Many Requests", 429
+    status = _device_ok(request.headers.get("X-DND-Device", ""), request.remote_addr)
+    if status == "denied":
+        return "Forbidden", 403
+    if status == "pending":
+        return jsonify({"status": "pending"}), 202
+    name, rows = _attack_sheet(character)
+    if name is None:
+        return rows
+    data = request.get_json(silent=True) or {}
+    target = re.sub(r"[`\\$<>\[\]]", "", str(data.get("target", ""))).strip()[:40]
+    try:
+        attack = _attacks.find(rows, str(data.get("attack", ""))[:80])
+        result = _attacks.roll(attack, str(data.get("advantage", "normal")), int(data.get("alt") or 0), bool(data.get("extra")))
+    except (_attacks.AttackError, ValueError, TypeError) as e:
+        return jsonify({"error": str(e), "code": "attack"}), 409
+    lang = _spell_lang(data.get("lang", ""))
+    line = _attacks.story_line(name, target, result, lang)
+    entry = {"text": line, "dice": True}
+    camp = _active_campaign()
+    if camp:
+        entry["_camp"] = camp
+    with _text_log_lock:
+        _text_log.append(dict(entry))
+    with _tail_lock:
+        _tail_buffer.append(dict(entry))
+    _persist_log()
+    _persist_tail()
+    _broadcast({"text": line, "dice": True})
+
+    action = _attacks.dm_line(target, result)
+    with _staged_lock:
+        before = _staged.get(name, {}).get("text", "")
+        _staged[name] = {"text": (before + " — " if before else "") + action, "ready": True, "timestamp": _time.time()}
+        snap = _staged_snapshot()
+    _broadcast({"staged_inputs": snap, "attack": {"character": name, "target": target, "attack": result["attack"]}})
+    _check_auto_trigger()
+    return jsonify({"result": result, "line": line}), 200
+
+
 # ─── Rests (scripts/rest.py) ─────────────────────────────────────────────────
 # The DM opens a short or long rest (rest.py open); every resting player's
 # screen shows a Rest panel. A short rest spends Hit Dice one at a time (rolled

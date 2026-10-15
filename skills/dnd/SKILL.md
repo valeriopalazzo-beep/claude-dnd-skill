@@ -454,6 +454,12 @@ Syntax: `SKILL-scripts.md` → *A Split Party*.
 
 ---
 
+## Attacks from the phone
+
+Every character with an `## Attacks` table on the sheet has an Attacks panel on their own screen: they pick the weapon, the target (the enemies of the initiative order, or any name typed in) and normal / advantage / disadvantage, and one tap rolls to hit and the damage together — a natural 20 doubles the damage dice; a note like `Versatile: 1d10+4` is offered as another damage, one like `Attacco furtivo +1d6` as extra dice to add. The line goes into the story for the table, and the player's action reaches you as `[Lyra]: ⚔ attacks against Goblin 1 with Stocco — already rolled on the display, do not roll again: 19 to hit (natural 14 +5); 6 damage perforante (1d8+3) if it hits. Compare with the target's AC and narrate.` **Do not roll it again**: compare the total with the target's AC, apply the damage if it hits (`combat.py` / `--stat-hp`), narrate. The damage is rolled whether or not it hits — use it only on a hit. Advantage is the player's claim: if the situation does not give it, say so and use the lower d20 the line reports. Keep the Attacks table in its format (`| Name | Attack Bonus | Damage | Type | Notes |`) when a character's gear changes. Syntax for your own use (roll_mode auto): `SKILL-scripts.md` → *Attacks*.
+
+---
+
 ## Rests
 
 With the display running, a rest is taken from the players' screens: `scripts/rest.py open short|long` puts a Rest panel on every resting player's screen (Hit Dice spent one at a time on a short rest, everything back in one tap on a long one), writes the sheets and the display, and reports each step as a `[[REST: …]]` line through `check_input.py` — already applied, never apply it twice. Procedure and the parts left to you: `SKILL-commands.md` → *rest*; syntax: `SKILL-scripts.md` → *Rests*.
