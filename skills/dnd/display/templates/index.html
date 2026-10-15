@@ -1530,7 +1530,7 @@
 
   /* ══ "Previously on…" (recap.py) — the story so far, full screen ══ */
   #recap-modal{ display:none; position:fixed; inset:0; z-index:10540; overflow-y:auto; -webkit-overflow-scrolling:touch;
-    background:radial-gradient(ellipse at 50% 0%, rgba(60,40,18,.97), rgba(8,6,4,.98) 70%); }
+    background-color:#0b0805; background-image:radial-gradient(ellipse at 50% 0%, #3c2812, #0b0805 70%); }
   #recap-modal.open{ display:flex; align-items:flex-start; justify-content:center; padding:24px 16px 32px; }
   #recap-panel{ width:min(680px, 100%); margin:auto 0; color:#ECE4D2; text-align:center; animation:recap-in .9s ease both; }
   @keyframes recap-in{ from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:none; } }
@@ -1540,8 +1540,13 @@
   #recap-text{ text-align:left; font-family:'Alegreya','Alegreya Sans',serif; font-size:clamp(18px, 2.6vw, 22px); line-height:1.6; }
   #recap-text p{ margin:0 0 14px; }
   #recap-actions{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; align-items:center; margin-top:18px; }
-  #recap-actions .tts-play-btn{ width:52px; height:52px; border-radius:999px; }
-  #recap-listen-lbl{ cursor:pointer; font-size:17px; font-weight:700; color:#f2c35c; }
+  #recap-listen-wrap{ display:inline-flex; align-items:center; gap:10px; padding:6px 18px 6px 6px; border-radius:999px; cursor:pointer;
+    border:2px solid #f2b544; }
+  #recap-listen-wrap[hidden]{ display:none; }
+  #recap-actions #recap-listen{ display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; padding:0;
+    border-radius:999px; cursor:pointer; color:#1a140c; background:#f2b544; border:0; opacity:1; }
+  #recap-actions #recap-listen svg{ width:20px; height:20px; }
+  #recap-listen-lbl{ font-size:17px; font-weight:700; color:#f2c35c; }
   #recap-go{ padding:13px 26px; border-radius:12px; cursor:pointer; font:inherit; font-size:18px; font-weight:800;
     color:#1a140c; background:#f2b544; border:0; }
 
