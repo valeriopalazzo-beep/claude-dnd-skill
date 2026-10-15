@@ -4,7 +4,7 @@
 The players' Attack panel is built on this: the weapons and attack spells in
 the sheet's "## Attacks" table (Name | Attack Bonus | Damage | Type | Notes),
 rolled to hit and for damage together. A natural 20 doubles the damage dice.
-A note that carries another damage ("Versatile: 1d10+4 a due mani") is offered
+A natural 1 misses, so no damage is rolled. A note that carries another damage ("Versatile: 1d10+4 a due mani") is offered
 as a choice, one that adds dice ("Attacco furtivo +1d6") as an extra.
 
     attacks.py -c <campaign> list "Ajeje"
@@ -147,7 +147,7 @@ def roll(attack: dict, advantage: str = "normal", alt: int = 0, extra: bool = Fa
             raise AttackError("no such alternative damage")
         damage = attack["alts"][int(alt) - 1]["dice"]
         out["alt_label"] = attack["alts"][int(alt) - 1]["label"]
-    if damage:
+    if damage and not out["fumble"]:            # a natural 1 always misses: no damage to roll
         times = 2 if out["crit"] else 1
         out["dice"] = [_d(damage["sides"], rng) for _ in range(damage["count"] * times)]
         total = sum(out["dice"]) + damage["bonus"]
