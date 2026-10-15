@@ -72,6 +72,12 @@ class SplitTests(unittest.TestCase):
         self.assertIn("**Grappling**", melee)
         self.assertNotIn("#", melee)
 
+    def test_a_table_under_a_subheading_stays_a_table(self):
+        # The blank line between the bold heading and the table must survive,
+        # or markdown reads the table as part of the heading's paragraph.
+        pace = self.names["Travel Pace"]["description"]
+        self.assertIn("**Travel Pace**\n\n| Pace | Distance |", pace)
+
     def test_indexes_are_unique(self):
         idx = [r["index"] for r in self.recs]
         self.assertEqual(len(idx), len(set(idx)))

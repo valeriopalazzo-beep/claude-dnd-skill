@@ -1609,7 +1609,7 @@ def _norm_rule_sections(records: list) -> list:
         lines = text.splitlines()
         heads = [(i, len(m.group(1)), m.group(2).strip())
                  for i, ln in enumerate(lines)
-                 for m in [re.match(r"^(#{2,6})\s+(.+?)\s*#*$", ln)] if m]
+                 for m in [re.match(r"^(#{2,6})[ \t]+(.+?)[ \t]*#*[ \t]*$", ln)] if m]
         if not heads:
             heads = [(-1, 2, sec.get("name", ""))]
         stack: list = []   # [(level, heading, slug)]
@@ -1633,8 +1633,10 @@ def _norm_rule_sections(records: list) -> list:
                     chain = chain[1:]
                 index = base + "/" + "/".join(chain)
             body = "\n".join(lines[i + 1:end]).strip()
-            # Sub-headings inside the text read as bold lines in the card
-            body = re.sub(r"^#{2,6}\s+(.+?)\s*#*$", r"**\1**", body, flags=re.M)
+            # Sub-headings inside the text read as bold lines in the card.
+            # [ \t], not \s: \s would eat the blank line after the heading
+            # and glue a table to it ("**Travel Pace**\n| Pace |").
+            body = re.sub(r"^#{2,6}[ \t]+(.+?)[ \t]*#*[ \t]*$", r"**\1**", body, flags=re.M)
             out.append({
                 "name":        heading,
                 "index":       index,
