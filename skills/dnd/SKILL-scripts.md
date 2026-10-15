@@ -425,7 +425,7 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/attacks.py -c $CAMP roll "Ajeje" "martello" 
 
 - **What it reads.** `| Name | Attack Bonus | Damage | Type | Notes |`. The first dice expression of Damage is the damage; a Notes part with another one (`Versatile: 1d10+4 a due mani`) is an alternative (`--alt 1`), one written `+1d6` (`Attacco furtivo +1d6`) an extra (`--extra`). A row with no bonus cannot be rolled.
 - **A natural 20** doubles every damage die (the extra too); the bonus is added once. Advantage rolls two d20 and keeps the higher.
-- **From the panel** the server writes the line in the story (`⚔ Lyra → Goblin 1 · Stocco: 19 per colpire (d20 14 +5) · 6 danni (perforante, 1d8+3: 3)`) and stages the player's action, ready, with the numbers for you (*do not roll again*). The panel's target list is the initiative order minus the party.
+- **From the panel** the server writes the line in the story (`⚔ Lyra → Goblin 1 · Stocco: 19 per colpire (d20 14 +5) · 6 danni (perforante, 1d8+3: 3)`) and stages the player's action, ready, in the same language (`⚔ Stocco → Goblin 1: 19 per colpire (d20 14 +5) · 6 danni (…)` — *do not roll again*; see SKILL.md → *Attacks from the phone*). The panel's target list is the initiative order minus the party.
 
 ---
 

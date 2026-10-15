@@ -169,13 +169,13 @@ _WORDS = {
 }
 
 
-def story_line(character: str, target: str, r: dict, lang: str = "en") -> str:
-    """The line the table reads: '⚔ Ajeje → Goblin 1 · Spadone: 20 to hit (d20 14 +6) · 11 damage (2d6+4: 3, 4)'."""
+def _numbers(r: dict, lang: str) -> str:
+    """'20 to hit (d20 14 +6) · 11 damage (slashing, 2d6+4: 3, 4)', in the table's language."""
     w = _WORDS.get(lang, _WORDS["en"])
     d20 = "d20 " + ("/".join(str(x) for x in r["d20"]) if len(r["d20"]) > 1 else str(r["d20"][0])) + f" {r['bonus']:+d}"
     if r["advantage"] != "normal":
         d20 += f", {w['adv'] if r['advantage'] == 'advantage' else w['dis']}"
-    line = f"⚔ {character}" + (f" → {target}" if target else "") + f" · {r['attack']}: {r['to_hit']} {w['hit']} ({d20})"
+    line = f"{r['to_hit']} {w['hit']} ({d20})"
     if r["crit"]:
         line += f" — {w['crit']}!"
     elif r["fumble"]:
@@ -186,20 +186,16 @@ def story_line(character: str, target: str, r: dict, lang: str = "en") -> str:
     return line
 
 
-def dm_line(target: str, r: dict) -> str:
-    """The player's action as the DM reads it — already rolled."""
-    tgt = f" against {target}" if target else ""
-    adv = "" if r["advantage"] == "normal" else f", rolled with {r['advantage']} ({'/'.join(str(x) for x in r['d20'])})"
-    line = (f"⚔ attacks{tgt} with {r['attack']}" + (f" ({r['alt_label']})" if r.get("alt_label") else "")
-            + f" — already rolled on the display, do not roll again: {r['to_hit']} to hit (natural {r['natural']} {r['bonus']:+d}{adv})")
-    if r["crit"]:
-        line += ", a natural 20: critical hit, the damage dice are already doubled"
-    elif r["fumble"]:
-        line += ", a natural 1: it misses"
-    if r["damage"] is not None:
-        line += (f"; {r['damage']} damage" + (f" {r['type']}" if r.get("type") else "") + f" ({r['damage_text']})"
-                 + (f" including {r['extra_label']}" if r.get("extra_label") else "") + " if it hits")
-    return line + ". Compare with the target's AC and narrate."
+def story_line(character: str, target: str, r: dict, lang: str = "en") -> str:
+    """The line the table reads: '⚔ Ajeje → Goblin 1 · Spadone: 20 to hit (d20 14 +6) · 11 damage (2d6+4: 3, 4)'."""
+    return f"⚔ {character}" + (f" → {target}" if target else "") + f" · {r['attack']}: {_numbers(r, lang)}"
+
+
+def action_line(target: str, r: dict, lang: str = "en") -> str:
+    """The player's action, as their own screen shows it and the DM reads it:
+    '⚔ Spadone → Goblin 1: 20 to hit (d20 14 +6) · 11 damage (…)' — already rolled."""
+    name = r["attack"] + (f" ({r['alt_label']})" if r.get("alt_label") else "")
+    return f"⚔ {name}" + (f" → {target}" if target else "") + f": {_numbers(r, lang)}"
 
 
 def main(argv: list | None = None) -> int:

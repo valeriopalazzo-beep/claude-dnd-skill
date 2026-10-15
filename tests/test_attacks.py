@@ -84,7 +84,7 @@ class SheetTests(unittest.TestCase):
         r = attacks.roll(stocco, "disadvantage", rng=FixedDice(15, 1))
         self.assertEqual((r["natural"], r["fumble"], r["damage"], r["dice"]), (1, True, None, []))
         self.assertNotIn("danni", attacks.story_line("Lyra", "", r, "it"))
-        self.assertNotIn("damage", attacks.dm_line("", r))
+        self.assertNotIn("danni", attacks.action_line("", r, "it"))
         martello = attacks.find(attacks.read_attacks(SHEET), "martello")
         r = attacks.roll(martello, alt=1, rng=FixedDice(10, 10))
         self.assertEqual((r["damage"], r["alt_label"]), (14, "Versatile"))
@@ -96,11 +96,12 @@ class SheetTests(unittest.TestCase):
         r = attacks.roll(stocco, rng=FixedDice(14, 3))
         self.assertEqual(attacks.story_line("Lyra", "Goblin 1", r, "it"),
                          "⚔ Lyra → Goblin 1 · Stocco: 19 per colpire (d20 14 +5) · 6 danni (perforante, 1d8+3: 3)")
-        dm = attacks.dm_line("Goblin 1", r)
-        self.assertIn("against Goblin 1 with Stocco — already rolled on the display, do not roll again: 19 to hit", dm)
-        self.assertIn("6 damage perforante (1d8+3) if it hits", dm)
-        crit = attacks.dm_line("", attacks.roll(stocco, rng=FixedDice(20, 3, 3)))
-        self.assertIn("critical hit, the damage dice are already doubled", crit)
+        self.assertEqual(attacks.action_line("Goblin 1", r, "it"),
+                         "⚔ Stocco → Goblin 1: 19 per colpire (d20 14 +5) · 6 danni (perforante, 1d8+3: 3)")
+        crit = attacks.action_line("", attacks.roll(stocco, rng=FixedDice(20, 3, 3)))
+        self.assertEqual(crit, "⚔ Stocco: 25 to hit (d20 20 +5) — critical! · 9 damage (perforante, 2d8+3: 3, 3)")
+        martello = attacks.find(attacks.read_attacks(SHEET), "martello")
+        self.assertTrue(attacks.action_line("", attacks.roll(martello, alt=1, rng=FixedDice(9, 2))).startswith("⚔ Martello da guerra (Versatile):"))
 
 
 class CommandTests(unittest.TestCase):
@@ -196,7 +197,8 @@ class ServerTests(unittest.TestCase):
         self.assertIn({"text": body["line"], "dice": True}, self.sent)
         staged = self.mod._staged["Lyra"]
         self.assertTrue(staged["ready"])
-        self.assertTrue(staged["text"].startswith("mi lancio sul goblin — ⚔ attacks against Goblin 1 with Stocco"))
+        self.assertTrue(staged["text"].startswith("mi lancio sul goblin — ⚔ Stocco → Goblin 1: "))
+        self.assertIn(" per colpire (d20 ", staged["text"])
         self.assertEqual(self.triggered, [True])
         self.assertEqual(self.mod._text_log[-1]["text"], body["line"])
 

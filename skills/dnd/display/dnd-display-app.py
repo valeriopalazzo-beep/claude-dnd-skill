@@ -3400,7 +3400,7 @@ def attacks_roll(character):
     _persist_tail()
     _broadcast({"text": line, "dice": True})
 
-    action = _attacks.dm_line(target, result)
+    action = _attacks.action_line(target, result, lang)
     with _staged_lock:
         before = _staged.get(name, {}).get("text", "")
         _staged[name] = {"text": (before + " — " if before else "") + action, "ready": True, "timestamp": _time.time()}
