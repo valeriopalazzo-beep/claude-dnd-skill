@@ -13,6 +13,7 @@ No third-party packages — the markdown here is the small subset the sheet
 template uses (headings, bullets, bold/italic, tables).
 """
 
+import contextlib
 import html
 import json
 import os
@@ -23,6 +24,7 @@ import sys
 import tempfile
 import threading
 import time
+import uuid
 from collections import OrderedDict
 from pathlib import Path
 from typing import Optional
@@ -792,12 +794,40 @@ def find_browser() -> Optional[str]:
     return found
 
 
+@contextlib.contextmanager
+def _work_dir():
+    """A scratch folder the browser can write in.
+
+    Not tempfile.mkdtemp: on Windows, Python 3.12 gives that folder an ACL of
+    its own (SYSTEM, Administrators, CREATOR OWNER), and headless Chrome was
+    seen to exit 0 there without writing the PDF. A plain mkdir inherits the
+    ordinary rights of the temp folder."""
+    base = tempfile.gettempdir()
+    while True:
+        path = os.path.join(base, "dnd-sheet-" + uuid.uuid4().hex[:12])
+        try:
+            os.mkdir(path)
+            break
+        except FileExistsError:
+            continue
+    try:
+        yield path
+    finally:
+        # Chrome's helper processes may still hold the profile for a moment
+        # after the PDF is written: try again before leaving the folder behind.
+        for _ in range(15):
+            shutil.rmtree(path, ignore_errors=True)
+            if not os.path.exists(path):
+                break
+            time.sleep(0.2)
+
+
 def to_pdf(page_html: str, timeout: int = 60) -> Optional[bytes]:
     """Print the page to PDF with a headless browser; None when that's not possible."""
     exe = find_browser()
     if not exe:
         return None
-    with _pdf_lock, tempfile.TemporaryDirectory(prefix="dnd-sheet-", ignore_cleanup_errors=True) as tmp:
+    with _pdf_lock, _work_dir() as tmp:
         src = Path(tmp) / "sheet.html"
         out = Path(tmp) / "sheet.pdf"
         src.write_text(page_html, encoding="utf-8")
