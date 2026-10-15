@@ -374,6 +374,28 @@ If `check_input.py` returns output, prepend it to the player's terminal input wh
 
 ---
 
+## Rests — `scripts/rest.py`
+
+Short and long rests on the sheet, and on the players' own screens.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/scripts/rest.py open short                       # every character at the table rests
+python3 ${CLAUDE_SKILL_DIR}/scripts/rest.py open long --only "Lyra, Hernio"  # only these
+python3 ${CLAUDE_SKILL_DIR}/scripts/rest.py status                           # who has finished
+python3 ${CLAUDE_SKILL_DIR}/scripts/rest.py close                            # end it now
+python3 ${CLAUDE_SKILL_DIR}/scripts/rest.py -c $CAMP show "Ajeje"            # HP and Hit Dice
+python3 ${CLAUDE_SKILL_DIR}/scripts/rest.py -c $CAMP hd "Ajeje" --count 2    # spend Hit Dice, rolled here
+python3 ${CLAUDE_SKILL_DIR}/scripts/rest.py -c $CAMP short "Ajeje"           # the short rest is over for Ajeje
+python3 ${CLAUDE_SKILL_DIR}/scripts/rest.py -c $CAMP long "Ajeje"            # a long rest
+```
+
+- **What it reads.** `**HP:** 6 / 17 | **Temp HP:** 4`, `**Hit Dice:** 2d10 (remaining: 2)`, `**Death Saves:** …`, the CON column of the Ability Scores table, the Spell Slots table, and *Warlock* in the Class. When the display holds a live HP or Hit Dice count (your `--stat-hp` pushes), that count wins over the sheet's — keep the sheet lines in this format.
+- **A Hit Die** heals the die plus CON (never less than 0), up to the maximum; it is refused at full HP or with none left. **The end of a short rest** gives a Warlock's pact slots back and sets Second Wind ready on the display. **A long rest**: HP to the maximum, temporary HP gone, half the Hit Dice back (at least one; all of them under ruleset 2024), every spell slot back, death saves cleared.
+- **From the screens.** `open` shows the Rest panel on each resting player's screen (the DM's screen can act for any of them). What they do arrives as `[[REST: Ajeje spent a Hit Die: d10 rolled 4 +3 CON = 7 HP — now 13/17 HP, 1 of 2 Hit Dice left. Already on the sheet and the display.]]`, `[[REST: … finished the short rest …]]`, `[[REST: … finished the long rest …]]`, and `[[REST: the long rest is over for everybody …]]` when the last one is done (the rest then closes by itself).
+- A mistake (no Hit Dice left, HP already full, no HP line on the sheet) changes nothing and exits non-zero.
+
+---
+
 ## Spellbook — `scripts/spellbook.py`
 
 A caster's spells and slots, read from and written to the character sheet. The players' **Spellbook** panel is built on it.

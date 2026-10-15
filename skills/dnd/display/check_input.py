@@ -107,6 +107,13 @@ except Exception:
     pass
 
 try:
+    from rest import drain_notes
+    for line in drain_notes():
+        print(line)
+except Exception:
+    pass
+
+try:
     from puzzle import drain_news
     for line in drain_news():
         print(line)

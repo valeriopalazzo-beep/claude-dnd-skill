@@ -799,6 +799,8 @@ DNDEND
 ---
 
 ## `/dm:dnd rest <short|long>`
+**With the display running, the players rest from their own screens.** Open it with `python3 ${CLAUDE_SKILL_DIR}/scripts/rest.py open short` (or `long`; `--only "A, B"` when not everybody rests). Each resting player's screen opens a Rest panel: on a short rest they spend Hit Dice one at a time (the display rolls the die and adds CON) and tap *I'm done*; on a long rest one tap brings HP to full, Hit Dice back (half, or all under 2024) and every spell slot back. The sheet and the display change together and you get a `[[REST: …]]` line for each step from `check_input.py`: **do not apply them again**. When the last one has finished the rest closes by itself and a last line reminds you of the clock. Then do only what the panel does not: features that recharge (other than Second Wind and a Warlock's pact slots), `calendar.py` and `tracker.py` below. `rest.py status` shows who is still resting, `rest.py close` ends it. Without the display, the same changes from the command line: `rest.py hd "<Char>" [--count N]`, `rest.py short "<Char>"`, `rest.py long "<Char>"`.
+
 **Short (1 hour):**
 1. Ask how many Hit Dice the player spends. Roll `d[hit-die] + CON mod` per die via `dice.py`. Update HP, push `push_stats.py --player NAME --hp`.
 2. Note class features that recharge (e.g. Second Wind → `push_stats.py --player NAME --second-wind true`).

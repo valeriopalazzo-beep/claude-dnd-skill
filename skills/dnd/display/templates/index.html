@@ -1528,6 +1528,40 @@
   .spell-note{ margin:0; color:var(--ln-text-muted, #cdbfa6); font-style:italic; }
   .spell-empty{ margin:30px 8px; text-align:center; font-size:16px; color:#b9ab92; }
 
+  /* ══ Rests (rest.py) — Hit Dice on a short rest, everything back on a long one ══ */
+  #rest-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
+    align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  #rest-modal.open{ display:flex; }
+  #rest-panel{ width:min(520px, 100%); margin:auto 0; color:var(--ln-text, #ECE4D2); font-family:'Alegreya Sans','Syne',sans-serif; }
+  #rest-head{ display:flex; align-items:center; gap:10px; margin-bottom:12px; color:#ECE4D2; }
+  #rest-head h2{ flex:1; min-width:0; margin:0; font-size:22px; line-height:1.15; }
+  #rest-head button{ flex:none; width:40px; height:40px; border-radius:999px; cursor:pointer; font-size:16px;
+    background:rgba(0,0,0,.35); color:inherit; border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #rest-who{ display:flex; flex-wrap:wrap; gap:8px; margin:0 0 12px; }
+  #rest-who[hidden]{ display:none; }
+  #rest-who button{ padding:8px 14px; border-radius:999px; cursor:pointer; font:inherit; font-size:15.5px; font-weight:700;
+    color:#ECE4D2; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.3); }
+  #rest-who button.sel{ color:#1a140c; background:#f2b544; border-color:#f2b544; }
+  #rest-who button.done::after{ content:' ✓'; }
+  #rest-body{ display:flex; flex-direction:column; gap:10px; }
+  .rest-card{ padding:12px 16px; border-radius:12px; font-size:16.5px; line-height:1.45;
+    background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
+  .rest-hp{ font-size:20px; font-weight:800; }
+  .rest-bar{ height:10px; margin:6px 0 10px; border-radius:999px; overflow:hidden; background:rgba(255,255,255,.12); }
+  .rest-bar i{ display:block; height:100%; background:#6fbf73; transition:width .4s; }
+  .rest-dice{ display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+  .rest-die{ min-width:30px; padding:2px 6px; border-radius:7px; text-align:center; font-size:13px; font-weight:800;
+    border:2px solid var(--ln-accent, #f2b544); color:var(--ln-accent, #f2b544); }
+  .rest-die.spent{ opacity:.35; }
+  .rest-go{ display:block; width:100%; padding:14px 12px; border-radius:12px; cursor:pointer; font:inherit; font-size:18px; font-weight:800;
+    color:var(--ln-on-accent, #1a140c); background:var(--ln-accent, #f2b544); border:0; }
+  .rest-go.second{ color:var(--ln-text, #ECE4D2); background:transparent; border:2px solid var(--ln-accent, #f2b544); }
+  .rest-go:disabled{ opacity:.45; cursor:default; }
+  .rest-go.armed{ outline:3px solid var(--ln-text, #ECE4D2); outline-offset:2px; }
+  .rest-roll{ font-size:18px; font-weight:800; text-align:center; color:#9be59f; }
+  .rest-note{ margin:0; text-align:center; color:var(--ln-text-muted, #cdbfa6); }
+  .rest-done{ margin:4px 0; text-align:center; font-size:20px; font-weight:800; color:#9be59f; }
+
   /* ══ Companions (companion.py) — the horse, the familiar, the hired guard ══ */
   .sb-companions{ display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
   .sb-comp-chip{ display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px; cursor:pointer;
@@ -5156,6 +5190,7 @@
   <div id="ph-set-menu" role="menu">
     <button class="ph-set-opt" id="ph-puzzle-opt" type="button" hidden><span data-i18n="puzzle.title">Puzzle</span><strong>🧩</strong></button>
     <button class="ph-set-opt" id="ph-shop-opt" type="button" hidden><span data-i18n="shop.title">Shop</span><strong>🛒</strong></button>
+    <button class="ph-set-opt" id="ph-rest-opt" type="button" hidden><span data-i18n="rest.title">Rest</span><strong>🏕</strong></button>
     <button class="ph-set-opt" id="ph-theme-opt" type="button"><span data-i18n="ph.theme">Theme</span><strong id="ph-theme-val">Dark</strong></button>
     <button class="ph-set-opt" id="ph-region-opt" type="button" hidden><span data-i18n="region.title">Region map</span><strong>🧭</strong></button>
     <button class="ph-set-opt" id="ph-cal-opt" type="button" hidden><span data-i18n="cal.title">Calendar</span><strong>📅</strong></button>
@@ -5400,6 +5435,18 @@
   </div>
 </div>
 
+<!-- Rests: Hit Dice on a short rest, everything back on a long one (scripts/rest.py) -->
+<div id="rest-modal">
+  <div id="rest-panel" role="dialog" aria-labelledby="rest-title">
+    <div id="rest-head">
+      <h2 id="rest-title" data-i18n="rest.title">Rest</h2>
+      <button id="rest-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
+    </div>
+    <div id="rest-who" hidden></div>
+    <div id="rest-body"></div>
+  </div>
+</div>
+
 <!-- Companions: the animals and followers travelling with the party, from companion.py -->
 <div id="comp-modal">
   <div id="comp-panel" role="dialog" aria-labelledby="comp-title">
@@ -5485,6 +5532,7 @@
   <symbol id="ln-i-people" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M15 4h6v5h-3l-2 2V9h-1z"/></symbol>
   <symbol id="ln-i-timeline" viewBox="0 0 24 24"><path d="M6 3v18"/><circle cx="6" cy="6" r="2"/><circle cx="6" cy="13" r="2"/><circle cx="6" cy="19" r="1.4"/><path d="M11 6h9M11 13h7M11 19h5"/></symbol>
   <symbol id="ln-i-spell" viewBox="0 0 24 24"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.200-.800z"/><path d="M5 15.500l.6 1.500 1.500.600-1.500.600L5 19.700l-.600-1.500-1.500-.600 1.500-.600z"/></symbol>
+  <symbol id="ln-i-rest" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M6 21l6-9 6 9"/><path d="M12 12V9"/><path d="M15.5 4.5a3.5 3.5 0 1 1-4.2 4.2 2.8 2.8 0 0 0 4.2-4.2z"/></symbol>
   <symbol id="ln-i-paw" viewBox="0 0 24 24"><circle cx="6.5" cy="10" r="2"/><circle cx="10" cy="5.5" r="2"/><circle cx="14" cy="5.5" r="2"/><circle cx="17.5" cy="10" r="2"/><path d="M12 12c-3 0-5.5 2.6-5.5 5.2 0 1.7 1.3 2.8 2.9 2.8 1 0 1.7-.5 2.6-.5s1.6.5 2.6.5c1.6 0 2.9-1.1 2.9-2.8C17.500 14.6 15 12 12 12z"/></symbol>
   <symbol id="ln-i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M12 7v6m0 0-2.5-2.5M12 13l2.5-2.5"/></symbol>
   <symbol id="ln-i-puzzle" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="16" r="1.3"/></symbol>
@@ -5512,6 +5560,7 @@
       <button class="ln-item" type="button" data-ln-go="mappa" title="Map" data-i18n-title="ln.view.mappa"><svg class="ln-i"><use href="#ln-i-map"/></svg><span class="ln-lbl" data-i18n="ln.view.mappa">Map</span><span class="ln-badge" id="ln-badge-map" data-i18n="ln.badge.new" hidden>New</span></button>
       <button class="ln-item" type="button" id="ln-puzzle" title="Puzzle" data-i18n-title="puzzle.title" hidden><svg class="ln-i"><use href="#ln-i-puzzle"/></svg><span class="ln-lbl" data-i18n="puzzle.title">Puzzle</span><span class="ln-badge alert">!</span></button>
       <button class="ln-item" type="button" id="ln-shop" title="Shop" data-i18n-title="shop.title" hidden><svg class="ln-i"><use href="#ln-i-coins"/></svg><span class="ln-lbl" data-i18n="shop.title">Shop</span><span class="ln-badge" data-i18n="shop.open">Open</span></button>
+      <button class="ln-item" type="button" id="ln-rest" title="Rest" data-i18n-title="rest.title" hidden><svg class="ln-i"><use href="#ln-i-rest"/></svg><span class="ln-lbl" data-i18n="rest.title">Rest</span><span class="ln-badge alert">!</span></button>
       <div class="ln-slot" id="ln-help-slot"></div>
     </div>
     <div class="ln-group">
@@ -5600,6 +5649,7 @@
         <button class="ln-item" type="button" data-ln-go="mappa"><svg class="ln-i"><use href="#ln-i-map"/></svg><span class="ln-lbl" data-i18n="ln.view.mappa">Map</span></button>
         <button class="ln-item" type="button" id="ln-puzzle-more" data-ln-proxy="ln-puzzle" hidden><svg class="ln-i"><use href="#ln-i-puzzle"/></svg><span class="ln-lbl" data-i18n="puzzle.title">Puzzle</span></button>
         <button class="ln-item" type="button" id="ln-shop-more" data-ln-proxy="ln-shop" hidden><svg class="ln-i"><use href="#ln-i-coins"/></svg><span class="ln-lbl" data-i18n="shop.title">Shop</span></button>
+        <button class="ln-item" type="button" id="ln-rest-more" data-ln-proxy="ln-rest" hidden><svg class="ln-i"><use href="#ln-i-rest"/></svg><span class="ln-lbl" data-i18n="rest.title">Rest</span></button>
         <button class="ln-item" type="button" data-ln-go="fazioni"><svg class="ln-i"><use href="#ln-i-flag"/></svg><span class="ln-lbl" data-i18n="ln.view.fazioni">Factions</span></button>
         <button class="ln-item" type="button" data-ln-proxy="ln-handouts"><svg class="ln-i"><use href="#ln-i-mail"/></svg><span class="ln-lbl" data-i18n="handout.title">Documents</span></button>
         <button class="ln-item" type="button" id="ln-region-more" data-ln-proxy="ln-region" hidden><svg class="ln-i"><use href="#ln-i-compass"/></svg><span class="ln-lbl" data-i18n="region.title">Region map</span></button>
@@ -10759,6 +10809,7 @@ function connect() {
     if ((payload.split || payload.split_event) && typeof window._onSplit === 'function') window._onSplit(payload.split, payload.split_event);
     if (payload.stats && typeof window._onSpellStats === 'function') window._onSpellStats(payload.stats);
     if (payload.spell_cast && typeof window._onSpellCast === 'function') window._onSpellCast(payload.spell_cast);
+    if (('rest' in payload || payload.rest_event) && typeof window._onRest === 'function') window._onRest(payload);
     if (payload.timeline && typeof window._onTimeline === 'function') window._onTimeline(payload.timeline);
     if (payload.quest_event && payload.quest_event.name) {
       const qe = payload.quest_event;
@@ -12145,6 +12196,187 @@ function _spellRows(book, spellName) {
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   loadCasters();
+})();
+
+// ── Rests (scripts/rest.py) ───────────────────────────────────────────
+// The DM opens a rest; the server holds who rests and who is done, and reads
+// HP and Hit Dice from the sheet (the display's live count first).
+// _restPlan says what one character's panel offers.
+function _restPlan(rest, view) {
+  rest = rest || null; view = view || {};
+  const kind = rest ? rest.kind : '';
+  const done = rest ? (rest.done || []) : [];
+  const waiting = rest ? (rest.characters || []).filter(n => done.indexOf(n) < 0) : [];
+  const hp = view.hp || null, hd = view.hit_dice || null;
+  const con = Number(view.con || 0);
+  const full = !!(hp && hp.current >= hp.max);
+  const noDice = !hd || hd.remaining < 1;
+  return {
+    kind: kind, open: !!rest, resting: !!view.resting, done: !!view.done, waiting: waiting,
+    hp: hp, hd: hd, con: con, conText: con ? (con > 0 ? '+' + con : String(con)) : '',
+    canSpend: kind === 'short' && !!view.resting && !view.done && !full && !noDice,
+    why: kind !== 'short' ? '' : full ? 'full' : noDice ? 'none' : '',
+  };
+}
+// ── end rest plan ──
+
+(function _initRest() {
+  const modal = document.getElementById('rest-modal');
+  if (!modal) return;
+  const $ = id => document.getElementById(id);
+  const body = $('rest-body'), whoEl = $('rest-who'), title = $('rest-title');
+  const qp = new URLSearchParams(location.search);
+  const mine = String(window._LOGIN_CHAR || qp.get('char') || qp.get('character') || '').trim();
+  let rest = null, who = '', view = null, armed = null, busy = false, lastRoll = null;
+
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+  const same = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+  const kindName = k => k === 'short' ? _t('rest.short', null, 'Short rest') : _t('rest.long', null, 'Long rest');
+  const resting = () => (rest && rest.characters) || [];
+  const mineRests = () => !!mine && resting().some(n => same(n, mine));
+
+  function triggers() {
+    const show = !!rest && (!mine || mineRests());
+    ['ln-rest', 'ln-rest-more', 'ph-rest-opt'].forEach(id => { const e = $(id); if (e) e.hidden = !show; });
+    if (!rest) modal.classList.remove('open');
+  }
+  function loadView() {
+    if (!who) return Promise.resolve();
+    return fetch('/rest/' + encodeURIComponent(who), { headers: _authHeaders() })
+      .then(r => r.ok ? r.json() : null).then(d => { if (d) { view = d; rest = d.rest; triggers(); render(); } }).catch(() => {});
+  }
+  function post(path) {
+    return fetch('/rest/' + encodeURIComponent(who) + path, {
+      method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, _authHeaders()), body: '{}',
+    }).then(r => r.json().then(d => ({ ok: r.ok, data: d })).catch(() => ({ ok: false, data: {} })));
+  }
+  function twoTaps(btn, run) {
+    btn.addEventListener('click', () => {
+      if (busy) return;
+      if (armed !== btn) {                         // the first tap asks, the second does it
+        if (armed) { armed.classList.remove('armed'); armed.textContent = armed.dataset.label; }
+        armed = btn;
+        btn.dataset.label = btn.textContent;
+        btn.classList.add('armed');
+        btn.textContent = _t('rest.confirm', null, 'Tap again to confirm');
+        return;
+      }
+      armed = null;
+      run();
+    });
+  }
+  function act(path, onOk) {
+    busy = true; render();
+    post(path).then(res => {
+      busy = false;
+      if (res.ok) { view = res.data; rest = res.data.rest; onOk(res.data); }
+      else {
+        const key = { full: 'rest.full', none: 'rest.noHd' }[res.data.code] || 'rest.failed';
+        _showToast('🏕 ' + _t(key, null, res.data.error || 'Could not do it — ask the DM.'), 5000);
+        loadView();
+      }
+      triggers(); render();
+    });
+  }
+
+  function render() {
+    armed = null;
+    whoEl.textContent = '';
+    whoEl.hidden = !!mine || resting().length < 2;
+    resting().forEach(n => {
+      const chip = el('button', (same(n, who) ? 'sel ' : '') + ((rest.done || []).indexOf(n) >= 0 ? 'done' : ''), n);
+      chip.type = 'button';
+      chip.addEventListener('click', () => { who = n; view = null; lastRoll = null; render(); loadView(); });
+      whoEl.appendChild(chip);
+    });
+    title.textContent = rest ? kindName(rest.kind) + (who && !mine ? ' — ' + who : '') : _t('rest.title', null, 'Rest');
+    body.textContent = '';
+    if (!rest) { body.appendChild(el('p', 'rest-note', _t('rest.over', null, 'The rest is over.'))); return; }
+    if (mine && !mineRests()) { body.appendChild(el('p', 'rest-note', _t('rest.notResting', null, 'You are not resting this time.'))); return; }
+    if (!view) return;
+    const plan = _restPlan(rest, view);
+    const card = el('div', 'rest-card');
+    if (plan.hp) {
+      card.appendChild(el('div', 'rest-hp', _t('rest.hp', { cur: plan.hp.current, max: plan.hp.max }, 'HP ' + plan.hp.current + ' / ' + plan.hp.max)));
+      const bar = el('div', 'rest-bar'), fill = el('i');
+      fill.style.width = Math.max(0, Math.min(100, plan.hp.max ? plan.hp.current * 100 / plan.hp.max : 0)) + '%';
+      bar.appendChild(fill); card.appendChild(bar);
+    }
+    if (plan.hd) {
+      card.appendChild(el('div', '', _t('rest.hd', { left: plan.hd.remaining, max: plan.hd.max, die: plan.hd.die, con: plan.conText },
+        'Hit Dice: ' + plan.hd.remaining + ' of ' + plan.hd.max)));
+      const dice = el('div', 'rest-dice');
+      for (let i = 0; i < plan.hd.max; i++) dice.appendChild(el('span', 'rest-die' + (i < plan.hd.remaining ? '' : ' spent'), 'd' + plan.hd.die));
+      card.appendChild(dice);
+    }
+    body.appendChild(card);
+    if (lastRoll) body.appendChild(el('div', 'rest-roll', _t('rest.spent', lastRoll, 'd' + lastRoll.die + ': ' + lastRoll.roll + ' → +' + lastRoll.gained)));
+    if (plan.done) {
+      body.appendChild(el('div', 'rest-done', _t('rest.done', null, 'Rested ✓')));
+    } else if (plan.kind === 'short') {
+      if (plan.hd) {
+        const spend = el('button', 'rest-go', _t('rest.spend', { die: plan.hd.die, con: plan.conText }, 'Spend a Hit Die'));
+        spend.type = 'button';
+        spend.disabled = busy || !plan.canSpend;
+        spend.addEventListener('click', () => act('/hit-die', d => {
+          const s = d.spent || {};
+          lastRoll = { die: s.die, roll: s.roll, con: s.con ? (s.con > 0 ? '+' + s.con : String(s.con)) : '', gained: s.gained };
+          if (navigator.vibrate) navigator.vibrate(30);
+        }));
+        body.appendChild(spend);
+        if (plan.why) body.appendChild(el('p', 'rest-note', plan.why === 'full' ? _t('rest.full', null, 'HP are full.') : _t('rest.noHd', null, 'No Hit Dice left.')));
+      }
+      const fin = el('button', 'rest-go second', _t('rest.finishShort', null, "I'm done resting"));
+      fin.type = 'button'; fin.disabled = busy;
+      twoTaps(fin, () => act('/finish', () => {}));
+      body.appendChild(fin);
+    } else {
+      body.appendChild(el('p', 'rest-note', _t('rest.longWill', null, 'HP back to full, Hit Dice and spell slots back.')));
+      const fin = el('button', 'rest-go', _t('rest.finishLong', null, 'Rest until morning'));
+      fin.type = 'button'; fin.disabled = busy;
+      twoTaps(fin, () => act('/finish', () => { if (navigator.vibrate) navigator.vibrate(30); }));
+      body.appendChild(fin);
+    }
+    if (plan.waiting.length) body.appendChild(el('p', 'rest-note', _t('rest.waiting', { names: plan.waiting.join(', ') }, 'Still resting: ' + plan.waiting.join(', '))));
+  }
+
+  function open() {
+    if (!rest) return;
+    if (!who || !resting().some(n => same(n, who))) {
+      who = mine ? (resting().find(n => same(n, mine)) || '') : (resting().find(n => (rest.done || []).indexOf(n) < 0) || resting()[0] || '');
+      view = null; lastRoll = null;
+    }
+    modal.classList.add('open');
+    render();
+    loadView();
+  }
+  const close = () => modal.classList.remove('open');
+
+  window._onRest = function (payload) {
+    if ('rest' in payload) {
+      const was = rest;
+      rest = payload.rest;
+      triggers();
+      if (payload.rest_opened) {
+        lastRoll = null; view = null;
+        _showToast('🏕 ' + _t('rest.opened', { kind: kindName(rest.kind) }, kindName(rest.kind)), 6000);
+        if (!mine || mineRests()) { who = ''; if (mine) open(); }
+      } else if (!rest && was) {
+        _showToast('🏕 ' + _t('rest.over', null, 'The rest is over.'), 5000);
+      }
+      if (modal.classList.contains('open')) { render(); loadView(); }
+    }
+    const ev = payload.rest_event;
+    if (ev && ev.character && !(mine && same(ev.character, mine))) {
+      if (ev.kind === 'hd') _showToast('🏕 ' + _t('rest.toastHd', { name: ev.character, gained: ev.gained }, ev.character + ' +' + ev.gained), 4000);
+      else _showToast('🏕 ' + _t('rest.toastDone', { name: ev.character }, ev.character + ' has rested'), 4000);
+    }
+  };
+  ['ln-rest', 'ph-rest-opt'].forEach(id => { const e = $(id); if (e) e.addEventListener('click', open); });
+  $('rest-close').addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  fetch('/rest', { headers: _authHeaders() }).then(r => r.ok ? r.json() : null).then(d => { if (d) { rest = d.rest; triggers(); } }).catch(() => {});
 })();
 
 // ── Input-only mode for mobile players ───────────────────────────────────

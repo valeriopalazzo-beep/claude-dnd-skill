@@ -498,6 +498,8 @@ _DM_ENDPOINTS = {
     "help_request", "narration_pref", "audio_toggle",
     # Opening and closing a shop; buying from it is the players'.
     "shop_set",
+    # Opening and closing a rest; resting is the players'.
+    "rest_set",
     # Where the party is — sets everyone's background and music.
     "set_scene",
     # Documents the party finds: the DM hands them out, everyone may read them.
@@ -3063,6 +3065,243 @@ def spellbook_drop(character):
     _broadcast({"stats": snapshot})
     _spellbook.casts_add({"character": name, "spell": dropped, "dropped": True})
     return jsonify(_spell_view(character, text, lang)), 200
+
+
+# ─── Rests (scripts/rest.py) ─────────────────────────────────────────────────
+# The DM opens a short or long rest (rest.py open); every resting player's
+# screen shows a Rest panel. A short rest spends Hit Dice one at a time (rolled
+# here, plus CON), a long rest brings HP, Hit Dice and slots back in one tap.
+# The sheet and the display change together, and the DM is told (check_input.py).
+# A player acts for their own character, the DM's screen for anyone resting.
+import rest as _rest_lib
+
+REST_FILE = rt("rest.json")
+_rest: Optional[dict] = None
+_rest_lock = threading.Lock()
+
+
+def _load_rest() -> None:
+    global _rest
+    try:
+        with open(REST_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+        _rest = data if isinstance(data, dict) and data.get("kind") in _rest_lib.KINDS else None
+    except (OSError, ValueError):
+        _rest = None
+
+
+def _persist_rest() -> None:
+    try:
+        if _rest is None:
+            if os.path.exists(REST_FILE):
+                os.remove(REST_FILE)
+            return
+        with open(REST_FILE + ".tmp", "w", encoding="utf-8") as f:
+            json.dump(_rest, f, ensure_ascii=False)
+        os.replace(REST_FILE + ".tmp", REST_FILE)
+    except OSError:
+        pass
+
+
+_load_rest()
+
+
+def _rest_now() -> Optional[dict]:
+    """The open rest, if it belongs to the campaign being played (call with _rest_lock held)."""
+    if _rest is None or _rest.get("campaign", "") != _active_campaign():
+        return None
+    return _rest
+
+
+def _rest_snapshot() -> Optional[dict]:
+    with _rest_lock:
+        r = _rest_now()
+        return json.loads(json.dumps(r)) if r else None
+
+
+def _resting_name(rest: Optional[dict], character: str) -> str:
+    """The resting character's name as the rest lists it, or ''."""
+    key = _sheet_key(character)
+    return next((n for n in (rest or {}).get("characters", []) if _sheet_key(n) == key), "")
+
+
+def _rest_view(character: str, text: str) -> dict:
+    st = _rest_lib.state(text, _live_player(character) or {})
+    slots = _live_slots(_live_player(character)) or _spellbook.read_slots(text)
+    rest = _rest_snapshot()
+    name = _resting_name(rest, character)
+    return {"character": (_live_player(character) or {}).get("name") or character,
+            "hp": st["hp"], "hit_dice": st["hit_dice"], "con": st["con"], "warlock": st["warlock"],
+            "slots": {str(k): v for k, v in sorted(slots.items())},
+            "rest": rest, "resting": bool(name), "done": bool(name and name in rest.get("done", []))}
+
+
+def _rest_to_display(character: str, text: str, second_wind: bool = False, long_rest: bool = False) -> None:
+    """The display's own copy of the character follows the sheet: HP, Hit Dice, slots."""
+    hp, hd = _rest_lib.read_hp(text), _rest_lib.read_hit_dice(text)
+    slots = _spellbook.read_slots(text)
+    snapshot = None
+    with _stats_lock:
+        for p in _current_stats.get("players", []):
+            if _sheet_key(p.get("name", "")) != _sheet_key(character):
+                continue
+            if hp:
+                p["hp"] = {**(p.get("hp") if isinstance(p.get("hp"), dict) else {}),
+                           "current": hp["current"], "max": hp["max"], "temp": hp["temp"]}
+            if hd:
+                p["hit_dice"] = {"remaining": hd["remaining"], "max": hd["max"]}
+            if slots:
+                p["spell_slots"] = {str(k): {"used": v["used"], "max": v["max"]} for k, v in slots.items()}
+            if second_wind and "second_wind" in p:
+                p["second_wind"] = True
+            if long_rest and isinstance(p.get("death_saves"), dict) and not p["death_saves"].get("dead"):
+                p.pop("death_saves", None)
+            _death_saves_follow_hp(p)
+            snapshot = dict(_current_stats)
+    if snapshot is not None:
+        _persist_stats()
+        _broadcast({"stats": snapshot})
+
+
+def _write_sheet(path: str, text: str):
+    """None, or an error response."""
+    try:
+        with open(path + ".tmp", "w", encoding="utf-8", newline="") as f:
+            f.write(text)
+        os.replace(path + ".tmp", path)
+    except OSError as e:
+        return jsonify({"error": str(e), "code": "sheet"}), 500
+    return None
+
+
+@app.route("/rest", methods=["GET"])
+def rest_get():
+    if not _token_ok():
+        return "Forbidden", 403
+    return jsonify({"rest": _rest_snapshot()}), 200
+
+
+@app.route("/rest", methods=["POST"])
+def rest_set():
+    """Open a rest — {"kind": "short"|"long", "characters": [...] (default: the party)} — or {"close": true}."""
+    global _rest
+    if not _token_ok():
+        return "Forbidden", 403
+    data = request.get_json(silent=True) or {}
+    if data.get("close"):
+        with _rest_lock:
+            _rest = None
+            _persist_rest()
+        _broadcast({"rest": None})
+        return jsonify({"rest": None}), 200
+    kind = str(data.get("kind", "")).strip().lower()
+    if kind not in _rest_lib.KINDS:
+        return jsonify({"error": "kind is short or long"}), 400
+    with _stats_lock:
+        party = [str(p.get("name", "")) for p in _current_stats.get("players", []) if p.get("name")]
+    asked = [str(n).strip() for n in (data.get("characters") or []) if str(n).strip()]
+    if asked:
+        names, unknown = [], []
+        for n in asked:
+            hit = next((p for p in party if _sheet_key(p) == _sheet_key(n)), None)
+            (names if hit else unknown).append(hit or n)
+        if unknown:
+            return jsonify({"error": "not at the table: " + ", ".join(unknown)}), 400
+    else:
+        names = party
+    if not names:
+        return jsonify({"error": "nobody at the table"}), 400
+    with _rest_lock:
+        _rest = {"kind": kind, "campaign": _active_campaign(), "characters": list(dict.fromkeys(names)), "done": []}
+        _persist_rest()
+        snap = json.loads(json.dumps(_rest))
+    _broadcast({"rest": snap, "rest_opened": True})
+    return jsonify({"rest": snap}), 200
+
+
+def _rest_sheet(character: str):
+    """(path, text, resting name) for an action of the open rest, or (None, error response, '')."""
+    path, text = _spell_sheet(character)
+    if path is None:
+        return None, text, ""
+    with _rest_lock:
+        rest = _rest_now()
+        name = _resting_name(rest, character)
+        if rest is None:
+            return None, (jsonify({"error": "no rest is open", "code": "closed"}), 409), ""
+        if not name:
+            return None, (jsonify({"error": "not resting", "code": "resting"}), 409), ""
+        if name in rest.get("done", []):
+            return None, (jsonify({"error": "already rested", "code": "done"}), 409), ""
+    return path, text, name
+
+
+@app.route("/rest/<character>", methods=["GET"])
+def rest_character(character):
+    path, text = _spell_sheet(character)
+    if path is None:
+        return text
+    return jsonify(_rest_view(character, text)), 200
+
+
+@app.route("/rest/<character>/hit-die", methods=["POST"])
+def rest_hit_die(character):
+    """Spend one Hit Die on a short rest: rolled here, written to the sheet and the display."""
+    with _spell_lock:
+        path, text, name = _rest_sheet(character)
+        if path is None:
+            return text
+        if (_rest_snapshot() or {}).get("kind") != "short":
+            return jsonify({"error": "Hit Dice are spent on a short rest", "code": "kind"}), 409
+        try:
+            new_text, done = _rest_lib.spend_hit_die(text, _live_player(character) or {})
+        except _rest_lib.RestError as e:
+            code = "none" if "no Hit Dice" in str(e) else "full" if "full" in str(e) else "sheet"
+            return jsonify({"error": str(e), "code": code}), 409
+        err = _write_sheet(path, new_text)
+        if err:
+            return err
+        _rest_to_display(character, new_text)
+    _rest_lib.notes_add({"kind": "hd", "character": name, **done})
+    _broadcast({"rest_event": {"character": name, "kind": "hd", "gained": done["gained"], "hp": done["hp"], "max": done["max"]}})
+    return jsonify({**_rest_view(character, new_text), "spent": done}), 200
+
+
+@app.route("/rest/<character>/finish", methods=["POST"])
+def rest_finish(character):
+    """The character's rest is over: a long rest is applied now; a short one only recharges."""
+    global _rest
+    with _spell_lock:
+        path, text, name = _rest_sheet(character)
+        if path is None:
+            return text
+        kind = (_rest_snapshot() or {}).get("kind")
+        try:
+            if kind == "long":
+                new_text, done = _rest_lib.long_rest(text, _spell_ruleset(), _live_player(character) or {})
+            else:
+                new_text, done = _rest_lib.finish_short(text)
+        except (_rest_lib.RestError, _spellbook.SpellError) as e:
+            return jsonify({"error": str(e), "code": "sheet"}), 409
+        if new_text != text:
+            err = _write_sheet(path, new_text)
+            if err:
+                return err
+        _rest_to_display(character, new_text, second_wind=True, long_rest=kind == "long")
+    over = None
+    with _rest_lock:
+        rest = _rest_now()
+        if rest is not None and name not in rest["done"]:
+            rest["done"].append(name)
+            if set(rest["done"]) >= set(rest["characters"]):
+                over, _rest = rest["kind"], None
+            _persist_rest()
+        snap = json.loads(json.dumps(_rest_now())) if _rest_now() else None
+    _rest_lib.notes_add({"kind": kind, "character": name, **done})
+    if over:
+        _rest_lib.notes_add({"kind": "over", "rest": over})
+    _broadcast({"rest": snap, "rest_event": {"character": name, "kind": kind, "over": bool(over)}})
+    return jsonify({**_rest_view(character, new_text), "finished": done}), 200
 
 
 # ─── Companions (companion.py) ───────────────────────────────────────────────
