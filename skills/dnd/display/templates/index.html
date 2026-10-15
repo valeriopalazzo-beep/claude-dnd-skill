@@ -1528,6 +1528,17 @@
   .spell-note{ margin:0; color:var(--ln-text-muted, #cdbfa6); font-style:italic; }
   .spell-empty{ margin:30px 8px; text-align:center; font-size:16px; color:#b9ab92; }
 
+  /* ══ Voice input — speak the action instead of typing it (the browser's speech recognition) ══ */
+  .mic-btn{ flex:none; width:40px; height:40px; padding:0; border-radius:999px; cursor:pointer; font-size:19px; line-height:1;
+    color:rgba(220,185,100,1); background:rgba(20,14,6,0.6); border:1px solid rgba(180,140,60,0.48); }
+  .mic-btn[hidden]{ display:none !important; }
+  .mic-btn.listening{ color:#fff; background:#c0392b; border-color:#e74c3c; animation:mic-pulse 1.1s ease-in-out infinite; }
+  @keyframes mic-pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(231,76,60,.55); } 50%{ box-shadow:0 0 0 9px rgba(231,76,60,0); } }
+  :root[data-skin="lanterna"] .mic-btn{ color:var(--ln-accent); background:var(--ln-surface-2); border:1.5px solid var(--ln-line-strong); }
+  :root[data-skin="lanterna"] .mic-btn.listening{ color:#fff; background:#c0392b; border-color:#e74c3c; }
+  body.input-only .mic-btn{ width:52px; height:52px; font-size:24px; }
+  #whisper-form .mic-btn{ align-self:stretch; height:auto; min-height:40px; }
+
   /* ══ Votes (vote.py) — the party decides on their phones ══ */
   #vote-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
     align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
@@ -5319,6 +5330,7 @@
     <textarea id="player-input-text" rows="2" placeholder="Enter action or dialogue…" data-i18n-placeholder="input.placeholder" maxlength="500"
               data-tab-section="move"></textarea>
     <div id="input-footer" data-tab-section="move">
+      <button id="mic-btn" class="mic-btn" type="button" hidden title="Speak" aria-label="Speak" data-i18n-title="mic.speak" data-i18n-aria="mic.speak">🎤</button>
       <button id="skip-turn-btn" style="display:none" title="Skip this character's turn" data-i18n="input.skipTurn" data-i18n-title="input.skipTurn.title">Skip Turn</button>
       <button id="stage-btn" data-i18n="input.stage">Stage</button>
     </div>
@@ -5418,6 +5430,7 @@
     <div id="whisper-thread"></div>
     <form id="whisper-form">
       <textarea id="whisper-text" rows="2" maxlength="500" placeholder="Write to the DM in secret…" data-i18n-placeholder="whisper.placeholder"></textarea>
+      <button id="whisper-mic" class="mic-btn" type="button" hidden title="Speak" aria-label="Speak" data-i18n-title="mic.speak" data-i18n-aria="mic.speak">🎤</button>
       <button id="whisper-send" type="submit" data-i18n="whisper.send">Send</button>
     </form>
   </div>
@@ -12292,6 +12305,77 @@ function _spellRows(book, spellName) {
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   loadCasters();
+})();
+
+// ── Voice input ──────────────────────────────────────────────────────
+// A microphone next to the action box (and the secret note box): the player
+// speaks and the browser's own speech recognition writes the words in — Chrome
+// on Android and on the PC, Safari on iPhone; it needs HTTPS. Nothing is sent
+// by itself: the player reads it and sends it as usual. Where the browser has
+// no speech recognition the button never shows.
+function _micLang(lang) {
+  const map = { it: 'it-IT', en: 'en-US', es: 'es-ES', fr: 'fr-FR', de: 'de-DE', pt: 'pt-PT', nl: 'nl-NL', pl: 'pl-PL' };
+  const code = String(lang || '').toLowerCase().slice(0, 2);
+  return map[code] || (code ? code + '-' + code.toUpperCase() : 'en-US');
+}
+function _micMerge(before, heard, max) {
+  before = String(before || '');
+  heard = String(heard || '').trim();
+  if (!heard) return before.slice(0, max || 500);
+  if (!before.trim()) heard = heard.charAt(0).toUpperCase() + heard.slice(1);
+  const sep = before && !/\s$/.test(before) ? ' ' : '';
+  return (before + sep + heard).slice(0, max || 500);
+}
+// ── end mic helpers ──
+
+(function _initMic() {
+  const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!Rec || !window.isSecureContext) return;
+  function attach(btn, box) {
+    if (!btn || !box) return;
+    btn.hidden = false;
+    let rec = null, base = '', placeholder = box.placeholder;
+    const stop = () => { if (rec) { try { rec.stop(); } catch (_) {} } };
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (rec) { stop(); return; }
+      rec = new Rec();
+      rec.lang = _micLang(window._LANG);
+      rec.interimResults = true;
+      rec.continuous = false;
+      rec.maxAlternatives = 1;
+      base = box.value;
+      const max = parseInt(box.getAttribute('maxlength') || '500', 10);
+      rec.onstart = () => {
+        btn.classList.add('listening');
+        btn.title = _t('mic.stop', null, 'Stop');
+        box.placeholder = _t('mic.listening', null, 'Listening…');
+        if (navigator.vibrate) navigator.vibrate(20);
+      };
+      rec.onresult = ev => {
+        let heard = '';
+        for (let i = 0; i < ev.results.length; i++) heard += ev.results[i][0].transcript;
+        box.value = _micMerge(base, heard, max);
+        box.dispatchEvent(new Event('input', { bubbles: true }));
+      };
+      rec.onerror = ev => {
+        const key = ev.error === 'not-allowed' || ev.error === 'service-not-allowed' ? 'mic.denied'
+                  : ev.error === 'no-speech' ? 'mic.noSpeech' : ev.error === 'aborted' ? '' : 'mic.failed';
+        if (key) _showToast('🎤 ' + _t(key, null, 'Voice input is not working here.'), 5000);
+      };
+      rec.onend = () => {
+        rec = null;
+        btn.classList.remove('listening');
+        btn.title = _t('mic.speak', null, 'Speak');
+        box.placeholder = placeholder;
+        box.focus();
+      };
+      try { rec.start(); } catch (_) { rec = null; }
+    });
+  }
+  attach(document.getElementById('mic-btn'), document.getElementById('player-input-text'));
+  attach(document.getElementById('whisper-mic'), document.getElementById('whisper-text'));
 })();
 
 // ── Votes (vote.py) ───────────────────────────────────────────────────
