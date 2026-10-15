@@ -107,6 +107,13 @@ except Exception:
     pass
 
 try:
+    from vote import drain_notes as drain_votes
+    for line in drain_votes():
+        print(line)
+except Exception:
+    pass
+
+try:
     from rest import drain_notes
     for line in drain_notes():
         print(line)

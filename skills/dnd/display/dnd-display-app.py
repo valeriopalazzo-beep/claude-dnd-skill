@@ -500,6 +500,8 @@ _DM_ENDPOINTS = {
     "shop_set",
     # Opening and closing a rest; resting is the players'.
     "rest_set",
+    # Asking the table a question; answering is the players'.
+    "vote_set",
     # Where the party is — sets everyone's background and music.
     "set_scene",
     # Documents the party finds: the DM hands them out, everyone may read them.
@@ -3065,6 +3067,174 @@ def spellbook_drop(character):
     _broadcast({"stats": snapshot})
     _spellbook.casts_add({"character": name, "spell": dropped, "dropped": True})
     return jsonify(_spell_view(character, text, lang)), 200
+
+
+# ─── Votes (vote.py) ─────────────────────────────────────────────────────────
+# The DM asks the table (or one group of a split party) a question; each voter
+# taps an answer on their own screen and may change it while the vote is open.
+# When everybody has voted the vote ends by itself: the result goes into the
+# story (for the voters only, when they are not the whole party) and to the DM.
+import vote as _vote_lib
+
+VOTE_FILE = rt("vote.json")
+_vote: Optional[dict] = None
+_vote_lock = threading.Lock()
+
+
+def _load_vote() -> None:
+    global _vote
+    try:
+        with open(VOTE_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+        _vote = data if isinstance(data, dict) and data.get("options") else None
+    except (OSError, ValueError):
+        _vote = None
+
+
+def _persist_vote() -> None:
+    try:
+        with open(VOTE_FILE + ".tmp", "w", encoding="utf-8") as f:
+            json.dump(_vote, f, ensure_ascii=False)
+        os.replace(VOTE_FILE + ".tmp", VOTE_FILE)
+    except OSError:
+        pass
+
+
+_load_vote()
+
+
+def _vote_now() -> Optional[dict]:
+    """The vote of the campaign being played, open or just ended (call with _vote_lock held)."""
+    if _vote is None or _vote.get("campaign", "") != _active_campaign():
+        return None
+    return _vote
+
+
+def _vote_view(vote: Optional[dict]) -> Optional[dict]:
+    """What this screen may see: a secret vote hides the count and who chose what until it ends."""
+    if not vote:
+        return None
+    me = (g.character or "") if getattr(g, "role", None) == "player" else ""
+    hidden = vote.get("secret") and not vote.get("closed") and getattr(g, "role", None) == "player"
+    votes = vote.get("votes") or {}
+    out = {k: vote[k] for k in ("id", "question", "options", "voters", "group", "secret", "closed")}
+    out["voted"] = [n for n in vote["voters"] if n in votes]
+    out["counts"] = None if hidden else _vote_lib.tally(vote)
+    out["votes"] = None if hidden else dict(votes)
+    out["mine"] = next((votes[n] for n in votes if me and n.lower() == me.lower()), None)
+    out["winners"] = _vote_lib.winners(vote) if vote.get("closed") else []
+    return out
+
+
+def _vote_story(vote: dict) -> None:
+    """The result as a line of the story, for the voters when they are not the whole table."""
+    line = _vote_lib.result_line(vote)
+    entry = {"text": line, "dice": True}
+    with _stats_lock:
+        party = {p.get("name", "") for p in _current_stats.get("players", [])}
+    if set(vote["voters"]) != party:
+        entry["only"] = list(vote["voters"])
+    camp = _active_campaign()
+    log_entry = dict(entry, _camp=camp) if camp else dict(entry)
+    with _text_log_lock:
+        _text_log.append(log_entry)
+    with _tail_lock:
+        _tail_buffer.append(dict(log_entry))
+    _persist_log()
+    _persist_tail()
+    _broadcast(entry)
+
+
+@app.route("/vote", methods=["GET"])
+def vote_get():
+    if not _token_ok():
+        return "Forbidden", 403
+    with _vote_lock:
+        return jsonify({"vote": _vote_view(_vote_now())}), 200
+
+
+@app.route("/vote", methods=["POST"])
+def vote_set():
+    """Open a vote — {"question", "options": [...], "voters": [...] (default: the party),
+    "group": label, "secret": bool} — or {"close": true} to end the open one."""
+    global _vote
+    if not _token_ok():
+        return "Forbidden", 403
+    data = request.get_json(silent=True) or {}
+    if data.get("close"):
+        with _vote_lock:
+            vote = _vote_now()
+            if vote is None or vote.get("closed"):
+                return jsonify({"error": "no vote is open"}), 409
+            vote["closed"] = True
+            _persist_vote()
+            snap = json.loads(json.dumps(vote))
+        _vote_story(snap)
+        _broadcast({"vote_event": {"id": snap["id"], "closed": True}})
+        with _vote_lock:
+            return jsonify({"vote": _vote_view(snap)}), 200
+    clean = lambda s, n: re.sub(r"[`\\$<>]", "", str(s or "")).strip()[:n]  # noqa: E731
+    question = clean(data.get("question"), 160)
+    options = list(dict.fromkeys(o for o in (clean(o, 60) for o in (data.get("options") or [])) if o))
+    if not question or not 2 <= len(options) <= _vote_lib.MAX_OPTIONS:
+        return jsonify({"error": f"a question and 2 to {_vote_lib.MAX_OPTIONS} options"}), 400
+    with _stats_lock:
+        party = [str(p.get("name", "")) for p in _current_stats.get("players", []) if p.get("name")]
+    asked = [str(n).strip() for n in (data.get("voters") or []) if str(n).strip()]
+    voters = []
+    for n in asked or party:
+        hit = next((p for p in party if _sheet_key(p) == _sheet_key(n)), None)
+        if not hit:
+            return jsonify({"error": f"not at the table: {n}"}), 400
+        if hit not in voters:
+            voters.append(hit)
+    if not voters:
+        return jsonify({"error": "nobody at the table"}), 400
+    with _vote_lock:
+        _vote = {"id": secrets.token_hex(4), "question": question, "options": options, "voters": voters,
+                 "group": clean(data.get("group"), 60), "secret": bool(data.get("secret")), "closed": False,
+                 "votes": {}, "campaign": _active_campaign()}
+        _persist_vote()
+        snap = json.loads(json.dumps(_vote))
+    _broadcast({"vote_event": {"id": snap["id"], "opened": True, "voters": voters, "question": question}})
+    with _vote_lock:
+        return jsonify({"vote": _vote_view(snap)}), 200
+
+
+@app.route("/vote/cast", methods=["POST"])
+def vote_cast():
+    """A voter's answer: {"character", "option": index, "id"}. It can be changed until the vote ends."""
+    if not _token_ok():
+        return "Forbidden", 403
+    if not _rate_ok(request.remote_addr):
+        return "Too Many Requests", 429
+    data = request.get_json(silent=True) or {}
+    character = _acting_character(str(data.get("character", ""))[:50].strip())
+    try:
+        option = int(data.get("option"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "which answer?", "code": "option"}), 400
+    over = None
+    with _vote_lock:
+        vote = _vote_now()
+        if vote is None or vote.get("closed") or (data.get("id") and data.get("id") != vote["id"]):
+            return jsonify({"error": "the vote is over", "code": "closed"}), 409
+        name = next((n for n in vote["voters"] if _sheet_key(n) == _sheet_key(character)), None)
+        if not name:
+            return jsonify({"error": "not one of the voters", "code": "voter"}), 403
+        if not 0 <= option < len(vote["options"]):
+            return jsonify({"error": "which answer?", "code": "option"}), 400
+        vote["votes"][name] = option
+        if set(vote["votes"]) >= set(vote["voters"]):
+            vote["closed"] = True
+            over = json.loads(json.dumps(vote))
+        _persist_vote()
+        view = _vote_view(vote)
+    if over:
+        _vote_lib.notes_add(over)
+        _vote_story(over)
+    _broadcast({"vote_event": {"id": view["id"], "voter": name, "closed": bool(over)}})
+    return jsonify({"vote": view}), 200
 
 
 # ─── Attacks (scripts/attacks.py) ────────────────────────────────────────────

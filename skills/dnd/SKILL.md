@@ -454,6 +454,12 @@ Syntax: `SKILL-scripts.md` → *A Split Party*.
 
 ---
 
+## Votes
+
+When the party has to choose together — which way, whom to trust, whether to accept — and the players are dithering, put the question on their phones: `display/vote.py open "Destra o sinistra?" --option Destra --option Sinistra` (`--group <name>` for one group of a split party, `--only "A, B"` for some characters, `--secret` to show the count only at the end). Each voter's screen opens the question; they tap an answer and may change it. When the last one has voted the vote ends by itself, the result goes into the story (for the voters only, when they are not the whole table) and reaches you as `[[VOTE: "…" — Destra 3, Sinistra 1 (who chose what). Destra wins.]]` — from `check_input.py`, and it also ends an autorun wait. Narrate from the result; on a tie, decide or ask again. `vote.py close` ends it early and prints the count. Use it for real choices, not for every turn. Syntax: `SKILL-scripts.md` → *Votes*.
+
+---
+
 ## Attacks from the phone
 
 Every character with an `## Attacks` table on the sheet has an Attacks panel on their own screen: they pick the weapon, the target (the enemies of the initiative order, or any name typed in) and normal / advantage / disadvantage, and one tap rolls to hit and the damage together — a natural 20 doubles the damage dice; a note like `Versatile: 1d10+4` is offered as another damage, one like `Attacco furtivo +1d6` as extra dice to add. The line goes into the story for the table, and the player's action reaches you as `[Lyra]: ⚔ attacks against Goblin 1 with Stocco — already rolled on the display, do not roll again: 19 to hit (natural 14 +5); 6 damage perforante (1d8+3) if it hits. Compare with the target's AC and narrate.` **Do not roll it again**: compare the total with the target's AC, apply the damage if it hits (`combat.py` / `--stat-hp`), narrate. The damage is rolled whether or not it hits — use it only on a hit. Advantage is the player's claim: if the situation does not give it, say so and use the lower d20 the line reports. Keep the Attacks table in its format (`| Name | Attack Bonus | Damage | Type | Notes |`) when a character's gear changes. Syntax for your own use (roll_mode auto): `SKILL-scripts.md` → *Attacks*.

@@ -374,6 +374,24 @@ If `check_input.py` returns output, prepend it to the player's terminal input wh
 
 ---
 
+## Votes — `display/vote.py`
+
+A question on the players' phones; the table decides.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/display/vote.py open "Destra o sinistra?" --option Destra --option Sinistra
+python3 ${CLAUDE_SKILL_DIR}/display/vote.py open "Chi entra per primo?" --option Lio --option Hernio --group Collina
+python3 ${CLAUDE_SKILL_DIR}/display/vote.py open "Accettate l'offerta?" --option Sì --option No --only "Ajeje, Lyra" --secret
+python3 ${CLAUDE_SKILL_DIR}/display/vote.py show     # the count so far
+python3 ${CLAUDE_SKILL_DIR}/display/vote.py close    # end it now, print the result
+```
+
+- 2 to 8 answers. Without `--group` / `--only` every character at the table votes. A new `open` replaces the vote on the screens.
+- Each voter answers on their own screen (the table / DM screen can vote for a player without a phone) and can change the answer while the vote is open. The count grows on every screen, or shows only at the end with `--secret`.
+- When everybody has voted the vote ends: a line in the story (`🗳 Destra o sinistra? — Destra 3 · Sinistra 1`, for the voters only when they are a part of the table) and `[[VOTE: …]]` for you from `check_input.py` / `autorun_wait.py`. A vote you `close` prints its result at once and is not reported again.
+
+---
+
 ## Attacks — `scripts/attacks.py`
 
 The weapons and attack spells of a sheet's `## Attacks` table, rolled to hit and for damage in one go. The players' **Attacks** panel is built on it; from the command line it serves roll_mode auto.
