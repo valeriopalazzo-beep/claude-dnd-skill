@@ -3327,25 +3327,28 @@ def stats():
                             ]
                         elif key == "_conditions_add":
                             # A plain name, or {name, duration_type, …} for a
-                            # condition that ends by itself (see _condition_timer).
-                            cond = str(val.get("name", "") if isinstance(val, dict) else val).strip()
-                            if not cond:
-                                continue
-                            conds = match.setdefault("conditions", [])
-                            if cond.lower() not in [c.lower() for c in conds]:
-                                conds.append(cond)
-                            timers = match.setdefault("condition_timers", {})
-                            timer = _condition_timer(val) if isinstance(val, dict) else None
-                            if timer:
-                                timers[cond.lower()] = timer
-                            else:
-                                timers.pop(cond.lower(), None)   # re-applied with no end in sight
+                            # condition that ends by itself (see _condition_timer);
+                            # a list of them when several arrive in one send.
+                            for one in (val if isinstance(val, list) else [val]):
+                                cond = str(one.get("name", "") if isinstance(one, dict) else one).strip()
+                                if not cond:
+                                    continue
+                                conds = match.setdefault("conditions", [])
+                                if cond.lower() not in [c.lower() for c in conds]:
+                                    conds.append(cond)
+                                timers = match.setdefault("condition_timers", {})
+                                timer = _condition_timer(one) if isinstance(one, dict) else None
+                                if timer:
+                                    timers[cond.lower()] = timer
+                                else:
+                                    timers.pop(cond.lower(), None)   # re-applied with no end in sight
                         elif key == "_conditions_remove":
-                            match["conditions"] = [
-                                c for c in match.get("conditions", [])
-                                if c.lower() != str(val).lower()
-                            ]
-                            match.get("condition_timers", {}).pop(str(val).lower(), None)
+                            for one in (val if isinstance(val, list) else [val]):
+                                match["conditions"] = [
+                                    c for c in match.get("conditions", [])
+                                    if c.lower() != str(one).lower()
+                                ]
+                                match.get("condition_timers", {}).pop(str(one).lower(), None)
                         elif key == "_slot_use":
                             slots = match.setdefault("spell_slots", {})
                             lvl = str(val)

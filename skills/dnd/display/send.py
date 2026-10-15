@@ -318,19 +318,30 @@ def _build_stats_payload(args) -> "dict | None":
             except ValueError:
                 pass
 
+    # Repeated for the same character, the conditions pile up in a list:
+    # one value per key would keep only the last of them.
+    def _add_to(name: str, key: str, value) -> None:
+        p = _p(name)
+        if key not in p:
+            p[key] = value
+        else:
+            if not isinstance(p[key], list):
+                p[key] = [p[key]]
+            p[key].append(value)
+
     for spec in (args.stat_condition_add or []):
         idx = spec.find(":")
         if idx > 0:
             name, cond = spec[:idx], spec[idx + 1:]
             if cond.strip():
-                _p(name)["_conditions_add"] = _condition_value(cond)
+                _add_to(name, "_conditions_add", _condition_value(cond))
 
     for spec in (args.stat_condition_remove or []):
         idx = spec.find(":")
         if idx > 0:
             name, cond = spec[:idx], spec[idx + 1:]
             if cond.strip():
-                _p(name)["_conditions_remove"] = cond.strip()
+                _add_to(name, "_conditions_remove", cond.strip())
 
     for spec in (getattr(args, "stat_death_save", None) or []):
         name, _, action = spec.rpartition(":")

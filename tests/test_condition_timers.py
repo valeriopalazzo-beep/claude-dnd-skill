@@ -167,6 +167,13 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(seen["condition_timers"], {"poisoned": {"duration_type": "rounds", "duration_remaining": 3}})
         self.assertNotIn("sheet", seen)
 
+    def test_several_conditions_in_one_send_are_all_kept(self):
+        self.add(["Poisoned", self.rounds(2, "Frightened")])
+        self.assertEqual(self.player()["conditions"], ["Poisoned", "Frightened"])
+        self.assertEqual(list(self.player()["condition_timers"]), ["frightened"])
+        self.post({"players": [{"name": "Aldric", "_conditions_remove": ["poisoned", "Frightened"]}]})
+        self.assertEqual((self.player()["conditions"], self.player()["condition_timers"]), ([], {}))
+
     def test_a_malformed_duration_is_just_a_condition(self):
         for bad in ({"name": "Stunned", "duration_type": "rounds", "duration_remaining": 0},
                     {"name": "Stunned", "duration_type": "rounds", "duration_remaining": "x"},
@@ -206,6 +213,20 @@ class CommandTests(unittest.TestCase):
         self.assertEqual(payload["players"], [
             {"name": "Aldric", "_conditions_add": {"name": "Poisoned", "duration_type": "rounds", "duration_remaining": 3}},
             {"name": "Mira", "_conditions_add": "Prone"}])
+
+    def test_send_py_keeps_every_condition_of_one_character(self):
+        send = _load("cond_send_many", DISPLAY / "send.py")
+
+        class Args:
+            stat_hp = stat_temp_hp = stat_slot_use = stat_slot_restore = None
+            stat_concentrate = stat_inventory_add = stat_inventory_remove = effect_start = effect_end = None
+            stat_condition_add = ["Aldric:Poisoned:3r", "Aldric:Prone", "Mira:Blinded"]
+            stat_condition_remove = ["Aldric:Charmed", "Aldric:Deafened"]
+        payload = send._build_stats_payload(Args)
+        self.assertEqual(payload["players"], [
+            {"name": "Aldric", "_conditions_add": [{"name": "Poisoned", "duration_type": "rounds", "duration_remaining": 3}, "Prone"],
+             "_conditions_remove": ["Charmed", "Deafened"]},
+            {"name": "Mira", "_conditions_add": "Blinded"}])
 
 
 class TrackerTests(unittest.TestCase):
