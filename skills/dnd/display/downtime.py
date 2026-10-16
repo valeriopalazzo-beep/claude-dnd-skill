@@ -23,7 +23,9 @@ that), work (lavorare: a modest lifestyle paid, wealthy with Performance),
 recuperate (riprendersi: three days, then a DC 15 Constitution save), research
 (ricerca: 1 gp a day, the DM decides what is found), train (addestrarsi: a
 language or a tool in 250 days at 1 gp a day), carouse (gozzovigliare: the
-DM's carousing table) and other (altro: anything else, said in words).
+DM's carousing table), business (gestire un'attività: d100 + days, DMG p. 129 —
+rolled on the party's stronghold by `close` when there is one) and other
+(altro: anything else, said in words).
 
 The choices live in <campaign>/downtime.json, so they wait for the DM even if
 the display is switched off in between. When every player has chosen, the DM
@@ -46,11 +48,11 @@ _SCRIPTS = os.path.join(os.path.dirname(_HERE), "scripts")
 if _SCRIPTS not in sys.path:
     sys.path.insert(0, _SCRIPTS)
 
-ACTIVITIES = ("craft", "work", "recuperate", "research", "train", "carouse", "other")
+ACTIVITIES = ("craft", "work", "recuperate", "research", "train", "carouse", "business", "other")
 ALIASES = {"fabbricare": "craft", "creare": "craft", "lavorare": "work", "lavoro": "work", "profession": "work",
            "riprendersi": "recuperate", "recupero": "recuperate", "ricerca": "research", "ricercare": "research",
            "addestrarsi": "train", "addestramento": "train", "training": "train", "gozzovigliare": "carouse",
-           "altro": "other"}
+           "attività": "business", "gestire": "business", "gestione": "business", "altro": "other"}
 MAX_DAYS = 365
 TRAIN_DAYS = 250            # PHB 2014: a language or a tool proficiency
 CRAFT_GP_PER_DAY = 5        # market value made per day; materials cost half
@@ -213,6 +215,9 @@ def outcome(data: dict, name: str, choice: dict, days: int) -> dict:
     elif kind == "carouse":
         out["text"] = (f"carousing{(' — ' + what) if what else ''}: {days} days of revelry at their lifestyle's cost; "
                        "roll on your carousing table (DMG) for what comes of it.")
+    elif kind == "business":
+        out["text"] = (f"running a business{(' — ' + what) if what else ''}: d100 + {min(days, 30)} on the DMG table (p. 129) "
+                       "— with the party's stronghold, downtime.py close rolls it (stronghold.py business).")
     else:
         out["text"] = f"{what}: decide what {days} days of it bring."
     return out
@@ -323,6 +328,25 @@ def _announce(event: dict) -> None:
         pass
 
 
+def _run_business(camp: str, result: dict) -> str:
+    """A character ran the party's stronghold: roll it there (stronghold.py), or leave the DM the table."""
+    try:
+        import stronghold
+        import treasury
+        path, fpath = stronghold.data_path(camp), stronghold.fund_path(camp)
+        data = stronghold.load(path)
+        if data is None:
+            return result["text"]
+        fund = treasury.load(fpath)
+        out = stronghold.business(data, result["days"], fund, result["character"])
+        stronghold.save(path, data)
+        if fund is not None:
+            treasury.save(fpath, fund)
+        return f"running {data['name']}: " + "; ".join(out["lines"])
+    except Exception as e:
+        return result["text"] + f" (stronghold.py could not roll it: {e})"
+
+
 def _party() -> list:
     from runtime_paths import rt
     try:
@@ -382,6 +406,8 @@ def main(argv: list | None = None) -> int:
             event = {"what": "closed"}
             charged = []
             for r in results:
+                if r.get("activity") == "business":
+                    r["text"] = _run_business(camp, r)
                 line = f"{r['character']}: {r['text']}"
                 if args.charge and r["cost_gp"]:
                     try:

@@ -528,6 +528,8 @@ _DM_ENDPOINTS = {
     "downtime_changed",
     # The party's common fund: treasury.py changes it; putting in and taking out is the players'.
     "treasury_changed",
+    # The party's stronghold: stronghold.py and the calendar change it, everyone reads it.
+    "stronghold_changed",
     # The DM's screen: everything the players do not see, and hidden rolls.
     "dm_screen", "dm_screen_data", "dm_screen_roll",
     # People met: people.py writes the notebook, everyone reads it.
@@ -2875,6 +2877,41 @@ def treasury_move():
     _broadcast({"treasury": view, "treasury_news": _treasury.describe(move["entry"]),
                 "treasury_by": move["character"]})
     return jsonify({"treasury": view, "purse": {"coins": move["purse"], "cp": _inventory.coins_cp(move["purse"])}}), 200
+
+
+# ─── The party's stronghold (stronghold.py) ──────────────────────────────────
+# The party's own place, in <campaign>/stronghold.json: works under way, upkeep,
+# staff, improvements. stronghold.py and the calendar change it; every screen
+# reads it; POST /stronghold says it changed, with what happened.
+import stronghold as _stronghold
+
+
+def _public_stronghold() -> Optional[dict]:
+    camp = re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]
+    if not camp:
+        return None
+    try:
+        return _stronghold.public_view(_stronghold.load(str(_find_campaign(camp) / "stronghold.json")))
+    except Exception:
+        return None
+
+
+@app.route("/stronghold", methods=["GET"])
+def stronghold_get():
+    if not _token_ok():
+        return "Forbidden", 403
+    return jsonify({"stronghold": _public_stronghold()}), 200
+
+
+@app.route("/stronghold", methods=["POST"])
+def stronghold_changed():
+    data = request.get_json(silent=True) or {}
+    payload = {"stronghold": _public_stronghold()}
+    news = data.get("news")
+    if isinstance(news, list) and news:
+        payload["stronghold_news"] = [str(n)[:240] for n in news[:4]]
+    _broadcast(payload)
+    return "", 204
 
 
 @app.route("/scene", methods=["POST"])

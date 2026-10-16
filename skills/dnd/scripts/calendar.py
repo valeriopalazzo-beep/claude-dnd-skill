@@ -597,6 +597,7 @@ def cmd_advance(campaign: str, amount: int, unit: str) -> None:
     print(f"  {label} → {_format_date(cal)}")
     _after_change(campaign, cal, before)
     _spend_supplies(campaign, total_hours, _abs_day(cal) - before)
+    _keep_stronghold(campaign, _abs_day(cal) - before)
 
 
 def cmd_rest(campaign: str, rest_type: str) -> None:
@@ -613,6 +614,7 @@ def cmd_rest(campaign: str, rest_type: str) -> None:
     print(f"  {label} → {_format_date(cal)}")
     _after_change(campaign, cal, before)
     _spend_supplies(campaign, 1 if rest_type == "short" else 8, _abs_day(cal) - before)
+    _keep_stronghold(campaign, _abs_day(cal) - before)
 
 
 def _spend_supplies(campaign: str, hours: float, days_crossed: int) -> None:
@@ -623,6 +625,21 @@ def _spend_supplies(campaign: str, hours: float, days_crossed: int) -> None:
             print(("  ⚠ Supplies: " if line.split(":")[0].isupper() else "  Supplies: ") + line)
     except Exception:
         pass   # supplies are a courtesy: the time has moved anyway
+
+
+def _keep_stronghold(campaign: str, days_crossed: int) -> None:
+    """The party's stronghold: works move on, upkeep is counted and billed (display/stronghold.py)."""
+    if days_crossed <= 0:
+        return
+    try:
+        import paths
+        if str(paths.display_dir()) not in sys.path:
+            sys.path.insert(0, str(paths.display_dir()))
+        import stronghold
+        for line in stronghold.tick(campaign, days_crossed):
+            print(("  ⚠ Stronghold: " if "NOT paid" in line else "  Stronghold: ") + line)
+    except Exception:
+        pass   # a courtesy: the time has moved anyway
 
 
 def cmd_now(campaign: str) -> None:

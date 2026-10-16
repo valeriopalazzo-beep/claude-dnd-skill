@@ -477,11 +477,38 @@ python3 ${CLAUDE_SKILL_DIR}/display/downtime.py projects                        
 | research | 1 gp a day; you decide what is found (one or two real leads) |
 | train | a language or a tool: 250 days in all at 1 gp a day, with a teacher; the days add up across stretches |
 | carouse | the lifestyle's cost; roll on your carousing table |
+| business | running a business (DMG p. 129): with the party's stronghold, `close` rolls d100 + days (max 30) − 10 per unpaid debt on it — it costs 1½, 1 or ½ of the upkeep of those days, covers itself, or earns 1d6 / 2d8 / 3d10 × 5 gp into the common fund; without one, the line reminds you of the table |
 | other | what the player wrote; you decide |
 
 - When every player has chosen, `[[DOWNTIME: every player has chosen … Lyra: train (Elfico); …]]` arrives with `check_input.py` — information, not an action.
 - `close --charge` pays each cost with `inventory.py pay`; one that cannot be paid is reported and left to you.
 - `--campaign NAME` works on another campaign; only the campaign on the display talks to the display.
+
+---
+
+## Stronghold — `display/stronghold.py`
+
+The party's own place, in `<campaign>/stronghold.json` (DMG 2014 pp. 127-129). Every screen has an **Our stronghold** panel: the works, the upkeep and when it is due, the staff, the improvements, what happened.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/display/stronghold.py kinds        # cost, days, upkeep, staff for each kind
+python3 ${CLAUDE_SKILL_DIR}/display/stronghold.py found "Torre di Vallombra" --kind tower --place Vallombra --build --pay fund
+python3 ${CLAUDE_SKILL_DIR}/display/stronghold.py found "La Rana Ubriaca" --kind inn_town --place Brezza   # owned already
+python3 ${CLAUDE_SKILL_DIR}/display/stronghold.py show
+python3 ${CLAUDE_SKILL_DIR}/display/stronghold.py present on   # someone of the party oversees the works (off: a third of the pace)
+python3 ${CLAUDE_SKILL_DIR}/display/stronghold.py pass 7       # days that pass without calendar.py
+python3 ${CLAUDE_SKILL_DIR}/display/stronghold.py upkeep [pay] [--from "Lyra"]
+python3 ${CLAUDE_SKILL_DIR}/display/stronghold.py hire "Berta" --role castellana [--wage 2gp]   /   fire "Berta"
+python3 ${CLAUDE_SKILL_DIR}/display/stronghold.py improve "Biblioteca" --cost 500gp --days 20 [--upkeep 1gp] [--pay fund]
+python3 ${CLAUDE_SKILL_DIR}/display/stronghold.py business 10 --by Lyra     # what downtime.py close does for "business"
+python3 ${CLAUDE_SKILL_DIR}/display/stronghold.py set --upkeep 30gp --skilled 10 --untrained 2 --place "…" --note "…"
+python3 ${CLAUDE_SKILL_DIR}/display/stronghold.py close
+```
+
+- Kinds: `abbey`, `farm`, `guildhall`, `hunting_lodge`, `inn_rural`, `inn_town`, `keep`, `noble_estate`, `outpost`, `palace`, `shop`, `temple_large`, `temple_small`, `tower`, `trading_post` (Italian names work: `torre`, `locanda`, `fortezza`…), or `custom` with `--upkeep`. The ones not in the DMG's building table need `--cost` and `--days` to be built.
+- The upkeep in the table already pays the staff; `--wage` on a named hireling adds to it, and so does a finished improvement's `--upkeep`.
+- Time: `calendar.py advance` / `rest` call it (`Stronghold:` lines). Works: one day per day with `present on`, one in three without (DMG: each day away adds three). Upkeep: counted from the day it stands, billed every 30 days from the common fund (`treasury.py`); what the fund cannot cover becomes a debt (`⚠ Stronghold: … NOT paid`) and each unpaid bill gives −10 to business rolls until `upkeep pay` settles everything.
+- `--pay fund` on `found --build` and `improve` takes the cost from the common fund (refused, with nothing changed, if it is short); without it the cost is yours to apply.
 
 ---
 

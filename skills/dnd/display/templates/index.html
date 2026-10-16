@@ -1478,6 +1478,33 @@
     color:inherit; background:transparent; border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
   #shop-pay button.sel{ color:var(--ln-on-accent, #1a1206); background:var(--ln-accent, #f2b544); border-color:var(--ln-accent, #f2b544); }
 
+  /* ══ The party's stronghold (stronghold.py) — works, upkeep, staff ══ */
+  #sh-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
+    align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  #sh-modal.open{ display:flex; }
+  #sh-panel{ width:min(540px, 100%); margin:auto 0; color:var(--ln-text, #ECE4D2); font-family:'Alegreya Sans','Syne',sans-serif; }
+  #sh-head{ display:flex; align-items:center; gap:10px; margin-bottom:12px; color:#ECE4D2; }
+  #sh-head h2{ flex:1; min-width:0; margin:0; font-size:22px; line-height:1.15; }
+  #sh-close{ flex:none; width:40px; height:40px; border-radius:999px; cursor:pointer; font-size:16px;
+    background:rgba(0,0,0,.35); color:inherit; border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #sh-body{ display:flex; flex-direction:column; gap:10px; }
+  .sh-box{ padding:13px 16px; border-radius:12px; background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
+  .sh-name{ font-size:22px; font-weight:800; }
+  .sh-sub{ margin:3px 0 0; font-size:15px; color:var(--ln-text-muted, #cdbfa6); }
+  .sh-line{ margin:0; font-size:16.5px; line-height:1.4; }
+  .sh-line + .sh-line{ margin-top:6px; }
+  .sh-debt{ color:#e2574c; font-weight:700; }
+  .sh-bar{ height:9px; margin:8px 0 4px; border-radius:5px; background:rgba(255,255,255,.12); overflow:hidden; }
+  .sh-bar i{ display:block; height:100%; background:var(--ln-accent, #f2b544); }
+  .sh-bar.done i{ background:#7fdc8a; }
+  .sh-imp + .sh-imp{ margin-top:10px; }
+  .sh-imp b{ font-size:16px; }
+  .sh-imp small{ display:block; font-size:13.5px; color:var(--ln-text-muted, #b9ab92); }
+  .sh-log{ list-style:none; margin:0; padding:0; font-size:15px; }
+  .sh-log li{ padding:6px 0; border-bottom:1px solid var(--ln-line, rgba(255,255,255,.1)); }
+  .sh-log li:last-child{ border-bottom:0; }
+  .sh-h{ margin:0 0 6px; font-size:13px; letter-spacing:.06em; text-transform:uppercase; color:var(--ln-text-muted, #b9ab92); }
+
   /* ══ Downtime (downtime.py) — what each character does between adventures ══ */
   #dt-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
     align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
@@ -5448,6 +5475,7 @@
     <button class="ph-set-opt" id="ph-clock-opt" type="button" hidden><span data-i18n="clock.title">Clocks</span><strong>◔</strong></button>
     <button class="ph-set-opt" id="ph-supplies-opt" type="button" hidden><span data-i18n="sup.title">Supplies</span><strong>🎒</strong></button>
     <button class="ph-set-opt" id="ph-treasury-opt" type="button" hidden><span data-i18n="tre.title">Common fund</span><strong>💰</strong></button>
+    <button class="ph-set-opt" id="ph-stronghold-opt" type="button" hidden><span data-i18n="sh.title">Our stronghold</span><strong>🏰</strong></button>
     <button class="ph-set-opt" id="ph-downtime-opt" type="button" hidden><span data-i18n="dt.title">Downtime</span><strong>⌂</strong></button>
     <label class="ph-set-opt ph-set-row" id="ph-skin-opt"><span data-i18n="ph.style">Style</span><select id="ph-skin-select" class="ph-set-select" aria-label="Display style"><option value="vellum">Vellum</option><option value="editorial">Editorial</option><option value="lanterna">Lanterna</option></select></label>
     <label class="ph-set-opt ph-set-row" id="ph-lang-opt"><span data-i18n="settings.language">Language</span><select id="ph-lang-select" class="ph-set-select" aria-label="Display language" data-i18n-aria="settings.language"></select></label>
@@ -5667,6 +5695,17 @@
   </div>
 </div>
 
+<!-- The party's stronghold (stronghold.py) -->
+<div id="sh-modal">
+  <div id="sh-panel" role="dialog" aria-labelledby="sh-title">
+    <div id="sh-head">
+      <h2 id="sh-title" data-i18n="sh.title">Our stronghold</h2>
+      <button id="sh-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
+    </div>
+    <div id="sh-body"></div>
+  </div>
+</div>
+
 <!-- Bestiary: what the party has learned about the creatures it met, from bestiary.py -->
 <div id="beast-modal">
   <div id="beast-panel" role="dialog" aria-labelledby="beast-title">
@@ -5880,6 +5919,7 @@
   <symbol id="ln-i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></symbol>
   <symbol id="ln-i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
   <symbol id="ln-i-chest" viewBox="0 0 24 24"><path d="M3 10a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v9H3z"/><path d="M3 12h18"/><path d="M10.5 11h3v3h-3z"/></symbol>
+  <symbol id="ln-i-castle" viewBox="0 0 24 24"><path d="M4 21V9h3v2h2V9h2v2h2V9h2v2h2V9h3v12z"/><path d="M10 21v-4a2 2 0 0 1 4 0v4"/><path d="M12 9V3l4 1.5L12 6"/></symbol>
   <symbol id="ln-i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></symbol>
   <symbol id="ln-i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
   <symbol id="ln-i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2v10l7 7"/></symbol>
@@ -5941,6 +5981,7 @@
       <button class="ln-item" type="button" id="ln-clocks" title="Clocks" data-i18n-title="clock.title" hidden><svg class="ln-i"><use href="#ln-i-clock"/></svg><span class="ln-lbl" data-i18n="clock.title">Clocks</span></button>
       <button class="ln-item" type="button" id="ln-supplies" title="Supplies" data-i18n-title="sup.title" hidden><svg class="ln-i"><use href="#ln-i-pack"/></svg><span class="ln-lbl" data-i18n="sup.title">Supplies</span></button>
       <button class="ln-item" type="button" id="ln-treasury" title="Common fund" data-i18n-title="tre.title" hidden><svg class="ln-i"><use href="#ln-i-chest"/></svg><span class="ln-lbl" data-i18n="tre.title">Common fund</span></button>
+      <button class="ln-item" type="button" id="ln-stronghold" title="Our stronghold" data-i18n-title="sh.title" hidden><svg class="ln-i"><use href="#ln-i-castle"/></svg><span class="ln-lbl" data-i18n="sh.title">Our stronghold</span></button>
       <button class="ln-item" type="button" id="ln-downtime" title="Downtime" data-i18n-title="dt.title" hidden><svg class="ln-i"><use href="#ln-i-downtime"/></svg><span class="ln-lbl" data-i18n="dt.title">Downtime</span></button>
       <button class="ln-item" type="button" id="ln-beast" title="Bestiary" data-i18n-title="beast.title" hidden><svg class="ln-i"><use href="#ln-i-beast"/></svg><span class="ln-lbl" data-i18n="beast.title">Bestiary</span><span class="ln-badge" id="ln-badge-beast" data-i18n="beast.new" hidden>New</span></button>
       <button class="ln-item" type="button" id="ln-people" title="People met" data-i18n-title="people.title" hidden><svg class="ln-i"><use href="#ln-i-people"/></svg><span class="ln-lbl" data-i18n="people.title">People met</span><span class="ln-badge" id="ln-badge-people" data-i18n="people.new" hidden>New</span></button>
@@ -6027,6 +6068,7 @@
         <button class="ln-item" type="button" id="ln-clocks-more" data-ln-proxy="ln-clocks" hidden><svg class="ln-i"><use href="#ln-i-clock"/></svg><span class="ln-lbl" data-i18n="clock.title">Clocks</span></button>
         <button class="ln-item" type="button" id="ln-supplies-more" data-ln-proxy="ln-supplies" hidden><svg class="ln-i"><use href="#ln-i-pack"/></svg><span class="ln-lbl" data-i18n="sup.title">Supplies</span></button>
         <button class="ln-item" type="button" id="ln-treasury-more" data-ln-proxy="ln-treasury" hidden><svg class="ln-i"><use href="#ln-i-chest"/></svg><span class="ln-lbl" data-i18n="tre.title">Common fund</span></button>
+        <button class="ln-item" type="button" id="ln-stronghold-more" data-ln-proxy="ln-stronghold" hidden><svg class="ln-i"><use href="#ln-i-castle"/></svg><span class="ln-lbl" data-i18n="sh.title">Our stronghold</span></button>
         <button class="ln-item" type="button" id="ln-downtime-more" data-ln-proxy="ln-downtime" hidden><svg class="ln-i"><use href="#ln-i-downtime"/></svg><span class="ln-lbl" data-i18n="dt.title">Downtime</span></button>
         <button class="ln-item" type="button" id="ln-beast-more" data-ln-proxy="ln-beast" hidden><svg class="ln-i"><use href="#ln-i-beast"/></svg><span class="ln-lbl" data-i18n="beast.title">Bestiary</span></button>
         <button class="ln-item" type="button" id="ln-people-more" data-ln-proxy="ln-people" hidden><svg class="ln-i"><use href="#ln-i-people"/></svg><span class="ln-lbl" data-i18n="people.title">People met</span></button>
@@ -11343,6 +11385,7 @@ function connect() {
     }
     if (('shop' in payload || payload.shop_sale) && typeof window._onShop === 'function') window._onShop(payload);
     if ('treasury' in payload && typeof window._onTreasury === 'function') window._onTreasury(payload);
+    if ('stronghold' in payload && typeof window._onStronghold === 'function') window._onStronghold(payload);
     if (payload.device_request) {
       _showDeviceRequest(payload.device_request);
     }
@@ -11969,6 +12012,114 @@ function _treasuryEntry(e) {
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   load();
+})();
+
+// ── The party's stronghold (stronghold.py) ────────────────────────────
+// Read-only on every screen: the works, the upkeep and when it is due, the
+// staff, the improvements and what happened. _strongholdPlan turns the
+// server's view into the lines the panel draws.
+function _strongholdPlan(sh) {
+  if (!sh) return null;
+  const pct = (done, need) => need ? Math.max(0, Math.min(100, Math.round(done * 100 / need))) : 100;
+  const num = n => String(n).replace('.', window._LANG && window._LANG.startsWith('it') ? ',' : '.');
+  const coins = t => (typeof _coinsLocal === 'function' ? _coinsLocal(t) : t);
+  const plan = {
+    name: sh.name,
+    sub: [_t('sh.kind.' + sh.kind, null, String(sh.kind).replace(/_/g, ' ')), sh.place].filter(Boolean).join(' · '),
+    note: sh.note || '',
+    build: null,
+    upkeep: sh.daily_cp ? _t('sh.upkeep', { coins: coins(sh.daily) }, 'Upkeep: ' + sh.daily + ' a day') : '',
+    due: sh.next_bill_days !== null && sh.next_bill_days !== undefined
+      ? _t('sh.due', { n: num(sh.next_bill_days) }, 'next payment in ' + sh.next_bill_days + ' days') : '',
+    debt: sh.debt ? _t('sh.debt', { coins: coins(sh.debt) }, 'Debt: ' + sh.debt) : '',
+    staff: _t('sh.staff', { s: sh.skilled || 0, u: sh.untrained || 0 }, (sh.skilled || 0) + ' skilled hirelings, ' + (sh.untrained || 0) + ' untrained'),
+    people: (sh.staff || []).map(p => p.name + (p.role ? ' (' + p.role + ')' : '')),
+    improvements: (sh.improvements || []).map(i => ({ name: i.name, pct: pct(i.days_done, i.days_needed), done: !!i.done,
+      text: i.done ? _t('sh.done', null, 'finished') : _t('sh.days', { d: num(i.days_done), n: i.days_needed }, i.days_done + ' of ' + i.days_needed + ' days') })),
+    log: (sh.log || []).map(e => {
+      if (!e.key) return e.text;
+      const v = Object.assign({}, e.vars || {});
+      ['coins', 'debt'].forEach(k => { if (v[k]) v[k] = coins(v[k]); });
+      if (v.gp) v.gp = coins(v.gp + 'gp');
+      return _t('sh.log.' + e.key, v, e.text);
+    }),
+  };
+  if (sh.build && !sh.build.done) {
+    plan.build = { pct: pct(sh.build.days_done, sh.build.days_needed),
+      text: _t('sh.building', { d: num(sh.build.days_done), n: sh.build.days_needed }, 'Being built: ' + sh.build.days_done + ' of ' + sh.build.days_needed + ' days of work'),
+      away: sh.present ? '' : _t('sh.away', null, 'Nobody of the party is there: the works go at a third of the pace.') };
+  }
+  return plan;
+}
+// ── end stronghold plan ──
+
+(function _initStronghold() {
+  const modal = document.getElementById('sh-modal');
+  if (!modal) return;
+  const $ = id => document.getElementById(id);
+  const body = $('sh-body');
+  let sh = null;
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+  const bar = (pct, done) => { const b = el('div', 'sh-bar' + (done ? ' done' : '')); const i = el('i'); i.style.width = pct + '%'; b.appendChild(i); return b; };
+
+  function render() {
+    ['ln-stronghold', 'ln-stronghold-more', 'ph-stronghold-opt'].forEach(id => { const e = $(id); if (e) e.hidden = !sh; });
+    body.textContent = '';
+    if (!sh) { modal.classList.remove('open'); return; }
+    const plan = _strongholdPlan(sh);
+    const head = el('div', 'sh-box');
+    head.appendChild(el('div', 'sh-name', plan.name));
+    if (plan.sub) head.appendChild(el('p', 'sh-sub', plan.sub));
+    if (plan.note) head.appendChild(el('p', 'sh-sub', plan.note));
+    body.appendChild(head);
+    if (plan.build) {
+      const box = el('div', 'sh-box');
+      box.appendChild(el('p', 'sh-line', plan.build.text));
+      box.appendChild(bar(plan.build.pct, false));
+      if (plan.build.away) box.appendChild(el('p', 'sh-sub', plan.build.away));
+      body.appendChild(box);
+    }
+    const money = el('div', 'sh-box');
+    if (plan.upkeep) money.appendChild(el('p', 'sh-line', plan.upkeep + (plan.due ? ' · ' + plan.due : '')));
+    if (plan.debt) money.appendChild(el('p', 'sh-line sh-debt', '⚠ ' + plan.debt));
+    money.appendChild(el('p', 'sh-line', plan.staff + (plan.people.length ? ' — ' + plan.people.join(', ') : '')));
+    body.appendChild(money);
+    if (plan.improvements.length) {
+      const box = el('div', 'sh-box');
+      box.appendChild(el('p', 'sh-h', _t('sh.improvements', null, 'Improvements')));
+      plan.improvements.forEach(i => {
+        const row = el('div', 'sh-imp');
+        row.appendChild(el('b', '', i.name));
+        row.appendChild(bar(i.pct, i.done));
+        row.appendChild(el('small', '', i.text));
+        box.appendChild(row);
+      });
+      body.appendChild(box);
+    }
+    if (plan.log.length) {
+      const box = el('div', 'sh-box');
+      box.appendChild(el('p', 'sh-h', _t('sh.log', null, 'What happened')));
+      const ul = el('ul', 'sh-log');
+      plan.log.forEach(t => ul.appendChild(el('li', '', t)));
+      box.appendChild(ul);
+      body.appendChild(box);
+    }
+  }
+  window._onStronghold = function (payload) {
+    sh = payload.stronghold || null;
+    render();
+    (payload.stronghold_news || []).slice(0, 2).forEach((line, i) =>
+      setTimeout(() => _showToast((/NOT paid/.test(line) ? '⚠ ' : '🏰 ') + (/NOT paid/.test(line) ? _t('sh.toast.unpaid', null, line)
+        : /is finished$/.test(line) ? _t('sh.toast.finished', { name: line.replace(/ is finished$/, '') }, line) : line), 6000), i * 700));
+  };
+  const open = () => { if (!sh) return; modal.classList.add('open'); render(); };
+  const close = () => modal.classList.remove('open');
+  ['ln-stronghold', 'ph-stronghold-opt'].forEach(id => { const e = $(id); if (e) e.addEventListener('click', open); });
+  $('sh-close').addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  fetch('/stronghold', { headers: _authHeaders() }).then(r => r.ok ? r.json() : null)
+    .then(d => { if (d) { sh = d.stronghold; render(); } }).catch(() => {});
 })();
 
 // ── Bestiary (bestiary.py) ────────────────────────────────────────────
