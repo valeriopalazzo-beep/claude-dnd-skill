@@ -67,6 +67,32 @@ tokens see: a room lit by a spell, a hall seen from a balcony. A foe, npc or
 neutral token standing where nobody is looking is not drawn at all — write
 the whole map, the script decides what shows.
 
+Light and vision (PHB 2014 pp. 183-185): a header line sets the light of the
+place, and the map shades what is dim or dark; with fog on, the party sees
+only what its light and its eyes reach.
+    light: dark        dark | dim | bright (Italian: buio | fioca | intensa)
+In the legend section, a light source stands on a square or is carried by a
+token (it moves with it):
+    light 4,5 torch                  luce 4,5 torcia
+    light A lantern                  Aldric carries a hooded lantern
+    light B bullseye E               a bullseye lantern's cone, pointing east
+    light 9,2 20ft/20ft              bright 20 ft, then dim 20 ft more (one size: both)
+Kinds: candle, torch, lamp, lantern (hooded), hooded-low, bullseye, light,
+daylight, continual-flame, dancing-lights, produce-flame, flame-blade, fire
+(Italian names too). A `!` square (fire, brazier) lights its surroundings as
+`fire` does. Walls and closed doors stop light as they stop the eye.
+A token's senses go after its side; PCs without them are read from their
+sheets (Darkvision / Scurovisione and its range):
+    A: Aldric | pc | darkvision 18m
+    g: Goblin | foe | darkvision 60ft
+    k: Melma | foe | blindsight 3m       also truesight, devil's sight
+Darkvision sees dim light as bright and darkness as dim, in grey; a `dark`
+effect (`@ … dark`, e.g. the Darkness spell) is magical darkness: only
+truesight, devil's sight and blindsight get through. The script prints, for
+the DM, who sees whom and how well — dim light and darkvision mean lightly
+obscured (disadvantage on Perception by sight); not seen means attacks
+against it have advantage and its own attacks disadvantage.
+
 Usage:
     python3 map_render.py << 'DNDEND'  ...map...  DNDEND      # render + show
     python3 map_render.py --file map.txt --no-send             # render only
@@ -108,7 +134,7 @@ SIDES = {
 SIDE_ALIASES = {"enemy": "foe", "monster": "foe", "hostile": "foe",
                 "player": "pc", "friend": "ally", "friendly": "ally"}
 
-HEADER_KEYS = ("title", "scale", "titolo", "scala", "art", "fog", "nebbia", "sight", "vista")
+HEADER_KEYS = ("title", "scale", "titolo", "scala", "art", "fog", "nebbia", "sight", "vista", "light", "luce")
 # effect kind → (fill, glyph)
 EFFECTS = {
     "fire": ("#ff6a1a", "✹"), "magic": ("#9b5de5", "✦"), "cold": ("#5fc4ef", "❄"),
@@ -158,6 +184,32 @@ class MapSpec:
     fog_reset: bool = False  # forget what was seen on earlier sends
     sight: int = 0           # squares; 0 = SIGHT_DEFAULT
     reveal: list = field(default_factory=list)   # (x0, y0, x1, y1) lit whatever the tokens see
+    light: str = ""          # the place's light: "", bright, dim or dark ("" = no light model)
+    lights: list = field(default_factory=list)   # LightSource
+    vision: dict = field(default_factory=dict)   # letter → Vision written in the legend
+
+
+@dataclass
+class Vision:
+    """How far (in squares) a creature sees without light, or past it."""
+    dark: float = 0.0     # darkvision
+    blind: float = 0.0    # blindsight
+    true: float = 0.0     # truesight
+    devil: float = 0.0    # devil's sight: darkness, magical too, as if lit
+
+    def __bool__(self):
+        return bool(self.dark or self.blind or self.true or self.devil)
+
+
+@dataclass
+class LightSource:
+    x: int                # where it shines from (a carried light: its token's square)
+    y: int
+    bright: float         # squares of bright light
+    dim: float            # squares of dim light beyond the bright
+    kind: str = ""
+    token: str = ""       # the letter of the token carrying it
+    direction: tuple = None   # a cone (bullseye lantern) pointing this way
 
 
 @dataclass
@@ -321,6 +373,113 @@ def _parse_effect(line: str, w: int, h: int, warnings: list):
     return Effect(x0, y0, x1, y1, kind, (label or "").strip())
 
 
+# Light sources: kind → (bright ft, dim ft beyond the bright, cone?). PHB 2014
+# p. 152-153 (candle, lamp, lanterns, torch) and the spells' own text (light,
+# daylight, continual flame = a torch, dancing lights, produce flame, flame
+# blade). `fire` — a brazier or a campfire — is the script's choice: the PHB
+# gives no number for it, so it shines like produce flame.
+LIGHT_KINDS = {
+    "candle": (5, 5, False), "torch": (20, 20, False), "lamp": (15, 30, False), "lantern": (30, 30, False),
+    "hooded-low": (0, 5, False), "bullseye": (60, 60, True), "light": (20, 20, False),
+    "daylight": (60, 60, False), "continual-flame": (20, 20, False), "dancing-lights": (0, 10, False),
+    "produce-flame": (10, 10, False), "flame-blade": (10, 10, False), "fire": (10, 10, False),
+}
+LIGHT_WORDS = {
+    "candela": "candle", "candele": "candle", "torcia": "torch", "torce": "torch", "lampada": "lamp",
+    "lanterna": "lantern", "hooded": "lantern", "hooded-lantern": "lantern", "lanterna-schermabile": "lantern",
+    "schermabile": "lantern", "lantern-low": "hooded-low", "lanterna-abbassata": "hooded-low",
+    "lanterna-schermabile-abbassata": "hooded-low", "bullseye-lantern": "bullseye",
+    "lanterna-a-lente-sporgente": "bullseye", "lente-sporgente": "bullseye", "luce": "light",
+    "light-spell": "light", "luce-diurna": "daylight", "fiamma-perenne": "continual-flame",
+    "luci-danzanti": "dancing-lights", "produrre-fiamma": "produce-flame", "lama-infuocata": "flame-blade",
+    "fuoco": "fire", "braciere": "fire", "brazier": "fire", "campfire": "fire", "falò": "fire", "fiamma": "fire",
+}
+LIGHT_LEVELS = {"bright": 2, "dim": 1, "dark": 0, "intensa": 2, "luminoso": 2, "giorno": 2, "day": 2,
+                "fioca": 1, "penombra": 1, "crepuscolo": 1, "buio": 0, "oscurità": 0, "oscurita": 0, "notte": 0,
+                "night": 0, "darkness": 0}
+LIGHT_NAMES = {2: "bright", 1: "dim", 0: "dark"}
+SENSES = {"darkvision": "dark", "superior-darkvision": "dark", "scurovisione": "dark",
+          "scurovisione-superiore": "dark", "blindsight": "blind", "vista-cieca": "blind",
+          "percezione-cieca": "blind", "truesight": "true", "vista-pura": "true", "visione-del-vero": "true",
+          "devil's-sight": "devil", "devils-sight": "devil", "devil-sight": "devil", "vista-del-diavolo": "devil"}
+SENSE_DEFAULT_FT = {"dark": 60, "blind": 10, "true": 120, "devil": 120}
+_LIGHT_RE = re.compile(r"^(?:light|luce)\s+(\S+)\s*(.*)$", re.I)
+
+
+def _light_size(word: str, per_foot: float):
+    """'20ft/20ft' → (bright, dim) squares; '20ft' → the same for both; None when not a size."""
+    parts = word.split("/")
+    if len(parts) > 2:
+        return None
+    sizes = [_size(p, per_foot) if p not in ("0", "") else 0.0 for p in parts]
+    if any(s is None for s in sizes):
+        return None
+    return (sizes[0], sizes[-1])
+
+
+def _parse_light(line: str, w: int, h: int, warnings: list, per_foot: float):
+    """A `light <x,y | letter> [kind] [bright/dim] [direction]` line as a LightSource (position unresolved for a token)."""
+    m = _LIGHT_RE.match(line.strip())
+    if not m:
+        return None
+    where, rest = m.group(1), m.group(2).split()
+    token, x, y = "", -1, -1
+    pos = re.fullmatch(r"(\d+)\s*,\s*(\d+)", where)
+    if pos:
+        x, y = int(pos.group(1)) - 1, int(pos.group(2)) - 1
+        if not (0 <= x < w and 0 <= y < h):
+            warnings.append(f"light outside the map: {line.strip()!r}")
+            return False
+    elif len(where) == 1 and where.isalpha():
+        token = where
+    else:
+        warnings.append(f"light: {where!r} is neither col,row nor a token letter in {line.strip()!r}")
+        return False
+    kind, size, direction, words = "", None, None, []
+    for word in rest:
+        if word.upper() in DIRECTIONS and direction is None:
+            direction = DIRECTIONS[word.upper()]
+        elif size is None and _light_size(word, per_foot) is not None:
+            size = _light_size(word, per_foot)
+        else:
+            words.append(word.lower())
+    if words:
+        name = "-".join(words)
+        kind = LIGHT_WORDS.get(name, name)
+        if kind not in LIGHT_KINDS:
+            warnings.append(f"light: unknown kind {name!r} — a torch: {line.strip()!r}")
+            kind = "torch"
+    elif size is None:
+        kind = "torch"
+    if size is None:
+        bright, dim, cone = LIGHT_KINDS[kind]
+        size = (bright * per_foot, dim * per_foot)
+        if cone and direction is None:
+            warnings.append(f"{kind} without a direction — pointing east: {line.strip()!r}")
+            direction = DIRECTIONS["E"]
+        if not cone:
+            direction = None
+    return LightSource(x, y, size[0], size[1], kind or "custom", token, direction)
+
+
+def parse_senses(text: str, per_foot: float, warnings: list = None) -> Vision:
+    """'darkvision 18m, blindsight 3m' → Vision (in squares). Unknown words are reported, not guessed."""
+    vis = Vision()
+    for part in re.split(r"[,;]", text or ""):
+        words = part.strip().lower().split()
+        if not words:
+            continue
+        size = _size(words[-1], per_foot) if len(words) > 1 else None
+        name = "-".join(words[:-1] if size is not None else words)
+        sense = SENSES.get(name)
+        if sense is None:
+            if warnings is not None:
+                warnings.append(f"sense {part.strip()!r} not understood (darkvision, blindsight, truesight, devil's sight)")
+            continue
+        setattr(vis, sense, size if size is not None else SENSE_DEFAULT_FT[sense] * per_foot)
+    return vis
+
+
 def parse(text: str) -> MapSpec:
     spec = MapSpec()
     lines = text.replace("\r", "").replace("\t", "    ").split("\n")
@@ -359,6 +518,12 @@ def parse(text: str) -> MapSpec:
                         spec.sight = min(int(num.group(1)), MAX_W)
                     else:
                         spec.warnings.append(f"sight is a number of squares, not {v.strip()!r} — using {SIGHT_DEFAULT}")
+                elif k in ("light", "luce"):
+                    word = v.strip().lower()
+                    if word in LIGHT_LEVELS:
+                        spec.light = LIGHT_NAMES[LIGHT_LEVELS[word]]
+                    elif word not in ("", "off", "no"):
+                        spec.warnings.append(f"light is dark, dim or bright, not {v.strip()!r} — no light model")
         sections = sections[1:]
 
     grid = sections[0]
@@ -392,18 +557,43 @@ def parse(text: str) -> MapSpec:
                 if area:
                     spec.reveal.append((area.x0, area.y0, area.x1, area.y1))
                 continue
+            if _LIGHT_RE.match(l.strip()) and ":" not in l.split()[0]:
+                src = _parse_light(l, width, len(spec.rows), spec.warnings, squares_per_foot(spec))
+                if src:
+                    spec.lights.append(src)
+                continue
             if ":" not in l:
                 continue
             k, v = l.split(":", 1)
             k = k.strip()
             if len(k) != 1 or not k.isalpha():
                 continue
-            name, _, side = v.partition("|")
-            side = side.strip().lower()
+            parts = [p.strip() for p in v.split("|")]
+            name, rest = parts[0], parts[1:]
+            side = rest[0].lower() if rest else ""
             side = SIDE_ALIASES.get(side, side)
-            if side not in SIDES:
+            if side in SIDES:
+                rest = rest[1:]
+            else:
                 side = "pc" if k.isupper() else "foe"
-            spec.legend[k] = (name.strip() or k, side)
+            spec.legend[k] = (name or k, side)
+            if rest:
+                vis = parse_senses(", ".join(rest), squares_per_foot(spec), spec.warnings)
+                if vis:
+                    spec.vision[k] = vis
+
+    carried = []
+    for src in spec.lights:
+        if src.token:
+            at = token_position(spec, src.token)
+            if at is None:
+                spec.warnings.append(f"light carried by {src.token!r}, but no such token is on the map — left out")
+                continue
+            src.x, src.y = at
+        carried.append(src)
+    spec.lights = carried
+    if spec.lights and not spec.light:
+        spec.warnings.append("light sources but no `light:` line in the header — they change nothing until it says dark or dim")
 
     for y, row in enumerate(spec.rows):
         for x, ch in enumerate(row):
@@ -518,7 +708,12 @@ FOG_DARK, FOG_DIM = "#14100b", 0.5
 
 
 def visible_cells(spec: MapSpec) -> set:
-    """Squares some pc or ally token sees right now, plus the `?` areas the DM lit."""
+    """Squares some pc or ally token sees right now, plus the `?` areas the DM lit.
+
+    With a `light:` line, what they see depends on the light and their eyes too
+    (see party_view)."""
+    if spec.light:
+        return set(party_view(spec, light_levels(spec)))
     w, h = len(spec.rows[0]), len(spec.rows)
     blocks = [[_cell_kind(spec, x, y) in FOG_BLOCKS for x in range(w)] for y in range(h)]
     radius = spec.sight if spec.sight > 0 else SIGHT_DEFAULT
@@ -553,6 +748,357 @@ def visible_cells(spec: MapSpec) -> set:
     for (x0, y0, x1, y1) in spec.reveal:
         seen.update((x, y) for y in range(y0, y1 + 1) for x in range(x0, x1 + 1))
     return seen
+
+
+# ── Light and vision ─────────────────────────────────────────────────────────
+# PHB 2014 pp. 183-185. Every square is bright, dim or dark: the place's light
+# (`light:`), raised by the light sources that reach it in a straight line.
+# Dim light and darkness seen through darkvision are lightly obscured
+# (disadvantage on Perception by sight); darkness is heavily obscured, so what
+# stands in it is not seen at all. Magical darkness (a `dark` effect) lets
+# only truesight, devil's sight and blindsight through.
+
+EPS = 1e-6
+CLEAR, DIM_SEEN, GREY_SEEN, SENSED = 3, 2, 1, 0      # how well a square is seen
+QUALITY_NAMES = {CLEAR: "", DIM_SEEN: "dim", GREY_SEEN: "darkvision, grey", SENSED: "blindsight only"}
+WHERE_NAMES = {2: "in bright light", 1: "in dim light", 0: "in darkness", -1: "in magical darkness"}
+LIGHT_SHADE = {1: ("#0b0d1a", 0.36), 0: ("#06070d", 0.72), -1: ("#000000", 0.88)}     # no fog: the place's light
+VIEW_SHADE = {DIM_SEEN: ("#0b0d1a", 0.34), GREY_SEEN: ("#2b3646", 0.55), SENSED: ("#06070d", 0.72)}  # fog: as seen
+LIGHT_KEY = {"it": ("luce intensa", "luce fioca", "buio", "scurovisione"),
+             "en": ("bright light", "dim light", "darkness", "darkvision")}
+
+
+def token_position(spec: MapSpec, letter: str):
+    """(x, y) of the first square holding that token, or None."""
+    for y, row in enumerate(spec.rows):
+        x = row.find(letter)
+        if x >= 0:
+            return (x, y)
+    return None
+
+
+def _blocks(spec: MapSpec) -> list:
+    return [[_cell_kind(spec, x, y) in FOG_BLOCKS for x in range(len(spec.rows[0]))] for y in range(len(spec.rows))]
+
+
+def _clear(blocks: list, vx: int, vy: int, tx: int, ty: int) -> bool:
+    """Nothing that blocks stands on the straight line between two squares (the ends excluded)."""
+    steps = max(abs(tx - vx), abs(ty - vy))
+    for i in range(1, steps):
+        if blocks[int(vy + (ty - vy) * i / steps + 0.5)][int(vx + (tx - vx) * i / steps + 0.5)]:
+            return False
+    return True
+
+
+def all_lights(spec: MapSpec) -> list:
+    """The legend's light sources, plus every `!` square (a fire lights what is around it)."""
+    out = list(spec.lights)
+    per_foot = squares_per_foot(spec)
+    bright, dim, _cone = LIGHT_KINDS["fire"]
+    for y, row in enumerate(spec.rows):
+        for x, ch in enumerate(row):
+            if ch == "!":
+                out.append(LightSource(x, y, bright * per_foot, dim * per_foot, "fire"))
+    return out
+
+
+def light_levels(spec: MapSpec) -> dict:
+    """(x, y) → 2 bright, 1 dim, 0 dark, -1 magical darkness; {} without a `light:` line."""
+    import math
+    if not spec.light:
+        return {}
+    w, h = len(spec.rows[0]), len(spec.rows)
+    blocks = _blocks(spec)
+    ambient = LIGHT_LEVELS[spec.light]
+    level = {(x, y): ambient for y in range(h) for x in range(w)}
+    if ambient < 2:
+        for src in all_lights(spec):
+            reach = src.bright + src.dim
+            if src.direction:
+                cone, _ = template_cells("cone", src.x, src.y, reach, 1.0, src.direction)
+                cand = set(cone) | {(src.x, src.y)}
+            else:
+                r = int(reach) + 1
+                cand = {(i, j) for j in range(src.y - r, src.y + r + 1) for i in range(src.x - r, src.x + r + 1)}
+            for (i, j) in cand:
+                if not (0 <= i < w and 0 <= j < h) or blocks[j][i]:
+                    continue
+                d = math.hypot(i - src.x, j - src.y)
+                if d > reach + EPS or not _clear(blocks, src.x, src.y, i, j):
+                    continue
+                lv = 2 if d <= src.bright + EPS else 1
+                if lv > level[(i, j)]:
+                    level[(i, j)] = lv
+        # A wall or a door is as lit as the brightest open square next to it.
+        for y in range(h):
+            for x in range(w):
+                if blocks[y][x]:
+                    near = [level[(x + dx, y + dy)] for dy in (-1, 0, 1) for dx in (-1, 0, 1)
+                            if 0 <= x + dx < w and 0 <= y + dy < h and not blocks[y + dy][x + dx]]
+                    level[(x, y)] = max([ambient] + near)
+    for e in spec.effects:
+        if e.kind == "dark":
+            cells = e.cells if e.cells is not None else {(x, y) for y in range(e.y0, e.y1 + 1) for x in range(e.x0, e.x1 + 1)}
+            for c in cells:
+                if c in level:
+                    level[c] = -1
+    return level
+
+
+def sees(vis, d: float, lv: int):
+    """How well eyes `vis` see a square `d` squares away lit at `lv`: CLEAR, DIM_SEEN, GREY_SEEN, SENSED or None."""
+    vis = vis or Vision()
+
+    def within(r):
+        return r > 0 and d <= r + EPS
+    if lv == -1:
+        if within(vis.true) or within(vis.devil):
+            return CLEAR
+        return SENSED if within(vis.blind) else None
+    if lv == 2:
+        return CLEAR
+    if lv == 1:
+        return CLEAR if within(vis.dark) or within(vis.true) or within(vis.devil) else DIM_SEEN
+    if within(vis.true) or within(vis.devil):
+        return CLEAR
+    if within(vis.dark):
+        return GREY_SEEN
+    return SENSED if within(vis.blind) else None
+
+
+def viewer_sees(spec, level, blocks, vx, vy, vis, tx, ty, radius):
+    import math
+    if (tx, ty) == (vx, vy):
+        q = sees(vis, 0.0, level[(tx, ty)])
+        return SENSED if q is None else q      # a creature knows where it stands
+    d = math.hypot(tx - vx, ty - vy)
+    if d > radius + 0.5 or not _clear(blocks, vx, vy, tx, ty):
+        return None
+    return sees(vis, d, level[(tx, ty)])
+
+
+def _sight_radius(spec: MapSpec) -> int:
+    # With a light model the light limits the eye; `sight:` still caps it when written.
+    return spec.sight if spec.sight > 0 else max(len(spec.rows[0]), len(spec.rows))
+
+
+def _side(spec: MapSpec, ch: str) -> str:
+    return spec.legend.get(ch, (ch, "pc" if ch.isupper() else "foe"))[1]
+
+
+def party_view(spec: MapSpec, level: dict) -> dict:
+    """(x, y) → how well the party (pc and ally tokens) sees it, for every square someone sees."""
+    w, h = len(spec.rows[0]), len(spec.rows)
+    blocks = _blocks(spec)
+    radius = _sight_radius(spec)
+    view = {}
+    for vy, row in enumerate(spec.rows):
+        for vx, ch in enumerate(row):
+            if not ch.isalpha() or _side(spec, ch) not in ("pc", "ally"):
+                continue
+            vis = spec.vision.get(ch)
+            for ty in range(max(0, vy - radius), min(h, vy + radius + 1)):
+                for tx in range(max(0, vx - radius), min(w, vx + radius + 1)):
+                    if blocks[ty][tx] and (tx, ty) != (vx, vy):
+                        continue
+                    q = viewer_sees(spec, level, blocks, vx, vy, vis, tx, ty, radius)
+                    if q is not None and q > view.get((tx, ty), -1):
+                        view[(tx, ty)] = q
+    # The walls and doors that close a seen open square are seen as well as it.
+    for (x, y), q in list(view.items()):
+        if blocks[y][x]:
+            continue
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < w and 0 <= ny < h and blocks[ny][nx] and _cell_kind(spec, nx, ny) != "void":
+                    view[(nx, ny)] = max(view.get((nx, ny), -1), q)
+    for (x0, y0, x1, y1) in spec.reveal:
+        view.update({(x, y): CLEAR for y in range(y0, y1 + 1) for x in range(x0, x1 + 1)})
+    return view
+
+
+def _feet(squares: float, spec: MapSpec) -> str:
+    return f"{round(squares / squares_per_foot(spec))} ft"
+
+
+def sight_report(spec: MapSpec, level: dict) -> list:
+    """For the DM: who sees whom on this map, and how well (only with a light model)."""
+    if not level:
+        return []
+    blocks = _blocks(spec)
+    radius = _sight_radius(spec)
+    tokens = []
+    for y, row in enumerate(spec.rows):
+        for x, ch in enumerate(row):
+            if ch.isalpha() and all(t[0] != ch for t in tokens):
+                tokens.append((ch, x, y))
+    party = [t for t in tokens if _side(spec, t[0]) in ("pc", "ally")]
+    others = [t for t in tokens if _side(spec, t[0]) not in ("pc", "ally")]
+    lines = []
+    for viewer in party + others:
+        ch, vx, vy = viewer
+        vis = spec.vision.get(ch)
+        name = spec.legend.get(ch, (ch, ""))[0]
+        senses = ", ".join(f"{label} {_feet(getattr(vis, attr), spec)}" for attr, label in
+                           (("dark", "darkvision"), ("blind", "blindsight"), ("true", "truesight"), ("devil", "devil's sight"))
+                           if vis and getattr(vis, attr))
+        seen, unseen = [], []
+        for t, tx, ty in (others if viewer in party else party):
+            q = viewer_sees(spec, level, blocks, vx, vy, vis, tx, ty, radius)
+            if q is None:
+                unseen.append(t)
+            else:
+                seen.append(t + (f" ({QUALITY_NAMES[q]})" if QUALITY_NAMES[q] else ""))
+        head = f"{name} ({ch}, {WHERE_NAMES[level[(vx, vy)]]}" + (f", {senses}" if senses else "") + ")"
+        lines.append(f"{head} sees: {', '.join(seen) or 'nobody'}" + (f"; does not see: {', '.join(unseen)}" if unseen else ""))
+    blind = [t[0] for t in others if not spec.vision.get(t[0])]
+    if blind and any(level[(x, y)] < 2 for _c, x, y in tokens):
+        lines.append(f"no senses written for {', '.join(blind)} — if they have darkvision, add `| darkvision 18m` "
+                     "to their legend line")
+    return lines
+
+
+def _draw_light(spec: MapSpec, level: dict, fog, view) -> list:
+    """Shade what is dim or dark — the place's light, or (with fog) how well the party sees each square."""
+    out = []
+    for y, row in enumerate(spec.rows):
+        x = 0
+        while x < len(row):
+            def shade(i):
+                if _cell_kind(spec, i, y) == "void":
+                    return None
+                if fog is None:
+                    return LIGHT_SHADE.get(level[(i, y)])
+                return VIEW_SHADE.get(view.get((i, y))) if (i, y) in fog[0] else None
+            s = shade(x)
+            if s is None:
+                x += 1
+                continue
+            start = x
+            while x < len(row) and shade(x) == s:
+                x += 1
+            out.append(f'<rect class="light" x="{PAD + start * CELL}" y="{PAD + y * CELL}" width="{(x - start) * CELL}" '
+                       f'height="{CELL}" fill="{s[0]}" fill-opacity="{s[1]}"/>')
+    for src in spec.lights:
+        if src.token or (fog is not None and (src.x, src.y) not in fog[0]):
+            continue
+        cx, cy = PAD + src.x * CELL + CELL / 2, PAD + src.y * CELL + CELL / 2
+        out.append(f'<g><title>{escape(src.kind)}</title><circle cx="{cx}" cy="{cy}" r="{CELL * 0.3}" fill="#ffd27a" '
+                   f'fill-opacity="0.55"/><text x="{cx}" y="{cy + 6}" font-size="17" text-anchor="middle" '
+                   f'fill="#a85a00">✹</text></g>')
+    return out
+
+
+def _draw_carried(spec: MapSpec, fog) -> list:
+    """A small flame on the tokens that carry a light."""
+    out = []
+    for src in spec.lights:
+        if not src.token or not _token_shown(spec, src.token, src.x, src.y, fog):
+            continue
+        cx, cy = PAD + src.x * CELL + CELL * 0.82, PAD + src.y * CELL + CELL * 0.18
+        out.append(f'<g><title>{escape(src.kind)}</title><circle cx="{cx}" cy="{cy}" r="7.5" fill="#ffd27a" '
+                   f'stroke="#a85a00" stroke-width="1.2"/><text x="{cx}" y="{cy + 4}" font-size="10" '
+                   f'text-anchor="middle" fill="#a85a00">✹</text></g>')
+    return out
+
+
+# Senses and lights that live outside the map text: the PCs' sheets and the
+# party's supplies (supplies.py light … --by NAME).
+_SHEET_SENSE_RE = re.compile(
+    r"(superior\s+darkvision|darkvision|scurovisione(?:\s+superiore)?|blindsight|vista\s+cieca|truesight|vista\s+pura"
+    r"|devil'?s\s+sight|vista\s+del\s+diavolo)\b[^\n\d]{0,120}?(\d+(?:[.,]\d+)?)\s*(m\b|metri|ft\b|feet|piedi)", re.I)
+
+
+def sheet_senses(text: str, per_foot: float) -> Vision:
+    """The senses a character sheet names with their range (Darkvision / Scurovisione 18 m …)."""
+    vis = Vision()
+    for m in _SHEET_SENSE_RE.finditer(text or ""):
+        sense = SENSES.get("-".join(m.group(1).lower().split()))
+        size = _size(m.group(2) + m.group(3).lower().rstrip(), per_foot)
+        if sense and size and size > getattr(vis, sense):
+            setattr(vis, sense, size)
+    return vis
+
+
+def _name_key(text: str) -> str:
+    return " ".join((text or "").casefold().split())
+
+
+def match_name(names: list, wanted: str):
+    """The one name of `names` that `wanted` means (exact, else the first word, else a part), or None."""
+    w = _name_key(wanted)
+    if not w:
+        return None
+    for test in (lambda n: _name_key(n) == w,
+                 lambda n: _name_key(n).split()[0] == w.split()[0],
+                 lambda n: w in _name_key(n) or _name_key(n) in w):
+        hits = [n for n in names if n and test(n)]
+        if len(hits) == 1:
+            return hits[0]
+        if hits:
+            return None
+    return None
+
+
+def add_sheet_senses(spec: MapSpec, campaign: str) -> list:
+    """Give every pc token without senses in the legend the ones its sheet names. Returns the letters done."""
+    import media
+    try:
+        folder = media.find_campaign(campaign) / "characters"
+    except Exception:
+        return []
+    sheets = {}
+    for path in sorted(folder.glob("*.md")) if folder.is_dir() else []:
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        first = text.splitlines()[0] if text else ""
+        sheets[first[2:].strip() if first.startswith("# ") else path.stem] = text
+    done = []
+    for ch, (name, side) in spec.legend.items():
+        if side != "pc" or ch in spec.vision:
+            continue
+        hit = match_name(list(sheets), name)
+        if hit:
+            vis = sheet_senses(sheets[hit], squares_per_foot(spec))
+            if vis:
+                spec.vision[ch] = vis
+                done.append(ch)
+    return done
+
+
+def add_supply_lights(spec: MapSpec, campaign: str) -> list:
+    """The lights burning in the party's supplies, on the tokens carrying them. Returns lines for the DM."""
+    import json
+    import media
+    try:
+        data = json.loads((media.find_campaign(campaign) / "supplies.json").read_text(encoding="utf-8"))
+    except Exception:
+        return []
+    per_foot = squares_per_foot(spec)
+    names = {name: ch for ch, (name, _side) in spec.legend.items()}
+    news = []
+    for lit in data.get("lights") or []:
+        kind = LIGHT_WORDS.get(str(lit.get("kind", "")), str(lit.get("kind", "")))
+        if kind not in LIGHT_KINDS:
+            continue
+        by = str(lit.get("by") or "")
+        hit = match_name(list(names), by) if by else None
+        if not hit:
+            news.append(f"supplies: a {kind} is burning" + (f" for {by!r}, who is not on this map" if by else
+                        " but nobody carries it — supplies.py carry <kind> <NAME> puts it in a hand"))
+            continue
+        ch = names[hit]
+        if any(s.token == ch and s.kind == kind for s in spec.lights):
+            continue
+        at = token_position(spec, ch)
+        if at is None:
+            continue
+        bright, dim, _cone = LIGHT_KINDS[kind]
+        spec.lights.append(LightSource(at[0], at[1], bright * per_foot, dim * per_foot, kind, ch))
+    return news
 
 
 def _fog_file(d, map_id: str):
@@ -692,12 +1238,14 @@ def _art_defs(art) -> list:
     return out
 
 
-def render_svg(spec: MapSpec, art=None, fog=None) -> str:
+def render_svg(spec: MapSpec, art=None, fog=None, lang: str = "en") -> str:
     """SVG of the map; `art` (a map_art.Art) replaces the vector terrain.
 
     `fog` is (visible, explored) — two sets of (x, y) — or None for a map with
-    no fog of war."""
+    no fog of war. `lang` is for the light key under a map with a light model."""
     w, h = len(spec.rows[0]), len(spec.rows)
+    level = light_levels(spec)
+    view = party_view(spec, level) if level and fog is not None else {}
     grid_w, grid_h = w * CELL, h * CELL
     title_h = 34 if spec.title else 0
 
@@ -717,9 +1265,10 @@ def render_svg(spec: MapSpec, art=None, fog=None) -> str:
     leg_rows = (n_items + cols - 1) // cols
     legend_h = (leg_rows * 24 + 16) if n_items else 0
     scale_h = 20 if spec.scale else 0
+    key_h = 22 if level else 0
 
     total_w = PAD + grid_w + 12
-    total_h = title_h + PAD + grid_h + 12 + legend_h + scale_h
+    total_h = title_h + PAD + grid_h + 12 + legend_h + key_h + scale_h
 
     out = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{total_w}" height="{total_h}" '
            f'viewBox="0 0 {total_w} {total_h}" font-family="Georgia, \'Times New Roman\', serif">',
@@ -748,12 +1297,16 @@ def render_svg(spec: MapSpec, art=None, fog=None) -> str:
                            f'height="{CELL}" fill="none" {grid}/>')
     for e in spec.effects:
         out.extend(_draw_effect(e))
+    if level:
+        out.extend(_draw_light(spec, level, fog, view))
     if fog is not None:
         out.extend(_draw_fog(spec, fog))
     for y, row in enumerate(spec.rows):
         for x, ch in enumerate(row):
             if ch.isalpha() and _token_shown(spec, ch, x, y, fog):
                 out.extend(_draw_token(ch, spec, x, y))
+    if level:
+        out.extend(_draw_carried(spec, fog))
     # Coordinate ruler: column numbers on top, row numbers on the left, so the
     # table can say "I move to 7,3".
     for x in range(w):
@@ -789,6 +1342,20 @@ def render_svg(spec: MapSpec, art=None, fog=None) -> str:
     if spec.scale:
         out.append(f'<text x="{total_w - 12}" y="{total_h - 8}" font-size="11" text-anchor="end" '
                    f'font-style="italic" fill="{C["ink"]}" opacity="0.7">{escape(spec.scale)}</text>')
+    if level:
+        # The light key: what the shades on the map mean.
+        names = LIGHT_KEY.get((lang or "en")[:2], LIGHT_KEY["en"])
+        swatches = [(None, names[0]), (LIGHT_SHADE[1], names[1]), (LIGHT_SHADE[0], names[2])]
+        if fog is not None:
+            swatches.append((VIEW_SHADE[GREY_SEEN], names[3]))
+        kx, key_y = PAD, total_h - scale_h - 9
+        for shade, label in swatches:
+            fill = f'fill="{shade[0]}" fill-opacity="{shade[1]}"' if shade else f'fill="{C["floor"]}"'
+            out.append(f'<rect x="{kx}" y="{key_y - 10}" width="12" height="12" {fill} stroke="{C["ink"]}" '
+                       f'stroke-width="0.8"/>')
+            out.append(f'<text x="{kx + 16}" y="{key_y}" font-size="11" fill="{C["ink"]}" '
+                       f'opacity="0.8">{escape(label)}</text>')
+            kx += 24 + 6.2 * len(label)
     out.append('</svg>')
     return "\n".join(out)
 
@@ -822,13 +1389,26 @@ def main() -> int:
         print(f"map_render: {w}", file=sys.stderr)
     for line in describe_templates(spec):
         print(f"map_render: area — {line}", file=sys.stderr)
+    lang = "en"
+    if spec.light:
+        # The PCs' darkvision from their sheets, the torches burning in the supplies.
+        import media
+        import paths
+        camp = media.safe_campaign(args.campaign) if args.campaign else media.active_campaign()
+        if camp:
+            add_sheet_senses(spec, camp)
+            for line in add_supply_lights(spec, camp):
+                print(f"map_render: {line}", file=sys.stderr)
+            lang = paths.campaign_language(camp)
+        for line in sight_report(spec, light_levels(spec)):
+            print(f"map_render: sight — {line}", file=sys.stderr)
     fog = None
     if spec.fog:
         now = visible_cells(spec)
         fog = (now, set(now))          # with --out there is no campaign to remember in
         if not now:
             print("map_render: fog is on but no pc or ally token is on the map — everything is dark", file=sys.stderr)
-    svg = render_svg(spec, fog=fog)
+    svg = render_svg(spec, fog=fog, lang=lang)
 
     if args.out:
         with open(args.out, "w", encoding="utf-8") as f:
@@ -851,7 +1431,7 @@ def main() -> int:
         before = set() if spec.fog_reset else load_explored(d, map_id, *size)
         fog = (fog[0], before | fog[0])
         save_explored(d, map_id, *size, fog[1])
-        svg = render_svg(spec, fog=fog)
+        svg = render_svg(spec, fog=fog, lang=lang)
         unseen = hidden_tokens(spec, fog)
         if unseen:
             print(f"map_render: fog hides {len(unseen)} token(s) the party cannot see: {', '.join(unseen)}", file=sys.stderr)
@@ -891,7 +1471,7 @@ def main() -> int:
             art = map_art.get_art(kinds, spec.art, d, cfg, mode, log=log)
         except map_art.ImageError:
             pass
-    save_and_show(render_svg(spec, art, fog=fog))
+    save_and_show(render_svg(spec, art, fog=fog, lang=lang))
     return 0
 
 

@@ -16,6 +16,8 @@ march (living off what it carries), each new day eats its share.
     supplies.py march off                                   # in town, at an inn: the stock is not touched
     supplies.py light torch --keep                          # a torch is lit (--keep lights the next when it burns out)
     supplies.py light lantern                               # a lantern burns 6 hours on a flask of oil
+    supplies.py light torch --by Aldric                     # who holds it: the battle map lights around them
+    supplies.py carry torch Mira                            # a burning torch changes hands
     supplies.py douse all                                   # or: douse torch
     supplies.py pass 90m                                    # time with no calendar: 90m, 3h, 2d
     supplies.py day 2                                       # two days eaten now, marching or not
@@ -171,8 +173,8 @@ def days_left(data: dict) -> float | None:
     return min(data["stock"]["rations"], water) / mouths
 
 
-def light(data: dict, kind: str, keep: bool = False) -> dict:
-    """Light one (it takes its torch, candle or flask of oil from the stock)."""
+def light(data: dict, kind: str, keep: bool = False, by: str = "") -> dict:
+    """Light one (it takes its torch, candle or flask of oil from the stock); `by` is who holds it."""
     kind = light_of(kind)
     minutes, stock = LIGHTS[kind]
     if data["stock"][stock] < 1:
@@ -181,7 +183,23 @@ def light(data: dict, kind: str, keep: bool = False) -> dict:
         raise SupplyError(f"{MAX_LIGHTS} lights are burning already")
     data["stock"][stock] -= 1
     entry = {"kind": kind, "left": minutes, "keep": bool(keep)}
+    if " ".join((by or "").split()):
+        entry["by"] = " ".join(by.split())[:60]
     data["lights"].append(entry)
+    return entry
+
+
+def carry(data: dict, kind: str, by: str) -> dict:
+    """A burning light changes hands: the first of that kind nobody holds, else the first of that kind."""
+    kind = light_of(kind)
+    who = " ".join((by or "").split())[:60]
+    if not who:
+        raise SupplyError("carried by whom?")
+    burning = [l for l in data["lights"] if l["kind"] == kind]
+    if not burning:
+        raise SupplyError(f"no {kind} is burning")
+    entry = next((l for l in burning if not l.get("by")), burning[0])
+    entry["by"] = who
     return entry
 
 
@@ -278,7 +296,8 @@ def public_view(data: dict) -> dict:
     left = days_left(data)
     return {"stock": dict(data["stock"]), "mouths": int(data.get("mouths") or 0), "march": bool(data.get("march")),
             "hot": bool(data.get("hot")), "days_left": None if left is None else round(left, 1),
-            "lights": [{"kind": l["kind"], "left": int(l["left"]), "keep": bool(l.get("keep"))} for l in data["lights"]],
+            "lights": [{"kind": l["kind"], "left": int(l["left"]), "keep": bool(l.get("keep")),
+                        **({"by": l["by"]} if l.get("by") else {})} for l in data["lights"]],
             "hungry_days": int(data.get("hungry_days") or 0)}
 
 
@@ -290,7 +309,8 @@ def describe(data: dict) -> str:
              + (", hot weather (double water)" if data.get("hot") else "")
              + (f"; food and water for {left:.1f} day(s)" if left is not None else "")]
     for l in data["lights"]:
-        lines.append(f"  lit: {l['kind']}, {l['left'] // 60}h{l['left'] % 60:02d} left" + (" (keeps lighting the next)" if l.get("keep") else ""))
+        lines.append(f"  lit: {l['kind']}" + (f" ({l['by']})" if l.get("by") else "") + f", {l['left'] // 60}h{l['left'] % 60:02d} left"
+                     + (" (keeps lighting the next)" if l.get("keep") else ""))
     if data.get("hungry_days"):
         lines.append(f"  {data['hungry_days']} day(s) in a row without enough food")
     return "\n".join(lines)
@@ -325,6 +345,10 @@ def main(argv: list | None = None) -> int:
     p = sub.add_parser("light", help="light a torch, a lantern or a candle")
     p.add_argument("kind")
     p.add_argument("--keep", action="store_true", help="light the next one when it burns out")
+    p.add_argument("--by", default="", help="who holds it (the battle map lights around that token)")
+    p = sub.add_parser("carry", help="a burning light changes hands")
+    p.add_argument("kind")
+    p.add_argument("by")
     sub.add_parser("douse", help="put lights out").add_argument("kind", nargs="?", default="all")
     sub.add_parser("pass", help="time passes with no calendar: 90m, 3h, 2d").add_argument("span")
     sub.add_parser("day", help="days of food and water eaten now").add_argument("n", type=int, nargs="?", default=1)
@@ -367,8 +391,11 @@ def main(argv: list | None = None) -> int:
             data["march"] = args.state in ("on", "si")
             data["hot"] = bool(args.hot) and data["march"]
         elif args.cmd == "light":
-            entry = light(data, args.kind, args.keep)
-            news.append(f"a {entry['kind']} is lit")
+            entry = light(data, args.kind, args.keep, args.by)
+            news.append(f"a {entry['kind']} is lit" + (f" ({entry['by']})" if entry.get("by") else ""))
+        elif args.cmd == "carry":
+            entry = carry(data, args.kind, args.by)
+            news.append(f"{entry['by']} holds the {entry['kind']}")
         elif args.cmd == "douse":
             if not douse(data, args.kind):
                 raise SupplyError("nothing like that is burning")
