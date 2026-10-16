@@ -518,6 +518,8 @@ _DM_ENDPOINTS = {
     "quests_changed",
     # Faction reputations: factions.py keeps them with the campaign, everyone reads them.
     "factions_changed",
+    # The party's supplies: supplies.py spends them, everyone sees them.
+    "supplies_changed",
     # People met: people.py writes the notebook, everyone reads it.
     "people_changed",
     # The timeline: timeline.py writes it, everyone reads what is not secret.
@@ -2868,6 +2870,41 @@ def factions_changed():
     return "", 204
 
 
+# ─── Supplies (supplies.py) ──────────────────────────────────────────────────
+# supplies.py keeps the party's food, water and light in
+# <campaign>/supplies.json and spends them as the calendar moves. Every screen
+# can read them; POST /supplies says they changed, with what happened.
+import supplies as _supplies
+
+
+def _public_supplies():
+    camp = re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]
+    if not camp:
+        return None
+    try:
+        path = _find_campaign(camp) / "supplies.json"
+        return _supplies.public_view(_supplies.load(str(path))) if path.is_file() else None
+    except Exception:
+        return None
+
+
+@app.route("/supplies", methods=["GET"])
+def supplies_get():
+    return jsonify(_public_supplies()), 200
+
+
+@app.route("/supplies", methods=["POST"])
+def supplies_changed():
+    """supplies.py spent or counted something: send every screen the stock, and the news."""
+    data = request.get_json(silent=True) or {}
+    payload = {"supplies": _public_supplies()}
+    news = data.get("news")
+    if isinstance(news, list):
+        payload["supplies_news"] = [str(n)[:300] for n in news[:6]]
+    _broadcast(payload)
+    return "", 204
+
+
 # ─── People met (people.py) ──────────────────────────────────────────────────
 # people.py keeps what the party knows of the people it met in
 # <campaign>/people.json. Every screen can read it; POST /people says a page
@@ -4402,7 +4439,8 @@ def stats():
         try:
             _broadcast({"clocks": _public_clocks(), "bestiary": _public_bestiary(), "people": _public_people(),
                         "timeline": _public_timeline(), "split": _party_split(), "split_event": "",
-                        "companions": _public_companions(), "region_changed": _time.time()})
+                        "companions": _public_companions(), "region_changed": _time.time(),
+                        "supplies": _public_supplies()})
         except Exception:
             pass
         # The quests kept with the campaign come back with it, unless this same

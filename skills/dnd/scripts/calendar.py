@@ -596,6 +596,7 @@ def cmd_advance(campaign: str, amount: int, unit: str) -> None:
     label = f"+{amount} {unit}"
     print(f"  {label} → {_format_date(cal)}")
     _after_change(campaign, cal, before)
+    _spend_supplies(campaign, total_hours, _abs_day(cal) - before)
 
 
 def cmd_rest(campaign: str, rest_type: str) -> None:
@@ -611,6 +612,17 @@ def cmd_rest(campaign: str, rest_type: str) -> None:
 
     print(f"  {label} → {_format_date(cal)}")
     _after_change(campaign, cal, before)
+    _spend_supplies(campaign, 1 if rest_type == "short" else 8, _abs_day(cal) - before)
+
+
+def _spend_supplies(campaign: str, hours: float, days_crossed: int) -> None:
+    """Lit torches and lanterns burn; on the march each new day eats (supplies.py)."""
+    try:
+        import supplies
+        for line in supplies.tick(campaign, int(round(hours * 60)), max(0, days_crossed)):
+            print(("  ⚠ Supplies: " if line.split(":")[0].isupper() else "  Supplies: ") + line)
+    except Exception:
+        pass   # supplies are a courtesy: the time has moved anyway
 
 
 def cmd_now(campaign: str) -> None:

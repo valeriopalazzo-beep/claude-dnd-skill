@@ -615,6 +615,32 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP push
 
 ---
 
+## Supplies — `scripts/supplies.py`
+
+The party's food, water and light, kept in `<campaign>/supplies.json` and spent by the clock: `calendar.py advance` and `calendar.py rest` burn the lit lights and, while the party is on the march, eat each new day's share. Every screen has a **Supplies** panel (days of food and water left, the stock, what is burning and for how long). A campaign without the file is never touched.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/scripts/supplies.py set rations 30 water 20 torches 10 oil 2   # Italian: razioni acqua torce olio candele
+python3 ${CLAUDE_SKILL_DIR}/scripts/supplies.py add torches 5          # bought, found, foraged
+python3 ${CLAUDE_SKILL_DIR}/scripts/supplies.py use rations 2          # eaten or lost outside the clock
+python3 ${CLAUDE_SKILL_DIR}/scripts/supplies.py mouths 6               # who eats from it, animals included
+python3 ${CLAUDE_SKILL_DIR}/scripts/supplies.py march on --hot         # on the road: each day eats (hot: double water)
+python3 ${CLAUDE_SKILL_DIR}/scripts/supplies.py march off              # in town, at an inn
+python3 ${CLAUDE_SKILL_DIR}/scripts/supplies.py light torch --keep     # --keep lights the next one when it burns out
+python3 ${CLAUDE_SKILL_DIR}/scripts/supplies.py light lantern          # 6 hours on a flask of oil
+python3 ${CLAUDE_SKILL_DIR}/scripts/supplies.py douse all              # or: douse torch
+python3 ${CLAUDE_SKILL_DIR}/scripts/supplies.py pass 90m               # time with no calendar (90m, 3h, 2d)
+python3 ${CLAUDE_SKILL_DIR}/scripts/supplies.py day 2                  # two days eaten now, marching or not
+python3 ${CLAUDE_SKILL_DIR}/scripts/supplies.py show
+python3 ${CLAUDE_SKILL_DIR}/scripts/supplies.py push
+```
+
+- Rations and water are person-days: `water 20` feeds 4 people for 5 days (a waterskin holds about half a day). Torch 1 hour, candle 1 hour, lantern 6 hours per flask (PHB 2014).
+- Shortages print `⚠ FOOD:` / `⚠ WATER:` with the rule: without food a character lasts 3 + CON modifier days (at least 1), then gains a level of exhaustion per day; with less than half the water, a DC 15 Constitution save or a level of exhaustion; with none, exhaustion automatically. `⚠ NO LIGHT` when the last light goes out.
+- `-c NAME` works on another campaign; only the campaign on the display talks to it.
+
+---
+
 ## Campaign Search — `scripts/campaign_search.py`
 Keyword search across campaign files. Use this **before** loading full files into context when looking up a specific past event, NPC detail, or plot thread.
 

@@ -694,5 +694,29 @@
 
   "conc.kept": "{name} keeps concentrating on {spell} ({total} vs DC {dc})",
   "conc.lost": "{name} loses concentration: {spell} ends ({total} vs DC {dc})",
-  "conc.down": "{name} is down: {spell} ends"
+  "conc.down": "{name} is down: {spell} ends",
+
+  "sup.title": "Supplies",
+  "sup.empty": "The party keeps no supplies yet.",
+  "sup.nobody": "Nobody eats from these supplies",
+  "sup.days": "Food and water for {n} days",
+  "sup.mouths": "{n} mouths to feed",
+  "sup.march": "on the march",
+  "sup.still": "not marching",
+  "sup.hot": "hot: double water",
+  "sup.hungry": "{n} days without enough food",
+  "sup.rations": "rations",
+  "sup.water": "days of water",
+  "sup.torches": "torches",
+  "sup.oil": "flasks of oil",
+  "sup.candles": "candles",
+  "sup.light.torch": "Torch",
+  "sup.light.lantern": "Lantern",
+  "sup.light.candle": "Candle",
+  "sup.left": "{t} left",
+  "sup.toast.food": "There is not enough food for everyone today",
+  "sup.toast.water": "There is not enough water for everyone today",
+  "sup.toast.dark": "You are in the dark: the last light went out",
+  "sup.toast.out": "A light went out",
+  "sup.toast.next": "A torch burned down: you light another"
 }

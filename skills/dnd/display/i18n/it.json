@@ -810,5 +810,29 @@
 
   "conc.kept": "{name} resta concentrato su {spell} ({total} contro CD {dc})",
   "conc.lost": "{name} perde la concentrazione: {spell} finisce ({total} contro CD {dc})",
-  "conc.down": "{name} è a 0 PF: {spell} finisce"
+  "conc.down": "{name} è a 0 PF: {spell} finisce",
+
+  "sup.title": "Provviste",
+  "sup.empty": "Il gruppo non tiene ancora il conto delle provviste.",
+  "sup.nobody": "Nessuno mangia da queste provviste",
+  "sup.days": "Cibo e acqua per {n} giorni",
+  "sup.mouths": "{n} bocche da sfamare",
+  "sup.march": "in viaggio",
+  "sup.still": "fermi",
+  "sup.hot": "caldo: acqua doppia",
+  "sup.hungry": "{n} giorni senza cibo a sufficienza",
+  "sup.rations": "razioni",
+  "sup.water": "giorni d'acqua",
+  "sup.torches": "torce",
+  "sup.oil": "ampolle d'olio",
+  "sup.candles": "candele",
+  "sup.light.torch": "Torcia",
+  "sup.light.lantern": "Lanterna",
+  "sup.light.candle": "Candela",
+  "sup.left": "ancora {t}",
+  "sup.toast.food": "Il cibo non basta per tutti oggi",
+  "sup.toast.water": "L'acqua non basta per tutti oggi",
+  "sup.toast.dark": "Siete al buio: l'ultima luce si è spenta",
+  "sup.toast.out": "Una luce si è spenta",
+  "sup.toast.next": "Una torcia si è consumata: ne accendete un'altra"
 }

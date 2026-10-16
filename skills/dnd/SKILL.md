@@ -699,6 +699,12 @@ When the fiction has a countdown — a ritual, an alarm about to be raised, a fl
 
 ---
 
+## Supplies
+
+Food, water and light are counted, not waved away, when the story is about the journey or the dark. Keep the party's stock with `scripts/supplies.py`: `set` what they carry when they set out (rations, water in person-days, torches, oil, candles), `mouths` for who eats from it (the mule too), `march on` while they live off what they carry and `march off` in town. From then on the clock spends it: every `calendar.py advance` or `rest` burns the lit torches and lanterns and, on the march, eats each new day's share — the script prints `Supplies:` lines and every screen has a Supplies panel. `light torch --keep` when they light one (the next is lit by itself when it burns out), `douse` when they put it out, `add` / `use` for what is bought, found, foraged or lost. When it prints `⚠` (not enough food or water, or no light left), apply the rule it gives in the same turn and tell the players. Syntax: `SKILL-scripts.md` → *Supplies*.
+
+---
+
 ## Images & Maps
 
 Only when the display is running. Syntax: `SKILL-scripts.md` → *Battle Maps* / *Region Map* / *Generated Images*.
