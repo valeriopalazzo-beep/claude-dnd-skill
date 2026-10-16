@@ -184,10 +184,12 @@ def outcome(data: dict, name: str, choice: dict, days: int) -> dict:
             p["done"] = p["progress_gp"] >= p["price_gp"]
             out["text"] = (f"crafting {what}: {p['progress_gp']:g} of {p['price_gp']:g} gp of work"
                            + (" — FINISHED: add it to the sheet" if p["done"] else "")
-                           + f"; raw materials {out['cost_gp']:g} gp. Needs proficiency with the tools it takes.")
+                           + f"; raw materials {out['cost_gp']:g} gp. Needs proficiency with the tools it takes; "
+                           "while crafting they live a modest lifestyle for free (comfortable at half price).")
         else:
             out["text"] = (f"crafting {what}: {p['progress_gp']:g} gp of work so far (no price given — compare it with the "
-                           f"item's market value); raw materials {out['cost_gp']:g} gp. Needs proficiency with the tools.")
+                           f"item's market value); raw materials {out['cost_gp']:g} gp. Needs proficiency with the tools; "
+                           "while crafting they live a modest lifestyle for free (comfortable at half price).")
         p["gp"] += out["cost_gp"]
     elif kind == "train":
         p = _project(data, name, kind, what)
@@ -199,7 +201,7 @@ def outcome(data: dict, name: str, choice: dict, days: int) -> dict:
                        + (" — LEARNED: write the proficiency on the sheet" if p["done"] else "") + ". Needs a teacher.")
     elif kind == "research":
         out["cost_gp"] = float(days)
-        out["text"] = (f"researching {what}: {days} days, {days} gp (books, bribes, a library). "
+        out["text"] = (f"researching {what}: {days} days, {days} gp on top of their lifestyle (books, bribes, a library). "
                        "Decide what is found — one or two real leads, from the secrets you prepared.")
     elif kind == "work":
         out["text"] = (f"working{(' as ' + what) if what else ''}: {days} days of a modest lifestyle paid "
