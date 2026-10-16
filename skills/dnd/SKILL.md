@@ -128,7 +128,7 @@ Players who take creative risks, commit hard to a roleplay choice, or do somethi
 Do not rely on remembering. The single most common failure here is a DM who means to reward bold play and simply forgets, so keep one hard mechanical backstop alongside the judgment calls: when a player character rolls a natural 20 on any d20 test, or a natural 20 to stabilize on a death save, award that character Inspiration on the spot — unless they already hold it, since Inspiration does not stack. Name it in a single beat and move on. The natural 20 is a reliable, table-visible moment to anchor the reward to, so the signal actually lands instead of quietly never arriving.
 
 ### 13. Open Each Scene With a Bang
-A "bang" is a hard question that forces an immediate choice. When you open a new scene, do **not** default to "what do you do?" — that is dead air. Drop the player into a moment that already demands action: an NPC names a price they have to accept or refuse right now; they turn a corner into someone they wronged last session, who sees them first; a door slams shut behind them and there are footsteps, two sets, both the wrong shape; the thing they came for is in front of them — and someone else is already taking it. Bangs are wedges, not foreshadowing or scene-setting. The first beat of every new scene should make the player feel they cannot afford to hesitate. This only applies on scene *transitions* — a chapter break, a new location, a time skip, the first beat after a rest. Continuation scenes mid-flow do not need a bang every time; forcing one there just churns the pace. The faction moves you logged under Standard 11 are your best raw material — a bang is often just a faction move arriving at the worst possible moment.
+A "bang" is a hard question that forces an immediate choice. When you open a new scene, do **not** default to "what do you do?" — that is dead air. Drop the player into a moment that already demands action: an NPC names a price they have to accept or refuse right now; they turn a corner into someone they wronged last session, who sees them first; a door slams shut behind them and there are footsteps, two sets, both the wrong shape; the thing they came for is in front of them — and someone else is already taking it. Bangs are wedges, not foreshadowing or scene-setting. The first beat of every new scene should make the player feel they cannot afford to hesitate. This only applies on scene *transitions* — a chapter break, a new location, a time skip, the first beat after a rest. Continuation scenes mid-flow do not need a bang every time; forcing one there just churns the pace. The faction moves you logged under Standard 11 are your best raw material — a bang is often just a faction move arriving at the worst possible moment. The first scene of every session is the **strong start** written in `prep.md` (see *Session Prep*).
 
 ### 14. Never Play the Player's Side
 The line between your authority and the player's is absolute: you run the world and everyone in it *except* the player characters. Never speak a PC's dialogue, narrate their private thoughts, or decide what they do. Even a plausible "and so you draw your blade and charge" steals the one thing that is theirs — the choice. Describe what the world presents and what it does back; stop at the edge of the player's own action.
@@ -147,6 +147,46 @@ Three optional settings in `state.md → ## Session Flags` let a table tune the 
 
 ---
 
+## Session Prep — the lazy DM's eight steps
+
+Every session is prepared before it is played, the lazy-DM way (Sly Flourish, *Return of the Lazy Dungeon Master*): prepare what is useful at the table and leave out the rest. The prep lives in `<campaign>/prep.md` (template `templates/prep.md`), is **written at `/dm:dnd end`** for the next session (or any time with `/dm:dnd prep`), and is **reviewed at `/dm:dnd load`** before the first word of narration. It is DM-only: never on the display, never read out.
+
+The eight steps, in order — each a few short lines, the whole file about two pages:
+
+1. **Review the characters.** Names, what each wants, what ties them to the story now, what their player enjoys, their wish (`state.md → ## Wish List`). Every step below hooks into at least one of them.
+2. **Strong start.** One paragraph for the session's opening scene: an event happening in the world, a hook that pushes the characters to act, as close to the action as possible. When in doubt, open with a fight. Mid-adventure too: a new event (the weather turns, an alarm nobody has heard before) restarts the story instead of "we pick up where we left off". The two most important steps are this one and the secrets.
+3. **Possible scenes.** A few words each, one or two per hour of play (`session_hours` in `## Session Flags`, default 3). They give confidence, not a script: in any order, or never.
+4. **Ten secrets and clues.** One sentence, one fact each, that matters to the characters — about the world, its past, the story in motion, an NPC. **Never tied to who or what reveals them**: at the table, a secret comes out of whatever the characters are doing (gossip, a prisoner, a document, the history of an item, marks on a wall after a fight). A secret becomes canon only when revealed; until then it may change or vanish. Build them from the open threads, the Faction Moves, the threat stage and the outstanding arc beats — a beat's `what_changes` is often a secret waiting for its scene.
+5. **Fantastic locations.** The backdrop of one scene each: an evocative name and three aspects the characters can interact with. Scale and age make them fantastic (*what was here before?*). One or two per hour of play. Tie one to a character's backstory when it fits.
+6. **Important NPCs.** Only those who drive the session: name, link to the story, an archetype from fiction to play them by (a character from a film, book or series — change the gender, avoid stereotypes), where they stand with the party. The rest are improvised: give each a name and write it down at once.
+7. **Relevant monsters.** The creatures that make sense for the story, the situation and the place, with CR and source (SRD, or the Monster Manual notes). Rough numbers for an organisation. At the table the fight is still sized with `encounter.py` and run with the whole stat block (*Rules enforcement*). For a boss, note what the PCs can do (big first-round damage, control, high defences) and give it allies, terrain or an exit — never a lone boss that dies in round one.
+8. **Rewards.** About one useful magic item per session, when it makes sense for the story and it has been a while: from the wish list, from the story, or rolled with `loot.py`. Tie it to a quest (the item is the goal) or to a secret (finding it reveals one).
+
+**At load — review.** Read `prep.md` after `state.md` and the character sheets, and say the PCs' names to yourself: the prep is fixed in mind before the recap. The first scene after the recap is the **strong start** — adapt it if the last session's ending changed things, never skip it.
+
+**During play — use it, then let it go.**
+- Bring the secrets in wherever they fit what the characters are doing, from whatever source makes sense in the fiction. When one comes out, mark it `[x]` in `prep.md` with a few words on how (same turn, silently, like the autosave), and update the players' own panels if it gave them a lead (`quests.py clue`, `people.py learn`).
+- Describe a prepared location through its three aspects, and put them on its battle map.
+- Voice a prepared NPC through their archetype; pick monsters from the list when a fight comes; place the reward where the story allows.
+- **Be ready to throw any of it away** the moment something better happens at the table. Nothing in the prep is real until it is played.
+- **"What do you do?"** — every stretch of narration ends on the characters' choice; if you have talked a while without asking it, they have become spectators. When the pace sags, make the options explicit (the quests in play, the enemy they forgot, the goal of this dungeon) without pushing one.
+- Alternate **exploration, social and combat**, and **hope and fear**: after a run of setbacks, a high beat (an ally they wrote off turns up, a rival faction hits their enemy first, a cache of supplies left by someone who came this way before); when everything goes their way, a low one (the bridge they need is down, a friend is taken as leverage, a lie they told catches up with them). Adding or removing creatures is the quickest way to shift a fight from one to the other — inside the encounter budget and the rules.
+- **The world lives and reacts.** NPCs and enemies are busy with their own business; they notice what the party does and answer it (they test them, send killers, dig in). Clever play that "breaks the game" gets a *yes, that's brilliant* — then the world learns from it, rather than a house rule taking it away.
+
+**Group storytelling — ask the players.** Small, closed questions that pull them out of the sheet. Ask them every time, in the table's language, and accept "pass" without pressure (ask the quieter players first):
+- **The killing blow:** when a PC drops an enemy, ask its player to describe how.
+- **A monster's trait:** the first time a PC attacks a creature, *before* the attack resolves, ask that player for one striking physical detail of it ("the one with the cracked helm"); use it to tell the creatures apart in narration and on the map. It colours the creature, never changes its stat block.
+- **A place's detail:** when the party enters a new tavern, shop, camp or room, ask one player for one interesting detail of it. Adopt it as canon unless it contradicts something established or gives away a secret — then fold it in a little changed.
+- **On the road:** at the start of a long journey, describe the route, where it leads and the lie of the land, then ask the table for one interesting event that happens to the whole group on the way; or let one player pose an obstacle and another say how the party gets past it. Play it out as it was told.
+
+These questions never put words in a PC's mouth or choose for them (Standard 14): the player tells what their own character does, or adds colour to the world.
+
+**Wish list.** At the first load of a campaign — and again when `## Wish List` is six or more sessions old — ask each player, out of character and in one line, what kind of magic items they would like for their character (armour, a bigger weapon, a strange wand, better numbers or new ways to act on the world). Write the answers there with the session number. Step 8 reads them.
+
+The DM's own notes on the method, when present, are in `~/.claude/dnd/riferimenti/dm-pigro/INDICE.md` (personal and local, like the other reference notes: never copied into this repository). The book's shortcuts that skip rules — DCs by eye, fixed monster damage, initiative by seating, no encounter budget — do **not** apply here: *Rules enforcement* stands.
+
+---
+
 ## Directory Layout
 
 **Code & assets** live in the skill directory. `${CLAUDE_SKILL_DIR}` is substituted
@@ -161,7 +201,7 @@ ${CLAUDE_SKILL_DIR}/                 ← the skill dir (plugin: <plugin>/skills/
   SKILL-commands.md  ← all /dm:dnd command procedures (load at session start)
   scripts/           ← dice.py, combat.py, character.py, tracker.py, calendar.py, lookup.py, inventory.py, loot.py, encounter.py, backup.py
   data/              ← bundled 5e SRD dataset (dnd5e_srd.json — no download needed; sync via /dm:dnd data sync)
-  templates/         ← blank character-sheet.md, state.md, world.md, npcs.md, session-log.md
+  templates/         ← blank character-sheet.md, state.md, world.md, npcs.md, session-log.md, prep.md
   display/           ← Flask SSE display companion (dnd-display-app.py, send.py, push_stats.py, wrapper.py, tts.py, map_render.py, map_art.py, image_gen.py)
 (plugin root, one level up: docs/ setup walkthroughs · dice-server/ optional physical-dice service)
 ```
@@ -173,6 +213,7 @@ inside the plugin (so it survives updates/uninstalls):
 ```
 <DATA root>/campaigns/<name>/
   state.md / world.md / npcs.md / session-log.md / characters/<name>.md
+  prep.md            ← the next session's prep (eight steps, DM only); prep-archive.md keeps the old ones
   media/             ← generated portraits/scenes + rendered maps (index.json records prompts)
 <DATA root>/characters/
   <name>.md          ← global roster: latest known state of every PC across all campaigns

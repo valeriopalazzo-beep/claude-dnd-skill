@@ -146,6 +146,8 @@ The display question is skipped, because `/dm:dnd load` asks it. The graph and c
    - **arc.md (imported campaigns only):** Do **NOT** load at session start. `state.md → ## Campaign Arc` already carries the current + next chapter window. Read `arc.md` only when advancing chapters or when a player asks about the broader arc. If absent, the arc lives inline in `state.md` (dynamic/sandbox) — read it there as before. **Sanity-check the pointer at load:** if `## Campaign Arc`'s `current_chapter` shows its `outstanding_beats` already cleared, or the last session plainly ended in the *next* chapter's location or situation, the pointer never advanced — surface it (*"the current chapter looks finished; pick up in `<next_chapter>`?"*) instead of opening another scene in a chapter that's already done. A pointer that never moves is exactly how a structured campaign quietly drifts off its own arc and starts improvising.
    - **source/<chapter-id>.md (imported campaigns only):** the full module text, one file per chapter. Never loaded at session start. Before running a scene in a chapter, read that chapter's `source/<id>.md` (the `source_ref` in the arc) — and only that chapter. This is the predefined-story equivalent of reading a single NPC's full entry on demand.
    - **npcs.md:** Index row only at load. **Before writing substantive dialogue or decisions for any named NPC, read their full entry in `npcs-full.md`.** Do not wait for an explicit `/dm:dnd npc [name]` call — do it proactively when a scene centers on that character. Index rows carry surface traits only; personality axes, relationships, and hidden goals are in the full entry.
+   - **prep.md — the session review.** Read `prep.md` after the character sheets: the eight steps prepared for tonight (SKILL.md → *Session Prep*). Go through the PCs' names and what each wants, then the strong start, the ten secrets, the locations, NPCs, monsters and rewards, so they are fixed in mind before the recap. If the file is missing (an older or brand-new campaign), or its header names an earlier session than the one about to be played, write it now with `/dm:dnd prep` before the recap. Never show it on the display.
+   - **## Wish List.** If it reads *(not asked yet)*, or the last answers are six or more sessions old, ask the players present — out of character, one line — what kind of magic items they would like for their characters, after the recap and before the strong start. Write the answers there with the session number.
    - **Do NOT read session-log.md at load** — recent events are already in `state.md → ## Recent Events`. Only read session-log.md if the player explicitly requests a recap, or if DM Calibration from the last 1-2 sessions is needed and not already internalized.
 6. Push full party stats to display sidebar. **CRITICAL:** use `--json` with a complete player object — **never** the `--player` shorthand here. `--player` only updates existing fields; it cannot populate the card or sheet tabs. The display shows "Full sheet not loaded" when `sheet` is absent.
 
@@ -273,7 +275,7 @@ The display question is skipped, because `/dm:dnd load` asks it. The graph and c
 
    6. Re-run scene-context (now populated). Then proceed to step 6 (recap).
 
-8. Deliver one in-character paragraph recapping current situation — where the party is, what's at stake, what was last happening. **With the display running**, this paragraph is the table's *Previously on…* card: send it with `python3 ${CLAUDE_SKILL_DIR}/display/recap.py << 'DNDEND'` … `DNDEND` (120–220 words, in the table's language, blank lines between paragraphs; with a split party say where each group stands) instead of `send.py` — it opens full screen on every screen and the narrator reads it where narration is on. Then go on with the first scene through `send.py` as usual. **Attendance:** if `absent:` names anyone, give each benched PC one in-fiction line explaining why they're not in the scene (see SKILL.md → *Absent players*). If a PC who was absent last session (`## Recent Events → Absent: …`) is back, write them back in with one line, and give their player a two-sentence out-of-character catch-up on what they missed.
+8. Deliver one in-character paragraph recapping current situation — where the party is, what's at stake, what was last happening. **With the display running**, this paragraph is the table's *Previously on…* card: send it with `python3 ${CLAUDE_SKILL_DIR}/display/recap.py << 'DNDEND'` … `DNDEND` (120–220 words, in the table's language, blank lines between paragraphs; with a split party say where each group stands) instead of `send.py` — it opens full screen on every screen and the narrator reads it where narration is on. Then go on with the first scene through `send.py` as usual: **the strong start from `prep.md`**, adapted to how the last session ended but never replaced by "you pick up where you left off". **Attendance:** if `absent:` names anyone, give each benched PC one in-fiction line explaining why they're not in the scene (see SKILL.md → *Absent players*). If a PC who was absent last session (`## Recent Events → Absent: …`) is back, write them back in with one line, and give their player a two-sentence out-of-character catch-up on what they missed.
 9. Enter active DM mode — no `/dm:dnd` prefix needed from this point.
 
 ---
@@ -492,23 +494,24 @@ If `graph.json` doesn't exist yet for this campaign, skip the sweep entirely (no
         - **Did not land — pressure absorbed without consequence** → the beat is overdue and its current shape no longer fits. **Run `/dm:dnd arc revise` immediately**; do not just update `steering_notes`. The beat's `what_changes` was event-shaped (something specific happens) when it should be consequence-shaped (something fundamentally different is true) — revise both `what_changes` and `world_pressure` to fit a path that DOES land. The committed shape bends; it does not break.
         - **Pressure not yet delivered** → leave beat alone; expected to deliver next session.
       iv. Update `steering_notes` for the next outstanding beat with the *consequence shape* expected, not the specific event.
-   f. **Tail verification (added 2026-05-01):** before killing the display, verify the campaign-side `session_tail.json` is healthy:
+   f. **Prepare the next session:** run `/dm:dnd prep` now, while tonight is fresh — it archives tonight's prep and writes the next one. Tell the DM in one line that the next session is prepared (the strong start in a sentence, nothing about the secrets if players can read the terminal).
+   g. **Tail verification (added 2026-05-01):** before killing the display, verify the campaign-side `session_tail.json` is healthy:
       ```bash
       bash ${CLAUDE_SKILL_DIR}/display/verify_tail.sh <campaign-name>
       ```
       Exit 0 = healthy. Exit 1 = missing/empty/corrupt → write a canonical replacement to `~/.claude/dnd/campaigns/<name>/session_tail.json` from session context (5–8 entries, each `{"text": "...", "_camp": "<name>"}`) BEFORE the display kill — once the display is dead, only the file matters. The display's own `_persist_tail` has skip-on-empty + atomic-write guards, but the backstop ensures a worst-case file state is impossible.
-   g. **Backup:** with everything written, keep a dated copy of the campaign:
+   h. **Backup:** with everything written, keep a dated copy of the campaign:
       ```bash
       python3 ${CLAUDE_SKILL_DIR}/scripts/backup.py save --campaign <campaign-name> --label end
       ```
       Say in one line where it went. If it fails, say so and carry on — the session is saved either way.
-   h. **Campaign book (when the DM wants it):** `python3 ${CLAUDE_SKILL_DIR}/scripts/campaign_book.py --campaign <campaign-name>` reprints the chronicle with tonight's chapter; with the display still up the players can download it from their menus. Run it before stopping the display.
+   i. **Campaign book (when the DM wants it):** `python3 ${CLAUDE_SKILL_DIR}/scripts/campaign_book.py --campaign <campaign-name>` reprints the chronicle with tonight's chapter; with the display still up the players can download it from their menus. Run it before stopping the display.
 2. Stop the display (always — even if `_display_running` was unclear):
    ```bash
    kill $(cat ${CLAUDE_SKILL_DIR}/display/app.pid 2>/dev/null) 2>/dev/null
    rm -f ${CLAUDE_SKILL_DIR}/display/app.pid
    ```
-3. **Post-kill tail re-verification:** run `verify_tail.sh` once more after the kill. If it now reports unhealthy (file got truncated by a final write race), restore from the canonical version written in step 1f.
+3. **Post-kill tail re-verification:** run `verify_tail.sh` once more after the kill. If it now reports unhealthy (file got truncated by a final write race), restore from the canonical version written in step 1g.
 
 ---
 
@@ -815,6 +818,23 @@ DNDEND
 5. Update `state.md` in-world date to match calendar output. If the calendar printed new weather, an event or a moon phase for the new day, bring it into the narration of the waking.
 
 ---
+
+## `/dm:dnd prep`
+Prepare the next session with the lazy DM's eight steps (SKILL.md → *Session Prep*). Run by `/dm:dnd end` (step 1f), at `/dm:dnd load` when `prep.md` is missing or stale, or whenever the DM asks. DM work: no display output.
+
+1. **Archive the old prep.** If `<campaign>/prep.md` exists, append it whole to `prep-archive.md` (create it with a `# Session preps — <campaign>` heading), followed by one line: `Revealed: N/10 · scenes played: … · locations used: …`. Secrets marked `[x]` that are not yet in `## Continuity Archive` or `## Recent Events` get a line in `## Recent Events`.
+2. **Read** `state.md` (Current Situation, Recent Events, Open Threads, Faction Moves, World State with the threat stage, Campaign Arc with outstanding beats and steering notes, Live State Flags, Wish List, DM Style Notes, `session_hours`), the character sheets, `world.md` (Adventure Nodes, Clue Trail, Quest Seed Bank, factions), the index of `npcs.md`, `quests.json` if present, and the last session-log entry. The method notes, when present: `~/.claude/dnd/riferimenti/dm-pigro/otto-passi.md`.
+3. **Write `prep.md`** from `templates/prep.md`, in the campaign's language, header `# Session <N> prep` where N is the session about to be played (`Session count` + 1):
+   1. **Characters** — one line per PC (absent ones too, they may be back): name, what they want now, the thread this session can touch, what their player enjoys (DM Style Notes, calibration), their wish.
+   2. **Strong start** — one paragraph: what is happening in the world (a faction move, a threat-stage change, the date's event), the hook, the action. Start from where the last session stopped, but with something new happening. In doubt, a fight.
+   3. **Possible scenes** — `session_hours` × 1–2 lines (default 3 hours → 3–6), a few words each, `[ ]` boxes.
+   4. **Ten secrets and clues** — one fact each, not tied to a source. Keep from the old list only the unrevealed ones that are still true and still interesting; write the rest new. Draw on outstanding arc beats (`what_changes`), the Clue Trail, NPC secrets in `npcs.md`, faction secrets, the characters' backstories.
+   5. **Fantastic locations** — `session_hours` × 1–2 (default 3–6): name and three aspects; carry good unused ones from *Kept for Later*.
+   6. **Important NPCs** — 3–5: name, link, archetype from fiction (keep the archetype an NPC already has — add one to their `npcs-full.md` entry if they get one for the first time), relationship now.
+   7. **Relevant monsters** — the creatures the story makes likely, CR, source (`lookup.py monster`, or `mm/INDICE.md`), rough numbers; a boss note if one may appear.
+   8. **Rewards** — one or two: from the Wish List when one fits, else the story or a `loot.py roll`; each tied to a secret or a quest.
+   Then **Kept for Later**: unused locations and ideas worth keeping (not secrets).
+4. Keep it to about two pages. Never put prep content on the display, in the session tail, in `quests.json`, `people.json` or anything the players read.
 
 ## `/dm:dnd recap`
 Read session-log.md. Deliver 3–5 sentence in-character narrator recap of the most recent session entry. With the display running, send it with `display/recap.py` (see `/dm:dnd load` step 8) so it shows as the *Previously on…* card.

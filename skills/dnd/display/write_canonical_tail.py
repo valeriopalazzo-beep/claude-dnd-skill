@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """write_canonical_tail.py — write a canonical session_tail.json from CLI input.
 
-Used by SKILL-commands.md `/dnd end` step 1f as the backstop when
+Used by SKILL-commands.md `/dnd end` step 1g as the backstop when
 verify_tail.sh reports the on-disk tail is unhealthy. Writes directly to the
 campaign-specific path with proper atomic semantics, so next /dnd load has
 working replay material even if the display's own persistence path failed.

@@ -11,6 +11,10 @@
 *Soft facts the DM always keeps — canon the table never wants forgotten. Read at every /dnd load alongside DM Style Notes and kept hot all session. Unlike Live State Flags (which track shifting state and are rewritten each save), pinned facts are stable and are only added or removed on request. Pin a promise made, a dead sibling's name, a running in-joke, a table house rule, a detail the player has said matters. Add/list/remove with `/dm:dnd pin`.*
 *(none pinned yet)*
 
+## Wish List
+*What kind of magic items each player would like for their character (heavy armour, a bigger weapon, a strange wand, numbers or new ways to act on the world). Asked at the first load and again every six sessions or so; read when preparing each session's rewards. One line per PC, with the session it was asked.*
+*(not asked yet)*
+
 ## World State
 - **In-world date:** <Day, Month, Year — canonical source; keep in sync above>
 - **Season:** <current season>  **Weather:** <current conditions>
@@ -154,6 +158,7 @@ revision_log: []
 *(tutor_mode, autorun, autorun_interval, tts_voice, sfx_languages, autosave, absent — session-scoped flags set via /dnd commands or by the display companion)*
 *(language: two-letter code of the table's language, e.g. `language: it` — scripts that print names to read out (loot.py…) use it. Unset = English.)*
 *(absent: PCs whose player isn't at the table this session, or `none` — asked fresh at every /dm:dnd load. Benched PCs are left off the sidebar and out of scenes, but still receive XP.)*
+*(session_hours: how long a session usually lasts, default 3 — sizes the scenes and locations of each session prep.)*
 *(autosave: on|off — default on. Governs the behind-the-scenes continuity checkpoint (Live State Flags + graph + session tail). Toggle with /dm:dnd autosave on|off.)*
 
 ## DM Notes (hidden from players)
