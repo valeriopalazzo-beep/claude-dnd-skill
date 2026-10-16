@@ -75,9 +75,11 @@ def sales_add(sale: dict) -> None:
 def format_sale(sale: dict) -> str:
     qty = int(sale.get("qty", 1) or 1)
     item = str(sale.get("item", "?")) + (f" ×{qty}" if qty > 1 else "")
+    paid = (f"paid from the party's common fund ({sale['fund']} left in it)" if sale.get("fund")
+            else f'already paid ({sale.get("left", "?")} left in the purse)')
     return (f'[[SHOP: {sale.get("character", "?")} bought {item} for {sale.get("total", "?")} '
-            f'at "{sale.get("shop", "?")}" — already paid and added to the sheet '
-            f'({sale.get("left", "?")} left in the purse). Not a turn action: mention it only if it matters.]]')
+            f'at "{sale.get("shop", "?")}" — {paid} and added to the sheet. '
+            f'Not a turn action: mention it only if it matters.]]')
 
 
 def drain_sales() -> list[str]:

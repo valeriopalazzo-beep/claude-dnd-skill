@@ -526,6 +526,8 @@ _DM_ENDPOINTS = {
     "supplies_changed",
     # Downtime: downtime.py opens and closes it; choosing is the players'.
     "downtime_changed",
+    # The party's common fund: treasury.py changes it; putting in and taking out is the players'.
+    "treasury_changed",
     # The DM's screen: everything the players do not see, and hidden rolls.
     "dm_screen", "dm_screen_data", "dm_screen_roll",
     # People met: people.py writes the notebook, everyone reads it.
@@ -2597,7 +2599,12 @@ def shop_get():
         who = request.args.get("character", "").strip()[:50]
     with _shop_lock:
         shop = _open_shop_now()
-        return jsonify({"shop": shop, "purse": _shop_purse(who) if shop else None}), 200
+    fund = None
+    if shop and who:
+        with _treasury_lock:
+            view = _treasury.public_view(_treasury_now())
+        fund = {"coins": view["coins"], "cp": view["cp"]} if view else None
+    return jsonify({"shop": shop, "purse": _shop_purse(who) if shop else None, "fund": fund}), 200
 
 
 @app.route("/shop", methods=["POST"])
@@ -2696,12 +2703,28 @@ def shop_buy():
             return jsonify({"error": "the shop does not sell that", "code": "item"}), 404
         if item["stock"] is not None and item["stock"] < qty:
             return jsonify({"error": "not enough in stock", "code": "stock", "shop": shop}), 409
-        try:
-            purse = _inventory.op_buy(character, item["name"], item["price_cp"], qty,
-                                      item["section"], _active_campaign(), push=False)
-        except _inventory.InventoryError as e:
-            code = "funds" if "not enough coins" in str(e) else "sheet"
-            return jsonify({"error": str(e), "code": code}), 409
+        purse = fund_paid = fund_paid_view = None
+        if data.get("pay") == "fund":            # the party's common fund pays (treasury.py)
+            with _treasury_lock:
+                fund, fund_path = _treasury_now(), _treasury_file()
+                if fund is None or not fund_path:
+                    return jsonify({"error": "the party has no common fund", "code": "nofund"}), 409
+                try:
+                    _treasury.shop_buy(fund, character, item["name"], item["price_cp"], qty,
+                                               item["section"], shop["name"], _active_campaign())
+                except (_treasury.TreasuryError, _inventory.InventoryError) as e:
+                    code = "fund" if "the fund holds" in str(e) else "sheet"
+                    return jsonify({"error": str(e), "code": code}), 409
+                _treasury.save(fund_path, fund)
+                fund_paid_view = _treasury.public_view(fund)
+                fund_paid = fund_paid_view["text"]     # the DM hears of it with the sale ([[SHOP: …]])
+        else:
+            try:
+                purse = _inventory.op_buy(character, item["name"], item["price_cp"], qty,
+                                          item["section"], _active_campaign(), push=False)
+            except _inventory.InventoryError as e:
+                code = "funds" if "not enough coins" in str(e) else "sheet"
+                return jsonify({"error": str(e), "code": code}), 409
         if item["stock"] is not None:
             item["stock"] -= qty
         _persist_shop()
@@ -2729,11 +2752,129 @@ def shop_buy():
         _persist_stats()
         _broadcast({"stats": snapshot})
     sale = {"character": character, "item": item["name"], "qty": qty, "total": total,
-            "shop": shop["name"], "left": _inventory.format_coins(purse)}
+            "shop": shop["name"], "left": _inventory.format_coins(purse) if purse is not None else ""}
+    if fund_paid:
+        sale["fund"] = fund_paid
     _shop_cli.sales_add(sale)
-    _broadcast({"shop": shop, "shop_sale": {"character": character, "item": label, "total": total}})
-    return jsonify({"shop": shop, "bought": label, "total": total,
-                    "purse": {"coins": purse, "cp": _inventory.coins_cp(purse)}}), 200
+    _broadcast({"shop": shop, "shop_sale": {"character": character, "item": label, "total": total, "fund": bool(fund_paid)}})
+    if fund_paid:
+        _broadcast({"treasury": fund_paid_view})
+    return jsonify({"shop": shop, "bought": label, "total": total, "fund": fund_paid_view,
+                    "purse": _shop_purse(character)}), 200
+
+
+# ─── The party's common fund (treasury.py) ───────────────────────────────────
+# Coins that belong to the group, in <campaign>/treasury.json. Every screen can
+# read it; a player puts coins in or takes them out from their own phone (the
+# coins move between their sheet and the fund) and the DM is told; the shop can
+# be paid from it. POST /treasury is treasury.py saying it changed.
+import treasury as _treasury
+
+_treasury_lock = threading.Lock()
+
+
+def _treasury_file() -> Optional[str]:
+    camp = re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]
+    if not camp:
+        return None
+    try:
+        return str(_find_campaign(camp) / "treasury.json")
+    except Exception:
+        return None
+
+
+def _treasury_now() -> Optional[dict]:
+    path = _treasury_file()
+    try:
+        return _treasury.load(path) if path else None
+    except _treasury.TreasuryError:
+        return None
+
+
+def _refresh_load(character: str) -> None:
+    """What the character carries now (coins weigh too), on the display's copy of the sheet."""
+    try:
+        import encumbrance as _encumbrance
+        load = _encumbrance.display_load(_encumbrance.report(
+            _inventory._read(_inventory.find_sheet(character, _active_campaign())), _active_campaign()))
+    except Exception:
+        return
+    snapshot = None
+    with _stats_lock:
+        for p in _current_stats.get("players", []):
+            if p.get("name", "").lower() == character.lower() and load:
+                p["load"] = load
+                snapshot = dict(_current_stats)
+    if snapshot is not None:
+        _persist_stats()
+        _broadcast({"stats": snapshot})
+
+
+@app.route("/treasury", methods=["GET"])
+def treasury_get():
+    if not _token_ok():
+        return "Forbidden", 403
+    who = g.character if getattr(g, "role", None) == "player" else request.args.get("character", "").strip()[:50]
+    with _treasury_lock:
+        view = _treasury.public_view(_treasury_now())
+    return jsonify({"treasury": view, "purse": _shop_purse(who or "") if view else None}), 200
+
+
+@app.route("/treasury", methods=["POST"])
+def treasury_changed():
+    """treasury.py changed the fund: every screen gets it, with what happened."""
+    data = request.get_json(silent=True) or {}
+    with _treasury_lock:
+        view = _treasury.public_view(_treasury_now())
+    payload = {"treasury": view}
+    if data.get("news"):
+        payload["treasury_news"] = str(data["news"])[:200]
+    _broadcast(payload)
+    return "", 204
+
+
+@app.route("/treasury/move", methods=["POST"])
+def treasury_move():
+    """A player moves coins: {"character", "dir": "in"|"out", "coins": "10gp"}.
+
+    "in" takes them from the character's sheet into the fund, "out" the other
+    way; both or neither. 409 says why (not enough coins, no fund, no sheet).
+    """
+    if not _token_ok():
+        return "Forbidden", 403
+    if not _rate_ok(request.remote_addr):
+        return "Too Many Requests", 429
+    body = request.get_json(silent=True) or {}
+    character = _acting_character(str(body.get("character", ""))[:50].strip())
+    with _stats_lock:
+        known = {p.get("name", "") for p in _current_stats.get("players", [])}
+    character = next((n for n in known if n.lower() == character.lower()), character)
+    if not character or character == "Everybody" or not _char_ok(character, known):
+        return jsonify({"error": "unknown character", "code": "character"}), 403
+    direction = body.get("dir")
+    if direction not in ("in", "out"):
+        return jsonify({"error": "dir is in or out", "code": "dir"}), 400
+    try:
+        coins = _inventory.parse_coins(str(body.get("coins", ""))[:60])
+    except _inventory.InventoryError as e:
+        return jsonify({"error": str(e), "code": "coins"}), 400
+    path = _treasury_file()
+    with _treasury_lock:
+        data = _treasury_now()
+        if data is None or not path:
+            return jsonify({"error": "the party has no common fund", "code": "nofund"}), 409
+        try:
+            move = (_treasury.deposit if direction == "in" else _treasury.withdraw)(data, character, coins, _active_campaign())
+        except (_treasury.TreasuryError, _inventory.InventoryError) as e:
+            code = "fund" if "the fund holds" in str(e) else "funds" if "not enough coins" in str(e) else "sheet"
+            return jsonify({"error": str(e), "code": code}), 409
+        _treasury.save(path, data)
+        view = _treasury.public_view(data)
+    _treasury.notes_add(_treasury.format_note(move["entry"], view["text"]))
+    _refresh_load(character)
+    _broadcast({"treasury": view, "treasury_news": _treasury.describe(move["entry"]),
+                "treasury_by": move["character"]})
+    return jsonify({"treasury": view, "purse": {"coins": move["purse"], "cp": _inventory.coins_cp(move["purse"])}}), 200
 
 
 @app.route("/scene", methods=["POST"])

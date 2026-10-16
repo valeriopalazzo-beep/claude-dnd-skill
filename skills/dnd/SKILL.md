@@ -586,6 +586,8 @@ Treasure is rolled, not improvised: `scripts/loot.py roll --cr N [--monsters N |
 
 When the party enters a shop and wants to browse, open it on their screens with `display/shop.py open` and a price list: each player buys from their own phone and the purchase is applied automatically. A `[[SHOP: … bought …]]` line from `check_input.py` reports a sale that is **already paid and on the sheet** — never apply it again. Syntax: `SKILL-scripts.md` → *Inventory Script* / *Shop*.
 
+When the party keeps money together — a reward they do not split, savings for a boat or a house, the stronghold's upkeep — give it a **common fund**: `display/treasury.py add 120gp --reason "…"` creates it, and from then on every screen has a Common fund panel. Each player puts coins in or takes them out from their own phone (the coins move between the sheet and the fund) and can pay at the shop from it; you get `[[TREASURY: Lyra put 10gp in — the party fund now holds 135gp.]]` from `check_input.py`, **already applied**. Money the group earns or spends together goes through the fund (`add` / `spend --reason`), not through one character's sheet. Syntax: `SKILL-scripts.md` → *Common Fund*.
+
 ---
 
 ## Encounters

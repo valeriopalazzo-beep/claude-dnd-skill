@@ -1442,6 +1442,42 @@
   .sup-light small{ flex:none; font-size:14px; color:var(--ln-text-muted, #cdbfa6); }
   .sup-empty{ margin:30px 8px; text-align:center; font-size:16px; color:#b9ab92; }
 
+  /* ══ Common fund (treasury.py) — the party's coins, in and out from each phone ══ */
+  #tre-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
+    align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  #tre-modal.open{ display:flex; }
+  #tre-panel{ width:min(520px, 100%); margin:auto 0; color:var(--ln-text, #ECE4D2); font-family:'Alegreya Sans','Syne',sans-serif; }
+  #tre-head{ display:flex; align-items:center; gap:10px; margin-bottom:12px; color:#ECE4D2; }
+  #tre-head h2{ flex:1; min-width:0; margin:0; font-size:22px; line-height:1.15; }
+  #tre-close{ flex:none; width:40px; height:40px; border-radius:999px; cursor:pointer; font-size:16px;
+    background:rgba(0,0,0,.35); color:inherit; border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #tre-body{ display:flex; flex-direction:column; gap:10px; }
+  .tre-box{ padding:13px 16px; border-radius:12px; background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
+  .tre-total{ font-size:26px; font-weight:800; color:var(--ln-accent, #f2b544); }
+  .tre-sub{ margin:3px 0 0; font-size:15px; color:var(--ln-text-muted, #cdbfa6); }
+  .tre-form{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .tre-form input, .tre-form select{ min-width:0; padding:10px 12px; border-radius:10px; font:inherit; font-size:17px;
+    color:inherit; background:rgba(0,0,0,.3); border:1px solid var(--ln-line, rgba(255,255,255,.2)); }
+  .tre-form input{ flex:1 1 90px; width:90px; }
+  .tre-form select{ flex:0 0 auto; }
+  .tre-form button{ flex:1 1 120px; padding:11px 12px; border-radius:10px; border:0; cursor:pointer; font:inherit; font-weight:800; font-size:16px;
+    background:var(--ln-accent, #f2b544); color:var(--ln-on-accent, #1a1206); }
+  .tre-form button.out{ background:transparent; color:inherit; border:1px solid var(--ln-line-strong, rgba(255,255,255,.3)); }
+  .tre-form button:disabled{ opacity:.4; cursor:default; }
+  .tre-hist{ list-style:none; margin:0; padding:0; }
+  .tre-hist li{ display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--ln-line, rgba(255,255,255,.1)); font-size:15.5px; }
+  .tre-hist li:last-child{ border-bottom:0; }
+  .tre-hist li span{ flex:1; min-width:0; overflow-wrap:anywhere; }
+  .tre-hist li small{ flex:none; color:var(--ln-text-muted, #b9ab92); font-size:13px; }
+  .tre-hist li.plus span::before{ content:'＋ '; color:#7fdc8a; }
+  .tre-hist li.minus span::before{ content:'－ '; color:#e2574c; }
+  .tre-empty{ margin:30px 8px; text-align:center; font-size:16px; color:#b9ab92; }
+  #shop-pay{ display:flex; gap:8px; margin:-2px 0 10px; }
+  #shop-pay[hidden]{ display:none; }
+  #shop-pay button{ flex:1; padding:8px 10px; border-radius:999px; cursor:pointer; font:inherit; font-size:14.5px; font-weight:700;
+    color:inherit; background:transparent; border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #shop-pay button.sel{ color:var(--ln-on-accent, #1a1206); background:var(--ln-accent, #f2b544); border-color:var(--ln-accent, #f2b544); }
+
   /* ══ Downtime (downtime.py) — what each character does between adventures ══ */
   #dt-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
     align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
@@ -5411,6 +5447,7 @@
     <button class="ph-set-opt" id="ph-people-opt" type="button" hidden><span data-i18n="people.title">People met</span><strong>👤</strong></button>
     <button class="ph-set-opt" id="ph-clock-opt" type="button" hidden><span data-i18n="clock.title">Clocks</span><strong>◔</strong></button>
     <button class="ph-set-opt" id="ph-supplies-opt" type="button" hidden><span data-i18n="sup.title">Supplies</span><strong>🎒</strong></button>
+    <button class="ph-set-opt" id="ph-treasury-opt" type="button" hidden><span data-i18n="tre.title">Common fund</span><strong>💰</strong></button>
     <button class="ph-set-opt" id="ph-downtime-opt" type="button" hidden><span data-i18n="dt.title">Downtime</span><strong>⌂</strong></button>
     <label class="ph-set-opt ph-set-row" id="ph-skin-opt"><span data-i18n="ph.style">Style</span><select id="ph-skin-select" class="ph-set-select" aria-label="Display style"><option value="vellum">Vellum</option><option value="editorial">Editorial</option><option value="lanterna">Lanterna</option></select></label>
     <label class="ph-set-opt ph-set-row" id="ph-lang-opt"><span data-i18n="settings.language">Language</span><select id="ph-lang-select" class="ph-set-select" aria-label="Display language" data-i18n-aria="settings.language"></select></label>
@@ -5545,6 +5582,7 @@
     <h2 id="shop-name"></h2>
     <p id="shop-sub"></p>
     <p id="shop-purse"></p>
+    <div id="shop-pay" role="group" hidden><button type="button" data-pay="me"></button><button type="button" data-pay="fund"></button></div>
     <div id="shop-items"></div>
   </div>
 </div>
@@ -5615,6 +5653,17 @@
       <button id="sup-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
     </div>
     <div id="sup-body"></div>
+  </div>
+</div>
+
+<!-- Common fund: the party's coins (treasury.py) -->
+<div id="tre-modal">
+  <div id="tre-panel" role="dialog" aria-labelledby="tre-title">
+    <div id="tre-head">
+      <h2 id="tre-title" data-i18n="tre.title">Common fund</h2>
+      <button id="tre-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
+    </div>
+    <div id="tre-body"></div>
   </div>
 </div>
 
@@ -5830,6 +5879,7 @@
   <symbol id="ln-i-swords" viewBox="0 0 24 24"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" x2="19" y1="19" y2="13"/><line x1="16" x2="20" y1="16" y2="20"/><line x1="19" x2="21" y1="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" x2="9" y1="14" y2="18"/><line x1="7" x2="4" y1="17" y2="20"/><line x1="3" x2="5" y1="19" y2="21"/></symbol>
   <symbol id="ln-i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></symbol>
   <symbol id="ln-i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+  <symbol id="ln-i-chest" viewBox="0 0 24 24"><path d="M3 10a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v9H3z"/><path d="M3 12h18"/><path d="M10.5 11h3v3h-3z"/></symbol>
   <symbol id="ln-i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></symbol>
   <symbol id="ln-i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
   <symbol id="ln-i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2v10l7 7"/></symbol>
@@ -5890,6 +5940,7 @@
       <button class="ln-item" type="button" id="ln-region" title="Region map" data-i18n-title="region.title" hidden><svg class="ln-i"><use href="#ln-i-compass"/></svg><span class="ln-lbl" data-i18n="region.title">Region map</span><span class="ln-badge" id="ln-badge-region" data-i18n="region.new" hidden>New</span></button>
       <button class="ln-item" type="button" id="ln-clocks" title="Clocks" data-i18n-title="clock.title" hidden><svg class="ln-i"><use href="#ln-i-clock"/></svg><span class="ln-lbl" data-i18n="clock.title">Clocks</span></button>
       <button class="ln-item" type="button" id="ln-supplies" title="Supplies" data-i18n-title="sup.title" hidden><svg class="ln-i"><use href="#ln-i-pack"/></svg><span class="ln-lbl" data-i18n="sup.title">Supplies</span></button>
+      <button class="ln-item" type="button" id="ln-treasury" title="Common fund" data-i18n-title="tre.title" hidden><svg class="ln-i"><use href="#ln-i-chest"/></svg><span class="ln-lbl" data-i18n="tre.title">Common fund</span></button>
       <button class="ln-item" type="button" id="ln-downtime" title="Downtime" data-i18n-title="dt.title" hidden><svg class="ln-i"><use href="#ln-i-downtime"/></svg><span class="ln-lbl" data-i18n="dt.title">Downtime</span></button>
       <button class="ln-item" type="button" id="ln-beast" title="Bestiary" data-i18n-title="beast.title" hidden><svg class="ln-i"><use href="#ln-i-beast"/></svg><span class="ln-lbl" data-i18n="beast.title">Bestiary</span><span class="ln-badge" id="ln-badge-beast" data-i18n="beast.new" hidden>New</span></button>
       <button class="ln-item" type="button" id="ln-people" title="People met" data-i18n-title="people.title" hidden><svg class="ln-i"><use href="#ln-i-people"/></svg><span class="ln-lbl" data-i18n="people.title">People met</span><span class="ln-badge" id="ln-badge-people" data-i18n="people.new" hidden>New</span></button>
@@ -5975,6 +6026,7 @@
         <button class="ln-item" type="button" id="ln-region-more" data-ln-proxy="ln-region" hidden><svg class="ln-i"><use href="#ln-i-compass"/></svg><span class="ln-lbl" data-i18n="region.title">Region map</span></button>
         <button class="ln-item" type="button" id="ln-clocks-more" data-ln-proxy="ln-clocks" hidden><svg class="ln-i"><use href="#ln-i-clock"/></svg><span class="ln-lbl" data-i18n="clock.title">Clocks</span></button>
         <button class="ln-item" type="button" id="ln-supplies-more" data-ln-proxy="ln-supplies" hidden><svg class="ln-i"><use href="#ln-i-pack"/></svg><span class="ln-lbl" data-i18n="sup.title">Supplies</span></button>
+        <button class="ln-item" type="button" id="ln-treasury-more" data-ln-proxy="ln-treasury" hidden><svg class="ln-i"><use href="#ln-i-chest"/></svg><span class="ln-lbl" data-i18n="tre.title">Common fund</span></button>
         <button class="ln-item" type="button" id="ln-downtime-more" data-ln-proxy="ln-downtime" hidden><svg class="ln-i"><use href="#ln-i-downtime"/></svg><span class="ln-lbl" data-i18n="dt.title">Downtime</span></button>
         <button class="ln-item" type="button" id="ln-beast-more" data-ln-proxy="ln-beast" hidden><svg class="ln-i"><use href="#ln-i-beast"/></svg><span class="ln-lbl" data-i18n="beast.title">Bestiary</span></button>
         <button class="ln-item" type="button" id="ln-people-more" data-ln-proxy="ln-people" hidden><svg class="ln-i"><use href="#ln-i-people"/></svg><span class="ln-lbl" data-i18n="people.title">People met</span></button>
@@ -11290,6 +11342,7 @@ function connect() {
       renderEffectExpiredBlock(ev.owner, ev.condition ? _condLabel(ev.name) : ev.name, ev.was_concentration);
     }
     if (('shop' in payload || payload.shop_sale) && typeof window._onShop === 'function') window._onShop(payload);
+    if ('treasury' in payload && typeof window._onTreasury === 'function') window._onTreasury(payload);
     if (payload.device_request) {
       _showDeviceRequest(payload.device_request);
     }
@@ -11793,6 +11846,129 @@ function _clockPie(segments, filled, size) {
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   fetch('/supplies').then(r => r.ok ? r.json() : null).then(d => { if (d && d.stock) window._onSupplies(d); }).catch(() => {});
+})();
+
+// ── Common fund (treasury.py) ─────────────────────────────────────────
+// The party's coins. A browser bound to a character puts coins in or takes
+// them out (they move between its sheet and the fund); every screen sees the
+// total and who did what. _coinsLocal writes '12gp 5sp' in the table's words;
+// _treasuryEntry is one line of the history.
+function _coinsLocal(text) {
+  return String(text || '').replace(/(\d+)\s*(pp|gp|ep|sp|cp)\b/g, (m, n, u) => n + ' ' + _t('coin.' + u, null, u));
+}
+function _treasuryEntry(e) {
+  const vars = { who: e.who || '', coins: _coinsLocal(e.coins) };
+  const fall = { deposit: '{who} put in {coins}', withdraw: '{who} took out {coins}', shop: '{who} paid {coins} at the shop',
+                 add: '{coins}', income: '{coins} earned', spend: '{coins}', upkeep: '{coins} upkeep' };
+  const kind = fall[e.kind] ? e.kind : 'add';
+  let text = _t('tre.h.' + kind, vars, fall[kind].replace('{who}', vars.who).replace('{coins}', vars.coins));
+  if (e.reason) text += ' — ' + e.reason;
+  const plus = kind === 'deposit' || kind === 'add' || kind === 'income';
+  return { text: text, sign: plus ? 'plus' : 'minus' };
+}
+// ── end treasury entry ──
+
+(function _initTreasury() {
+  const modal = document.getElementById('tre-modal');
+  if (!modal) return;
+  const $ = id => document.getElementById(id);
+  const body = $('tre-body');
+  const q = new URLSearchParams(location.search);
+  const me = String(window._LOGIN_CHAR || q.get('char') || q.get('character') || '').trim();
+  let fund = null, purse = null, busy = false, amount = '', unit = 'gp';
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+
+  function triggers() {
+    ['ln-treasury', 'ln-treasury-more', 'ph-treasury-opt'].forEach(id => { const e = $(id); if (e) e.hidden = !fund; });
+    if (!fund) modal.classList.remove('open');
+  }
+  function load() {
+    const url = '/treasury' + (me && !window._IS_PLAYER ? '?character=' + encodeURIComponent(me) : '');
+    return fetch(url, { headers: _authHeaders() }).then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) { fund = d.treasury; purse = d.purse; triggers(); render(); } }).catch(() => {});
+  }
+  function move(dir) {
+    const n = parseInt(amount, 10);
+    if (!me || busy || !(n > 0)) return;
+    busy = true; render();
+    fetch('/treasury/move', {
+      method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json', 'X-DND-Device': _deviceId }, _authHeaders()),
+      body: JSON.stringify({ character: me, dir: dir, coins: n + unit }),
+    }).then(r => r.json().then(d => ({ ok: r.ok, d })).catch(() => ({ ok: false, d: {} })))
+      .then(({ ok, d }) => {
+        busy = false;
+        if (ok) {
+          fund = d.treasury; purse = d.purse; amount = '';
+          if (navigator.vibrate) navigator.vibrate(30);
+          _showToast('💰 ' + _t(dir === 'in' ? 'tre.done.in' : 'tre.done.out', { coins: _coinsLocal(n + unit) },
+            (dir === 'in' ? 'Put in ' : 'Took out ') + n + unit), 4000);
+        } else {
+          const key = { funds: 'tre.err.funds', fund: 'tre.err.fund', nofund: 'tre.err.nofund' }[d.code] || 'tre.err.generic';
+          _showToast('💰 ' + _t(key, null, d.error || 'It did not go through.'), 5000);
+        }
+        render();
+      });
+  }
+
+  function render() {
+    body.textContent = '';
+    if (!fund) { body.appendChild(el('p', 'tre-empty', _t('tre.empty', null, 'The party has no common fund.'))); return; }
+    const head = el('div', 'tre-box');
+    head.appendChild(el('div', 'tre-total', _coinsLocal(fund.text)));
+    if (me) head.appendChild(el('p', 'tre-sub', purse ? _t('tre.yours', { coins: _coinsLocal(_shopCoinText(purse.coins)) }, 'You carry: ' + _shopCoinText(purse.coins))
+      : _t('shop.nosheet', null, 'No character sheet found — ask the DM.')));
+    body.appendChild(head);
+    if (me && purse) {
+      const form = el('div', 'tre-box tre-form');
+      const inp = el('input');
+      inp.type = 'number'; inp.min = '1'; inp.step = '1'; inp.inputMode = 'numeric'; inp.value = amount;
+      inp.placeholder = _t('tre.amount', null, 'How much');
+      inp.setAttribute('aria-label', inp.placeholder);
+      inp.addEventListener('input', () => { amount = inp.value; sync(); });
+      const sel = el('select');
+      sel.setAttribute('aria-label', _t('tre.coin', null, 'Coin'));
+      ['pp', 'gp', 'ep', 'sp', 'cp'].forEach(u => { const o = el('option', '', _t('coin.' + u, null, u)); o.value = u; if (u === unit) o.selected = true; sel.appendChild(o); });
+      sel.addEventListener('change', () => { unit = sel.value; });
+      const bin = el('button', '', _t('tre.in', null, 'Put in')); bin.type = 'button';
+      const bout = el('button', 'out', _t('tre.out', null, 'Take out')); bout.type = 'button';
+      bin.addEventListener('click', () => move('in'));
+      bout.addEventListener('click', () => move('out'));
+      function sync() { const ok = parseInt(amount, 10) > 0 && !busy; bin.disabled = !ok; bout.disabled = !ok; }
+      sync();
+      form.append(inp, sel, bin, bout);
+      body.appendChild(form);
+    }
+    const box = el('div', 'tre-box');
+    const list = el('ul', 'tre-hist');
+    (fund.history || []).forEach(e => {
+      const row = _treasuryEntry(e);
+      const li = el('li', row.sign);
+      li.appendChild(el('span', '', row.text));
+      const d = new Date((e.t || 0) * 1000);
+      li.appendChild(el('small', '', d.toLocaleDateString(window._LANG || undefined, { day: 'numeric', month: 'short' })));
+      list.appendChild(li);
+    });
+    if (!(fund.history || []).length) list.appendChild(el('li', '', _t('tre.nohistory', null, 'Nothing has moved yet.')));
+    box.appendChild(list);
+    body.appendChild(box);
+  }
+
+  window._onTreasury = function (payload) {
+    const was = !!fund;
+    fund = payload.treasury || null;
+    triggers();
+    if (fund && payload.treasury_by && me && payload.treasury_by.toLowerCase() === me.toLowerCase()) { load(); return; }
+    if (fund && payload.treasury_news && payload.treasury_by) _showToast('💰 ' + _t('tre.toast', { name: payload.treasury_by }, payload.treasury_by + ' used the common fund'), 3500);
+    else if (fund && !was) _showToast('💰 ' + _t('tre.opened', null, 'The party has a common fund.'), 5000);
+    if (modal.classList.contains('open')) { render(); load(); }
+  };
+  const open = () => { if (!fund) return; modal.classList.add('open'); render(); load(); };
+  const close = () => modal.classList.remove('open');
+  ['ln-treasury', 'ph-treasury-opt'].forEach(id => { const e = $(id); if (e) e.addEventListener('click', open); });
+  $('tre-close').addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  load();
 })();
 
 // ── Bestiary (bestiary.py) ────────────────────────────────────────────
@@ -14290,6 +14466,10 @@ function _updateDicePendingBadge(snapshot) {
 }
 
 // ── Shop (shop.py) ────────────────────────────────────────────────────
+function _shopCoinText(coins) {
+  const parts = ['pp', 'gp', 'ep', 'sp', 'cp'].filter(u => coins && coins[u]).map(u => coins[u] + u);
+  return parts.join(' ') || '0gp';
+}
 // The DM opens a shop; every screen can read the price list. A browser bound
 // to a character (PIN login, or the phone view's ?char=) also sees that
 // character's purse and can buy: two taps (Buy, then Confirm), and the server
@@ -14299,12 +14479,9 @@ function _updateDicePendingBadge(snapshot) {
   const me = (window._LOGIN_CHAR || q.get('char') || q.get('character') || '').trim();
   const modal = document.getElementById('shop-modal');
   if (!modal) return;
-  let shop = null, purse = null, armed = '', armTimer = null, busy = false;
+  let shop = null, purse = null, fund = null, payFund = false, armed = '', armTimer = null, busy = false;
 
-  function coinText(coins) {
-    const parts = ['pp', 'gp', 'ep', 'sp', 'cp'].filter(u => coins[u]).map(u => coins[u] + ' ' + _t('coin.' + u, null, u));
-    return parts.join(' ') || '0 ' + _t('coin.gp', null, 'gp');
-  }
+  const coinText = coins => _coinsLocal(_shopCoinText(coins));
   const priceText = cp => coinText({ gp: Math.floor(cp / 100), sp: Math.floor(cp % 100 / 10), cp: cp % 10 });
 
   function render() {
@@ -14315,6 +14492,15 @@ function _updateDicePendingBadge(snapshot) {
     purseEl.textContent = !me ? _t('shop.hint.phone', null, 'Each player buys from their own phone.')
       : purse ? _t('shop.purse', { coins: coinText(purse.coins) }, 'You have: ' + coinText(purse.coins))
       : _t('shop.nosheet', null, 'No character sheet found — ask the DM.');
+    const pay = document.getElementById('shop-pay');
+    if (!me || !fund) payFund = false;
+    pay.hidden = !me || !fund;
+    if (me && fund) {
+      pay.querySelector('[data-pay="me"]').textContent = _t('shop.pay.me', null, 'I pay');
+      pay.querySelector('[data-pay="fund"]').textContent = _t('shop.pay.fund', { coins: coinText(fund.coins) }, 'Common fund (' + coinText(fund.coins) + ')');
+      pay.querySelectorAll('button').forEach(b => b.classList.toggle('sel', (b.dataset.pay === 'fund') === payFund));
+    }
+    const wallet = payFund ? fund : purse;
     const list = document.getElementById('shop-items');
     list.textContent = '';
     shop.items.forEach(item => {
@@ -14342,7 +14528,7 @@ function _updateDicePendingBadge(snapshot) {
         btn.type = 'button';
         btn.className = 'shop-buy' + (armed === item.id ? ' armed' : '');
         btn.textContent = armed === item.id ? _t('shop.confirm', null, 'Confirm') : _t('shop.buy', null, 'Buy');
-        btn.disabled = busy || out || !purse || purse.cp < item.price_cp;
+        btn.disabled = busy || out || !wallet || wallet.cp < item.price_cp;
         btn.addEventListener('click', () => buy(item));
         row.appendChild(btn);
       }
@@ -14354,7 +14540,7 @@ function _updateDicePendingBadge(snapshot) {
     const url = '/shop' + (me && !window._IS_PLAYER ? '?character=' + encodeURIComponent(me) : '');
     return fetch(url, { headers: _authHeaders() })
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d) { shop = d.shop; purse = d.purse; setOpen(!!shop); render(); } })
+      .then(d => { if (d) { shop = d.shop; purse = d.purse; fund = d.fund || null; setOpen(!!shop); render(); } })
       .catch(() => {});
   }
 
@@ -14378,16 +14564,17 @@ function _updateDicePendingBadge(snapshot) {
     armed = ''; clearTimeout(armTimer);
     busy = true; render();
     const headers = Object.assign({ 'Content-Type': 'application/json', 'X-DND-Device': _deviceId }, _authHeaders());
-    fetch('/shop/buy', { method: 'POST', headers, body: JSON.stringify({ character: me, item: item.id, qty: 1 }) })
+    fetch('/shop/buy', { method: 'POST', headers, body: JSON.stringify({ character: me, item: item.id, qty: 1, pay: payFund ? 'fund' : 'me' }) })
       .then(r => r.json().then(d => ({ ok: r.ok, d })))
       .then(({ ok, d }) => {
         if (d.shop) shop = d.shop;
         if (ok) {
           purse = d.purse;
+          if (d.fund) fund = { coins: d.fund.coins, cp: d.fund.cp };
           if (navigator.vibrate) navigator.vibrate(30);
           _showToast(_t('shop.bought', { item: d.bought, price: priceText(item.price_cp) }, 'Bought ' + d.bought));
         } else {
-          const key = { funds: 'shop.err.funds', stock: 'shop.err.stock', closed: 'shop.err.closed' }[d.code] || 'shop.err.generic';
+          const key = { funds: 'shop.err.funds', fund: 'tre.err.fund', stock: 'shop.err.stock', closed: 'shop.err.closed' }[d.code] || 'shop.err.generic';
           _showToast(_t(key, null, d.error || 'Could not buy'));
         }
       })
@@ -14415,6 +14602,13 @@ function _updateDicePendingBadge(snapshot) {
   ['ln-shop', 'ph-shop-opt'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('click', open);
+  });
+  document.getElementById('shop-pay').addEventListener('click', e => {
+    const b = e.target.closest('button[data-pay]');
+    if (!b) return;
+    payFund = b.dataset.pay === 'fund';
+    armed = '';
+    render();
   });
   document.getElementById('shop-close').addEventListener('click', () => modal.classList.remove('open'));
   modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('open'); });

@@ -111,7 +111,7 @@ class ShopTests(unittest.TestCase):
             ("i1", 100, "1gp", None, "gear"), ("i2", 5000, "50gp", 1, "gear"),
             ("i3", 1000, "10gp", None, "weapons"), ("i4", 50, "5sp", None, "gear")])
         self.assertEqual(self.sent, [{"shop": shop, "shop_opened": True}])
-        self.assertEqual(self.client.get("/shop").get_json(), {"shop": shop, "purse": None})
+        self.assertEqual(self.client.get("/shop").get_json(), {"shop": shop, "purse": None, "fund": None})
 
     def test_a_bad_price_or_an_empty_list_opens_nothing(self):
         for items in ([], [{"name": "Corda", "price": "poco"}], [{"name": "", "price": "1gp"}],
@@ -149,7 +149,7 @@ class ShopTests(unittest.TestCase):
         self.assertIn("- Zaino\n- Razioni (1 giorno)\n", sheet)
         # every screen: the bag on the display's copy of the sheet, and who bought what
         self.assertEqual(self.sent[0]["stats"]["players"][0]["sheet"]["inventory"], ["Razioni (1 giorno)"])
-        self.assertEqual(self.sent[1]["shop_sale"], {"character": "Aldric", "item": "Razioni (1 giorno)", "total": "5sp"})
+        self.assertEqual(self.sent[1]["shop_sale"], {"character": "Aldric", "item": "Razioni (1 giorno)", "total": "5sp", "fund": False})
         lines = self.mod._shop_cli.drain_sales()
         self.assertEqual(len(lines), 1)
         self.assertIn('[[SHOP: Aldric bought Razioni (1 giorno) for 5sp at "Emporio di Brakka"', lines[0])

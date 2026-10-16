@@ -21,6 +21,9 @@ that was solved, or ran out of attempts (puzzle.py), is a `[[PUZZLE …]]` line.
 When every player has chosen a downtime activity (downtime.py) the DM gets a
 `[[DOWNTIME: …]]` line.
 
+Coins a player put into or took out of the party's common fund, or paid from
+it at the shop (treasury.py), are `[[TREASURY: …]]` lines, already applied.
+
 Spells cast from a player's screen and concentration saves after damage
 are `[[SPELL: …]]` and `[[CONCENTRATION: …]]` lines, already applied.
 
@@ -129,6 +132,13 @@ except Exception:
 try:
     from downtime import drain_notes as drain_downtime
     for line in drain_downtime():
+        print(line)
+except Exception:
+    pass
+
+try:
+    from treasury import drain_notes as drain_treasury
+    for line in drain_treasury():
         print(line)
 except Exception:
     pass

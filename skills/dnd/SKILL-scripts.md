@@ -569,6 +569,27 @@ python3 ${CLAUDE_SKILL_DIR}/display/shop.py close    # when the party leaves
 
 ---
 
+## Common Fund — `display/treasury.py`
+
+The party's own purse, in `<campaign>/treasury.json`: coins that belong to the group, with who moved what and why.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/display/treasury.py add 120gp --reason "Ricompensa del borgomastro"   # creates the fund the first time
+python3 ${CLAUDE_SKILL_DIR}/display/treasury.py spend 2gp 5sp --reason "Due notti alla Rana Ubriaca"
+python3 ${CLAUDE_SKILL_DIR}/display/treasury.py deposit "Lyra" 10gp       # from Lyra's sheet into the fund
+python3 ${CLAUDE_SKILL_DIR}/display/treasury.py withdraw "Hernio" 5gp     # from the fund onto Hernio's sheet
+python3 ${CLAUDE_SKILL_DIR}/display/treasury.py show                      # the coins and the last movements
+python3 ${CLAUDE_SKILL_DIR}/display/treasury.py history --all
+python3 ${CLAUDE_SKILL_DIR}/display/treasury.py close                     # no fund any more (prints what was left)
+```
+
+- Coins in `pp gp ep sp cp` (`mp mo me ma mr` too); change is made as on a sheet. `spend`, `withdraw` and a purchase refuse what the fund cannot cover, and nothing moves.
+- From the phone: the **Common fund** panel shows the coins and the history; a character puts in or takes out an amount of one coin. At an open shop the buyer chooses **I pay** or **Common fund**: the fund pays, the item goes on the buyer's sheet, and the `[[SHOP: …]]` line says it was paid from the fund.
+- What the players do reaches you as `[[TREASURY: …]]` lines from `check_input.py` — already applied, information only. Your own `add` / `spend` are not reported back.
+- No fund, no panel: it exists from the first `add` or `deposit`.
+
+---
+
 ## Tracker Script — `scripts/tracker.py`
 Tracks conditions, concentration, timed effects, and death saves. State persists at `~/.claude/dnd/campaigns/<name>/tracker.json`.
 
