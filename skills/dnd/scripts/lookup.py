@@ -308,7 +308,7 @@ LABELS = {
         "cr": "CR", "xp": "XP", "ac": "AC", "hp": "HP", "speed": "Speed: ",
         "abbr": ["STR", "DEX", "CON", "INT", "WIS", "CHA"],
         "vulnerable": "Vulnerable", "resistant": "Resistant", "immune": "Immune",
-        "condition_immune": "Condition Immune", "languages": "Languages: ",
+        "condition_immune": "Condition Immune", "languages": "Languages: ", "senses": "Senses: ",
         "feature_level": "  (level {n})",
     },
     "it": {
@@ -326,7 +326,7 @@ LABELS = {
         "cr": "GS", "xp": "PE", "ac": "CA", "hp": "PF", "speed": "Velocità: ",
         "abbr": ["FOR", "DES", "COS", "INT", "SAG", "CAR"],
         "vulnerable": "Vulnerabilità", "resistant": "Resistenze", "immune": "Immunità",
-        "condition_immune": "Immunità alle condizioni", "languages": "Linguaggi: ",
+        "condition_immune": "Immunità alle condizioni", "languages": "Linguaggi: ", "senses": "Sensi: ",
         "feature_level": "  (livello {n})",
         # Italian books use metric units: 1 lb = 0.5 kg
         "weight_unit": "kg", "weight_factor": 0.5, "decimal": ",",
@@ -455,12 +455,32 @@ def _fmt_monster(r: dict, L: dict = _EN) -> str:
                               "immunities", "condition_immunities")):
         lines.append("")
 
+    if r.get("senses"):
+        lines.append(f"{L.get('senses', 'Senses: ')}{_senses_text(r['senses'], L)}")
     if r.get("languages"):
         lines.append(f"{L['languages']}{r['languages']}")
     desc = r.get("description", "")
     if desc:
         lines += ["", desc]
     return "\n".join(lines)
+
+
+_SENSE_IT = (("passive perception", "Percezione passiva"), ("darkvision", "scurovisione"), ("blindsight", "vista cieca"),
+             ("truesight", "vista pura"), ("tremorsense", "percezione tellurica"))
+
+
+def _senses_text(text: str, L: dict) -> str:
+    """The senses line in the reader's language: Italian names and metres (5 ft = 1,5 m) for 'it'."""
+    if L.get("weight_unit") != "kg":
+        return text
+    out = text
+    for en, it in _SENSE_IT:
+        out = re.sub(en, it, out, flags=re.I)
+
+    def metres(m):
+        v = int(m.group(1)) * 3 / 10
+        return (f"{v:g}".replace(".", ",")) + " m"
+    return re.sub(r"(\d+)\s*ft\.?", metres, out)
 
 
 def _fmt_feature(r: dict, L: dict = _EN) -> str:

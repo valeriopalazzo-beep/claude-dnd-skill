@@ -1480,6 +1480,19 @@ def _norm_condition(r: dict) -> dict:
     }
 
 
+def _senses_5ebits(senses) -> str:
+    """5e-bits senses {"darkvision": "60 ft.", "passive_perception": 9} → 'darkvision 60 ft., passive Perception 9'.
+
+    Kept because they decide what a creature sees in the dark (map_render.py
+    reads darkvision, blindsight and truesight from here)."""
+    if not isinstance(senses, dict):
+        return ""
+    parts = [f"{k.replace('_', ' ')} {v}" for k, v in senses.items() if k != "passive_perception" and v]
+    if senses.get("passive_perception") is not None:
+        parts.append(f"passive Perception {senses['passive_perception']}")
+    return ", ".join(parts)
+
+
 def _norm_monster(r: dict) -> dict:
     ac_list = r.get("armor_class", [])
     ac_val  = (ac_list[0].get("value") if isinstance(ac_list, list) and ac_list
@@ -1532,6 +1545,7 @@ def _norm_monster(r: dict) -> dict:
         "wis":   r.get("wisdom", 10),
         "cha":   r.get("charisma", 10),
         "alignment": r.get("alignment", ""),
+        "senses":    _senses_5ebits(r.get("senses")),
         "languages": r.get("languages", ""),
         "resistances":   _flat("damage_resistances"),
         "immunities":    _flat("damage_immunities"),
