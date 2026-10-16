@@ -3533,7 +3533,8 @@ def _downtime_file() -> Optional[str]:
 
 def _downtime_view(data: dict) -> Optional[dict]:
     me = g.character if getattr(g, "role", None) == "player" else str(request.args.get("character") or "")[:50]
-    return _downtime.public_view(data, me or "", dm=getattr(g, "role", None) != "player")
+    # A screen bound to a character sees its own choice only, whoever is logged in.
+    return _downtime.public_view(data, me or "", dm=getattr(g, "role", None) != "player" and not me)
 
 
 @app.route("/downtime", methods=["GET"])
