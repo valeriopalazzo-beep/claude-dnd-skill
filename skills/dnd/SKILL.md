@@ -763,7 +763,7 @@ You write the layout and the tokens; the image backend paints the terrain's look
 
 Generation takes 5–60 s each: run every `image_gen.py` call as its **own Bash call with `run_in_background: true`**, then carry on narrating — the image lands in the feed when ready. Several can be queued at once. If `image_gen.py` fails or reports images are off, stop calling it for the rest of the session and never mention it in the fiction.
 
-**Handouts (`handout.py`).** When the characters hold a written text and its wording matters — a letter, a wanted poster, a diary page, a riddle, a contract — hand it out instead of reading it in the narration: it appears as a sheet of paper and stays in the players' Documents list to be re-read. Write the document itself, in its author's voice. No image backend needed. Syntax: `SKILL-scripts.md` → *Handouts*.
+**Handouts (`handout.py`).** When the characters hold a written text and its wording matters — a letter, a wanted poster, a diary page, a riddle, a contract — hand it out instead of reading it in the narration: it appears as a sheet of paper and stays in the players' Documents list to be re-read. Write the document itself, in its author's voice. When it is written in a language some characters may not know — an elven inscription, a dwarven ledger, orders in Infernal — add `--language <language>`: only the characters whose sheet lists it read the words; the others see the shapes of the script and who at the table can read it, so the reading becomes a scene of its own (who translates, and how faithfully). *Comprehend languages* or a translation later: `handout.py --reader <id> <name>`. No image backend needed. Syntax: `SKILL-scripts.md` → *Handouts*.
 
 ---
 

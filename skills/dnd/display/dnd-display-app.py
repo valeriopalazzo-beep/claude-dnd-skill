@@ -2403,6 +2403,55 @@ def _show_handout(entry: dict) -> None:
     _broadcast({"handout": entry})
 
 
+import tongues as _tongues
+
+
+def _handout_readers(language: str) -> list:
+    """The characters at the table whose sheet lists the language."""
+    with _stats_lock:
+        party = [str(p.get("name", "")) for p in _current_stats.get("players", []) if p.get("name")]
+    readers = []
+    for name in party:
+        try:
+            text = _inventory._read(_inventory.find_sheet(name, _active_campaign()))
+        except Exception:
+            continue
+        if _tongues.knows(text, language):
+            readers.append(name)
+    return readers
+
+
+def _handout_view(entry: dict, me: str) -> dict:
+    """What `me` (a character, lowercase; "" for the DM and the table screen) can read of a handout.
+
+    In a language `me` does not know, the words become the shapes of its script —
+    the server never sends them the text."""
+    if not isinstance(entry, dict) or not entry.get("language") or not me:
+        return entry
+    if me in {str(r).lower() for r in entry.get("readers") or []}:
+        return entry
+    out = dict(entry)
+    out["body"] = _tongues.glyphs(entry.get("body", ""), entry["language"])
+    out["from"] = _tongues.glyphs(entry.get("from", ""), entry["language"])
+    out["unreadable"] = True
+    return out
+
+
+def _handout_for(payload: Optional[dict], viewer: Optional[str], bound: str) -> Optional[dict]:
+    """A handout in a language: each screen gets only what its character can read."""
+    me = viewer if viewer is not None else (bound or "")
+    if not isinstance(payload, dict) or not me:
+        return payload
+    if isinstance(payload.get("handout"), dict) and payload["handout"].get("language"):
+        payload = dict(payload, handout=_handout_view(payload["handout"], me))
+    batch = payload.get("replay_batch")
+    if isinstance(batch, list) and any(isinstance(e, dict) and isinstance(e.get("handout"), dict) for e in batch):
+        payload = dict(payload, replay_batch=[dict(e, handout=_handout_view(e["handout"], me))
+                                              if isinstance(e, dict) and isinstance(e.get("handout"), dict) else e
+                                              for e in batch])
+    return payload
+
+
 def _clean_handout_text(value, limit: int) -> str:
     # The DM's own words: keep punctuation and line breaks, drop control characters.
     return re.sub(r"[\x00-\x09\x0b-\x1f\x7f]", "", str(value or ""))[:limit].strip()
@@ -2412,8 +2461,11 @@ def _clean_handout_text(value, limit: int) -> str:
 def handout():
     """Hand the party a document, or show an old one again.
 
-    New:     {"title": "...", "body": "...", "kind": "letter", "from": "...", "image": "file.png"}
+    New:     {"title": "...", "body": "...", "kind": "letter", "from": "...", "image": "file.png",
+              "language": "Elfico"}
     Again:   {"id": "a1b2c3d4"}
+    Reader:  {"id": "a1b2c3d4", "reader": "Hernio"} — someone can read it now (comprehend languages,
+             a translation): their screen gets the text
     """
     if not _token_ok():
         return "Forbidden", 403
@@ -2421,10 +2473,21 @@ def handout():
 
     again = str(data.get("id", "")).strip()
     if again:
+        reader = " ".join(str(data.get("reader", "")).split())[:50]
         with _handouts_lock:
-            entry = next((h for h in _read_handouts() if h["id"] == again), None)
-        if entry is None:
-            return jsonify({"error": "unknown handout"}), 404
+            items = _read_handouts()
+            entry = next((h for h in items if h["id"] == again), None)
+            if entry is None:
+                return jsonify({"error": "unknown handout"}), 404
+            if reader:
+                if not entry.get("language"):
+                    return jsonify({"error": "that handout is in no particular language: everyone reads it"}), 400
+                if reader.lower() not in {r.lower() for r in entry.get("readers") or []}:
+                    entry["readers"] = list(entry.get("readers") or []) + [reader]
+                try:
+                    _write_handouts(items)
+                except OSError as e:
+                    return jsonify({"error": f"could not save: {e}"}), 500
         _show_handout(entry)
         return jsonify(entry), 200
 
@@ -2450,6 +2513,10 @@ def handout():
         "image": image,
         "ts": _time.time(),
     }
+    language = " ".join(_clean_handout_text(data.get("language"), 40).split())
+    if language:
+        entry["language"] = language
+        entry["readers"] = _handout_readers(language)
     with _handouts_lock:
         items = _read_handouts()
         items.append(entry)
@@ -2484,8 +2551,12 @@ def handouts_list():
     """Every handout of the active campaign, oldest first. Players may read them."""
     if not _token_ok():
         return "Forbidden", 403
+    if getattr(g, "role", None) == "player":
+        me = (g.character or "").lower()
+    else:
+        me = str(request.args.get("character") or "").strip().lower()[:50]
     with _handouts_lock:
-        return jsonify(_read_handouts()), 200
+        return jsonify([_handout_view(h, me) for h in _read_handouts()]), 200
 
 
 def _pc_slug(name: str) -> str:
@@ -6937,6 +7008,7 @@ def stream():
                 try:
                     payload = _whisper_for(_for_viewer(q.get(timeout=5), _viewer), _viewer, _ch)
                     payload = _scene_for(payload, _viewer, _ch)
+                    payload = _handout_for(payload, _viewer, _ch)
                     if payload:
                         yield f"data: {json.dumps(payload)}\n\n"
                 except queue.Empty:

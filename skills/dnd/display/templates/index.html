@@ -4574,6 +4574,11 @@
     font-family:'IM Fell English','Literata',serif; font-size:19px; line-height:1.5; }
   .handout-body{ margin:0; white-space:pre-wrap; overflow-wrap:anywhere; }
   .handout-from{ margin:14px 0 0; text-align:right; font-style:italic; }
+  .handout-lang{ margin:-10px 0 10px; text-align:right; font-family:'Alegreya Sans','Syne',sans-serif; font-size:13px;
+    font-style:normal; letter-spacing:.06em; text-transform:uppercase; opacity:.6; }
+  .handout-paper.unreadable .handout-body, .handout-paper.unreadable .handout-from{ font-family:serif; letter-spacing:.08em; opacity:.85; }
+  .handout-tongue{ margin:16px 0 0; padding:9px 12px; border-radius:6px; background:rgba(59,47,34,.1); font-family:'Alegreya Sans','Syne',sans-serif;
+    font-size:15px; font-style:italic; line-height:1.35; text-align:left; }
   .handout-paper img{ display:block; max-width:100%; max-height:70vh; margin:0 auto 12px; border-radius:2px; cursor:zoom-in; }
   .handout-paper.kind-letter, .handout-paper.kind-note{ font-family:'Caveat','IM Fell English',cursive; font-size:25px; line-height:1.3; }
   .handout-paper.kind-note{ max-width:380px; padding:18px 20px; transform:rotate(-1.2deg); background:#f3ead2;
@@ -7643,9 +7648,34 @@ function _handoutKind(h) {
   return _HANDOUT_ICON[h.kind] ? h.kind : 'letter';
 }
 
+// A handout in another language (handout.py --language): a reader sees which
+// one; who cannot read it gets the glyphs from the server, and who at the table can.
+function _handoutTongue(h) {
+  if (!h || !h.language) return null;
+  const readers = h.readers || [];
+  return {
+    tag: _t('handout.lang', { language: h.language }, 'In ' + h.language),
+    unreadable: !!h.unreadable,
+    note: h.unreadable
+      ? _t('handout.unreadable', { language: h.language }, 'Written in ' + h.language + ': you cannot read it.') + ' '
+        + (readers.length ? _t('handout.readers', { names: readers.join(', ') }, 'It can be read by: ' + readers.join(', '))
+                          : _t('handout.noReaders', null, 'Nobody in the party can read it.'))
+      : '',
+  };
+}
+// ── end handout tongue ──
+
 function _handoutPaper(h) {
   const paper = document.createElement('div');
   paper.className = 'handout-paper kind-' + _handoutKind(h);
+  const tongue = _handoutTongue(h);
+  if (tongue) {
+    const tag = document.createElement('p');
+    tag.className = 'handout-lang';
+    tag.textContent = tongue.tag;
+    paper.appendChild(tag);
+    if (tongue.unreadable) paper.classList.add('unreadable');
+  }
   if (h.image) {
     const img = document.createElement('img');
     img.src = _mediaUrl(h.image);
@@ -7665,6 +7695,12 @@ function _handoutPaper(h) {
     from.className = 'handout-from';
     from.textContent = h.from;
     paper.appendChild(from);
+  }
+  if (tongue && tongue.note) {
+    const note = document.createElement('p');
+    note.className = 'handout-tongue';
+    note.textContent = tongue.note;
+    paper.appendChild(note);
   }
   return paper;
 }
@@ -7783,7 +7819,9 @@ function _handoutRemoved(id) {
     const el = document.getElementById(id);
     if (el) el.addEventListener('click', () => _handoutOpen(''));
   });
-  fetch('/handouts')
+  const _hq = new URLSearchParams(location.search);
+  const _hme = window._IS_PLAYER ? '' : String(_hq.get('char') || _hq.get('character') || '').trim();
+  fetch('/handouts' + (_hme ? '?character=' + encodeURIComponent(_hme) : ''))
     .then(r => r.ok ? r.json() : [])
     .then(list => { (list || []).forEach(_handoutRemember); _handoutBadges(); })
     .catch(() => {});

@@ -1524,6 +1524,8 @@ python3 ${CLAUDE_SKILL_DIR}/display/handout.py --remove a1b2c3d4 # the party los
 
 **When to use it:** whenever the characters hold a text in their hands and its exact wording matters — a clue to re-read, a riddle, a contract to sign, a list of names. Write the document itself, in the voice of whoever wrote it (title = what the players would call it; `--from` = the signature, if it has one); narrate the finding with `send.py` as usual and do not repeat the text in the narration. For a text only one character reads in secret, use `whisper.py` instead.
 
+**In another language:** `--language Elfico` (English or Italian names: Elvish/Elfico, Dwarvish/Nanico, Infernal/Infernale, Thieves' Cant/Gergo dei ladri…, or one the campaign invented). Who can read it is worked out from the `**Languages:**` line of each sheet at the table when it is handed out; the script prints who. Everyone else's screen gets the text turned into the glyphs of that script — the server never sends them the words — with a note saying who can read it. The table screen and yours show the text with an "In Elfico" tag. `handout.py --reader <id> "Hernio"` lets one more character read it (comprehend languages, a dictionary, someone teaching them) and shows it again; `--list` shows each language and its readers.
+
 ---
 
 ## Continuity Autosave — `scripts/autosave_checkpoint.py`, `scripts/install_autosave_hook.py`

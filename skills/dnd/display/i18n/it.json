@@ -1109,5 +1109,10 @@
   "chase.ev.sight.off": "La preda è sparita alla vista",
   "chase.ev.cover.crowded": "Tanti ripari: fuggire è più facile",
   "chase.ev.cover.normal": "Ripari normali",
-  "chase.ev.cover.open": "Pochi ripari: fuggire è più difficile"
+  "chase.ev.cover.open": "Pochi ripari: fuggire è più difficile",
+
+  "handout.lang": "In {language}",
+  "handout.unreadable": "È scritto in {language}: non sai leggerlo.",
+  "handout.readers": "Lo sa leggere: {names}.",
+  "handout.noReaders": "Nessuno del gruppo lo sa leggere."
 }

@@ -975,5 +975,10 @@
   "chase.ev.sight.off": "The quarry is out of sight",
   "chase.ev.cover.crowded": "Plenty of cover: escaping is easier",
   "chase.ev.cover.normal": "Ordinary cover",
-  "chase.ev.cover.open": "Little cover: escaping is harder"
+  "chase.ev.cover.open": "Little cover: escaping is harder",
+
+  "handout.lang": "In {language}",
+  "handout.unreadable": "It is written in {language}: you cannot read it.",
+  "handout.readers": "It can be read by: {names}.",
+  "handout.noReaders": "Nobody in the party can read it."
 }

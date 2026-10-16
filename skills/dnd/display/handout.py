@@ -19,6 +19,11 @@ so they can read it again whenever they like.
     # A picture already in <campaign>/media/ (image_gen.py, map_render.py --no-send):
     python3 handout.py --title "Mappa del contrabbandiere" --image mappa-contrabbandiere.png
 
+    # Written in another language: only the characters whose sheet lists it can
+    # read it; the others see the script and who at the table can read it.
+    python3 handout.py --title "Iscrizione sull'arco" --kind scroll --language Elfico --body "…"
+    python3 handout.py --reader a1b2c3d4 "Hernio"   # now Hernio can read it too (comprehend languages…)
+
     python3 handout.py --list            # id, kind and title of every handout
     python3 handout.py --show a1b2c3d4   # put an old one back on every screen
     python3 handout.py --remove a1b2c3d4 # take it out of the Documents list
@@ -114,6 +119,8 @@ def main() -> int:
     ap.add_argument("--from", dest="sender", default="", help="signature at the bottom")
     ap.add_argument("--body", help="the text; without it the text is read from stdin")
     ap.add_argument("--image", default="", help="a file in <campaign>/media/ shown on the sheet")
+    ap.add_argument("--language", default="", help="written in this language: only who knows it reads it")
+    ap.add_argument("--reader", nargs=2, metavar=("ID", "NAME"), help="let one more character read a handout")
     ap.add_argument("--list", action="store_true", help="list the handouts of the active campaign")
     ap.add_argument("--show", metavar="ID", help="show an existing handout again")
     ap.add_argument("--remove", metavar="ID", help="take a handout out of the Documents list")
@@ -126,7 +133,8 @@ def main() -> int:
         if not items:
             print("No handouts yet.")
         for h in items:
-            print(f"{h.get('id')}  {h.get('kind', ''):8} {h.get('title', '')}")
+            print(f"{h.get('id')}  {h.get('kind', ''):8} {h.get('title', '')}"
+                  + (f"  [{h['language']}: {', '.join(h.get('readers') or []) or 'nobody'}]" if h.get("language") else ""))
         return 0
 
     if args.remove:
@@ -134,6 +142,14 @@ def main() -> int:
         if status != 204:
             return _fail(status, body, f"handout {args.remove} was not removed")
         print(f"handout {args.remove}: removed from the Documents list")
+        return 0
+
+    if args.reader:
+        hid, name = args.reader
+        status, body = _request("/handout", {"id": hid, "reader": name})
+        if status != 200:
+            return _fail(status, body, f"{name} cannot read handout {hid} yet")
+        print(f"handout {hid}: \"{body.get('title', '')}\" — readers now: {', '.join(body.get('readers') or [])}")
         return 0
 
     if args.show:
@@ -154,11 +170,15 @@ def main() -> int:
 
     status, body = _request("/handout", {
         "title": args.title, "kind": args.kind, "from": args.sender,
-        "body": body_text, "image": args.image,
+        "body": body_text, "image": args.image, "language": args.language,
     })
     if status != 200 or not isinstance(body, dict):
         return _fail(status, body, "nothing was handed out")
     print(f"handout {body.get('id')}: \"{body.get('title')}\" is in the story and in the players' Documents")
+    if body.get("language"):
+        readers = body.get("readers") or []
+        print(f"  in {body['language']}: " + (f"{', '.join(readers)} can read it; the others see only the script"
+                                              if readers else "nobody at the table can read it — they see only the script"))
     return 0
 
 
