@@ -138,7 +138,7 @@ class SeeingTests(unittest.TestCase):
         self.assertIn("Aldric (A, in bright light, darkvision 60 ft) sees: g (darkvision, grey); does not see: h", lines)
         self.assertIn("Goblin (g, in darkness, darkvision 60 ft) sees: A", lines)
         self.assertIn("Hobgoblin (h, in darkness) sees: A", lines, "a torch is seen from afar")
-        self.assertTrue(any("no senses written for h" in l for l in lines))
+        self.assertTrue(any("no stat block found for h" in l for l in lines))
         self.assertEqual(mr.sight_report(spec, {}), [])
 
 
@@ -238,6 +238,70 @@ class CampaignTests(unittest.TestCase):
             _sys.argv, _sys.stdin = old
         self.assertIn("map_render: sight — Lyra (L, in darkness, darkvision 60 ft) sees: g (darkvision, grey)", err.getvalue())
         self.assertIn("darkness", out.read_text(encoding="utf-8"), "the key, in the campaign's language (English here)")
+        self.assertIn("map_render: senses — g = Goblin (SRD): darkvision 60 ft", err.getvalue())
+
+
+class BookSensesTests(unittest.TestCase):
+    """A creature's senses come from its stat block: the SRD, then the DM's Monster Manual notes."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = pathlib.Path(self._tmp.name)
+        self._old = os.environ.get("DND_CAMPAIGN_ROOT")
+        os.environ["DND_CAMPAIGN_ROOT"] = str(self.root)       # no notes here unless a test writes them
+
+    def tearDown(self):
+        if self._old is None:
+            os.environ.pop("DND_CAMPAIGN_ROOT", None)
+        else:
+            os.environ["DND_CAMPAIGN_ROOT"] = self._old
+        self._tmp.cleanup()
+
+    def test_srd_creatures_by_their_english_or_italian_name(self):
+        spec = mr.parse("light: dark\n---\nA.g.w.k.x.y\n---\nA: Aldric | pc\ng: Goblin arciere 2 | foe\n"
+                        "w: Lupo crudele | foe\nk: Ser Bertrand | ally | come Cavaliere\nx: Grak il Rosso | foe\n"
+                        "y: Ombra | foe | none\n")
+        lines = mr.add_book_senses(spec)
+        self.assertIn("g = Goblin (SRD): darkvision 60 ft", lines)
+        self.assertIn("w = Dire Wolf (SRD): no darkvision", lines, "not in its stat block: it has none")
+        self.assertIn("k = Knight (SRD): no darkvision", lines)
+        self.assertEqual(spec.vision["g"].dark, 12)
+        self.assertFalse(spec.vision["w"])
+        self.assertNotIn("x", spec.vision, "nowhere in the books: left to the DM")
+        self.assertIn("y", spec.vision, "`| none` is a decision, not a gap")
+        report = mr.sight_report(spec, mr.light_levels(spec))
+        self.assertTrue(any(l.startswith("no stat block found for x —") for l in report))
+        self.assertEqual(mr.srd_senses("Goblinoide"), None, "only an exact name, never a guess")
+
+    def test_the_monster_manual_notes_when_they_are_on_this_pc(self):
+        self.assertIsNone(mr.mm_senses("Belva Distorcente"))
+        notes = self.root / "riferimenti" / "mm"
+        notes.mkdir(parents=True)
+        (notes / "INDICE.md").write_text("| Nome italiano | Nome inglese | GS | Tipo | Pagina | File |\n|---|---|---|---|---|---|\n"
+                                         "| Belva Distorcente | Displacer Beast | 3 | Mostruosità | 31 | [displacer-beast.md](displacer-beast.md) |\n"
+                                         "| Senza Sensi | Senseless | 1 | Prova | 1 | [senseless.md](senseless.md) |\n", encoding="utf-8")
+        (notes / "displacer-beast.md").write_text("# Belva\n- **Sensi** scurovisione 18 m, Percezione passiva 11 · **Linguaggi** —\n",
+                                                  encoding="utf-8")
+        (notes / "senseless.md").write_text("# Senza\nSensi come un altro.\n", encoding="utf-8")
+        spec = mr.parse("light: dark\n---\nA.d.z\n---\nA: Aldric | pc\nd: Displacer Beast | foe\nz: Senza sensi | foe\n")
+        lines = mr.add_book_senses(spec)
+        self.assertIn("d = Belva Distorcente (Monster Manual notes): darkvision 60 ft", lines)
+        self.assertTrue(any(l.startswith("z = Senza Sensi (Monster Manual notes): the note has no Sensi line") for l in lines))
+        self.assertNotIn("z", spec.vision)
+
+    def test_the_dataset_and_lookup_carry_the_senses(self):
+        sys.path.insert(0, str(SKILL / "scripts"))
+        import build_srd
+        import lookup
+        self.assertEqual(build_srd._senses_5ebits({"darkvision": "60 ft.", "blindsight": "10 ft.", "passive_perception": 9}),
+                         "darkvision 60 ft., blindsight 10 ft., passive Perception 9")
+        self.assertEqual(build_srd._senses_5ebits(None), "")
+        self.assertIn("Senses: darkvision 60 ft., passive Perception 9", lookup.lookup("goblin", "monsters"))
+        self.assertEqual(lookup._senses_text("darkvision 60 ft., passive Perception 9", lookup.LABELS["it"]),
+                         "scurovisione 18 m, Percezione passiva 9")
+        with_dv = [m for m in json.loads((SKILL / "data" / "dnd5e_srd.json").read_text(encoding="utf-8"))["monsters"]
+                   if "darkvision" in m.get("senses", "")]
+        self.assertEqual(len(with_dv), 181)
 
 
 if __name__ == "__main__":

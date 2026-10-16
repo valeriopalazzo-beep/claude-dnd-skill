@@ -81,11 +81,14 @@ Kinds: candle, torch, lamp, lantern (hooded), hooded-low, bullseye, light,
 daylight, continual-flame, dancing-lights, produce-flame, flame-blade, fire
 (Italian names too). A `!` square (fire, brazier) lights its surroundings as
 `fire` does. Walls and closed doors stop light as they stop the eye.
-A token's senses go after its side; PCs without them are read from their
-sheets (Darkvision / Scurovisione and its range):
+A token's senses go after its side. Without them a PC's are read from the
+sheet (Darkvision / Scurovisione and its range), and a creature's from its
+stat block — the SRD, then the DM's Monster Manual notes when present — by
+the token's name or by `as <creature>`; `none` for one with no special senses:
     A: Aldric | pc | darkvision 18m
-    g: Goblin | foe | darkvision 60ft
-    k: Melma | foe | blindsight 3m       also truesight, devil's sight
+    k: Ser Bertrand | ally | as Knight
+    q: Melma | foe | blindsight 3m       also truesight, devil's sight
+    z: Ombra senza nome | foe | none
 Darkvision sees dim light as bright and darkness as dim, in grey; a `dark`
 effect (`@ … dark`, e.g. the Darkness spell) is magical darkness: only
 truesight, devil's sight and blindsight get through. The script prints, for
@@ -187,6 +190,7 @@ class MapSpec:
     light: str = ""          # the place's light: "", bright, dim or dark ("" = no light model)
     lights: list = field(default_factory=list)   # LightSource
     vision: dict = field(default_factory=dict)   # letter → Vision written in the legend
+    statblock: dict = field(default_factory=dict)  # letter → the book's creature it is (`| as Knight`)
 
 
 @dataclass
@@ -577,7 +581,13 @@ def parse(text: str) -> MapSpec:
             else:
                 side = "pc" if k.isupper() else "foe"
             spec.legend[k] = (name or k, side)
-            if rest:
+            block = [r for r in rest if re.match(r"(?i)^(as|come)\s+\S", r)]
+            if block:
+                spec.statblock[k] = re.sub(r"(?i)^(as|come)\s+", "", block[0]).strip()
+                rest = [r for r in rest if r not in block]
+            if [r.lower() for r in rest] in (["none"], ["nessuno"], ["nessun senso"], ["-"]):
+                spec.vision[k] = Vision()          # no special senses: nothing to look up
+            elif rest:
                 vis = parse_senses(", ".join(rest), squares_per_foot(spec), spec.warnings)
                 if vis:
                     spec.vision[k] = vis
@@ -952,10 +962,10 @@ def sight_report(spec: MapSpec, level: dict) -> list:
                 seen.append(t + (f" ({QUALITY_NAMES[q]})" if QUALITY_NAMES[q] else ""))
         head = f"{name} ({ch}, {WHERE_NAMES[level[(vx, vy)]]}" + (f", {senses}" if senses else "") + ")"
         lines.append(f"{head} sees: {', '.join(seen) or 'nobody'}" + (f"; does not see: {', '.join(unseen)}" if unseen else ""))
-    blind = [t[0] for t in others if not spec.vision.get(t[0])]
+    blind = [t[0] for t in others if t[0] not in spec.vision]
     if blind and any(level[(x, y)] < 2 for _c, x, y in tokens):
-        lines.append(f"no senses written for {', '.join(blind)} — if they have darkvision, add `| darkvision 18m` "
-                     "to their legend line")
+        lines.append(f"no stat block found for {', '.join(blind)} — name the creature as the book does (or `| as <creature>`); "
+                     "a creature of your own: decide its senses and write them (`| darkvision 18m`), or `| none`")
     return lines
 
 
@@ -1067,6 +1077,102 @@ def add_sheet_senses(spec: MapSpec, campaign: str) -> list:
                 spec.vision[ch] = vis
                 done.append(ch)
     return done
+
+
+def _book_key(text: str) -> str:
+    import unicodedata
+    text = unicodedata.normalize("NFKD", text or "").encode("ascii", "ignore").decode()
+    return " ".join(re.sub(r"[-_'’]", " ", text).casefold().split())
+
+
+def _book_candidates(name: str) -> list:
+    """'Goblin arciere 2' → ['Goblin arciere', 'Goblin']: the name, then shorter and shorter, numbers dropped."""
+    words = [w for w in (name or "").split() if not re.fullmatch(r"#?\d+|[IVX]+", w)]
+    return [" ".join(words[:i]) for i in range(len(words), 0, -1)]
+
+
+def srd_senses(name: str):
+    """(senses text, creature) from the SRD for a creature named exactly as the book (English or Italian), or None."""
+    scripts = os.path.join(os.path.dirname(_HERE), "scripts")
+    if scripts not in sys.path:
+        sys.path.insert(0, scripts)
+    try:
+        import lookup
+    except Exception:
+        return None
+    for cand in _book_candidates(name):
+        try:
+            r = lookup.lookup_record(cand, "monsters")
+        except Exception:
+            return None
+        if not r:
+            continue
+        names = {r.get("name", ""), r.get("index", ""), *(r.get("_alt_names") or []),
+                 ((r.get("_i18n") or {}).get("it") or {}).get("name", "")}
+        if _book_key(cand) in {_book_key(n) for n in names if n}:
+            return r.get("senses", ""), r.get("name", cand)
+    return None
+
+
+def mm_notes_dir():
+    """The DM's own Monster Manual notes (~/.claude/dnd/riferimenti/mm), when they exist on this PC."""
+    import paths
+    d = paths._root() / "riferimenti" / "mm"
+    return d if (d / "INDICE.md").is_file() else None
+
+
+def mm_senses(name: str):
+    """(senses text, creature) from the Monster Manual notes, for a creature the SRD lacks; None when not there.
+
+    The notes are personal and never part of this repository: this only reads them where they are."""
+    d = mm_notes_dir()
+    if d is None:
+        return None
+    rows = {}
+    for line in (d / "INDICE.md").read_text(encoding="utf-8", errors="replace").splitlines():
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        link = re.search(r"\(([^)]+\.md)\)", line)
+        if len(cells) >= 2 and link:
+            for n in cells[:2]:
+                rows.setdefault(_book_key(n), (cells[0], link.group(1)))
+    for cand in _book_candidates(name):
+        hit = rows.get(_book_key(cand))
+        if not hit:
+            continue
+        try:
+            text = (d / hit[1]).read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            return None
+        m = re.search(r"\*\*Sensi\*\*\s*(.*?)(?:·|\*\*Linguaggi|$)", text, re.M)
+        return (m.group(1).strip() if m else None), hit[0]
+    return None
+
+
+def add_book_senses(spec: MapSpec) -> list:
+    """Every creature token with no senses in the legend gets its stat block's: the SRD first, then the
+    Monster Manual notes. A creature the book gives no darkvision has none. Returns lines for the DM."""
+    lines = []
+    per_foot = squares_per_foot(spec)
+    for ch, (name, side) in spec.legend.items():
+        if side == "pc" or ch in spec.vision or token_position(spec, ch) is None:
+            continue
+        wanted = spec.statblock.get(ch) or name
+        found, book = srd_senses(wanted), "SRD"
+        if found is None:
+            found, book = mm_senses(wanted), "Monster Manual notes"
+        if found is None:
+            continue
+        text, creature = found
+        if text is None:
+            lines.append(f"{ch} = {creature} ({book}): the note has no Sensi line — read its stat block and write them")
+            continue
+        vis = sheet_senses(text, per_foot)
+        spec.vision[ch] = vis
+        what = ", ".join(f"{label} {_feet(getattr(vis, attr), spec)}" for attr, label in
+                         (("dark", "darkvision"), ("blind", "blindsight"), ("true", "truesight"), ("devil", "devil's sight"))
+                         if getattr(vis, attr)) or "no darkvision"
+        lines.append(f"{ch} = {creature} ({book}): {what}")
+    return lines
 
 
 def add_supply_lights(spec: MapSpec, campaign: str) -> list:
@@ -1397,6 +1503,8 @@ def main() -> int:
         camp = media.safe_campaign(args.campaign) if args.campaign else media.active_campaign()
         if camp:
             add_sheet_senses(spec, camp)
+            for line in add_book_senses(spec):
+                print(f"map_render: senses — {line}", file=sys.stderr)
             for line in add_supply_lights(spec, camp):
                 print(f"map_render: {line}", file=sys.stderr)
             lang = paths.campaign_language(camp)

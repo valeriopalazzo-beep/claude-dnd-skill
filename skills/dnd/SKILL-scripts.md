@@ -1038,8 +1038,8 @@ light: dark
 ---
 A: Aldric | pc
 B: Lyra | pc
-g: Goblin arciere | foe | darkvision 18m
-h: Hobgoblin | foe | darkvision 18m
+g: Goblin arciere | foe
+h: Hobgoblin | foe
 light A torch
 light 2,4 candle
 ```
@@ -1047,7 +1047,7 @@ light 2,4 candle
 - `light: dark | dim | bright` (`buio | fioca | intensa`) is the place's own light; without the line the map works as before. Each square is then bright, dim or dark: the place's light raised by every source that reaches it in a straight line (walls and closed doors stop light).
 - Sources: `light <col,row> <kind>` on a square, `light <letter> <kind>` carried by a token (it moves with it). Kinds with the PHB ranges: `candle` 1,5+1,5 m, `torch` 6+6 m, `lamp` 4,5+9 m, `lantern` (hooded) 9+9 m, `hooded-low` dim 1,5 m, `bullseye` cone 18+18 m (add a direction: `light A bullseye E`), the spells `light` 6+6 m, `daylight` 18+18 m, `continual-flame`, `dancing-lights` dim 3 m, `produce-flame` and `flame-blade` 3+3 m. Italian names work (`torcia`, `lanterna schermabile`, `luci danzanti`…). Any other size: `light 9,2 6m/6m` (bright, then dim beyond it). A `!` square (a fire, a brazier) shines 3+3 m by itself — the script's choice, the PHB gives no number for it.
 - The torches burning in `supplies.py` that have a holder (`light torch --by Lyra`, `carry torch Lyra`) are put on that PC's token by themselves; one with no holder is reported, not guessed.
-- Senses go after the side in a token's legend line: `| darkvision 18m`, `blindsight 3m`, `truesight 36m`, `devil's sight 36m` (Italian: `scurovisione`, `vista cieca`, `vista pura`, `vista del diavolo`; no range = 18 m darkvision). A PC with nothing written gets them from their sheet (`Darkvision` / `Scurovisione … 18 m`). **Monsters are not read from anywhere: write their darkvision** — the script lists the tokens in a dark place with no senses written.
+- Senses go after the side in a token's legend line: `| darkvision 18m`, `blindsight 3m`, `truesight 36m`, `devil's sight 36m` (Italian: `scurovisione`, `vista cieca`, `vista pura`, `vista del diavolo`; no range = 18 m darkvision). A PC with nothing written gets them from their sheet (`Darkvision` / `Scurovisione … 18 m`). **A creature gets its stat block's senses by itself**: the token's name as the book has it (English or Italian, `Goblin arciere 2` → *Goblin*) is looked up in the SRD, then in the Monster Manual notes in `~/.claude/dnd/riferimenti/mm` when they are on this PC, and the script prints what it found (`map_render: senses — g = Goblin (SRD): darkvision 60 ft`). A creature whose stat block has no darkvision has none. A named NPC: `| as Knight` (`| come Cavaliere`) points to the stat block it uses. Found in no book (a creature of your own): the script says so — decide its senses and write them, or `| none`. Senses written in the legend always win.
 - A `dark` effect or template (`@ 9,8 sphere 15ft dark | Oscurità`) is **magical darkness**: no light gets in, darkvision does not see through it, only truesight, devil's sight and blindsight do.
 - Without fog the map shades dim and dark squares for everyone. With `fog: on` it shows only what the party sees: bright as is, dim and darkvision-in-darkness shaded (lightly obscured), what is dark for every eye left dark — and a creature standing there is not drawn. A small key under the map says what the shades mean, in the campaign's language.
 - The script prints, for you, who sees whom: `map_render: sight — Lyra (B, in dim light, darkvision 60 ft) sees: g (darkvision, grey); does not see: h` — and the same for each foe. Use it for the rules: **dim light or darkvision in darkness = lightly obscured**, disadvantage on Wisdom (Perception) checks that rely on sight; **not seen** = attack rolls against that creature have advantage and its own attacks disadvantage; a creature in darkness can try to Hide from those who do not see it. Tell the players when one of these applies.
