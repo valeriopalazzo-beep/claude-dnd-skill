@@ -155,6 +155,9 @@
 <link rel="icon" type="image/png" sizes="32x32"  href="/icons/app_icon_32.png">
 <link rel="apple-touch-icon" sizes="180x180"      href="/icons/app_icon_180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icons/app_icon_192.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0f0c16">
+<meta name="apple-mobile-web-app-title" content="D&amp;D">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1667,6 +1670,18 @@
   .vote-opt small{ position:relative; display:block; font-size:13.5px; font-weight:500; color:var(--ln-text-muted, #b9ab92); }
   .vote-note{ margin:0; text-align:center; color:var(--ln-text-muted, #cdbfa6); font-size:15px; }
   .vote-result{ margin:2px 0; text-align:center; font-size:21px; font-weight:800; color:#9be59f; }
+
+  /* ══ Installable display (PWA) — the "add to home screen" help ══ */
+  #pwa-modal{ display:none; position:fixed; inset:0; z-index:10540; background:rgba(8,6,4,.92);
+    align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  #pwa-modal.open{ display:flex; }
+  #pwa-panel{ width:min(480px, 100%); margin:auto 0; color:var(--ln-text, #ECE4D2); font-family:'Alegreya Sans','Syne',sans-serif; }
+  #pwa-head{ display:flex; align-items:center; gap:10px; margin-bottom:12px; color:#ECE4D2; }
+  #pwa-head h2{ flex:1; min-width:0; margin:0; font-size:22px; line-height:1.15; }
+  #pwa-head button{ flex:none; width:40px; height:40px; border-radius:999px; cursor:pointer; font-size:16px;
+    background:rgba(0,0,0,.35); color:inherit; border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #pwa-body ol{ margin:0; padding-left:22px; display:flex; flex-direction:column; gap:10px; font-size:18px; line-height:1.35; }
+  #pwa-body p{ margin:14px 0 0; color:var(--ln-text-muted, #b9ab92); font-size:15px; }
 
   /* ══ Attacks (attacks.py) — weapon, target, roll: to hit and damage in one tap ══ */
   #atk-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
@@ -5406,6 +5421,7 @@
     <button class="ph-set-opt" id="ph-handouts-opt" type="button"><span data-i18n="handout.title">Documents</span><strong id="ph-handouts-val">0</strong></button>
     <button class="ph-set-opt" id="ph-login-opt" type="button" hidden><span data-i18n="login.asCharacter">Play as a character</span><strong>🎭</strong></button>
     <button class="ph-set-opt" id="ph-dm-opt" type="button" hidden><span data-i18n="login.dmScreen">DM screen</span><strong>🎲</strong></button>
+    <button class="ph-set-opt" id="ph-install-opt" type="button" hidden><span data-i18n="pwa.install">Install the app</span><strong>📲</strong></button>
     <button class="ph-set-opt" id="ph-logout-opt" type="button" hidden><span data-i18n="ph.logout">Log out</span><strong>⏻</strong></button>
   </div>
 </div>
@@ -5695,6 +5711,24 @@
   </div>
 </div>
 
+<!-- Installable display: how to add it to the home screen where the browser has no install button -->
+<div id="pwa-modal">
+  <div id="pwa-panel" role="dialog" aria-labelledby="pwa-title">
+    <div id="pwa-head">
+      <h2 id="pwa-title" data-i18n="pwa.install">Install the app</h2>
+      <button id="pwa-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
+    </div>
+    <div id="pwa-body">
+      <ol>
+        <li data-i18n="pwa.ios1">Tap the Share button (the square with the arrow) at the bottom of Safari.</li>
+        <li data-i18n="pwa.ios2">Choose “Add to Home Screen”, then “Add”.</li>
+        <li data-i18n="pwa.ios3">Open the display from the new icon: it fills the whole screen.</li>
+      </ol>
+      <p data-i18n="pwa.iosLogin">The first time, the app asks for your PIN again.</p>
+    </div>
+  </div>
+</div>
+
 <!-- Attacks: weapon, target, advantage — one roll for to hit and damage (scripts/attacks.py) -->
 <div id="atk-modal">
   <div id="atk-panel" role="dialog" aria-labelledby="atk-title">
@@ -5957,6 +5991,7 @@
         <button class="ln-item" type="button" id="ln-login-more" title="Play as a character" data-i18n-title="login.asCharacter" hidden><svg class="ln-i"><use href="#ln-i-me"/></svg><span class="ln-lbl" data-i18n="login.asCharacter">Play as a character</span></button>
         <button class="ln-item" type="button" id="ln-dm-more" title="DM screen" data-i18n-title="login.dmScreen" hidden><svg class="ln-i"><use href="#ln-i-back"/></svg><span class="ln-lbl" data-i18n="login.dmScreen">DM screen</span></button>
         <button class="ln-item" type="button" id="ln-dmscreen-more" data-ln-proxy="ln-dmscreen" hidden><svg class="ln-i"><use href="#ln-i-recap"/></svg><span class="ln-lbl" data-i18n="dms.title">DM screen</span></button>
+        <button class="ln-item" type="button" id="ln-install-more" title="Install the app" data-i18n-title="pwa.install" hidden><svg class="ln-i"><use href="#ln-i-phone"/></svg><span class="ln-lbl" data-i18n="pwa.install">Install the app</span></button>
         <button class="ln-item" type="button" id="ln-logout-more" title="Log out" data-i18n-title="ph.logout" hidden><svg class="ln-i"><use href="#ln-i-x"/></svg><span class="ln-lbl" data-i18n="ph.logout">Log out</span></button>
       </div>
     </div>
@@ -13223,6 +13258,59 @@ function _votePlan(vote, me) {
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   load();
+})();
+
+// ── Installable display (PWA) ─────────────────────────────────────────
+// Chrome / Edge / Samsung offer their own install prompt (beforeinstallprompt);
+// Safari on iPhone and iPad has none, so the button explains "Add to Home
+// Screen". Once the display runs as an app the button goes away.
+function _pwaPlan(ua, standalone, hasPrompt) {
+  if (standalone) return { show: false, mode: null };
+  if (hasPrompt) return { show: true, mode: 'prompt' };
+  const s = String(ua || '');
+  const ios = /iPhone|iPad|iPod/i.test(s) || (/Macintosh/i.test(s) && /Mobile\//i.test(s));
+  const safari = ios && !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(s);
+  return safari ? { show: true, mode: 'ios' } : { show: false, mode: null };
+}
+// ── end pwa plan ──
+
+(function _initPwa() {
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1'))
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  const $ = id => document.getElementById(id);
+  const modal = $('pwa-modal');
+  let prompt = null;
+  const standalone = () => (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  function refresh() {
+    const plan = _pwaPlan(navigator.userAgent, standalone(), !!prompt);
+    ['ph-install-opt', 'ln-install-more'].forEach(id => { const e = $(id); if (e) e.hidden = !plan.show; });
+    return plan;
+  }
+  function install(e) {
+    if (e) e.stopPropagation();
+    const plan = refresh();
+    if (plan.mode === 'prompt' && prompt) {
+      const p = prompt;
+      prompt = null;
+      p.prompt();
+      (p.userChoice || Promise.resolve()).finally(refresh);
+    } else if (plan.mode === 'ios' && modal) {
+      modal.classList.add('open');
+    }
+  }
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); prompt = e; refresh(); });
+  window.addEventListener('appinstalled', () => {
+    prompt = null;
+    refresh();
+    _showToast('📲 ' + _t('pwa.installed', null, 'Installed: open the display from its icon.'), 6000);
+  });
+  ['ph-install-opt', 'ln-install-more'].forEach(id => { const e = $(id); if (e) e.addEventListener('click', install); });
+  if (modal) {
+    $('pwa-close').addEventListener('click', () => modal.classList.remove('open'));
+    modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('open'); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') modal.classList.remove('open'); });
+  }
+  refresh();
 })();
 
 // ── Attacks (scripts/attacks.py) ──────────────────────────────────────

@@ -482,6 +482,8 @@ _login_lock = threading.Lock()
 
 # Reachable without logging in. Every other endpoint needs a login.
 _PUBLIC_ENDPOINTS = {"ping", "serve_icon", "favicon", "login", "login_options", "logout", "static",
+                     # The installable display: manifest and service worker, no game data.
+                     "pwa_manifest", "pwa_sw",
                      "crea_page", "crea_start", "crea_conv", "crea_msg", "crea_finish",
                      # /campagna checks its own password cookie (camp_create.py).
                      "campagna_page", "campagna_login", "campagna_logout", "campagna_start",
@@ -1924,6 +1926,86 @@ def favicon():
     _icons_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
     return send_from_directory(_icons_dir, "favicon.ico",
                                mimetype="image/vnd.microsoft.icon")
+
+
+# ─── Installable display (PWA) ───────────────────────────────────────────────
+# A phone adds the display to its home screen and opens it full screen, like an
+# app. The manifest and the service worker are public (the login page links
+# them too) and carry no game data. The worker caches nothing: it only answers
+# a page load that cannot reach the display with a small "the table is not
+# answering" page that retries by itself. Over plain-HTTP LAN addresses browsers
+# refuse service workers; the display still works, it just cannot be installed.
+PWA_THEME = "#0f0c16"
+_PWA_KEYS = ("pwa.name", "pwa.shortName", "pwa.offlineTitle", "pwa.offlineText", "pwa.retry")
+
+
+def _pwa_strings() -> dict:
+    """The manifest's and the offline page's words, in the browser's language."""
+    try:
+        langs = json.loads(_load_i18n_json().replace("<\\/", "</"))
+    except ValueError:
+        langs = {}
+    lang = request.accept_languages.best_match(sorted(langs)) or "en"
+    out = {k: (langs.get(lang) or {}).get(k) or (langs.get("en") or {}).get(k) or k for k in _PWA_KEYS}
+    out["lang"] = lang
+    return out
+
+
+@app.route("/manifest.webmanifest")
+def pwa_manifest():
+    s = _pwa_strings()
+    manifest = {
+        "name": s["pwa.name"], "short_name": s["pwa.shortName"], "lang": s["lang"],
+        "id": "/", "start_url": "/", "scope": "/", "display": "standalone", "orientation": "any",
+        "background_color": PWA_THEME, "theme_color": PWA_THEME,
+        "icons": [
+            {"src": "/icons/app_icon_192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+            {"src": "/icons/app_icon_512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+            {"src": "/icons/app_icon_maskable_512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+        ],
+    }
+    resp = Response(json.dumps(manifest, ensure_ascii=False), mimetype="application/manifest+json")
+    resp.headers["Cache-Control"] = "no-cache"
+    return resp
+
+
+_PWA_WORKER = """'use strict';
+// The display's service worker: nothing is cached; a page that cannot reach the
+// display gets a small offline page that tries again by itself.
+const OFFLINE = %s;
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+self.addEventListener('fetch', e => {
+  if (e.request.mode !== 'navigate') return;
+  e.respondWith(fetch(e.request).catch(() =>
+    new Response(OFFLINE, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })));
+});
+"""
+
+_PWA_OFFLINE = """<!doctype html><html lang="{lang}"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="{theme}"><title>{title}</title>
+<style>html,body{{margin:0;height:100%;background:{theme};color:#ECE4D2;font-family:system-ui,sans-serif}}
+main{{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;box-sizing:border-box;text-align:center}}
+img{{width:120px;height:120px}}h1{{margin:0;font-size:24px}}p{{margin:0;max-width:30em;color:#b9ab92;font-size:17px;line-height:1.4}}
+button{{margin-top:8px;padding:12px 26px;border-radius:999px;border:0;background:#f2b544;color:#1a140c;font-size:17px;font-weight:700}}</style>
+</head><body><main><img src="/icons/app_icon_192.png" alt=""><h1>{title}</h1><p>{text}</p>
+<button type="button" onclick="location.reload()">{retry}</button></main>
+<script>setInterval(function(){{fetch('/ping',{{cache:'no-store'}}).then(function(r){{if(r.ok)location.reload();}}).catch(function(){{}});}},8000);</script>
+</body></html>"""
+
+
+@app.route("/sw.js")
+def pwa_sw():
+    from html import escape
+    s = _pwa_strings()
+    page = _PWA_OFFLINE.format(lang=escape(s["lang"]), theme=PWA_THEME, title=escape(s["pwa.offlineTitle"]),
+                               text=escape(s["pwa.offlineText"]), retry=escape(s["pwa.retry"]))
+    resp = Response(_PWA_WORKER % json.dumps(page, ensure_ascii=False).replace("</", "<\\/"),
+                    mimetype="text/javascript")
+    resp.headers["Cache-Control"] = "no-cache"
+    resp.headers["Service-Worker-Allowed"] = "/"
+    return resp
 
 
 @app.route("/srd-lookup")

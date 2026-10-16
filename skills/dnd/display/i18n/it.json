@@ -944,5 +944,17 @@
   "dms.skill.Stealth": "Furtività",
   "dms.skill.Survival": "Sopravvivenza",
 
-  "sup.light.lamp": "Lampada"
+  "sup.light.lamp": "Lampada",
+
+  "pwa.name": "D&D al tavolo",
+  "pwa.shortName": "D&D",
+  "pwa.offlineTitle": "Il tavolo non risponde",
+  "pwa.offlineText": "Il display del master è spento o il telefono non è in rete. Questa pagina riprova da sola.",
+  "pwa.retry": "Riprova",
+  "pwa.install": "Installa l'app",
+  "pwa.installed": "Installata: apri il display dalla sua icona.",
+  "pwa.ios1": "Tocca il pulsante Condividi (il quadrato con la freccia) in basso in Safari.",
+  "pwa.ios2": "Scegli «Aggiungi alla schermata Home», poi «Aggiungi».",
+  "pwa.ios3": "Apri il display dalla nuova icona: occupa tutto lo schermo.",
+  "pwa.iosLogin": "La prima volta l'app ti chiede di nuovo il PIN."
 }

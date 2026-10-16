@@ -810,5 +810,17 @@
   "dms.dc.very_hard": "Very hard",
   "dms.dc.nearly_impossible": "Nearly impossible",
 
-  "sup.light.lamp": "Lamp"
+  "sup.light.lamp": "Lamp",
+
+  "pwa.name": "D&D at the table",
+  "pwa.shortName": "D&D",
+  "pwa.offlineTitle": "The table is not answering",
+  "pwa.offlineText": "The DM's display is off or this phone is not online. This page tries again by itself.",
+  "pwa.retry": "Try again",
+  "pwa.install": "Install the app",
+  "pwa.installed": "Installed: open the display from its icon.",
+  "pwa.ios1": "Tap the Share button (the square with the arrow) at the bottom of Safari.",
+  "pwa.ios2": "Choose “Add to Home Screen”, then “Add”.",
+  "pwa.ios3": "Open the display from the new icon: it fills the whole screen.",
+  "pwa.iosLogin": "The first time, the app asks for your PIN again."
 }
