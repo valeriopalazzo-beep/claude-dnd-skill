@@ -717,6 +717,18 @@ Food, water and light are counted, not waved away, when the story is about the j
 
 ---
 
+## Traps
+
+Set a trap before the party reaches it with `scripts/trap.py add` — a sample trap from the SRD (`--preset poison-darts`, `hidden-pit`, `collapsing-roof`…, `trap.py presets` lists them) or your own numbers (`trap.py rate --level N` gives the SRD's DCs, attack bonuses and damage by severity) — so its trigger, DCs and effect are fixed before anyone rolls. Then the script does the rules (SRD *Traps*, DMG pp. 120-123):
+
+- **The party walks up to it:** `trap.py pass "<trap>"` compares each present PC's passive Perception (from the sheet) with the DC to spot it. Whoever notices it is told privately (`--tell "Noti dei forellini nel muro."` sends them a secret note) — describe the clue, never the word "trap". Nobody notices and they walk on: it goes off.
+- **They look for it or work at it:** `trap.py check "<trap>" search|investigate|disarm <PC>` puts the roll on that player's phone with the right modifier (thieves' tools from the sheet; `--arcana` for a magic trap, `--no-tools` for an edged tool at disadvantage) and applies the result — found, disarmed, or sprung when the trap says a failed disarm sets it off. A search on the phone shows neither the trap's name nor its DC. An action that clearly reveals it (lifting the rug over the plate) finds it with no roll: `trap.py set … --status found`. Clever play beats the dice: a chest opened from behind a shield with a pole still springs its needle — into the shield.
+- **It goes off:** `trap.py spring "<trap>" --targets "<PCs and foes in it>"` rolls its attacks against AC, asks the PCs' saving throws on their phones (foes' rolled with `--save-bonus g:+2`, default +0), halves the damage on a successful save where the trap says so, and prints one line per target. Apply it in the same turn: `--stat-hp` for the PCs, `tracker.py hit` for the foes, the conditions it names with `--stat-condition-add`.
+
+The DM's screen lists every trap with its DCs and who has noticed or found it. Players never see a trap until it is found: draw it on the battle map (`^`) only then. Syntax: `SKILL-scripts.md` → *Traps*.
+
+---
+
 ## Images & Maps
 
 Only when the display is running. Syntax: `SKILL-scripts.md` → *Battle Maps* / *Region Map* / *Generated Images*.

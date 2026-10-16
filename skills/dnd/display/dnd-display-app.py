@@ -3805,7 +3805,13 @@ def dm_screen_data():
                       for r in _missed.load(str(folder / "missed.json"))][-12:]
         except _missed.MissedError:
             missed = []
+    traps = []
+    for t in ((_dm_json(folder, "traps.json") or {}).get("traps", []) if folder else []):
+        if isinstance(t, dict) and t.get("name"):
+            traps.append({k: t.get(k) for k in ("name", "where", "at", "status", "spot", "investigate", "disarm", "dispel",
+                                                 "magic", "noticed_by", "found_by", "trigger")})
     return jsonify({
+        "traps": traps,
         "missed": missed,
         "campaign": camp, "world": {k: world.get(k) for k in ("date", "time", "weather") if world.get(k)},
         "order": order if isinstance(order, dict) else {}, "party": party, "foes": foes, "clocks": clocks,

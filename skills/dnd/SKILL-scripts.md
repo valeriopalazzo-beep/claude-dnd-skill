@@ -698,6 +698,38 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/supplies.py push
 
 ---
 
+## Traps — `scripts/trap.py`
+
+Traps kept in `<campaign>/traps.json`, with the rules done for you (SRD 5.1 *Traps*, DMG 2014 pp. 120-123).
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/scripts/trap.py presets                    # the SRD sample traps, with their numbers
+python3 ${CLAUDE_SKILL_DIR}/scripts/trap.py rate --level 3             # save DC, attack bonus, damage by severity
+python3 ${CLAUDE_SKILL_DIR}/scripts/trap.py add "Dardi del corridoio" --preset poison-darts --where "Corridoio est" --at 7,3
+python3 ${CLAUDE_SKILL_DIR}/scripts/trap.py add "Lastra instabile" --spot 12 --investigate 12 --disarm 13 --fail-springs \
+    --save DEX --dc 13 --damage "2d10 bludgeoning" --half --condition prone --trigger "lastra a pressione"
+python3 ${CLAUDE_SKILL_DIR}/scripts/trap.py add "Glifo" --magic --investigate 15 --disarm 15 --save DEX --dc 15 --damage "5d8 thunder" --half
+python3 ${CLAUDE_SKILL_DIR}/scripts/trap.py list [--all]
+python3 ${CLAUDE_SKILL_DIR}/scripts/trap.py show "dardi"
+python3 ${CLAUDE_SKILL_DIR}/scripts/trap.py pass "dardi" [--who "Lyra, Hernio"] [--tell "Noti dei forellini nel muro."]
+python3 ${CLAUDE_SKILL_DIR}/scripts/trap.py check "dardi" search Lyra            # also investigate, disarm
+python3 ${CLAUDE_SKILL_DIR}/scripts/trap.py check "glifo" disarm Vardamir --arcana
+python3 ${CLAUDE_SKILL_DIR}/scripts/trap.py check "lastra" disarm Lio --no-tools # an edged tool, at disadvantage (trip wires)
+python3 ${CLAUDE_SKILL_DIR}/scripts/trap.py check "dardi" search Lyra --roll 17  # rolled already · --here: roll it here
+python3 ${CLAUDE_SKILL_DIR}/scripts/trap.py spring "dardi" --targets "Lyra, Hernio, Goblin 1" --ac "Goblin 1:15" --save-bonus "Goblin 1:+0"
+python3 ${CLAUDE_SKILL_DIR}/scripts/trap.py set "dardi" --status found          # or --spot/--disarm N, --where, --note, --at
+python3 ${CLAUDE_SKILL_DIR}/scripts/trap.py remove "dardi"
+```
+
+- **Presets** (SRD): `collapsing-roof`, `falling-net`, `fire-breathing-statue` (magic), `simple-pit`, `hidden-pit`, `locking-pit`, `spiked-pit`, `poison-darts`, `poison-needle`, `rolling-sphere` (a complex trap: initiative +8, see its note), `sphere-of-annihilation` (magic). Italian names work (`dardi`, `ago`, `fossa-nascosta`, `crollo-del-soffitto`…). Explicit options change a preset's numbers.
+- **The effect** is up to three parts: `--attack N [--shots N] --hit-damage "1d4 piercing"` (several shots pick random targets), `--save ABILITY --dc N` with `--damage` / `--save-damage` (`--half` for half on a success) and `--condition` for a failed save, and damage with no roll (`--damage` without a save). Damage is dice and a type joined by `+`: `"1 piercing + 2d10 poison"`. A save that rides on a hit (poisoned darts) is rolled once per hit.
+- **pass**: every PC present (not in `absent:`) unless `--who`; passive Perception from the sheet against the spot DC. A trap with only an Investigation DC (the needle) is not noticed in passing.
+- **check**: the modifier comes from the sheet — the skill's bonus, or thieves' tools (`Tool proficiencies: Arnesi da scasso (+7, …)`, else DEX + proficiency, else plain DEX). The roll goes to the player's phone and waits for it; without the display, or under `roll_mode: auto`, use `--here` or `--roll N`. Search and Investigate success → **found**; disarm success → **disarmed**; a failed disarm on a `--fail-springs` trap → **sprung** (then `spring` it on whoever is in reach).
+- **spring**: PCs' AC and saves from their sheets; foes' AC from `tracker.py hp … --ac` or `--ac NAME:N`, their save bonus `--save-bonus NAME:N` (default +0). The PCs' saves are asked on their phones all at once (`--here` rolls them here). A natural 20 on a trap's attack doubles its dice, a natural 1 misses. It prints one line per target with the total damage and the conditions, then the trap is **sprung** (`--resets` traps go back to **armed**).
+- Statuses: armed, noticed (someone's passive Perception caught it), found, disarmed, sprung. The DM's screen shows them all, armed first.
+
+---
+
 ## Campaign Search — `scripts/campaign_search.py`
 Keyword search across campaign files. Use this **before** loading full files into context when looking up a specific past event, NPC detail, or plot thread.
 

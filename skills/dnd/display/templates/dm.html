@@ -112,6 +112,7 @@
   <section id="s-secrets"><h2 data-t="dms.secrets">Secret dates</h2><div></div></section>
   <section id="s-supplies"><h2 data-t="dms.supplies">Supplies</h2><div></div></section>
   <section id="s-downtime"><h2 data-t="dms.downtime">Downtime</h2><div></div></section>
+  <section id="s-traps"><h2 data-t="dms.traps">Traps</h2><div></div></section>
   <section id="s-missed"><h2 data-t="missed.menu">While you were away</h2><div></div></section>
   <section id="s-prep" class="wide"><h2 data-t="dms.prep">Session prep</h2><div></div></section>
 </main>
@@ -203,6 +204,21 @@
       const c = (dt.choices || {})[n];
       return `<tr><td>${esc(n)}</td><td>${c ? esc(_t('dt.act.' + c.activity, null, c.activity)) + (c.detail ? ' — ' + esc(c.detail) : '') : `<span class="muted">${esc(_t('dt.waiting', null, '…'))}</span>`}</td></tr>`;
     }).join('') + '</table>' : empty('dms.none');
+
+    // Traps (trap.py): where they are, their DCs, who has noticed or found them. The armed ones first.
+    const trapOrder = ['armed', 'noticed', 'found', 'sprung', 'disarmed'];
+    const traps = (d.traps || []).slice().sort((a, b) => trapOrder.indexOf(a.status) - trapOrder.indexOf(b.status));
+    body('s-traps').innerHTML = traps.length ? traps.map(t => {
+      const dcs = [['spot', 'dms.trap.spot'], ['investigate', 'dms.trap.investigate'], ['disarm', 'dms.trap.disarm'], ['dispel', 'dms.trap.dispel']]
+        .filter(([k]) => t[k]).map(([k, key]) => `${esc(_t(key, null, k))} <b>${esc(t[k])}</b>`).join(' · ');
+      const done = t.status === 'sprung' || t.status === 'disarmed';
+      const who = (t.found_by || []).length ? `${esc(_t('dms.trap.foundBy', null, 'found by'))} ${esc(t.found_by.join(', '))}`
+        : (t.noticed_by || []).length ? `${esc(_t('dms.trap.noticedBy', null, 'noticed by'))} ${esc(t.noticed_by.join(', '))}` : '';
+      return `<div class="roll"${done ? ' style="opacity:.55"' : ''}><b style="font-size:16px">${esc(t.name)}</b>
+        <span class="tag ${t.status === 'armed' ? 'warn' : ''}">${esc(_t('dms.trap.' + t.status, null, t.status))}</span>${t.magic ? ' <span class="tag">✦</span>' : ''}
+        ${t.where || t.at ? `<br><small class="muted">${esc([t.where, t.at].filter(Boolean).join(' · '))}</small>` : ''}
+        ${dcs ? `<br><small>${dcs}</small>` : ''}${who ? `<br><small class="muted">${who}</small>` : ''}</div>`;
+    }).join('') : empty('dms.none');
 
     // Recaps written for absent players (missed.py): who has read theirs.
     const missed = d.missed || [];
