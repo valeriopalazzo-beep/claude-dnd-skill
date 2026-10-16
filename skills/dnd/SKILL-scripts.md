@@ -187,6 +187,25 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/inventory.py split 137gp 4sp --among "Aldric
 
 ---
 
+## Encumbrance — `scripts/encumbrance.py`
+
+What a character carries, weighed from the sheet: every item under `## Equipment & Inventory` is looked up in the SRD equipment (English or Italian names, plurals, packs by their contents), coins weigh 1 lb per 50, and Strength sets the limits (PHB 2014 p. 176). `inventory.py` runs it after every item change: the load goes on the character's card and a `⚠` line says what it costs.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/scripts/encumbrance.py show "Ajeje"         # every item, its weight, the total and the limits
+python3 ${CLAUDE_SKILL_DIR}/scripts/encumbrance.py party                # one line per character, with the unknown items
+python3 ${CLAUDE_SKILL_DIR}/scripts/encumbrance.py weight "Fiaschetta di grappa" 0.5kg    # lb or kg; a bare number is kg at an Italian table
+python3 ${CLAUDE_SKILL_DIR}/scripts/encumbrance.py weight "Fiaschetta di grappa" --forget
+python3 ${CLAUDE_SKILL_DIR}/scripts/encumbrance.py push                 # everyone's load to the display (after a load or a --clear)
+```
+
+- **Standard rule** (default): capacity STR × 15 lb; beyond it, speed 5 ft. **Variant rule** (`encumbrance: variant` in `state.md`): over STR × 5 → speed −10 ft; over STR × 10 → speed −20 ft and disadvantage on ability checks, attack rolls and saving throws that use STR, DEX or CON.
+- Heavy armour worn without its Strength (e.g. chain mail, STR 13) costs 10 ft in both rules. Powerful Build doubles every limit.
+- Weights set with `weight` live in `<campaign>/weights.json` and count for every character; an item still unknown weighs nothing.
+- Italian tables read kilograms (1 lb = 0.5 kg, as the Italian Player's Handbook does); the display converts by the screen's language.
+
+---
+
 ## Treasure — `scripts/loot.py`
 
 Random treasure by challenge rating, handed out through `inventory.py` so it lands on the sheets.

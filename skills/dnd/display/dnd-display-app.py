@@ -2619,12 +2619,21 @@ def shop_buy():
 
     label = item["name"] if qty == 1 else f'{item["name"]} ×{qty}'
     total = _inventory.format_cp(item["price_cp"] * qty)
-    # The display's own copy of the sheet, so the bag is right without a reload.
+    # The display's own copy of the sheet, so the bag is right without a reload,
+    # and what it weighs now (encumbrance.py).
+    try:
+        import encumbrance as _encumbrance
+        load = _encumbrance.display_load(_encumbrance.report(
+            _inventory._read(_inventory.find_sheet(character, _active_campaign())), _active_campaign()))
+    except Exception:
+        load = None
     snapshot = None
     with _stats_lock:
         for p in _current_stats.get("players", []):
             if p.get("name", "").lower() == character.lower():
                 p.setdefault("sheet", {}).setdefault("inventory", []).append(label)
+                if load:
+                    p["load"] = load
                 snapshot = dict(_current_stats)
     if snapshot is not None:
         _persist_stats()

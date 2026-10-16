@@ -684,5 +684,11 @@
   "faction.neutral": "Neutral",
   "faction.unfriendly": "Unfriendly",
   "faction.suspicious": "Suspicious",
-  "faction.hostile": "Hostile"
+  "faction.hostile": "Hostile",
+
+  "stat.load": "Load",
+  "load.encumbered": "Encumbered: speed −10 ft",
+  "load.heavy": "Heavily encumbered: speed −20 ft and disadvantage on STR, DEX and CON checks, attacks and saves",
+  "load.over": "Over capacity: speed 5 ft until something is dropped",
+  "load.armour": "heavy armour without its Strength: speed −10 ft"
 }

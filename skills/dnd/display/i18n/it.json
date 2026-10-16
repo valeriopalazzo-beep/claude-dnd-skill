@@ -800,5 +800,11 @@
   "faction.score": "Reputazione {n}",
   "faction.toast.new": "Nuova fazione: {name} ({standing})",
   "faction.toast.up": "{name} vi vede meglio: {standing}",
-  "faction.toast.down": "{name} vi vede peggio: {standing}"
+  "faction.toast.down": "{name} vi vede peggio: {standing}",
+
+  "stat.load": "Carico",
+  "load.encumbered": "Ingombrato: velocità −3 m",
+  "load.heavy": "Molto ingombrato: velocità −6 m e svantaggio a prove, attacchi e tiri salvezza di FOR, DES e COS",
+  "load.over": "Oltre il limite: velocità 1,5 m finché non lascia qualcosa",
+  "load.armour": "armatura pesante senza la Forza richiesta: velocità −3 m"
 }

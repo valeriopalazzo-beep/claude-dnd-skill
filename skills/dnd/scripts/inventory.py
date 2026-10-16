@@ -523,7 +523,23 @@ def main(argv: list | None = None) -> int:
     except InventoryError as e:
         print(f"inventory: {e}. Nothing was changed.", file=sys.stderr)
         return 1
+    if args.cmd in ("add", "remove", "buy", "sell", "give", "gain", "pay", "split"):
+        _after_change(args, camp)
     return 0
+
+
+def _after_change(args, campaign: str = "") -> None:
+    """What the bag weighs now (encumbrance.py): pushed to the display, and a warning when it costs speed."""
+    names = ([args.giver, args.taker] if args.cmd == "give"
+             else [n for n in args.among.split(",") if n.strip()] if args.cmd == "split" else [args.character])
+    try:
+        import encumbrance
+        for name in names:
+            warn = encumbrance.refresh(find_sheet(name, campaign), campaign)
+            if warn:
+                print(f"  ⚠ {display_name(find_sheet(name, campaign))}: {warn}")
+    except Exception:
+        pass   # the load is a courtesy: the change itself is done
 
 
 if __name__ == "__main__":

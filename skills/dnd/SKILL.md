@@ -199,7 +199,7 @@ ${CLAUDE_SKILL_DIR}/                 ← the skill dir (plugin: <plugin>/skills/
   SKILL.md           ← core DM rules (this file)
   SKILL-scripts.md   ← all Python script syntax (load at session start)
   SKILL-commands.md  ← all /dm:dnd command procedures (load at session start)
-  scripts/           ← dice.py, combat.py, character.py, tracker.py, calendar.py, lookup.py, inventory.py, loot.py, encounter.py, backup.py
+  scripts/           ← dice.py, combat.py, character.py, tracker.py, calendar.py, lookup.py, inventory.py, encumbrance.py, loot.py, encounter.py, backup.py
   data/              ← bundled 5e SRD dataset (dnd5e_srd.json — no download needed; sync via /dm:dnd data sync)
   templates/         ← blank character-sheet.md, state.md, world.md, npcs.md, session-log.md, prep.md
   display/           ← Flask SSE display companion (dnd-display-app.py, send.py, push_stats.py, wrapper.py, tts.py, map_render.py, map_art.py, image_gen.py)
@@ -567,6 +567,8 @@ Every caster has a Spellbook panel on their own screen: the spells on their shee
 ## Coins, Items & Shops
 
 Money and gear are **applied by script, never by hand**: `scripts/inventory.py` (`gain`, `pay`, `add`, `remove`, `buy`, `sell`, `give`, `split`) edits the sheet's Currency line and item lists, makes change, and refuses what cannot be paid. Use it every time coins or items change hands — loot, a toll, a potion drunk, a gift between characters — and to split treasure in equal shares.
+
+What a character carries has a weight (`scripts/encumbrance.py`): after every item change `inventory.py` puts the load on the character's card and prints `⚠ <name>: …` when it costs speed or more. Apply what it says from then on — the slower speed in combat and travel, the disadvantage when heavily encumbered — and say it to the player in the same turn. The campaign uses the PHB standard rule (only the capacity, STR × 15 lb) unless `state.md` says `encumbrance: variant` (slowed over STR × 5, heavily over STR × 10). An item the SRD does not know weighs nothing until `encumbrance.py weight "<item>" <weight>` gives it one; give the ones `show` lists as unknown a sensible weight when they matter. Syntax: `SKILL-scripts.md` → *Encumbrance*.
 
 Treasure is rolled, not improvised: `scripts/loot.py roll --cr N [--monsters N | --hoard]` draws coins, valuables and magic items for the challenge, and `loot.py take` splits the coins and puts each item on the sheet of whoever takes it. Syntax: `SKILL-scripts.md` → *Treasure*.
 
