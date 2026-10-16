@@ -672,5 +672,17 @@
   "camp.long": "Shorter please: at most {n} characters.",
   "camp.expired": "This conversation has expired. Start over.",
   "camp.claude": "No answer came. Send your message again in a moment.",
-  "camp.error": "Something went wrong. Try again."
+  "camp.error": "Something went wrong. Try again.",
+
+  "faction.history": "How it changed",
+  "faction.score": "Reputation {n}",
+  "faction.toast.new": "New faction: {name} ({standing})",
+  "faction.toast.up": "{name} thinks better of you: {standing}",
+  "faction.toast.down": "{name} thinks worse of you: {standing}",
+  "faction.allied": "Allied",
+  "faction.friendly": "Friendly",
+  "faction.neutral": "Neutral",
+  "faction.unfriendly": "Unfriendly",
+  "faction.suspicious": "Suspicious",
+  "faction.hostile": "Hostile"
 }

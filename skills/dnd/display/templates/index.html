@@ -1880,6 +1880,13 @@
   .sb-faction-standing.suspicious{ color: rgba(220,120,50,0.70); }
   .sb-faction-standing.hostile   { color: rgba(220,60,60,0.80); }
   .sb-faction-standing.unknown   { color: rgba(200,185,150,0.25); }
+  /* Reputation bar (factions.py): -10 at the left, +10 at the right */
+  .sb-faction-bar { position: relative; flex: 0 0 100%; height: 6px; margin: 6px 0 2px; border-radius: 3px;
+    background: linear-gradient(90deg, rgba(220,60,60,.75), rgba(220,120,50,.6) 30%, rgba(180,140,60,.45) 50%, rgba(80,200,130,.6) 70%, rgba(80,200,130,.85)); }
+  .sb-faction-bar i { position: absolute; top: -3px; width: 4px; height: 12px; margin-left: -2px; border-radius: 2px;
+    background: #f4ead2; box-shadow: 0 0 0 1px rgba(0,0,0,.55); }
+  :root[data-theme="light"] .sb-faction-bar i { background: #2a2018; box-shadow: 0 0 0 1px rgba(255,255,255,.7); }
+  .sb-faction-item { flex-wrap: wrap; }
 
   /* ── Quest tracker ── */
   #sb-quests {
@@ -8670,11 +8677,30 @@ function _questDetail(q) {
 }
 
 function _factionDetail(f) {
-  return _detailBox(f,
+  // factions.py sends the last moves of the reputation, newest first.
+  const moves = (Array.isArray(f.history) ? f.history : [])
+    .filter(h => h && Number(h.delta))
+    .map(h => (h.delta > 0 ? '+' : '') + h.delta + (h.reason ? ' — ' + h.reason : ''));
+  return _detailBox(Object.assign({}, f, { moves }),
     [['leader', 'faction.leader'], ['base', 'faction.base'],
      ['goal', 'faction.goal'], ['attitude', 'faction.attitude']],
     [['members', 'faction.members', 'sb-qd-clues'],
-     ['known', 'faction.known', 'sb-qd-clues']]);
+     ['known', 'faction.known', 'sb-qd-clues'],
+     ['moves', 'faction.history', 'sb-qd-clues']]);
+}
+
+// A reputation from -10 to +10 (factions.py) as a bar with a marker: the
+// middle is neutral, the left end hostile, the right end allied.
+function _factionBar(score) {
+  const n = Math.max(-10, Math.min(10, Number(score) || 0));
+  const bar = document.createElement('span');
+  bar.className = 'sb-faction-bar';
+  bar.setAttribute('role', 'img');
+  bar.setAttribute('aria-label', _t('faction.score', { n: (n > 0 ? '+' : '') + n }, 'Reputation ' + n));
+  const mark = document.createElement('i');
+  mark.style.left = ((n + 10) * 5) + '%';
+  bar.appendChild(mark);
+  return bar;
 }
 
 // Tap (or Enter/Space) unfolds a row's detail; `openSet` remembers it by name
@@ -8783,6 +8809,7 @@ function updateStats(stats) {
         st.textContent = SCLS[_fk] ? _t('faction.' + _fk, null, f.standing) : (f.standing || '—');
         item.appendChild(nm);
         item.appendChild(st);
+        if (typeof f.score === 'number') item.appendChild(_factionBar(f.score));
         const detail = _factionDetail(f);
         if (detail) _makeUnfoldable(item, detail, f.name || '', _openFactions);
         factPanel.appendChild(item);
@@ -11011,6 +11038,13 @@ function connect() {
     if (payload.quest_event && payload.quest_event.name) {
       const qe = payload.quest_event;
       _showToast('📜 ' + _t('quest.toast.' + qe.what, { name: qe.name }, qe.name), qe.what === 'updated' ? 4500 : 6500);
+    }
+    if (payload.faction_event && payload.faction_event.name) {
+      const fe = payload.faction_event;
+      const word = _t('faction.' + String(fe.standing || '').toLowerCase(), null, fe.standing || '');
+      const what = fe.new ? 'new' : fe.delta > 0 ? 'up' : 'down';
+      _showToast((fe.delta < 0 ? '⚑ ' : '⚐ ') + _t('faction.toast.' + what, { name: fe.name, standing: word }, fe.name + ': ' + word)
+        + (fe.reason ? ' — ' + fe.reason : ''), 6500);
     }
     if ((payload.clocks || payload.clock_event) && typeof window._onClocks === 'function') window._onClocks(payload.clocks, payload.clock_event);
     if (payload.death_save && typeof window._onDeathSaveResult === 'function') window._onDeathSaveResult(payload.death_save);

@@ -941,6 +941,35 @@ python3 ${CLAUDE_SKILL_DIR}/display/quests.py import                            
 
 ---
 
+## Factions — `display/factions.py`
+
+What each faction thinks of the party, as a score from -10 to +10 kept with the campaign in `<campaign>/factions.json`. Every change is saved and sent to the Factions panel of every screen (a bar, the standing word, and the last moves with their reasons); loading the campaign brings them back.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/display/factions.py add "Casa Valtrenna" --score -3 --leader "Ser Bertrand" --base "Il campo"     --goal "Riprendersi la corona" --attitude "Vi ha cacciati dal campo"
+python3 ${CLAUDE_SKILL_DIR}/display/factions.py add "La Confraternita della Cenere" --standing hostile --secret
+python3 ${CLAUDE_SKILL_DIR}/display/factions.py up "Valtrenna" 2 --reason "Avete riportato il frammento"   # down for worse
+python3 ${CLAUDE_SKILL_DIR}/display/factions.py to "Valtrenna" 0 --reason "Patto davanti al prete"
+python3 ${CLAUDE_SKILL_DIR}/display/factions.py set "Valtrenna" --attitude "…" --goal ""    # "" empties a field; --name renames
+python3 ${CLAUDE_SKILL_DIR}/display/factions.py member "Valtrenna" "Ser Bertrand, il capofamiglia"
+python3 ${CLAUDE_SKILL_DIR}/display/factions.py learn "Valtrenna" "Hanno un frammento della corona"
+python3 ${CLAUDE_SKILL_DIR}/display/factions.py drop "Valtrenna" --member "Bertrand"        # or --known
+python3 ${CLAUDE_SKILL_DIR}/display/factions.py reveal "Confraternita"                      # hide puts it back
+python3 ${CLAUDE_SKILL_DIR}/display/factions.py remove "Valtrenna"
+python3 ${CLAUDE_SKILL_DIR}/display/factions.py list                                        # all, with their history
+python3 ${CLAUDE_SKILL_DIR}/display/factions.py show "Valtrenna"
+python3 ${CLAUDE_SKILL_DIR}/display/factions.py push                                        # send them again, e.g. after a --clear
+python3 ${CLAUDE_SKILL_DIR}/display/factions.py import                                      # take in the factions the display is showing
+```
+
+- Bands: -10…-6 Hostile, -5…-2 Suspicious, -1…+1 Neutral, +2…+5 Friendly, +6…+10 Allied. `--standing` (Italian words too: ostile, diffidente, neutrale, amichevole, alleata) puts a new faction in the middle of its band.
+- Every move is kept with its `--reason`; the panel shows the last five. When a move crosses into another band the script prints `★ old → new`.
+- A secret faction is never sent to the screens and moves silently; `reveal` shows it.
+- `import` is for a campaign whose factions were pushed by hand until now: it reads their standing words into scores. After that, stop pushing `--factions`: the file wins at every load.
+- `--campaign NAME` (before the subcommand) works on another campaign; only the campaign on the display talks to the display.
+
+---
+
 ## Bestiary — `display/bestiary.py`
 
 The party's own notebook of the creatures it has met: it starts empty and holds only what the characters have found out. Words only — no pictures. Every screen has a **Bestiary** panel; numbers the party has not earned yet show as `?`.

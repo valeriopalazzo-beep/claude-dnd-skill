@@ -203,6 +203,8 @@ The display question is skipped, because `/dm:dnd load` asks it. The graph and c
 
    `--scene` is where the party is (tavern, city, castle, temple, forest, mountain, desert, swamp, ocean, mine, cave, dungeon, ruins, crypt, fire, arcane, night): it sets the display's background and its background music. Push it again whenever the party reaches a new place.
 
+   **Factions kept with the campaign.** If the campaign has a `factions.json` (`display/factions.py`), leave `--factions` out: loading the campaign brings them back with their reputation scores. If it has none, push them by hand as below once, then run `factions.py import` so they are kept from now on.
+
    Faction JSON structure — **`standing` is required**:
    ```json
    [{"name":"Pale Court","standing":"Allied",

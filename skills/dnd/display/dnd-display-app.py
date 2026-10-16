@@ -516,6 +516,8 @@ _DM_ENDPOINTS = {
     "bestiary_changed",
     # Quests: quests.py keeps them with the campaign, everyone reads them.
     "quests_changed",
+    # Faction reputations: factions.py keeps them with the campaign, everyone reads them.
+    "factions_changed",
     # People met: people.py writes the notebook, everyone reads it.
     "people_changed",
     # The timeline: timeline.py writes it, everyone reads what is not secret.
@@ -2803,6 +2805,60 @@ def quests_changed():
     return "", 204
 
 
+# ─── Faction reputations (factions.py) ───────────────────────────────────────
+# factions.py keeps a score from -10 to +10 for each faction in
+# <campaign>/factions.json. Like the quests, they reach the screens inside the
+# stats; POST /factions says the file changed, and loading a campaign that has
+# the file brings them back.
+import factions as _factions
+
+
+def _campaign_factions() -> Optional[list]:
+    """The active campaign's factions as the panel wants them; None when it keeps no factions.json."""
+    camp = re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]
+    if not camp:
+        return None
+    try:
+        path = _find_campaign(camp) / "factions.json"
+        return _factions.public_view(_factions.load(str(path))) if path.is_file() else None
+    except Exception:
+        return None
+
+
+def _adopt_campaign_factions() -> Optional[dict]:
+    """Put the campaign's factions in the stats. Returns the stats to broadcast, or None."""
+    rows = _campaign_factions()
+    if rows is None:
+        return None
+    with _stats_lock:
+        _current_stats["factions"] = rows
+        snapshot = dict(_current_stats)
+    _persist_stats()
+    return snapshot
+
+
+@app.route("/factions", methods=["POST"])
+def factions_changed():
+    """factions.py moved a faction: send every screen the list, and what moved."""
+    data = request.get_json(silent=True) or {}
+    payload = {}
+    snapshot = _adopt_campaign_factions()
+    if snapshot is not None:
+        payload["stats"] = snapshot
+    event = data.get("event")
+    if isinstance(event, dict) and event.get("name"):
+        try:
+            delta, score = int(event.get("delta") or 0), int(event.get("score") or 0)
+        except (TypeError, ValueError):
+            delta, score = 0, 0
+        payload["faction_event"] = {"name": str(event["name"])[:80], "delta": delta, "score": score,
+                                    "standing": _factions.standing(max(-10, min(10, score))),
+                                    "new": bool(event.get("new")), "reason": str(event.get("reason") or "")[:240]}
+    if payload:
+        _broadcast(payload)
+    return "", 204
+
+
 # ─── People met (people.py) ──────────────────────────────────────────────────
 # people.py keeps what the party knows of the people it met in
 # <campaign>/people.json. Every screen can read it; POST /people says a page
@@ -4226,6 +4282,14 @@ def stats():
         if "quests" not in data:
             try:
                 if _adopt_campaign_quests() is not None:
+                    with _stats_lock:
+                        current = dict(_current_stats)
+            except Exception:
+                pass
+        # The same for the factions' reputations (factions.py).
+        if "factions" not in data:
+            try:
+                if _adopt_campaign_factions() is not None:
                     with _stats_lock:
                         current = dict(_current_stats)
             except Exception:

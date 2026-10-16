@@ -661,6 +661,10 @@ This fires a green-bordered block in the companion feed showing each character's
 
 The Quests panel is the party's own record of what it has taken on, and it must be right at every moment of play. Keep it with `display/quests.py`, which stores the quests in the campaign (`quests.json`) and updates every screen at each change: `add "<quest>" --summary … --giver … --location …` when the party takes one on, `objective` / `done` as steps appear and are achieved, `clue` for each lead gathered, `set` when the situation changes, `resolve` or `fail` when it ends. Do it in the same turn the fiction changes, without being asked, and write only what the characters know. Syntax: `SKILL-scripts.md` → *Quests*.
 
+## Faction Reputation
+
+Each faction's view of the party is a score from -10 to +10, kept with the campaign by `display/factions.py` (`factions.json`); the Factions panel shows the word that follows from it (Hostile, Suspicious, Neutral, Friendly, Allied), a bar, and the last moves with their reasons. When the party does something a faction would hear of, move it in the same turn — `up "<faction>" 2 --reason "…"` or `down` — and say the reason in the words the players would hear it. One point for a favour or a slight, two or three for something that matters to the faction, more only for what changes everything. When the script prints `★` the faction has crossed into another standing: let it act on that soon, visibly (an envoy, a closed door, a price that changes). Keep a faction `--secret` until the party knows it exists. Once a campaign has `factions.json`, do not push `--factions` by hand: loading the campaign brings the factions back. Syntax: `SKILL-scripts.md` → *Factions*.
+
 ---
 
 ## Bestiary

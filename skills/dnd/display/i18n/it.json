@@ -794,5 +794,11 @@
   "camp.long": "Più breve, per favore: al massimo {n} caratteri.",
   "camp.expired": "Questa conversazione è scaduta. Ricomincia.",
   "camp.claude": "Non è arrivata risposta. Rimanda il messaggio tra poco.",
-  "camp.error": "Qualcosa è andato storto. Riprova."
+  "camp.error": "Qualcosa è andato storto. Riprova.",
+
+  "faction.history": "Come è cambiata",
+  "faction.score": "Reputazione {n}",
+  "faction.toast.new": "Nuova fazione: {name} ({standing})",
+  "faction.toast.up": "{name} vi vede meglio: {standing}",
+  "faction.toast.down": "{name} vi vede peggio: {standing}"
 }
