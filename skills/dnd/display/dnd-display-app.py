@@ -4104,7 +4104,9 @@ def dm_screen_data():
             continue
         foes.append({"name": ent.get("name", key), "hp": ent.get("hp"), "max_hp": ent.get("max_hp"), "ac": ent.get("ac"),
                      "conditions": ent.get("conditions") or [], "concentration": ent.get("concentration"),
-                     "legendary": ent.get("legendary") if isinstance(ent.get("legendary"), dict) else None})
+                     "legendary": ent.get("legendary") if isinstance(ent.get("legendary"), dict) else None,
+                     "morale": ({k: ent["morale"].get(k) for k in ("group", "leader", "due", "broken", "fearless")}
+                                if isinstance(ent.get("morale"), dict) else None)})
     clocks = (_dm_json(folder, "clocks.json") or {}).get("clocks", []) if folder else []
     factions = []
     for f in ((_dm_json(folder, "factions.json") or {}).get("factions", []) if folder else []):

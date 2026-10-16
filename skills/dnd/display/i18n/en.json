@@ -990,5 +990,9 @@
 
   "dms.leg.actions": "Legendary actions left",
   "dms.leg.resist": "Legendary Resistance left today",
-  "dms.leg.lair": "Lair actions on initiative 20 (the last one used)"
+  "dms.leg.lair": "Lair actions on initiative 20 (the last one used)",
+
+  "dms.morale.due": "A morale check is due (Wisdom save DC 10)",
+  "dms.morale.check": "morale?",
+  "dms.morale.broken": "broken"
 }

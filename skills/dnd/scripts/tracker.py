@@ -41,6 +41,13 @@ Usage:
     python3 tracker.py -c $CAMPAIGN legendary <entity> reset              # a new day: Legendary Resistance back
     python3 tracker.py -c $CAMPAIGN legendary <entity> off
 
+    # Morale (DMG 2014 p. 273, optional: only with `morale: on` in state.md's Session Flags). A creature
+    # may flee the first time it drops to half its HP; a group when its leader falls or half of it is
+    # down. hit / hp say when a check is due; roll it here (Wisdom save DC 10).
+    python3 tracker.py -c $CAMPAIGN morale <entity> set --group Banditi [--leader] [--as "Bandit Captain"] [--wis +1] [--cha +2] [--fearless]
+    python3 tracker.py -c $CAMPAIGN morale <entity|group> roll [--dis | --fail]   # overwhelming odds: --dis, or --fail
+    python3 tracker.py -c $CAMPAIGN morale <entity> off
+
     # Death saves (PC only — 3 successes = stable, 3 failures = dead)
     python3 tracker.py -c $CAMPAIGN saves <entity> success
     python3 tracker.py -c $CAMPAIGN saves <entity> failure
@@ -442,8 +449,10 @@ def cmd_hp(campaign: str, entity_name: str, current: int, maximum=None, ac=None)
         ent.setdefault("max_hp", max(1, ent["hp"]))
     if ac is not None:
         ent["ac"] = int(ac)
-    _save(campaign, state)
     print(f"  {entity_name}: {ent['hp']}/{ent['max_hp']} HP" + (f", AC {ent['ac']}" if ent.get("ac") is not None else ""))
+    for line in morale_after_damage(campaign, state, ent):
+        print("  " + line)
+    _save(campaign, state)
     return ent
 
 
@@ -458,6 +467,8 @@ def cmd_hit(campaign: str, entity_name: str, damage: int, con: int = 0, adv: str
         ent["hp"] = max(0, ent["hp"] - damage)
         down = down or ent["hp"] == 0
         print(f"  {entity_name}: {ent['hp']}/{ent.get('max_hp', '?')} HP" + ("  — DOWN" if ent["hp"] == 0 else ""))
+        for line in morale_after_damage(campaign, state, ent):
+            print("  " + line)
         _save(campaign, state)
     spell = ent.get("concentration")
     if not spell:
@@ -638,6 +649,129 @@ def turn_news(campaign: str, prev: dict, new: dict) -> list:
     return lines
 
 
+# ─── Morale (DMG 2014 p. 273, optional rule) ───────────────────────────────────
+
+MORALE_DC = 10
+
+
+def morale_on(campaign: str) -> bool:
+    """The campaign adopted the morale rule: `morale: on` in state.md's Session Flags."""
+    import re
+    try:
+        text = (_find_campaign(campaign) / "state.md").read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return False
+    return bool(re.search(r"^[ \t]*(?:[-*][ \t]*)?morale:[ \t]*(?:on|true|yes|sì|si)\b", text, re.M | re.I))
+
+
+def _srd_mods(name: str, exact: bool) -> dict:
+    try:
+        import encounter
+        rec = encounter.find_monster(name, encounter.load_monsters())
+    except Exception:
+        return {}
+    if exact and name.strip().lower() != str(rec.get("name", "")).lower():
+        return {}
+    return {"wis": (int(rec.get("wis", 10)) - 10) // 2, "cha": (int(rec.get("cha", 10)) - 10) // 2}
+
+
+def _alive(ent: dict) -> bool:
+    return not (isinstance(ent.get("hp"), int) and ent["hp"] <= 0) and \
+        not any(c in ("unconscious", "incapacitated", "paralyzed", "petrified", "stunned") for c in ent.get("conditions", []))
+
+
+def _group(state: dict, name: str) -> list:
+    return [e for e in state.values() if isinstance(e, dict) and (e.get("morale") or {}).get("group", "").lower() == name.lower()]
+
+
+def morale_after_damage(campaign: str, state: dict, ent: dict) -> list:
+    """After damage: is a morale check due for the creature or its group? Lines; marks `due` (call with the state, then save)."""
+    mor = ent.get("morale")
+    if not mor or mor.get("fearless") or not morale_on(campaign) or not isinstance(ent.get("hp"), int):
+        return []
+    lines = []
+    mx = ent.get("max_hp") or 0
+    if 0 < ent["hp"] <= mx / 2 and not mor.get("half_done"):
+        mor["half_done"], mor["due"] = True, "half"
+        lines.append(f"🏳 Morale: {ent['name']} is down to half its HP for the first time — it may flee: "
+                     f"tracker.py morale \"{ent['name']}\" roll")
+    group = _group(state, mor.get("group", "")) if mor.get("group") else []
+    if ent["hp"] <= 0 and mor.get("leader") and group:
+        for e in group:
+            if _alive(e) and not e["morale"].get("fearless"):
+                e["morale"]["due"] = "leader"
+        lines.append(f"🏳 Morale: the leader {ent['name']} is down — the group {mor['group']} may break: "
+                     f"tracker.py morale \"{mor['group']}\" roll")
+    if group and len(group) >= 2 and not any(e["morale"].get("half_group") for e in group):
+        down = [e for e in group if not _alive(e)]
+        if len(down) * 2 >= len(group):
+            for e in group:
+                e["morale"]["half_group"] = True
+                if _alive(e) and not e["morale"].get("fearless"):
+                    e["morale"]["due"] = "half_group"
+            lines.append(f"🏳 Morale: half of {mor['group']} is down ({len(down)} of {len(group)}) — if the party has "
+                         f"lost no one, the group may break: tracker.py morale \"{mor['group']}\" roll")
+    return lines
+
+
+def cmd_morale(campaign: str, target: str, action: str, group: str = "", leader: bool = False, srd: str = "",
+               wis=None, cha=None, fearless: bool = False, mode: str = "normal", rng=None) -> dict:
+    import random
+    rng = rng or random.SystemRandom()
+    state = _load(campaign)
+    if action == "set":
+        ent = _entity(state, target)
+        mods = _srd_mods(srd, False) if srd else _srd_mods(target, True)
+        ent["morale"] = {"group": " ".join((group or "").split())[:50], "leader": bool(leader),
+                         "wis": int(wis) if wis is not None else mods.get("wis", 0),
+                         "cha": int(cha) if cha is not None else mods.get("cha", 0),
+                         "fearless": bool(fearless), "half_done": False, "half_group": False, "due": ""}
+        _save(campaign, state)
+        m = ent["morale"]
+        print(f"  {ent['name']}: morale" + (f" in {m['group']}" if m["group"] else "") + (" (leader)" if m["leader"] else "")
+              + f", WIS {m['wis']:+d}" + (" — fearless, never flees" if m["fearless"] else "")
+              + ("" if morale_on(campaign) else "  [the campaign has not adopted the rule: add `morale: on` to the Session Flags for the prompts]"))
+        return ent["morale"]
+    if action == "off":
+        ent = _entity(state, target)
+        ent.pop("morale", None)
+        _save(campaign, state)
+        print(f"  {target}: morale no longer tracked")
+        return {}
+    # roll: one creature, or a group (its leader rolls; if the leader cannot, the one with the best Charisma)
+    members = _group(state, target)
+    if members:
+        standing = [e for e in members if _alive(e) and not e["morale"].get("fearless")]
+        if not standing:
+            raise SystemExit(f"  nobody in {target} is left to run")
+        roller = next((e for e in standing if e["morale"].get("leader")), None) or max(standing, key=lambda e: e["morale"].get("cha", 0))
+        who, affected = f"{target} ({roller['name']} rolls)", standing
+    else:
+        key = target.lower()
+        if key not in state or not state[key].get("morale"):
+            raise SystemExit(f"  {target}: no creature or group with morale — morale <entity> set first")
+        roller = state[key]
+        who, affected = roller["name"], [roller]
+    if mode == "fail":
+        total, shown, held = None, "automatic failure (overwhelming odds)", False
+    else:
+        rolls = [rng.randint(1, 20)] + ([rng.randint(1, 20)] if mode == "disadvantage" else [])
+        d20 = min(rolls)
+        total = d20 + roller["morale"].get("wis", 0)
+        shown = (f"[{', '.join(map(str, rolls))}] → {d20}" if len(rolls) > 1 else str(d20)) + f"{roller['morale'].get('wis', 0):+d} = {total}"
+        held = total >= MORALE_DC
+    for e in affected:
+        e["morale"]["due"] = ""
+        if not held:
+            e["morale"]["broken"] = True
+    _save(campaign, state)
+    print(f"  🏳 Morale of {who}: Wisdom save {shown} vs DC {MORALE_DC} — "
+          + ("they HOLD and fight on" if held else
+             "they BREAK: they flee by the quickest way; cornered, they surrender. One who surrendered and is "
+             "attacked anyway will not surrender again. Fleeing may raise the alarm or carry off the treasure."))
+    return {"held": held, "total": total, "affected": [e["name"] for e in affected]}
+
+
 def cmd_saves(campaign: str, entity_name: str, action: str) -> None:
     state = _load(campaign)
     ent   = _entity(state, entity_name)
@@ -714,6 +848,11 @@ def cmd_status(campaign: str, filter_name: str = "") -> None:
             parts.append(f"Death saves: {s}✓ {f}✗{stable}")
         if ent.get("legendary"):
             parts.append("Legendary: " + _fmt_legendary(ent["legendary"]))
+        if ent.get("morale"):
+            m = ent["morale"]
+            parts.append("Morale: " + (m.get("group") or "alone") + (" (leader)" if m.get("leader") else "")
+                         + (" — fearless" if m.get("fearless") else "") + (" — BROKEN" if m.get("broken") else "")
+                         + (f" — CHECK DUE ({m['due']})" if m.get("due") else ""))
 
         if parts:
             print(f"  {name}:")
@@ -802,6 +941,19 @@ def main() -> None:
     leg.add_argument("--cost", type=int, default=1)
     leg.add_argument("--as", dest="srd", default="", help="the SRD creature to read the numbers from")
 
+    # morale
+    mor = sub.add_parser("morale", help="Morale (DMG optional rule): who may flee")
+    mor.add_argument("target", help="a creature, or a group for roll")
+    mor.add_argument("action", choices=["set", "roll", "off"])
+    mor.add_argument("--group", default="")
+    mor.add_argument("--leader", action="store_true")
+    mor.add_argument("--as", dest="srd", default="")
+    mor.add_argument("--wis", type=int, default=None)
+    mor.add_argument("--cha", type=int, default=None)
+    mor.add_argument("--fearless", action="store_true", help="never flees (mindless, undead under orders, a zealot)")
+    mor.add_argument("--dis", action="store_true", help="overwhelming odds: disadvantage")
+    mor.add_argument("--fail", action="store_true", help="hopeless odds: the save fails")
+
     # saves
     sav = sub.add_parser("saves", help="Track death saving throws")
     sav.add_argument("entity")
@@ -835,6 +987,9 @@ def main() -> None:
     elif args.cmd == "legendary":
         cmd_legendary(args.campaign, args.entity, args.action, args.actions, args.resist, args.lair,
                       args.cost, args.srd, args.value)
+    elif args.cmd == "morale":
+        cmd_morale(args.campaign, args.target, args.action, args.group, args.leader, args.srd, args.wis, args.cha,
+                   args.fearless, "fail" if args.fail else "disadvantage" if args.dis else "normal")
     elif args.cmd == "saves":
         cmd_saves(args.campaign, args.entity, args.action)
     elif args.cmd == "status":

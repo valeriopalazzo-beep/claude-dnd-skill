@@ -1124,5 +1124,9 @@
 
   "dms.leg.actions": "Azioni leggendarie rimaste",
   "dms.leg.resist": "Resistenza leggendaria rimasta oggi",
-  "dms.leg.lair": "Azioni di tana al conteggio 20 (l'ultima usata)"
+  "dms.leg.lair": "Azioni di tana al conteggio 20 (l'ultima usata)",
+
+  "dms.morale.due": "Va tirato il morale (TS Saggezza CD 10)",
+  "dms.morale.check": "morale?",
+  "dms.morale.broken": "in fuga"
 }

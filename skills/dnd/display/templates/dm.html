@@ -169,7 +169,11 @@
         const legend = lg ? [lg.actions ? `<span class="tag" title="${esc(_t('dms.leg.actions', null, 'Legendary actions'))}">⚔ ${esc(lg.left)}/${esc(lg.actions)}</span>` : '',
           lg.resist ? `<span class="tag${lg.resist_left ? '' : ' warn'}" title="${esc(_t('dms.leg.resist', null, 'Legendary Resistance'))}">🛡 ${esc(lg.resist_left)}/${esc(lg.resist)}</span>` : '',
           lg.lair ? `<span class="tag" title="${esc(_t('dms.leg.lair', null, 'Lair actions on initiative 20'))}">🏰${lg.lair_last ? ' ' + esc(lg.lair_last) : ''}</span>` : ''].join(' ') : '';
-        return `<tr class="${cur ? 'current' : ''}"><td>${cur ? '▶ ' : ''}${esc(n)}${legend ? '<br>' + legend : ''}</td><td>${hp(e.hp, e.max_hp)}</td><td class="num">${esc(e.ac ?? '—')}</td><td>${tags(e.conditions, e.concentration)}</td></tr>`;
+        const mo = e.morale;
+        const morale = mo ? (mo.due ? `<span class="tag warn" title="${esc(_t('dms.morale.due', null, 'Morale check due'))}">🏳 ${esc(_t('dms.morale.check', null, 'morale?'))}</span>`
+          : mo.broken ? `<span class="tag">🏳 ${esc(_t('dms.morale.broken', null, 'broken'))}</span>`
+          : mo.leader ? `<span class="tag" title="${esc(mo.group || '')}">♛</span>` : '') : '';
+        return `<tr class="${cur ? 'current' : ''}"><td>${cur ? '▶ ' : ''}${esc(n)}${legend || morale ? '<br>' + [legend, morale].filter(Boolean).join(' ') : ''}</td><td>${hp(e.hp, e.max_hp)}</td><td class="num">${esc(e.ac ?? '—')}</td><td>${tags(e.conditions, e.concentration)}</td></tr>`;
       }).join('') + '</table>' : empty('dms.noFoes');
 
     // The party: passives and save DCs, for checks the players should not know about.
