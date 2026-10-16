@@ -15,7 +15,7 @@ Strength sets the limits (PHB 2014, p. 176):
 
 The campaign picks the rule with an `encumbrance: variant` line in state.md
 (standard when missing). Heavy armour worn without its Strength costs 10 ft
-in both. Powerful Build doubles the numbers.
+in the standard rule (the variant ignores it, PHB p. 176). Powerful Build doubles the numbers.
 
     encumbrance.py show "Ajeje"            # every item, its weight, the total and the limits
     encumbrance.py party                   # one line per character of the campaign
@@ -50,14 +50,14 @@ PACKS = {"burglars-pack": 44.5, "diplomats-pack": 36, "dungeoneers-pack": 61.5, 
          "explorers-pack": 59, "priests-pack": 24, "scholars-pack": 10}
 # How Italian sheets name the packs ("Zaino da dungeon", "Dotazione dell'esploratore").
 _PACK_WORDS = (("dungeon", "dungeoneers-pack"), ("esplorat", "explorers-pack"), ("scassin", "burglars-pack"),
-               ("ladr", "burglars-pack"), ("diplomat", "diplomats-pack"), ("intratten", "entertainers-pack"),
+               ("avventurier", "dungeoneers-pack"), ("ladr", "burglars-pack"), ("diplomat", "diplomats-pack"), ("intratten", "entertainers-pack"),
                ("artist", "entertainers-pack"), ("sacerdot", "priests-pack"), ("chieric", "priests-pack"),
                ("studios", "scholars-pack"), ("erudit", "scholars-pack"))
 _PACK_HEADS = ("zaino", "dotazione", "pacchetto", "kit", "equipaggiamento")
 # Common Italian words that are not the dataset's names.
 ALIASES = {"borraccia": "waterskin", "otre": "waterskin", "torce": "torch", "razione": "rations-1-day",
            "razioni": "rations-1-day", "corda": "rope-hempen-50-feet", "giaciglio": "bedroll",
-           "sacco a pelo": "bedroll", "acciarino": "tinderbox", "pitoni": "piton", "chiodi da roccia": "piton",
+           "sacco a pelo": "bedroll", "acciarino": "tinderbox", "pitoni": "piton", "chiodi da roccia": "piton", "chiodi da rocciatore": "piton",
            "arnesi da scasso": "thieves-tools", "strumenti da scasso": "thieves-tools",
            "kit da guaritore": "healers-kit", "lanterna schermabile": "lantern-hooded", "abiti": "clothes-common",
            "vestiti": "clothes-common", "accetta": "handaxe", "kit da erborista": "herbalism-kit",
@@ -330,7 +330,8 @@ def report(text: str, campaign: str = "", rule: str = "", weights: dict | None =
         status, speed = "encumbered", -10
     else:
         status, speed = "ok", 0
-    armour = _armour_penalty(items, score)
+    # PHB 2014 p. 176: the variant rule ignores the Strength column of the armour table.
+    armour = _armour_penalty(items, score) if rule == "standard" else []
     if armour and speed is not None:
         speed -= 10
     return {"items": items, "unknown": unknown, "coins": coins, "coins_lb": round(coins_lb, 2),

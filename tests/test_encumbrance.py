@@ -113,10 +113,14 @@ class ReportTests(unittest.TestCase):
         rep = enc.report(self.sheet(13), rule="variant", weights={})
         self.assertEqual((rep["status"], rep["speed"]), ("encumbered", -10))   # 127.5 lb: over 65, not over 130
         rep = enc.report(self.sheet(12), rule="variant", weights={})
-        self.assertEqual((rep["status"], rep["speed"]), ("heavy", -30))        # over 120, and chain mail wants STR 13
+        self.assertEqual((rep["status"], rep["speed"], rep["armour"]), ("heavy", -20, []))   # over 120; the variant ignores armour STR
         rep = enc.report(self.sheet(19), rule="variant", weights={})
         self.assertEqual((rep["status"], rep["speed"]), ("encumbered", -10))   # 127.5 > 95, ≤ 190
         self.assertIn("ENCUMBERED", enc.warning(rep))
+
+    def test_italian_handbook_names(self):
+        self.assertEqual(enc.weight_of("Dotazione da Avventuriero"), 61.5)
+        self.assertEqual(enc.weight_of("10 chiodi da rocciatore".split(" ", 1)[1]), enc.weight_of("Piton"))
 
     def test_beyond_capacity_and_heavy_armour_without_strength(self):
         rep = enc.report(self.sheet(8), rule="standard", weights={})

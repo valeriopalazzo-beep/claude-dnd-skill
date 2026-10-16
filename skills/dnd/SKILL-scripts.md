@@ -200,7 +200,7 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/encumbrance.py push                 # everyo
 ```
 
 - **Standard rule** (default): capacity STR × 15 lb; beyond it, speed 5 ft. **Variant rule** (`encumbrance: variant` in `state.md`): over STR × 5 → speed −10 ft; over STR × 10 → speed −20 ft and disadvantage on ability checks, attack rolls and saving throws that use STR, DEX or CON.
-- Heavy armour worn without its Strength (e.g. chain mail, STR 13) costs 10 ft in both rules. Powerful Build doubles every limit.
+- Heavy armour worn without its Strength (e.g. chain mail, STR 13) costs 10 ft in the standard rule; the variant ignores the armour's Strength (PHB p. 176). Powerful Build doubles every limit.
 - Weights set with `weight` live in `<campaign>/weights.json` and count for every character; an item still unknown weighs nothing.
 - Italian tables read kilograms (1 lb = 0.5 kg, as the Italian Player's Handbook does); the display converts by the screen's language.
 
