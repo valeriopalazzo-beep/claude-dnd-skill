@@ -598,6 +598,7 @@ def cmd_advance(campaign: str, amount: int, unit: str) -> None:
     _after_change(campaign, cal, before)
     _spend_supplies(campaign, total_hours, _abs_day(cal) - before)
     _keep_stronghold(campaign, _abs_day(cal) - before)
+    _wander(campaign, total_hours, _format_date(cal))
 
 
 def cmd_rest(campaign: str, rest_type: str) -> None:
@@ -615,6 +616,7 @@ def cmd_rest(campaign: str, rest_type: str) -> None:
     _after_change(campaign, cal, before)
     _spend_supplies(campaign, 1 if rest_type == "short" else 8, _abs_day(cal) - before)
     _keep_stronghold(campaign, _abs_day(cal) - before)
+    _wander(campaign, 1 if rest_type == "short" else 8, _format_date(cal))
 
 
 def _spend_supplies(campaign: str, hours: float, days_crossed: int) -> None:
@@ -625,6 +627,16 @@ def _spend_supplies(campaign: str, hours: float, days_crossed: int) -> None:
             print(("  ⚠ Supplies: " if line.split(":")[0].isupper() else "  Supplies: ") + line)
     except Exception:
         pass   # supplies are a courtesy: the time has moved anyway
+
+
+def _wander(campaign: str, hours: float, when: str = "") -> None:
+    """Random encounters in the party's zone fall due as the clock moves (wander.py). For the DM only."""
+    try:
+        import wander
+        for line in wander.tick(campaign, hours, when):
+            print(("  ⚔ " if line.startswith("ENCOUNTER") else "  Wander: ") + line)
+    except Exception:
+        pass   # a courtesy: the time has moved anyway
 
 
 def _keep_stronghold(campaign: str, days_crossed: int) -> None:

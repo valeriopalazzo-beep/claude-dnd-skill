@@ -1031,5 +1031,11 @@
   "sh.log.hire": "{name} entra al servizio",
   "sh.log.hire.role": "{name} entra al servizio come {role}",
   "sh.log.fire": "{name} lascia il servizio",
-  "sh.log.improve": "Iniziano i lavori: {name}, {coins}, {days} giorni"
+  "sh.log.improve": "Iniziano i lavori: {name}, {coins}, {days} giorni",
+
+  "dms.wander": "Incontri casuali",
+  "dms.wander.paused": "in pausa",
+  "dms.wander.check": "d20 {on}+ ogni {every} ore · prossimo controllo tra {next} ore",
+  "dms.wander.last": "Gli ultimi",
+  "dms.wander.nozone": "Il gruppo non è in nessuna zona. Zone: {zones}"
 }

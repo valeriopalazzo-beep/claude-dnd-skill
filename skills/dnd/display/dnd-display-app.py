@@ -4070,8 +4070,16 @@ def dm_screen_data():
         if isinstance(t, dict) and t.get("name"):
             traps.append({k: t.get(k) for k in ("name", "where", "at", "status", "spot", "investigate", "disarm", "dispel",
                                                  "magic", "noticed_by", "found_by", "trigger")})
+    wander = None
+    if folder and (folder / "wander.json").is_file():     # random encounters (wander.py): the zone and its table
+        try:
+            import wander as _wander
+            wander = _wander.dm_view(_wander.load(str(folder / "wander.json")), camp)
+        except Exception:
+            wander = None
     return jsonify({
         "traps": traps,
+        "wander": wander,
         "missed": missed,
         "campaign": camp, "world": {k: world.get(k) for k in ("date", "time", "weather") if world.get(k)},
         "order": order if isinstance(order, dict) else {}, "party": party, "foes": foes, "clocks": clocks,

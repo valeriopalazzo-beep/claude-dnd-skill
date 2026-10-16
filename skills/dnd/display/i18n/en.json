@@ -897,5 +897,11 @@
   "sh.log.hire": "{name} joins the staff",
   "sh.log.hire.role": "{name} joins the staff as {role}",
   "sh.log.fire": "{name} leaves the staff",
-  "sh.log.improve": "Works begin: {name}, {coins}, {days} days"
+  "sh.log.improve": "Works begin: {name}, {coins}, {days} days",
+
+  "dms.wander": "Random encounters",
+  "dms.wander.paused": "paused",
+  "dms.wander.check": "d20 {on}+ every {every} h · next check in {next} h",
+  "dms.wander.last": "The last ones",
+  "dms.wander.nozone": "The party is in no zone. Zones: {zones}"
 }

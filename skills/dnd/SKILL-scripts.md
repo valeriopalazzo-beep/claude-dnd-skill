@@ -120,6 +120,34 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/encounter.py rate --campaign $CAMP --monster
 
 ---
 
+## Random Encounters — `scripts/wander.py`
+
+A table for each zone of the region; the checks fall due as the clock moves, in the zone where the party is. For the DM only: nothing reaches the players' screens.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/scripts/wander.py zone "Bosco di Cenere" --places "Carbonaia, La Rocca Muta" --every 4 << 'DNDEND'
+2-4   | Un orso bruno affamato               | brown bear
+5-8   | 2d4 lupi a caccia                     | wolf:2d4
+9-13  | Carbonai che tornano al villaggio
+14-16 | Tracce fresche di qualcosa di grosso
+17-20 | Una pattuglia di 1d4+1 cultisti       | cultist:1d4+1
+DNDEND
+python3 ${CLAUDE_SKILL_DIR}/scripts/wander.py zones                  # all of them; → marks the party's
+python3 ${CLAUDE_SKILL_DIR}/scripts/wander.py show ["Bosco di Cenere"]
+python3 ${CLAUDE_SKILL_DIR}/scripts/wander.py here "Bosco di Cenere" # pin the zone (here --auto: follow the region map again)
+python3 ${CLAUDE_SKILL_DIR}/scripts/wander.py check --hours 8        # time that passed without calendar.py
+python3 ${CLAUDE_SKILL_DIR}/scripts/wander.py roll                   # a row now, no d20 check
+python3 ${CLAUDE_SKILL_DIR}/scripts/wander.py pause|resume|remove "Bosco di Cenere"
+python3 ${CLAUDE_SKILL_DIR}/scripts/wander.py history
+```
+
+- Rows: `range | what happens | monsters`. The ranges must cover the die exactly (`--die d12+d8` 2-20 by default — the middle rows come up most; `d20`, `d100`, `d8` work too). Dice in the text are rolled when the row comes up; the same expression in the monsters column is the same roll ("2d4 lupi" and `wolf:2d4` are the same wolves).
+- The monsters column is encounter.py's `--monsters` with dice allowed in the counts (SRD names, Italian too). The line rates the group for the PCs present and gives the `encounter.py rate --monsters` string; a creature from the Monster Manual notes is fine in the text — leave the column empty.
+- The zone is the one whose `--places` include where the region map puts the party (`region_map.py here / travel`); a place belongs to one zone. `--every` hours between checks (DMG: every hour where it is busy, 4-8 hours, `--every 12` for one by day and one at night), `--on` the d20 threshold (18).
+- `calendar.py advance` and `rest` print `⚔ ENCOUNTER in …` lines (and how many checks were quiet). They are for you: decide how it begins, who notices first (passive Perception, stealth), and whether it is a fight at all.
+
+---
+
 ## Combat Script — `scripts/combat.py`
 ```bash
 # Roll initiative and print tracker

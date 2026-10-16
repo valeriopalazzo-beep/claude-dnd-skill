@@ -113,6 +113,7 @@
   <section id="s-supplies"><h2 data-t="dms.supplies">Supplies</h2><div></div></section>
   <section id="s-downtime"><h2 data-t="dms.downtime">Downtime</h2><div></div></section>
   <section id="s-traps"><h2 data-t="dms.traps">Traps</h2><div></div></section>
+  <section id="s-wander"><h2 data-t="dms.wander">Random encounters</h2><div></div></section>
   <section id="s-missed"><h2 data-t="missed.menu">While you were away</h2><div></div></section>
   <section id="s-prep" class="wide"><h2 data-t="dms.prep">Session prep</h2><div></div></section>
 </main>
@@ -219,6 +220,15 @@
         ${t.where || t.at ? `<br><small class="muted">${esc([t.where, t.at].filter(Boolean).join(' · '))}</small>` : ''}
         ${dcs ? `<br><small>${dcs}</small>` : ''}${who ? `<br><small class="muted">${who}</small>` : ''}</div>`;
     }).join('') : empty('dms.none');
+
+    // Random encounters (wander.py): the party's zone, when the next check falls, its table, the last ones.
+    const w = d.wander;
+    body('s-wander').innerHTML = w && w.zone ? `<p><b>${esc(w.zone)}</b>${w.paused ? ` <span class="tag">${esc(_t('dms.wander.paused', null, 'paused'))}</span>` : ''}
+      <br><small class="muted">${esc(_t('dms.wander.check', { every: w.every, on: w.on, next: w.next_in }, `d20 ${w.on}+ every ${w.every} h · next in ${w.next_in} h`))}</small></p>
+      <table>` + w.rows.map(r => `<tr><td class="muted">${esc(r.range)}</td><td>${esc(r.text)}${r.monsters ? `<br><small class="muted">${esc(r.monsters)}</small>` : ''}</td></tr>`).join('') + '</table>'
+      + (w.history.length ? `<p class="muted" style="margin-top:8px">${esc(_t('dms.wander.last', null, 'Last ones'))}</p>` + w.history.map(h =>
+        `<div class="roll"><small class="muted">${esc(h.zone)}</small><br>${esc(h.text)}${h.rating ? `<br><small>${esc(h.rating)}</small>` : ''}</div>`).join('') : '')
+      : w && w.zones.length ? `<p class="muted">${esc(_t('dms.wander.nozone', { zones: w.zones.join(', ') }, 'The party is in no zone. Zones: ' + w.zones.join(', ')))}</p>` : empty('dms.none');
 
     // Recaps written for absent players (missed.py): who has read theirs.
     const missed = d.missed || [];
