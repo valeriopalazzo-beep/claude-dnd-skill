@@ -140,7 +140,7 @@ class CommandTests(unittest.TestCase):
         f = self.saved()[0]
         self.assertEqual((f["name"], f["score"], f["goal"], f["members"], f["known"], len(f["history"])),
                          ("I Valtrenna", 2, "La corona", ["Ser Bertrand"], ["Hanno un frammento"], 2))
-        self.assertIn("+6 → +3  Avete riportato il frammento", self.run_fx("show", "valtrenna")[1])
+        self.assertIn("+6 (now +3)  Avete riportato il frammento", self.run_fx("show", "valtrenna")[1])
         self.assertEqual(self.run_fx("drop", "valtrenna", "--known", "frammento")[0], 0)
         self.assertEqual(self.run_fx("remove", "valtrenna")[0], 0)
         self.assertEqual(self.saved(), [])

@@ -293,7 +293,7 @@ def describe(faction: dict, history: bool = False) -> str:
     lines += [f"  member: {m}" for m in faction.get("members") or []]
     lines += [f"  · {k}" for k in faction.get("known") or []]
     if history:
-        lines += [f"  {_signed(h['delta'])} → {_signed(h['score'])}" + (f"  {h['reason']}" if h.get("reason") else "")
+        lines += [f"  {_signed(h['delta'])} (now {_signed(h['score'])})" + (f"  {h['reason']}" if h.get("reason") else "")
                   for h in faction.get("history") or []]
     return "\n".join(lines)
 
