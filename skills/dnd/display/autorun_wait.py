@@ -34,6 +34,10 @@ try:
     import vote as _vote
 except Exception:
     _vote = None
+try:
+    import chase as _chase
+except Exception:
+    _chase = None
 PUSH = os.path.join(DISPLAY_DIR, "push_stats.py")
 
 try:
@@ -82,6 +86,8 @@ for _ in range(1800):  # 0.3s * 1800 = 9 min
         break
     if _vote and _vote.notes_pending():       # the table has decided: the DM goes on from there
         break
+    if _chase and _chase.notes_pending():     # a player ran: the creatures' turn, or a complication
+        break
     try:
         if open(SESSION_FILE, encoding="utf-8").read().strip() != my_session:
             break
@@ -119,6 +125,7 @@ if content:
 notes = _whisper.drain_inbox() if _whisper else []
 notes += _puzzle.drain_news() if _puzzle else []
 notes += _vote.drain_notes() if _vote else []
+notes += _chase.drain_notes() if _chase else []
 if notes:
     content = "\n".join(notes + ([content] if content else []))
 

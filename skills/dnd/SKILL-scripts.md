@@ -540,6 +540,30 @@ python3 ${CLAUDE_SKILL_DIR}/display/stronghold.py close
 
 ---
 
+## Chases — `display/chase.py`
+
+A quarry and its pursuers on one line, kept by the display (DMG 2014 pp. 252-255). Every runner's phone has a Chase panel: the line, the distances, whose turn; on their own turn **run** (speed), **dash** (twice it) or **give up**.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/display/chase.py start --quarry "Ladro:speed=9,con=1,dex=3,stealth=5" --pursuers "Lyra, Hernio, Guardia" --gap 18 --setting urban
+python3 ${CLAUDE_SKILL_DIR}/display/chase.py start --quarry "Lyra, Hernio" --pursuers "Thug:2" --gap 12 --setting wild
+python3 ${CLAUDE_SKILL_DIR}/display/chase.py act "Ladro" dash        # a creature's turn: move | dash | stop
+python3 ${CLAUDE_SKILL_DIR}/display/chase.py adjust "Hernio" -3      # a complication cost 3 m (+3 for a shortcut)
+python3 ${CLAUDE_SKILL_DIR}/display/chase.py sight off               # out of the lead pursuer's sight: escape checks this round
+python3 ${CLAUDE_SKILL_DIR}/display/chase.py cover crowded|normal|open
+python3 ${CLAUDE_SKILL_DIR}/display/chase.py mark "Lyra" escaped     # escaped | caught | out | in
+python3 ${CLAUDE_SKILL_DIR}/display/chase.py show
+python3 ${CLAUDE_SKILL_DIR}/display/chase.py end
+```
+
+- Who runs: a name with a sheet is a PC (speed, CON, DEX, Stealth, passive Perception from the sheet); anything else is a creature, `Name:key=value,…` (`speed` in metres, `con`, `dex`, `stealth`, `passive`) or a name the SRD knows (`Thug:2` = two thugs). Initiative is d20 + DEX, rolled at the start.
+- Dashes: 3 + CON modifier are free; each one after asks a DC 10 Constitution save (rolled by the display) or a level of exhaustion — level 2 halves the speed, 5 takes the runner out. Those levels go with a short or long rest afterwards (DMG): apply them on the sheet when they matter after the chase.
+- Complications: at the end of each turn a d20, 1-10 = the urban or wilderness complication of that number for the NEXT runner; it shows on that runner's phone with its check and what a failure costs. Ask the roll, then apply the failure (`adjust`, damage with the usual tools, a condition).
+- Escape: at the end of a round with `sight off`, each quarry rolls Dexterity (Stealth) against the pursuers' best passive Perception (advantage with `cover crowded`, disadvantage with `open`); creatures roll by themselves, a PC quarry is asked (a line tells you the DC) and you `mark` the result. `sight` goes back on at every new round.
+- A player's turn reaches you as `[[CHASE: Lyra dashes 18 m; complication for Guardia (crowd): …. Now Guardia's turn: chase.py act "Guardia" move|dash|stop.]]` from `check_input.py`, and ends an autorun wait. Your own `act` prints the same at once.
+
+---
+
 ## Attacks — `scripts/attacks.py`
 
 The weapons and attack spells of a sheet's `## Attacks` table, rolled to hit and for damage in one go. The players' **Attacks** panel is built on it; from the command line it serves roll_mode auto.

@@ -21,6 +21,9 @@ that was solved, or ran out of attempts (puzzle.py), is a `[[PUZZLE …]]` line.
 When every player has chosen a downtime activity (downtime.py) the DM gets a
 `[[DOWNTIME: …]]` line.
 
+A player's turn in a chase (chase.py) is a `[[CHASE: …]]` line: already
+applied, with whose turn it is now.
+
 Coins a player put into or took out of the party's common fund, or paid from
 it at the shop (treasury.py), are `[[TREASURY: …]]` lines, already applied.
 
@@ -118,6 +121,13 @@ except Exception:
 try:
     from vote import drain_notes as drain_votes
     for line in drain_votes():
+        print(line)
+except Exception:
+    pass
+
+try:
+    from chase import drain_notes as drain_chase
+    for line in drain_chase():
         print(line)
 except Exception:
     pass

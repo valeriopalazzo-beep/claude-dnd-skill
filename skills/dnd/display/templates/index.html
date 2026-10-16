@@ -1746,6 +1746,43 @@
   #pwa-body ol{ margin:0; padding-left:22px; display:flex; flex-direction:column; gap:10px; font-size:18px; line-height:1.35; }
   #pwa-body p{ margin:14px 0 0; color:var(--ln-text-muted, #b9ab92); font-size:15px; }
 
+  /* ══ Chases (chase.py) — distances, dashes, your turn ══ */
+  #chase-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
+    align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  #chase-modal.open{ display:flex; }
+  #chase-panel{ width:min(560px, 100%); margin:auto 0; color:var(--ln-text, #ECE4D2); font-family:'Alegreya Sans','Syne',sans-serif; }
+  #chase-head{ display:flex; align-items:center; gap:10px; margin-bottom:10px; color:#ECE4D2; }
+  #chase-head h2{ flex:1; min-width:0; margin:0; font-size:22px; line-height:1.15; }
+  #chase-close{ flex:none; width:40px; height:40px; border-radius:999px; cursor:pointer; font-size:16px;
+    background:rgba(0,0,0,.35); color:inherit; border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #chase-body{ display:flex; flex-direction:column; gap:10px; }
+  .chase-box{ padding:13px 16px; border-radius:12px; background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
+  .chase-sub{ margin:0; font-size:15px; color:var(--ln-text-muted, #cdbfa6); }
+  .chase-track{ position:relative; height:44px; margin:6px 6px 2px; }
+  .chase-track::before{ content:''; position:absolute; left:0; right:0; top:21px; height:2px; background:rgba(255,255,255,.18); }
+  .chase-dot{ position:absolute; top:12px; width:20px; height:20px; margin-left:-10px; border-radius:50%;
+    border:2px solid #0f0c16; background:#6fa8dc; }
+  .chase-dot.quarry{ background:#e2574c; }
+  .chase-dot.me{ box-shadow:0 0 0 3px var(--ln-accent, #f2b544); }
+  .chase-dot.gone{ opacity:.3; }
+  .chase-rows{ list-style:none; margin:0; padding:0; }
+  .chase-rows li{ display:flex; gap:10px; align-items:baseline; padding:7px 0; border-bottom:1px solid var(--ln-line, rgba(255,255,255,.1)); font-size:16px; }
+  .chase-rows li:last-child{ border-bottom:0; }
+  .chase-rows li b{ flex:1; min-width:0; }
+  .chase-rows li small{ flex:none; color:var(--ln-text-muted, #b9ab92); font-size:14px; }
+  .chase-rows li.turn b::before{ content:'▶ '; color:var(--ln-accent, #f2b544); }
+  .chase-rows li.quarry b{ color:#ff8a80; }
+  .chase-acts{ display:flex; flex-direction:column; gap:8px; }
+  .chase-acts button{ display:block; width:100%; padding:13px 14px; text-align:left; cursor:pointer; border-radius:10px; font:inherit; color:inherit;
+    background:rgba(0,0,0,.25); border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  .chase-acts button b{ display:block; font-size:18px; }
+  .chase-acts button small{ display:block; margin-top:2px; font-size:14px; color:var(--ln-text-muted, #cdbfa6); }
+  .chase-acts button.main{ border-color:var(--ln-accent, #f2b544); }
+  .chase-acts button:disabled{ opacity:.4; cursor:default; }
+  .chase-cx{ padding:11px 14px; border-radius:10px; background:rgba(226,87,76,.14); border:1px solid rgba(226,87,76,.5); font-size:16px; }
+  .chase-log{ list-style:none; margin:0; padding:0; font-size:14.5px; color:var(--ln-text-muted, #cdbfa6); }
+  .chase-log li{ padding:4px 0; }
+
   /* ══ Attacks (attacks.py) — weapon, target, roll: to hit and damage in one tap ══ */
   #atk-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
     align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
@@ -5461,6 +5498,7 @@
     <button class="ph-set-opt" id="ph-recap-opt" type="button" hidden><span data-i18n="recap.menu">Previously on…</span><strong>📜</strong></button>
     <button class="ph-set-opt" id="ph-missed-opt" type="button" hidden><span data-i18n="missed.menu">While you were away</span><strong>✉</strong></button>
     <button class="ph-set-opt" id="ph-vote-opt" type="button" hidden><span data-i18n="vote.title">Vote</span><strong>🗳</strong></button>
+    <button class="ph-set-opt" id="ph-chase-opt" type="button" hidden><span data-i18n="chase.title">Chase</span><strong>🏃</strong></button>
     <button class="ph-set-opt" id="ph-rest-opt" type="button" hidden><span data-i18n="rest.title">Rest</span><strong>🏕</strong></button>
     <button class="ph-set-opt" id="ph-theme-opt" type="button"><span data-i18n="ph.theme">Theme</span><strong id="ph-theme-val">Dark</strong></button>
     <button class="ph-set-opt" id="ph-region-opt" type="button" hidden><span data-i18n="region.title">Region map</span><strong>🧭</strong></button>
@@ -5817,6 +5855,17 @@
   </div>
 </div>
 
+<!-- Chases: distances, dashes and each runner's turn (chase.py) -->
+<div id="chase-modal">
+  <div id="chase-panel" role="dialog" aria-labelledby="chase-title">
+    <div id="chase-head">
+      <h2 id="chase-title" data-i18n="chase.title">Chase</h2>
+      <button id="chase-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
+    </div>
+    <div id="chase-body"></div>
+  </div>
+</div>
+
 <!-- Attacks: weapon, target, advantage — one roll for to hit and damage (scripts/attacks.py) -->
 <div id="atk-modal">
   <div id="atk-panel" role="dialog" aria-labelledby="atk-title">
@@ -5920,6 +5969,7 @@
   <symbol id="ln-i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
   <symbol id="ln-i-chest" viewBox="0 0 24 24"><path d="M3 10a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v9H3z"/><path d="M3 12h18"/><path d="M10.5 11h3v3h-3z"/></symbol>
   <symbol id="ln-i-castle" viewBox="0 0 24 24"><path d="M4 21V9h3v2h2V9h2v2h2V9h2v2h2V9h3v12z"/><path d="M10 21v-4a2 2 0 0 1 4 0v4"/><path d="M12 9V3l4 1.5L12 6"/></symbol>
+  <symbol id="ln-i-run" viewBox="0 0 24 24"><circle cx="14" cy="4.5" r="2"/><path d="M8 21l3-6 3 2v5"/><path d="M6 12l3-4h5l3 4 3 1"/><path d="M11 15l1-5"/></symbol>
   <symbol id="ln-i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></symbol>
   <symbol id="ln-i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
   <symbol id="ln-i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2v10l7 7"/></symbol>
@@ -5963,6 +6013,7 @@
       <button class="ln-item" type="button" id="ln-recap" title="Previously on…" data-i18n-title="recap.menu" hidden><svg class="ln-i"><use href="#ln-i-recap"/></svg><span class="ln-lbl" data-i18n="recap.menu">Previously on…</span></button>
       <button class="ln-item" type="button" id="ln-missed" title="While you were away" data-i18n-title="missed.menu" hidden><svg class="ln-i"><use href="#ln-i-recap"/></svg><span class="ln-lbl" data-i18n="missed.menu">While you were away</span><span class="ln-badge alert" id="ln-missed-badge" hidden>!</span></button>
       <button class="ln-item" type="button" id="ln-vote" title="Vote" data-i18n-title="vote.title" hidden><svg class="ln-i"><use href="#ln-i-vote"/></svg><span class="ln-lbl" data-i18n="vote.title">Vote</span><span class="ln-badge alert">!</span></button>
+      <button class="ln-item" type="button" id="ln-chase" title="Chase" data-i18n-title="chase.title" hidden><svg class="ln-i"><use href="#ln-i-run"/></svg><span class="ln-lbl" data-i18n="chase.title">Chase</span><span class="ln-badge alert">!</span></button>
       <button class="ln-item" type="button" id="ln-rest" title="Rest" data-i18n-title="rest.title" hidden><svg class="ln-i"><use href="#ln-i-rest"/></svg><span class="ln-lbl" data-i18n="rest.title">Rest</span><span class="ln-badge alert">!</span></button>
       <div class="ln-slot" id="ln-help-slot"></div>
     </div>
@@ -6061,6 +6112,7 @@
         <button class="ln-item" type="button" id="ln-recap-more" data-ln-proxy="ln-recap" hidden><svg class="ln-i"><use href="#ln-i-recap"/></svg><span class="ln-lbl" data-i18n="recap.menu">Previously on…</span></button>
         <button class="ln-item" type="button" id="ln-missed-more" data-ln-proxy="ln-missed" hidden><svg class="ln-i"><use href="#ln-i-recap"/></svg><span class="ln-lbl" data-i18n="missed.menu">While you were away</span></button>
         <button class="ln-item" type="button" id="ln-vote-more" data-ln-proxy="ln-vote" hidden><svg class="ln-i"><use href="#ln-i-vote"/></svg><span class="ln-lbl" data-i18n="vote.title">Vote</span></button>
+        <button class="ln-item" type="button" id="ln-chase-more" data-ln-proxy="ln-chase" hidden><svg class="ln-i"><use href="#ln-i-run"/></svg><span class="ln-lbl" data-i18n="chase.title">Chase</span></button>
         <button class="ln-item" type="button" id="ln-rest-more" data-ln-proxy="ln-rest" hidden><svg class="ln-i"><use href="#ln-i-rest"/></svg><span class="ln-lbl" data-i18n="rest.title">Rest</span></button>
         <button class="ln-item" type="button" data-ln-go="fazioni"><svg class="ln-i"><use href="#ln-i-flag"/></svg><span class="ln-lbl" data-i18n="ln.view.fazioni">Factions</span></button>
         <button class="ln-item" type="button" data-ln-proxy="ln-handouts"><svg class="ln-i"><use href="#ln-i-mail"/></svg><span class="ln-lbl" data-i18n="handout.title">Documents</span></button>
@@ -11352,6 +11404,7 @@ function connect() {
     if (payload.stats && typeof window._onAttackStats === 'function') window._onAttackStats(payload.stats);
     if (payload.attack && typeof window._onAttack === 'function') window._onAttack(payload.attack);
     if (payload.vote_event && typeof window._onVote === 'function') window._onVote(payload.vote_event);
+    if ('chase' in payload && typeof window._onChase === 'function') window._onChase(payload);
     if ('recap' in payload && typeof window._onRecap === 'function') window._onRecap(payload);
     if (payload.missed_changed && typeof window._onMissed === 'function') window._onMissed(payload.missed_changed);
     if (payload.ambience && typeof window._onAmbience === 'function') window._onAmbience(payload.ambience);
@@ -13638,6 +13691,171 @@ function _pwaPlan(ua, standalone, hasPrompt) {
     document.addEventListener('keydown', e => { if (e.key === 'Escape') modal.classList.remove('open'); });
   }
   refresh();
+})();
+
+// ── Chases (chase.py) ─────────────────────────────────────────────────
+// The server keeps the chase; _chasePlan arranges one screen's view of it:
+// where each runner is on the line, the gaps, whose turn, and — when it is
+// this character's turn — what moving and dashing would mean.
+function _chasePlan(chase, me) {
+  if (!chase) return null;
+  const same = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+  const runners = chase.runners || [];
+  const pos = runners.map(r => r.pos);
+  const lo = Math.min.apply(null, pos), hi = Math.max.apply(null, pos);
+  const mine = runners.find(r => same(r.name, me)) || null;
+  const rows = runners.slice().sort((a, b) => b.pos - a.pos).map(r => ({
+    name: r.name, side: r.side, status: r.status, gap: r.gap, me: same(r.name, me), turn: !chase.over && same(r.name, chase.turn),
+    pct: hi > lo ? Math.round((r.pos - lo) * 1000 / (hi - lo)) / 10 : 50,
+  }));
+  const plan = { rows: rows, round: chase.round, over: !!chase.over, turn: chase.turn, setting: chase.setting,
+                 sight: chase.sight, mine: mine, myTurn: !!mine && !chase.over && same(chase.turn, me) && mine.status === 'in',
+                 move: 0, dash: 0, freeLeft: 0, dashSave: false, complication: mine && mine.complication ? mine.complication : null };
+  if (mine) {
+    plan.move = mine.speed;
+    plan.dash = mine.speed * 2;
+    plan.freeLeft = Math.max(0, mine.free - mine.dashes);
+    plan.dashSave = plan.freeLeft === 0;
+  }
+  return plan;
+}
+// ── end chase plan ──
+
+(function _initChase() {
+  const modal = document.getElementById('chase-modal');
+  if (!modal) return;
+  const $ = id => document.getElementById(id);
+  const body = $('chase-body');
+  const qp = new URLSearchParams(location.search);
+  const me = String(window._LOGIN_CHAR || qp.get('char') || qp.get('character') || '').trim();
+  let chase = null, busy = false, lastTurn = '';
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+  const num = n => String(n).replace('.', window._LANG && window._LANG.startsWith('it') ? ',' : '.');
+  const isRunner = () => !!chase && (chase.runners || []).some(r => r.name.toLowerCase() === me.toLowerCase());
+  const evText = e => _t('chase.ev.' + e.key, e.vars || {}, e.text);
+
+  function triggers() {
+    const show = !!chase && (!me || isRunner());
+    ['ln-chase', 'ln-chase-more', 'ph-chase-opt'].forEach(id => { const e = $(id); if (e) e.hidden = !show; });
+    const badge = document.querySelector('#ln-chase .ln-badge');
+    if (badge) badge.hidden = !(chase && !chase.over && me && chase.turn.toLowerCase() === me.toLowerCase());
+    if (!chase) modal.classList.remove('open');
+  }
+  function act(action) {
+    if (!me || busy || !chase) return;
+    busy = true; render();
+    fetch('/chase/act', {
+      method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json', 'X-DND-Device': _deviceId }, _authHeaders()),
+      body: JSON.stringify({ character: me, action: action, id: chase.id }),
+    }).then(r => r.json().then(d => ({ ok: r.ok, d })).catch(() => ({ ok: false, d: {} })))
+      .then(({ ok, d }) => {
+        busy = false;
+        if (ok && d.chase) { chase = d.chase; if (navigator.vibrate) navigator.vibrate(30); }
+        else _showToast('🏃 ' + _t(d.code === 'turn' ? 'chase.err.turn' : 'chase.err.generic', null, d.error || 'It did not go through.'), 5000);
+        triggers(); render();
+      });
+  }
+
+  function render() {
+    body.textContent = '';
+    if (!chase) return;
+    const plan = _chasePlan(chase, me);
+    const head = el('div', 'chase-box');
+    head.appendChild(el('p', 'chase-sub', [_t('chase.round', { n: plan.round }, 'Round ' + plan.round),
+      _t('chase.setting.' + plan.setting, null, plan.setting),
+      plan.over ? _t('chase.over', null, 'The chase is over') : _t('chase.turnOf', { name: plan.turn }, plan.turn + "'s turn")].join(' · ')));
+    const track = el('div', 'chase-track');
+    plan.rows.forEach(r => {
+      const dot = el('i', 'chase-dot ' + r.side + (r.me ? ' me' : '') + (r.status !== 'in' ? ' gone' : ''));
+      dot.style.left = r.pct + '%';
+      dot.title = r.name;
+      track.appendChild(dot);
+    });
+    head.appendChild(track);
+    const list = el('ul', 'chase-rows');
+    plan.rows.forEach(r => {
+      const li = el('li', r.side + (r.turn ? ' turn' : ''));
+      li.appendChild(el('b', '', r.name + (r.me ? ' (' + _t('chase.you', null, 'you') + ')' : '')));
+      const bits = [];
+      if (r.status !== 'in') bits.push(_t('chase.status.' + r.status, null, r.status));
+      else if (r.gap !== null && r.gap !== undefined) bits.push(_t(r.side === 'quarry' ? 'chase.lead' : 'chase.behind', { m: num(r.gap) }, r.gap + ' m'));
+      li.appendChild(el('small', '', bits.join(' · ')));
+      list.appendChild(li);
+    });
+    head.appendChild(list);
+    body.appendChild(head);
+
+    if (plan.complication) {
+      const c = plan.complication;
+      body.appendChild(el('div', 'chase-cx', '⚠ ' + _t('chase.cx.' + c.key, null, c.check + ' — ' + c.fail)));
+    }
+    if (plan.mine && plan.mine.status === 'in') {
+      const box = el('div', 'chase-box');
+      const m = plan.mine;
+      box.appendChild(el('p', 'chase-sub', _t('chase.mine', { free: plan.freeLeft, ex: m.exhaustion }, plan.freeLeft + ' free dashes left')
+        + (m.exhaustion ? ' · ' + _t('chase.exhaustion', { n: m.exhaustion }, 'exhaustion ' + m.exhaustion) : '')));
+      if (plan.myTurn) {
+        const acts = el('div', 'chase-acts');
+        [['move', 'main', _t('chase.move', { m: num(plan.move) }, 'Move ' + plan.move + ' m'), _t('chase.moveSub', null, 'Your speed; you can still attack or cast')],
+         ['dash', '', _t('chase.dash', { m: num(plan.dash) }, 'Dash ' + plan.dash + ' m'),
+          plan.dashSave ? _t('chase.dashSave', null, 'No free dash left: a DC 10 Constitution save, or a level of exhaustion')
+                        : _t('chase.dashFree', { n: plan.freeLeft }, plan.freeLeft + ' free dashes left')],
+         ['stop', '', _t('chase.stop', null, 'Give up the chase'), _t('chase.stopSub', null, 'You stop running')]].forEach(([a, cls, title, sub]) => {
+          const b = el('button', cls);
+          b.type = 'button';
+          b.disabled = busy;
+          b.appendChild(el('b', '', title));
+          b.appendChild(el('small', '', sub));
+          b.addEventListener('click', () => act(a));
+          acts.appendChild(b);
+        });
+        box.appendChild(acts);
+      } else if (!plan.over) {
+        box.appendChild(el('p', 'chase-sub', _t('chase.wait', { name: plan.turn }, 'Waiting for ' + plan.turn)));
+      }
+      body.appendChild(box);
+    }
+    if ((chase.log || []).length) {
+      const box = el('div', 'chase-box');
+      const ul = el('ul', 'chase-log');
+      chase.log.slice(0, 8).forEach(e => ul.appendChild(el('li', '', evText(e))));
+      box.appendChild(ul);
+      body.appendChild(box);
+    }
+  }
+
+  function load() {
+    return fetch('/chase', { headers: _authHeaders() }).then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) { chase = d.chase; triggers(); render(); } }).catch(() => {});
+  }
+  function open() { if (!chase) return; modal.classList.add('open'); render(); }
+  const close = () => modal.classList.remove('open');
+
+  window._onChase = function (payload) {
+    const was = chase;
+    chase = payload.chase || null;
+    triggers();
+    if (!chase) { lastTurn = ''; return; }
+    const mineNow = !!me && isRunner() && !chase.over && chase.turn.toLowerCase() === me.toLowerCase();
+    if (!was && (!me || isRunner())) {
+      _showToast('🏃 ' + _t('chase.started', null, 'A chase!'), 5000);
+      if (me && isRunner()) open();
+    }
+    if (mineNow && lastTurn !== chase.turn + '#' + chase.round) {
+      if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
+      _showToast('🏃 ' + _t('chase.yourTurn', null, 'Your turn in the chase'), 5000);
+      open();
+    }
+    lastTurn = chase.turn + '#' + chase.round;
+    (payload.chase_events || []).filter(e => ['caught', 'escaped', 'out', 'over.quarry', 'over.pursuers'].indexOf(e.key) >= 0)
+      .slice(0, 2).forEach((e, i) => setTimeout(() => _showToast('🏃 ' + evText(e), 5000), i * 600));
+    if (modal.classList.contains('open')) render();
+  };
+  ['ln-chase', 'ph-chase-opt'].forEach(id => { const e = $(id); if (e) e.addEventListener('click', open); });
+  $('chase-close').addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  load();
 })();
 
 // ── Attacks (scripts/attacks.py) ──────────────────────────────────────

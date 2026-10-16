@@ -504,6 +504,8 @@ _DM_ENDPOINTS = {
     "rest_set",
     # Asking the table a question; answering is the players'.
     "vote_set",
+    # A chase: chase.py starts it and plays the creatures; running is the players'.
+    "chase_set",
     # The recap at the start of a session.
     "recap_set",
     # A player's own "while you were away" recap: missed.py writes it, the player reads it.
@@ -4116,6 +4118,163 @@ def dm_screen_roll():
         _dm_rolls.append(entry)
         del _dm_rolls[:-_DM_ROLLS_KEPT]
     return jsonify(entry), 200
+
+
+# ─── Chases (chase.py) ───────────────────────────────────────────────────────
+# A quarry and its pursuers on one line (DMG 2014 pp. 252-255). The server
+# keeps the distances, the order, the dashes and the exhaustion; a player
+# moves, dashes or stops on their own turn from the phone; the DM plays the
+# creatures with chase.py and hears of the players' turns as [[CHASE: …]].
+import chase as _chase_lib
+
+CHASE_FILE = rt("chase.json")
+_chase: Optional[dict] = None
+_chase_lock = threading.Lock()
+
+
+def _load_chase() -> None:
+    global _chase
+    try:
+        with open(CHASE_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+        _chase = data if isinstance(data, dict) and data.get("runners") else None
+    except (OSError, ValueError):
+        _chase = None
+
+
+def _persist_chase() -> None:
+    try:
+        if _chase is None:
+            if os.path.exists(CHASE_FILE):
+                os.remove(CHASE_FILE)
+            return
+        with open(CHASE_FILE + ".tmp", "w", encoding="utf-8") as f:
+            json.dump(_chase, f, ensure_ascii=False)
+        os.replace(CHASE_FILE + ".tmp", CHASE_FILE)
+    except OSError:
+        pass
+
+
+_load_chase()
+
+
+def _chase_now() -> Optional[dict]:
+    """The chase of the campaign being played (call with _chase_lock held)."""
+    if _chase is None or _chase.get("campaign", "") != _active_campaign():
+        return None
+    return _chase
+
+
+def _chase_runner(raw, side: str) -> dict:
+    """A runner sent by chase.py, rebuilt field by field."""
+    if not isinstance(raw, dict):
+        raise _chase_lib.ChaseError("a runner is not an object")
+    num = lambda k, d, lo, hi: max(lo, min(hi, float(raw.get(k, d) if raw.get(k) is not None else d)))  # noqa: E731
+    return _chase_lib.runner(str(raw.get("name", "")), side, num("speed", 9, 0, 60), int(num("con", 0, -5, 10)),
+                             int(num("dex", 0, -5, 10)), int(num("stealth", 0, -5, 20)), int(num("passive", 10, 1, 30)),
+                             bool(raw.get("pc")))
+
+
+def _chase_publish(events: list, tell_dm: bool) -> dict:
+    """Send every screen the chase and what happened; the DM's line when a player acted."""
+    with _chase_lock:
+        state = _chase_now() or _chase
+        view = _chase_lib.public_view(state)
+        note = _chase_lib.format_note(events, state) if (tell_dm and events and state) else ""
+    if note:
+        _chase_lib.notes_add(note)
+    _broadcast({"chase": view, "chase_events": events[-8:]})
+    return view
+
+
+@app.route("/chase", methods=["GET"])
+def chase_get():
+    if not _token_ok():
+        return "Forbidden", 403
+    with _chase_lock:
+        return jsonify({"chase": _chase_lib.public_view(_chase_now())}), 200
+
+
+@app.route("/chase", methods=["POST"])
+def chase_set():
+    """chase.py: {"op": "start", "quarry": [...], "pursuers": [...], "gap", "setting"} | {"op": "act", "name",
+    "action"} | {"op": "adjust", "name", "metres"} | {"op": "mark", "name", "status"} | {"op": "sight", "on"} |
+    {"op": "cover", "cover"} | {"op": "end"}."""
+    global _chase
+    if not _token_ok():
+        return "Forbidden", 403
+    data = request.get_json(silent=True) or {}
+    op = data.get("op")
+    events = []
+    try:
+        with _chase_lock:
+            if op == "start":
+                quarry = [_chase_runner(r, "quarry") for r in (data.get("quarry") or [])][:12]
+                pursuers = [_chase_runner(r, "pursuer") for r in (data.get("pursuers") or [])][:12]
+                _chase = _chase_lib.start(quarry, pursuers, float(data.get("gap") or 0), str(data.get("setting") or "urban"),
+                                          campaign=_active_campaign())
+                events = [_chase_lib._say(_chase, "start", "the chase begins", gap=data.get("gap"))]
+            elif op == "end":
+                if _chase_now() is None:
+                    return jsonify({"error": "no chase"}), 409
+                _chase = None
+                _persist_chase()
+                _broadcast({"chase": None})
+                return jsonify({"chase": None, "events": ["the chase is over"]}), 200
+            else:
+                state = _chase_now()
+                if state is None:
+                    return jsonify({"error": "no chase"}), 409
+                if op == "act":
+                    events = _chase_lib.act(state, str(data.get("name", "")), str(data.get("action", "")))
+                elif op == "adjust":
+                    events = [_chase_lib.adjust(state, str(data.get("name", "")), float(data.get("metres") or 0))]
+                elif op == "mark":
+                    events = [_chase_lib.mark(state, str(data.get("name", "")), str(data.get("status", "")))]
+                elif op == "sight":
+                    state["sight"] = bool(data.get("on"))
+                    events = [_chase_lib._say(state, "sight.on" if state["sight"] else "sight.off",
+                                              "the quarry is in sight" if state["sight"] else "the quarry is out of sight")]
+                elif op == "cover":
+                    if data.get("cover") not in _chase_lib.COVERS:
+                        return jsonify({"error": "cover is crowded, normal or open"}), 400
+                    state["cover"] = data["cover"]
+                    events = [_chase_lib._say(state, "cover." + state["cover"], f"cover: {state['cover']}")]
+                else:
+                    return jsonify({"error": "unknown op"}), 400
+            _persist_chase()
+    except (_chase_lib.ChaseError, TypeError, ValueError) as e:
+        return jsonify({"error": str(e)}), 400
+    view = _chase_publish(events, tell_dm=False)
+    return jsonify({"chase": view, "events": [e["text"] for e in events]}), 200
+
+
+@app.route("/chase/act", methods=["POST"])
+def chase_act():
+    """A player's turn: {"character", "action": "move"|"dash"|"stop", "id"}."""
+    if not _token_ok():
+        return "Forbidden", 403
+    if not _rate_ok(request.remote_addr):
+        return "Too Many Requests", 429
+    body = request.get_json(silent=True) or {}
+    character = _acting_character(str(body.get("character", ""))[:50].strip())
+    with _chase_lock:
+        state = _chase_now()
+        if state is None or state.get("over") or (body.get("id") and body.get("id") != state["id"]):
+            return jsonify({"error": "no chase", "code": "over"}), 409
+        try:
+            runner = _chase_lib.find(state, character)
+        except _chase_lib.ChaseError:
+            return jsonify({"error": "not in the chase", "code": "runner"}), 403
+        if not runner.get("pc"):
+            return jsonify({"error": "not in the chase", "code": "runner"}), 403
+        try:
+            events = _chase_lib.act(state, runner["name"], str(body.get("action", "")))
+        except _chase_lib.ChaseError as e:
+            return jsonify({"error": str(e), "code": "turn" if "turn" in str(e) else "action"}), 409
+        _persist_chase()
+    view = _chase_publish(events, tell_dm=True)
+    return jsonify({"chase": view}), 200
 
 
 # ─── Attacks (scripts/attacks.py) ────────────────────────────────────────────
