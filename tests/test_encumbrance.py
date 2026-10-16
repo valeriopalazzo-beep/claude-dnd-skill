@@ -84,6 +84,8 @@ class WeightTests(unittest.TestCase):
         self.assertEqual(enc.weight_of("frecce"), 1 / 20)
         self.assertEqual(enc.weight_of("Ascia da battaglia di Orm (nanica, rune)"), enc.weight_of("Battleaxe"))
         self.assertEqual(enc.weight_of("Pozione di guarigione"), 0.5)
+        self.assertEqual(enc.weight_of("Un pegno d'affetto di un ammiratore"), 0)
+        self.assertEqual(enc.weight_of("la torcia di riserva"), enc.weight_of("Torch"))
         self.assertIsNone(enc.weight_of("Cimelio misterioso"))
         self.assertEqual(enc.weight_of("Cimelio misterioso", {"cimelio misterioso": 3.0}), 3.0)
 

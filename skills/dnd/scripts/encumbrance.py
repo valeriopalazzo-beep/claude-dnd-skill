@@ -179,6 +179,11 @@ def weight_of(name: str, extra: dict | None = None):
         return None
     found = _weight_of(n, extra)
     if found is None:
+        # "Un pegno d'affetto", "la chiave del forno": the article is not part of the name.
+        first, _, rest = n.partition(" ")
+        if first in ("un", "uno", "una", "il", "lo", "la", "i", "gli", "le", "l", "a", "an", "the") and rest:
+            return weight_of(rest, extra)
+    if found is None:
         first, _, rest = n.partition(" ")
         for single in _singulars(first):
             found = _weight_of((single + " " + rest).strip(), extra)
