@@ -24,8 +24,11 @@ Usage:
     python3 tracker.py -c $CAMPAIGN effect end   <entity> "<spell>"
     python3 tracker.py -c $CAMPAIGN effect tick  <entity>   # call on that entity's turn start
 
-    # Damage to a creature that is concentrating (monsters, NPCs; the display does the PCs):
-    # rolls the CON save, DC 10 or half the damage, and breaks it on a failure
+    # Hit points of monsters and NPCs (PCs live on their sheets and the display) — shown on the DM's screen
+    python3 tracker.py -c $CAMPAIGN hp <entity> <current> [--max N] [--ac N]
+
+    # Damage to a monster or an NPC: takes it off the HP above (when known) and, when it is concentrating,
+    # rolls the CON save — DC 10 or half the damage — and breaks it on a failure (at 0 HP it just ends)
     python3 tracker.py -c $CAMPAIGN hit <entity> <damage> [--con +3] [--adv|--dis] [--down]
 
     # Death saves (PC only — 3 successes = stable, 3 failures = dead)
@@ -418,13 +421,34 @@ def concentration_dc(damage: int) -> int:
     return max(10, int(damage) // 2)
 
 
+def cmd_hp(campaign: str, entity_name: str, current: int, maximum=None, ac=None) -> dict:
+    """Set a monster's or an NPC's hit points (and AC): the DM's screen shows them, `hit` takes damage off."""
+    state = _load(campaign)
+    ent = _entity(state, entity_name)
+    ent["hp"] = max(0, int(current))
+    if maximum is not None:
+        ent["max_hp"] = max(1, int(maximum))
+    else:
+        ent.setdefault("max_hp", max(1, ent["hp"]))
+    if ac is not None:
+        ent["ac"] = int(ac)
+    _save(campaign, state)
+    print(f"  {entity_name}: {ent['hp']}/{ent['max_hp']} HP" + (f", AC {ent['ac']}" if ent.get("ac") is not None else ""))
+    return ent
+
+
 def cmd_hit(campaign: str, entity_name: str, damage: int, con: int = 0, adv: str = "normal",
             down: bool = False, rng=None) -> dict:
-    """Damage to a concentrating creature: roll its save and break the spell on a failure."""
+    """Damage to a monster or an NPC: off its HP when known, and a concentration save when it concentrates."""
     import random
     rng = rng or random.SystemRandom()
     state = _load(campaign)
     ent = _entity(state, entity_name)
+    if isinstance(ent.get("hp"), int) and damage > 0:
+        ent["hp"] = max(0, ent["hp"] - damage)
+        down = down or ent["hp"] == 0
+        print(f"  {entity_name}: {ent['hp']}/{ent.get('max_hp', '?')} HP" + ("  — DOWN" if ent["hp"] == 0 else ""))
+        _save(campaign, state)
     spell = ent.get("concentration")
     if not spell:
         print(f"  {entity_name}: not concentrating — nothing to roll")
@@ -545,6 +569,8 @@ def cmd_clear(campaign: str, clear_all: bool = False) -> None:
         ent["condition_timers"] = {}
         ent["concentration"] = None
         ent["effects"] = []
+        for k in ("hp", "max_hp", "ac"):       # the fight is over: the foes' numbers go with it
+            ent.pop(k, None)
         _push_conditions(ent["name"], [])
         if clear_all:
             ent["death_saves"] = {"successes": 0, "failures": 0, "stable": False}
@@ -585,6 +611,13 @@ def main() -> None:
     conc.add_argument("entity")
     conc.add_argument("spell", help="Spell name, or 'break' to end concentration")
 
+    # hp
+    hpp = sub.add_parser("hp", help="Hit points (and AC) of a monster or an NPC")
+    hpp.add_argument("entity")
+    hpp.add_argument("current", type=int)
+    hpp.add_argument("--max", type=int, default=None)
+    hpp.add_argument("--ac", type=int, default=None)
+
     # hit
     hit = sub.add_parser("hit", help="Damage to a concentrating creature: roll the CON save")
     hit.add_argument("entity")
@@ -618,6 +651,8 @@ def main() -> None:
         cmd_condition(args.campaign, args.entity, args.action, args.condition, args.duration)
     elif args.cmd == "concentrate":
         cmd_concentrate(args.campaign, args.entity, args.spell)
+    elif args.cmd == "hp":
+        cmd_hp(args.campaign, args.entity, args.current, args.max, args.ac)
     elif args.cmd == "hit":
         cmd_hit(args.campaign, args.entity, args.damage, args.con,
                 "advantage" if args.adv and not args.dis else "disadvantage" if args.dis and not args.adv else "normal",

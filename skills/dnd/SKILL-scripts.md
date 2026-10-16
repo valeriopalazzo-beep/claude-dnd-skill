@@ -569,8 +569,10 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/tracker.py -c $CAMP condition clear "Ethros 
 # Concentration (auto-clears previous if switching spells)
 python3 ${CLAUDE_SKILL_DIR}/scripts/tracker.py -c $CAMP concentrate "Max of Thraxx" "Bless"
 python3 ${CLAUDE_SKILL_DIR}/scripts/tracker.py -c $CAMP concentrate "Max of Thraxx" break
-# Damage to a concentrating creature that is not a PC: rolls its CON save (DC 10 or half the damage)
-# and breaks the concentration on a failure; --down when it dropped to 0 HP (no roll, it just ends)
+# Hit points (and AC) of monsters and NPCs, shown on the DM's screen (/dm-screen); `clear` empties them
+python3 ${CLAUDE_SKILL_DIR}/scripts/tracker.py -c $CAMP hp "Isolda" 29 --max 52 --ac 14
+# Damage to a monster or an NPC: off its HP when set; when it concentrates, rolls its CON save
+# (DC 10 or half the damage) and breaks the concentration on a failure — at 0 HP (or --down) it just ends
 python3 ${CLAUDE_SKILL_DIR}/scripts/tracker.py -c $CAMP hit "Isolda" 14 --con 3          # --adv for War Caster
 
 # Death saves

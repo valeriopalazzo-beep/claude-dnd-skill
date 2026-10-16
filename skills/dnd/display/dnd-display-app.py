@@ -522,6 +522,8 @@ _DM_ENDPOINTS = {
     "supplies_changed",
     # Downtime: downtime.py opens and closes it; choosing is the players'.
     "downtime_changed",
+    # The DM's screen: everything the players do not see, and hidden rolls.
+    "dm_screen", "dm_screen_data", "dm_screen_roll",
     # People met: people.py writes the notebook, everyone reads it.
     "people_changed",
     # The timeline: timeline.py writes it, everyone reads what is not secret.
@@ -3593,6 +3595,175 @@ def downtime_choose():
         _downtime.notes_add(ready)
     _broadcast({"downtime_event": {"what": "chosen", "character": name, "everyone": everyone}})
     return jsonify({"downtime": view}), 200
+
+
+# ─── The DM's screen (/dm-screen) ────────────────────────────────────────────
+# A page for the DM alone: the foes' hit points, the party's passive scores
+# and save DCs, every clock and faction (secret ones too), the secret dates,
+# the session prep, supplies and downtime, and dice rolled behind the screen —
+# never broadcast, never in the story. Players are refused (DM-only endpoints).
+
+DM_SKILLS = ("Acrobatics", "Animal Handling", "Arcana", "Athletics", "Deception", "History", "Insight",
+             "Intimidation", "Investigation", "Medicine", "Nature", "Perception", "Performance", "Persuasion",
+             "Religion", "Sleight of Hand", "Stealth", "Survival")
+_dm_rolls: list = []                 # hidden rolls, oldest first
+_dm_rolls_lock = threading.Lock()
+_DM_ROLLS_KEPT = 40
+_DM_NOTATION = re.compile(r"^\s*(\d{0,2})d(\d{1,3})\s*([+-]\s*\d{1,3})?\s*$", re.I)
+
+
+def _dm_sheet_numbers(name: str) -> dict:
+    """Skill bonuses, passive scores and spell save DC read from a PC's sheet."""
+    path, _safe, _camp = _find_sheet_file(name)
+    try:
+        with open(path, encoding="utf-8") as f:
+            text = f.read()
+    except (OSError, TypeError):
+        return {}
+    skills = {}
+    for row in re.finditer(r"^\|\s*([A-Za-z ]+?)\s*\|\s*(STR|DEX|CON|INT|WIS|CHA)\s*\|\s*([+\-\u2212]?\d+)", text, re.M):
+        if row.group(1) in DM_SKILLS:
+            skills[row.group(1)] = int(row.group(3).replace("\u2212", "-"))
+    passive = re.search(r"Passive Perception:\**\s*(\d+)", text)
+    dc = re.search(r"(?:spell save DC|CD dei tiri salvezza)\D{0,4}(\d{1,2})", text, re.I)
+    return {"skills": skills,
+            "passive": {"perception": int(passive.group(1)) if passive else 10 + skills.get("Perception", 0),
+                        "insight": 10 + skills.get("Insight", 0), "investigation": 10 + skills.get("Investigation", 0)},
+            "spell_dc": int(dc.group(1)) if dc else None}
+
+
+def _dm_json(folder, name: str):
+    try:
+        with open(folder / name, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError, TypeError):
+        return None
+
+
+def _dm_roll_notation(notation: str, adv: str = "normal") -> dict:
+    m = _DM_NOTATION.match(notation or "")
+    if not m:
+        raise ValueError("write e.g. 1d20+5, 2d6 or d100")
+    n, sides = int(m.group(1) or 1), int(m.group(2))
+    mod = int((m.group(3) or "0").replace(" ", ""))
+    if not (1 <= n <= 20 and 2 <= sides <= 100):
+        raise ValueError("1 to 20 dice of 2 to 100 sides")
+    rolls = [secrets.randbelow(sides) + 1 for _ in range(n)]
+    both = None
+    if adv in ("advantage", "disadvantage") and n == 1 and sides == 20:
+        other = secrets.randbelow(20) + 1
+        both = [rolls[0], other]
+        rolls = [max(both) if adv == "advantage" else min(both)]
+    return {"notation": f"{n}d{sides}" + (f"{mod:+d}" if mod else ""), "rolls": rolls, "both": both,
+            "total": sum(rolls) + mod, "advantage": adv}
+
+
+def _dm_party() -> list:
+    with _stats_lock:
+        return [dict(p) for p in _current_stats.get("players", []) if isinstance(p, dict) and p.get("name")]
+
+
+@app.route("/dm-screen", methods=["GET"])
+def dm_screen():
+    return render_template("dm.html", i18n=_load_i18n_json(), skills=list(DM_SKILLS))
+
+
+@app.route("/dm-screen/data", methods=["GET"])
+def dm_screen_data():
+    camp = re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]
+    folder = None
+    if camp:
+        try:
+            folder = _find_campaign(camp)
+        except Exception:
+            folder = None
+    with _stats_lock:
+        order = json.loads(json.dumps(_current_stats.get("turn_order") or {}))
+        world = json.loads(json.dumps(_current_stats.get("world_time") or {}))
+    party = []
+    for p in _dm_party():
+        nums = _dm_sheet_numbers(p["name"])
+        party.append({"name": p["name"], "hp": p.get("hp"), "ac": p.get("ac"), "conditions": p.get("conditions") or [],
+                      "concentration": p.get("concentration"), "load": (p.get("load") or {}).get("status"),
+                      "passive": nums.get("passive"), "spell_dc": nums.get("spell_dc")})
+    foes = []
+    tracker = _dm_json(folder, "tracker.json") if folder else None
+    in_order = {str(n).lower() for n in (order.get("order") or [])} if isinstance(order, dict) else set()
+    pcs = {p["name"].lower() for p in party}
+    for key, ent in (tracker or {}).items():
+        if not isinstance(ent, dict) or str(ent.get("name", key)).lower() in pcs:
+            continue
+        if ent.get("hp") is None and str(ent.get("name", key)).lower() not in in_order:
+            continue
+        foes.append({"name": ent.get("name", key), "hp": ent.get("hp"), "max_hp": ent.get("max_hp"), "ac": ent.get("ac"),
+                     "conditions": ent.get("conditions") or [], "concentration": ent.get("concentration")})
+    clocks = (_dm_json(folder, "clocks.json") or {}).get("clocks", []) if folder else []
+    factions = []
+    for f in ((_dm_json(folder, "factions.json") or {}).get("factions", []) if folder else []):
+        if isinstance(f, dict) and f.get("name"):
+            score = int(f.get("score", 0))
+            factions.append({"name": f["name"], "score": score, "standing": _factions.standing(max(-10, min(10, score))),
+                             "secret": bool(f.get("secret"))})
+    secrets_list = []
+    cal = _dm_json(folder, "calendar.json") if folder else None
+    for e in (cal or {}).get("events") or []:
+        if isinstance(e, dict) and e.get("secret"):
+            secrets_list.append({"what": e.get("name", ""), "when": f"{e.get('day', '?')}/{e.get('month', '?')}"
+                                 + (f"/{e['year']}" if e.get("year") else ""), "note": e.get("note", ""), "kind": "calendar"})
+    for e in ((_dm_json(folder, "timeline.json") or {}).get("events", []) if folder else []):
+        if isinstance(e, dict) and e.get("secret"):
+            secrets_list.append({"what": e.get("title", ""), "when": e.get("date", ""), "note": e.get("note", ""),
+                                 "kind": "timeline"})
+    prep = ""
+    if folder:
+        try:
+            prep = (folder / "prep.md").read_text(encoding="utf-8")[:60000]
+        except OSError:
+            prep = ""
+    downtime = None
+    if folder and (folder / "downtime.json").is_file():
+        try:
+            downtime = _downtime.public_view(_downtime.load(str(folder / "downtime.json")), dm=True)
+        except Exception:
+            downtime = None
+    with _dm_rolls_lock:
+        rolls = list(_dm_rolls)[::-1]
+    return jsonify({
+        "campaign": camp, "world": {k: world.get(k) for k in ("date", "time", "weather") if world.get(k)},
+        "order": order if isinstance(order, dict) else {}, "party": party, "foes": foes, "clocks": clocks,
+        "factions": factions, "secrets": secrets_list, "prep": prep, "supplies": _public_supplies(),
+        "downtime": downtime, "dice_pending": _dice_pending_snapshot(), "rolls": rolls,
+        "dcs": [["very_easy", 5], ["easy", 10], ["medium", 15], ["hard", 20], ["very_hard", 25], ["nearly_impossible", 30]],
+    }), 200
+
+
+@app.route("/dm-screen/roll", methods=["POST"])
+def dm_screen_roll():
+    """A roll behind the screen: {"notation", "label", "advantage"} or {"skill"} for every PC at once."""
+    data = request.get_json(silent=True) or {}
+    label = re.sub(r"[`\\$<>]", "", str(data.get("label") or ""))[:60].strip()
+    adv = str(data.get("advantage") or "normal")
+    adv = adv if adv in ("advantage", "disadvantage") else "normal"
+    skill = str(data.get("skill") or "")
+    if skill:
+        if skill not in DM_SKILLS:
+            return jsonify({"error": "unknown skill"}), 400
+        lines = []
+        for p in _dm_party():
+            bonus = _dm_sheet_numbers(p["name"]).get("skills", {}).get(skill, 0)
+            r = _dm_roll_notation(f"1d20{bonus:+d}", adv)
+            lines.append({"who": p["name"], **r})
+        entry = {"label": label or skill, "skill": skill, "group": lines, "ts": _time.time()}
+    else:
+        try:
+            r = _dm_roll_notation(str(data.get("notation") or ""), adv)
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
+        entry = {"label": label, **r, "ts": _time.time()}
+    with _dm_rolls_lock:
+        _dm_rolls.append(entry)
+        del _dm_rolls[:-_DM_ROLLS_KEPT]
+    return jsonify(entry), 200
 
 
 # ─── Attacks (scripts/attacks.py) ────────────────────────────────────────────

@@ -5831,6 +5831,7 @@
       <div class="ln-slot" id="ln-phone-slot"></div>
       <button class="ln-item" type="button" id="ln-login" title="Play as a character" data-i18n-title="login.asCharacter" hidden><svg class="ln-i"><use href="#ln-i-me"/></svg><span class="ln-lbl" data-i18n="login.asCharacter">Play as a character</span></button>
       <button class="ln-item" type="button" id="ln-dm" title="DM screen" data-i18n-title="login.dmScreen" hidden><svg class="ln-i"><use href="#ln-i-back"/></svg><span class="ln-lbl" data-i18n="login.dmScreen">DM screen</span></button>
+      <button class="ln-item" type="button" id="ln-dmscreen" title="DM screen" data-i18n-title="dms.title" hidden><svg class="ln-i"><use href="#ln-i-recap"/></svg><span class="ln-lbl" data-i18n="dms.title">DM screen</span></button>
       <button class="ln-item" type="button" id="ln-logout" title="Log out" data-i18n-title="ph.logout" hidden><svg class="ln-i"><use href="#ln-i-x"/></svg><span class="ln-lbl" data-i18n="ph.logout">Log out</span></button>
       <button class="ln-item" type="button" data-ln-go="altro" data-phone title="More" data-i18n-title="ln.view.altro"><svg class="ln-i"><use href="#ln-i-more"/></svg><span class="ln-lbl" data-i18n="ln.view.altro">More</span></button>
     </div>
@@ -5913,6 +5914,7 @@
         <button class="ln-item" type="button" data-ln-proxy="phone-mode-btn"><svg class="ln-i"><use href="#ln-i-phone"/></svg><span class="ln-lbl" data-i18n="ln.phoneMode">Phone mode</span></button>
         <button class="ln-item" type="button" id="ln-login-more" title="Play as a character" data-i18n-title="login.asCharacter" hidden><svg class="ln-i"><use href="#ln-i-me"/></svg><span class="ln-lbl" data-i18n="login.asCharacter">Play as a character</span></button>
         <button class="ln-item" type="button" id="ln-dm-more" title="DM screen" data-i18n-title="login.dmScreen" hidden><svg class="ln-i"><use href="#ln-i-back"/></svg><span class="ln-lbl" data-i18n="login.dmScreen">DM screen</span></button>
+        <button class="ln-item" type="button" id="ln-dmscreen-more" data-ln-proxy="ln-dmscreen" hidden><svg class="ln-i"><use href="#ln-i-recap"/></svg><span class="ln-lbl" data-i18n="dms.title">DM screen</span></button>
         <button class="ln-item" type="button" id="ln-logout-more" title="Log out" data-i18n-title="ph.logout" hidden><svg class="ln-i"><use href="#ln-i-x"/></svg><span class="ln-lbl" data-i18n="ph.logout">Log out</span></button>
       </div>
     </div>
@@ -13683,6 +13685,14 @@ function _onscreenDiceOn() { try { return localStorage.getItem('dnd-onscreen-dic
   const playerUrl = meta('dnd-player-url'), dmUrl = meta('dnd-dm-url');
   if (playerUrl) wire(['ph-login-opt', 'ln-login', 'ln-login-more'], () => { window.open(playerUrl, 'dnd-player'); });
   if (dmUrl) wire(['ph-dm-opt', 'ln-dm', 'ln-dm-more'], () => { window.open(dmUrl, 'dnd-dm'); });
+  // The DM's screen (/dm-screen): on a screen that is nobody's character and not a player's login.
+  const bound = typeof _turnMine === 'function' && _turnMine();
+  if (!bound && meta('dnd-login') !== 'player') {
+    const b = document.getElementById('ln-dmscreen');
+    if (b) { b.hidden = false; b.addEventListener('click', () => { window.open('/dm-screen', 'dnd-dm-screen'); }); }
+    const more = document.getElementById('ln-dmscreen-more');
+    if (more) more.hidden = false;
+  }
   if (meta('dnd-login')) wire(['ln-logout', 'ln-logout-more'], () => {
     fetch('/logout', { method: 'POST' }).finally(() => { window.location.href = '/'; });
   });

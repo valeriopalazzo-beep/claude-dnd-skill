@@ -546,6 +546,12 @@ When the party has to choose together — which way, whom to trust, whether to a
 
 ---
 
+## The DM's screen
+
+The display has a page for the DM alone, `/dm-screen` (**Schermo del DM** in the DM's menu; players are refused): initiative with the foes' hit points, AC, conditions and concentration; the party's HP, AC, passive Perception, Insight and Investigation and spell save DCs read from the sheets; the DC table; every clock and faction, the secret ones too; the secret dates of the calendar and the timeline; supplies; downtime choices; `prep.md`; and dice rolled behind the screen — one roll, or a skill for every PC at once ("Everyone, in secret": Perception against a hidden trap, Insight against a lie) — that never reach the story or the players. Keep the foes' numbers on it with `tracker.py hp "<name>" <hp> --max <hp> --ac <ac>` when a fight starts and `tracker.py hit "<name>" <damage>` as they take damage (it rolls their concentration saves too); `tracker.py clear` at the end of the fight empties them. Point Valerio to it when he asks what is going on behind the scenes.
+
+---
+
 ## Downtime
 
 When the characters have days or weeks to themselves — between adventures, waiting for a ship, wintering in a town — let each player decide what their character does with them, from the phone: `display/downtime.py open <days> --note "…"`. Every player gets the PHB 2014 activities (craft, work, recuperate, research, train, carouse, other) and says what, exactly; the choices are kept with the campaign, and when the last one has chosen you get `[[DOWNTIME: …]]` from `check_input.py`. Play it out with `downtime.py close --charge`: long projects (an item, a language, a tool) move on day by day and are remembered for the next stretch, costs are paid from the sheets, and each character has one line for you to narrate from — research turns up a secret from `prep.md`, carousing a new acquaintance or a debt. Syntax: `SKILL-scripts.md` → *Downtime*.

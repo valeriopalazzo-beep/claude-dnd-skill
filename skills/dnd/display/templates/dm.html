@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>D&amp;D — DM screen</title>
+<link rel="icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Alegreya+SC:wght@700&display=swap" rel="stylesheet">
+
+<!-- Same i18n runtime as index.html: localStorage["dnd-lang"], else the device
+     language, else English. -->
+<script>
+  window._I18N = {{ i18n|safe }};
+  window._SKILLS = {{ skills|tojson }};
+  (function () {
+    var all = window._I18N || {}, pick = null;
+    try { pick = localStorage.getItem('dnd-lang'); } catch (_) {}
+    if (!all[pick]) {
+      pick = null;
+      var langs = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || 'en'];
+      for (var i = 0; i < langs.length && !pick; i++) {
+        var base = String(langs[i] || '').toLowerCase().split('-')[0];
+        if (all[base]) pick = base;
+      }
+    }
+    window._LANG = pick || 'en';
+    document.documentElement.lang = window._LANG;
+    var cur = all[window._LANG] || {}, en = all.en || {};
+    window._t = function (key, vars, fallback) {
+      var str = cur[key];
+      if (str == null) str = en[key];
+      if (str == null) str = (fallback != null ? fallback : key);
+      if (vars) str = String(str).replace(/\{(\w+)\}/g, function (m, k) { return vars[k] != null ? vars[k] : m; });
+      return str;
+    };
+  })();
+</script>
+
+<style>
+  :root{ --bg:#14110d; --card:#1d1813; --line:rgba(255,255,255,.13); --text:#ECE4D2; --muted:#b9ab92;
+         --accent:#f2b544; --good:#6cc070; --warn:#e0a040; --bad:#e2574c; }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f3ecdc; --card:#fffaf0; --line:rgba(0,0,0,.14); --text:#2a2018; --muted:#6d5f4a;
+           --accent:#a8650c; --good:#2f7d3a; --warn:#a8650c; --bad:#b03a2e; }
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:'Alegreya Sans',sans-serif; font-size:16px; }
+  header{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:14px 16px; border-bottom:1px solid var(--line); }
+  header h1{ margin:0; font-family:'Alegreya SC',serif; font-size:24px; flex:1; min-width:200px; }
+  header .meta{ color:var(--muted); font-size:15px; }
+  header a, header button{ color:var(--accent); background:none; border:1px solid var(--line); border-radius:999px;
+                           padding:6px 12px; font:inherit; cursor:pointer; text-decoration:none; }
+  main{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap:12px; padding:12px 16px 40px; }
+  section{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; min-width:0; }
+  section.wide{ grid-column:1 / -1; }
+  h2{ margin:0 0 8px; font-size:15px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); }
+  table{ width:100%; border-collapse:collapse; font-size:15px; }
+  th, td{ text-align:left; padding:4px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th{ color:var(--muted); font-weight:700; font-size:13px; }
+  tr.current td{ background:rgba(242,181,68,.14); }
+  .num{ text-align:right; white-space:nowrap; }
+  .muted, .empty{ color:var(--muted); }
+  .empty{ font-style:italic; }
+  .bad{ color:var(--bad); } .good{ color:var(--good); } .warn{ color:var(--warn); }
+  .tag{ display:inline-block; margin:1px 4px 1px 0; padding:0 7px; border-radius:999px; font-size:12.5px; font-weight:700;
+        border:1px solid var(--line); color:var(--muted); }
+  .bar{ height:6px; border-radius:3px; background:var(--line); overflow:hidden; margin-top:3px; }
+  .bar i{ display:block; height:100%; background:var(--good); }
+  .row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:6px 0; }
+  input, select{ font:inherit; color:var(--text); background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:7px 9px; }
+  input[type=text]{ flex:1; min-width:110px; }
+  button.go{ font:inherit; font-weight:800; cursor:pointer; border:0; border-radius:8px; padding:8px 14px;
+             background:var(--accent); color:#1a140c; }
+  .roll{ padding:6px 0; border-bottom:1px solid var(--line); }
+  .roll b{ font-size:20px; }
+  .roll small{ color:var(--muted); }
+  pre{ white-space:pre-wrap; word-break:break-word; margin:0; font-family:inherit; font-size:15px; line-height:1.4; max-height:70vh; overflow:auto; }
+  .err{ color:var(--bad); font-size:14px; }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">DM screen</h1>
+  <span class="meta" id="meta"></span>
+  <a href="/" id="back">← Display</a>
+</header>
+<main>
+  <section id="s-order"><h2 data-t="dms.order">Initiative</h2><div></div></section>
+  <section id="s-party"><h2 data-t="dms.party">The party</h2><div></div></section>
+  <section id="s-roll"><h2 data-t="dms.rolls">Behind the screen</h2>
+    <div class="row">
+      <input type="text" id="roll-notation" value="1d20" aria-label="dice">
+      <input type="text" id="roll-label" placeholder="" aria-label="label">
+    </div>
+    <div class="row">
+      <select id="roll-adv"></select>
+      <button class="go" type="button" id="roll-go">🎲</button>
+    </div>
+    <div class="row">
+      <select id="roll-skill"></select>
+      <button class="go" type="button" id="roll-group"></button>
+    </div>
+    <p class="err" id="roll-err"></p>
+    <div id="roll-list"></div>
+  </section>
+  <section id="s-dcs"><h2 data-t="dms.dcs">Difficulty classes</h2><div></div></section>
+  <section id="s-clocks"><h2 data-t="dms.clocks">Clocks</h2><div></div></section>
+  <section id="s-factions"><h2 data-t="dms.factions">Factions</h2><div></div></section>
+  <section id="s-secrets"><h2 data-t="dms.secrets">Secret dates</h2><div></div></section>
+  <section id="s-supplies"><h2 data-t="dms.supplies">Supplies</h2><div></div></section>
+  <section id="s-downtime"><h2 data-t="dms.downtime">Downtime</h2><div></div></section>
+  <section id="s-prep" class="wide"><h2 data-t="dms.prep">Session prep</h2><div></div></section>
+</main>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const body = id => $(id).querySelector('div');
+  const empty = key => `<p class="empty">${esc(_t(key, null, '—'))}</p>`;
+  const signed = n => (n > 0 ? '+' : '') + n;
+
+  document.title = 'D&D — ' + _t('dms.title', null, 'DM screen');
+  $('title').textContent = _t('dms.title', null, 'DM screen');
+  $('back').textContent = _t('dms.back', null, '← Display');
+  document.querySelectorAll('[data-t]').forEach(el => { el.textContent = _t(el.dataset.t, null, el.textContent); });
+  $('roll-label').placeholder = _t('dms.label', null, 'what for (optional)');
+  [['normal', 'dms.normal'], ['advantage', 'dms.adv'], ['disadvantage', 'dms.dis']].forEach(([v, k]) => {
+    const o = document.createElement('option'); o.value = v; o.textContent = _t(k, null, v); $('roll-adv').appendChild(o);
+  });
+  (window._SKILLS || []).forEach(sk => {
+    const o = document.createElement('option'); o.value = sk; o.textContent = _t('dms.skill.' + sk, null, sk); $('roll-skill').appendChild(o);
+  });
+  $('roll-skill').value = 'Perception';
+  $('roll-group').textContent = _t('dms.groupRoll', null, 'Everyone, in secret');
+
+  function hp(h, max) {
+    if (h == null) return '—';
+    const cur = typeof h === 'object' ? h.current : h, mx = typeof h === 'object' ? h.max : max;
+    const pct = mx ? Math.max(0, Math.min(100, cur / mx * 100)) : 0;
+    const cls = !mx ? '' : pct <= 25 ? 'bad' : pct <= 50 ? 'warn' : '';
+    return `<span class="${cls}">${esc(cur)}${mx ? '/' + esc(mx) : ''}</span>` + (typeof h === 'object' && h.temp ? ` <small class="muted">+${esc(h.temp)}</small>` : '');
+  }
+  function tags(list, conc) {
+    return (list || []).map(c => `<span class="tag">${esc(c)}</span>`).join('') + (conc ? `<span class="tag">◎ ${esc(conc)}</span>` : '');
+  }
+
+  function render(d) {
+    $('meta').textContent = [d.campaign, d.world && d.world.date, d.world && d.world.time].filter(Boolean).join(' · ');
+
+    // Initiative: the order with the numbers the players do not see.
+    const order = (d.order && d.order.order) || [];
+    const byName = {};
+    (d.party || []).forEach(p => { byName[p.name.toLowerCase()] = { ...p, pc: true }; });
+    (d.foes || []).forEach(f => { byName[f.name.toLowerCase()] = f; });
+    const names = order.length ? order : (d.foes || []).map(f => f.name);
+    body('s-order').innerHTML = names.length ? `<p class="muted">${order.length ? esc(_t('dms.round', { n: d.order.round || 1 }, 'Round ' + (d.order.round || 1))) : esc(_t('dms.noFight', null, 'No fight on the display'))}</p>
+      <table><tr><th></th><th>${esc(_t('dms.hp', null, 'HP'))}</th><th class="num">${esc(_t('dms.ac', null, 'AC'))}</th><th></th></tr>` +
+      names.map(n => {
+        const e = byName[String(n).toLowerCase()] || { name: n };
+        const cur = d.order && d.order.current && String(d.order.current).toLowerCase() === String(n).toLowerCase();
+        return `<tr class="${cur ? 'current' : ''}"><td>${cur ? '▶ ' : ''}${esc(n)}</td><td>${hp(e.hp, e.max_hp)}</td><td class="num">${esc(e.ac ?? '—')}</td><td>${tags(e.conditions, e.concentration)}</td></tr>`;
+      }).join('') + '</table>' : empty('dms.noFoes');
+
+    // The party: passives and save DCs, for checks the players should not know about.
+    const party = d.party || [];
+    body('s-party').innerHTML = party.length ? `<table><tr><th></th><th>${esc(_t('dms.hp', null, 'HP'))}</th><th class="num">${esc(_t('dms.ac', null, 'AC'))}</th><th class="num" title="${esc(_t('dms.perception', null, 'Passive Perception'))}">👁</th><th class="num" title="${esc(_t('dms.insight', null, 'Passive Insight'))}">♡</th><th class="num" title="${esc(_t('dms.investigation', null, 'Passive Investigation'))}">🔍</th><th class="num">${esc(_t('dms.spellDc', null, 'Spell DC'))}</th></tr>` +
+      party.map(p => `<tr><td>${esc(p.name)}<br>${tags(p.conditions, p.concentration)}${p.load && p.load !== 'ok' ? `<span class="tag warn">${esc(_t('load.' + p.load, null, p.load).split(':')[0])}</span>` : ''}</td>
+        <td>${hp(p.hp)}</td><td class="num">${esc(p.ac ?? '—')}</td>
+        <td class="num">${esc(p.passive ? p.passive.perception : '—')}</td><td class="num">${esc(p.passive ? p.passive.insight : '—')}</td>
+        <td class="num">${esc(p.passive ? p.passive.investigation : '—')}</td><td class="num">${esc(p.spell_dc ?? '—')}</td></tr>`).join('') + '</table>'
+      : empty('dms.noParty');
+
+    body('s-dcs').innerHTML = '<table>' + (d.dcs || []).map(([k, n]) => `<tr><td>${esc(_t('dms.dc.' + k, null, k))}</td><td class="num"><b>${n}</b></td></tr>`).join('') + '</table>'
+      + `<p class="muted">${esc(_t('dms.concDc', null, 'Concentration: DC 10 or half the damage'))}</p>`;
+
+    const clocks = d.clocks || [];
+    body('s-clocks').innerHTML = clocks.length ? clocks.map(c => `<div class="roll">${esc(c.name)} ${c.secret ? `<span class="tag">${esc(_t('dms.secret', null, 'secret'))}</span>` : ''}
+      <span class="muted">${esc(c.filled)}/${esc(c.segments)}</span><div class="bar"><i style="width:${Math.round(c.filled / c.segments * 100)}%;background:${c.kind === 'danger' ? 'var(--bad)' : c.kind === 'goal' ? 'var(--good)' : 'var(--accent)'}"></i></div>
+      ${c.note ? `<small class="muted">${esc(c.note)}</small>` : ''}</div>`).join('') : empty('dms.none');
+
+    const factions = d.factions || [];
+    body('s-factions').innerHTML = factions.length ? '<table>' + factions.map(f => `<tr><td>${esc(f.name)} ${f.secret ? `<span class="tag">${esc(_t('dms.secret', null, 'secret'))}</span>` : ''}</td>
+      <td class="${f.score < -1 ? 'bad' : f.score > 1 ? 'good' : ''}">${esc(_t('faction.' + String(f.standing).toLowerCase(), null, f.standing))}</td><td class="num">${esc(signed(f.score))}</td></tr>`).join('') + '</table>'
+      : empty('dms.noFactions');
+
+    const secretsList = d.secrets || [];
+    body('s-secrets').innerHTML = secretsList.length ? secretsList.map(e => `<div class="roll"><b style="font-size:16px">${esc(e.what)}</b> <span class="muted">${esc(e.when)}</span>${e.note ? `<br><small class="muted">${esc(e.note)}</small>` : ''}</div>`).join('')
+      : empty('dms.none');
+
+    const sup = d.supplies;
+    body('s-supplies').innerHTML = sup ? `<p>${esc(_t('sup.days', { n: sup.days_left ?? '—' }, ''))} · ${esc(sup.march ? _t('sup.march', null, 'on the march') : _t('sup.still', null, 'not marching'))}</p>
+      <p class="muted">${['rations', 'water', 'torches', 'oil', 'candles'].map(k => esc(_t('sup.' + k, null, k)) + ' ' + esc((sup.stock || {})[k] || 0)).join(' · ')}</p>
+      ${(sup.lights || []).map(l => `<span class="tag">${esc(_t('sup.light.' + l.kind, null, l.kind))} ${Math.floor(l.left / 60)}h${String(l.left % 60).padStart(2, '0')}</span>`).join('')}`
+      : empty('dms.none');
+
+    const dt = d.downtime;
+    body('s-downtime').innerHTML = dt ? `<p>${esc(_t('dt.days', { n: dt.days }, ''))}</p><table>` + dt.players.map(n => {
+      const c = (dt.choices || {})[n];
+      return `<tr><td>${esc(n)}</td><td>${c ? esc(_t('dt.act.' + c.activity, null, c.activity)) + (c.detail ? ' — ' + esc(c.detail) : '') : `<span class="muted">${esc(_t('dt.waiting', null, '…'))}</span>`}</td></tr>`;
+    }).join('') + '</table>' : empty('dms.none');
+
+    body('s-prep').innerHTML = d.prep ? `<pre>${esc(d.prep)}</pre>` : empty('dms.noPrep');
+    renderRolls(d.rolls || []);
+  }
+
+  function renderRolls(rolls) {
+    $('roll-list').innerHTML = rolls.slice(0, 12).map(r => {
+      const when = new Date((r.ts || 0) * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      if (r.group) {
+        return `<div class="roll"><small>${esc(when)} · ${esc(_t('dms.skill.' + r.skill, null, r.label))}</small><br>` +
+          r.group.map(g => `${esc(g.who)} <b>${esc(g.total)}</b> <small>${esc(g.notation)}${g.both ? ' [' + g.both.join(', ') + ']' : ''}</small>`).join(' · ') + '</div>';
+      }
+      return `<div class="roll"><b>${esc(r.total)}</b> <small>${esc(r.notation)} [${esc((r.both || r.rolls).join(', '))}]${r.label ? ' — ' + esc(r.label) : ''} · ${esc(when)}</small></div>`;
+    }).join('') || empty('dms.noRolls');
+  }
+
+  function roll(payload) {
+    $('roll-err').textContent = '';
+    fetch('/dm-screen/roll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      .then(r => r.json().then(d => ({ ok: r.ok, d })))
+      .then(({ ok, d }) => { if (!ok) $('roll-err').textContent = d.error || '…'; load(); })
+      .catch(() => { $('roll-err').textContent = '…'; });
+  }
+  $('roll-go').addEventListener('click', () => roll({ notation: $('roll-notation').value, label: $('roll-label').value, advantage: $('roll-adv').value }));
+  $('roll-notation').addEventListener('keydown', e => { if (e.key === 'Enter') $('roll-go').click(); });
+  $('roll-group').addEventListener('click', () => roll({ skill: $('roll-skill').value, advantage: $('roll-adv').value }));
+
+  function load() {
+    fetch('/dm-screen/data').then(r => r.ok ? r.json() : null).then(d => { if (d) render(d); }).catch(() => {});
+  }
+  load();
+  setInterval(() => { if (document.visibilityState === 'visible') load(); }, 5000);
+})();
+</script>
+</body>
+</html>
