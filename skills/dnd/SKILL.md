@@ -546,6 +546,12 @@ When the party has to choose together — which way, whom to trust, whether to a
 
 ---
 
+## Downtime
+
+When the characters have days or weeks to themselves — between adventures, waiting for a ship, wintering in a town — let each player decide what their character does with them, from the phone: `display/downtime.py open <days> --note "…"`. Every player gets the PHB 2014 activities (craft, work, recuperate, research, train, carouse, other) and says what, exactly; the choices are kept with the campaign, and when the last one has chosen you get `[[DOWNTIME: …]]` from `check_input.py`. Play it out with `downtime.py close --charge`: long projects (an item, a language, a tool) move on day by day and are remembered for the next stretch, costs are paid from the sheets, and each character has one line for you to narrate from — research turns up a secret from `prep.md`, carousing a new acquaintance or a debt. Syntax: `SKILL-scripts.md` → *Downtime*.
+
+---
+
 ## Attacks from the phone
 
 Every character with an `## Attacks` table on the sheet has an Attacks panel on their own screen: they pick the weapon, the target (the enemies of the initiative order, or any name typed in) and normal / advantage / disadvantage, and one tap rolls to hit and the damage together — a natural 20 doubles the damage dice; a note like `Versatile: 1d10+4` is offered as another damage, one like `Attacco furtivo +1d6` as extra dice to add. The line goes into the story for the table, and the player's action reaches you in the table's language, after anything they wrote: `[Lyra]: ⚔ Stocco → Goblin 1: 19 per colpire (d20 14 +5) · 6 danni (perforante, 1d8+3: 3)`. **A player's action that starts with ⚔ like this was rolled on the display — do not roll it again**: the first number is the attack total (bonus included), compare it with the target's AC; the damage (dice already doubled on *critico* / *critical*) applies only if it hits (`combat.py` / `--stat-hp`); a natural 1 (*1 naturale*) misses and carries no damage. Then narrate. Advantage is the player's claim: if the situation does not give it, say so and use the lower d20 the line reports. Keep the Attacks table in its format (`| Name | Attack Bonus | Damage | Type | Notes |`) when a character's gear changes. Syntax for your own use (roll_mode auto): `SKILL-scripts.md` → *Attacks*.

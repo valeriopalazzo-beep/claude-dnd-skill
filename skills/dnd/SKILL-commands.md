@@ -277,6 +277,8 @@ The display question is skipped, because `/dm:dnd load` asks it. The graph and c
 
    6. Re-run scene-context (now populated). Then proceed to step 6 (recap).
 
+7b. **Downtime:** if `downtime.py show` lists an open stretch of downtime, close it before the recap — `python3 ${CLAUDE_SKILL_DIR}/display/downtime.py close --charge` — and weave each character's outcome into the recap and the first scene (what they made, learned, found out or brought back from carousing). A player who did not choose: decide with them in a sentence.
+
 8. Deliver one in-character paragraph recapping current situation — where the party is, what's at stake, what was last happening. **With the display running**, this paragraph is the table's *Previously on…* card: send it with `python3 ${CLAUDE_SKILL_DIR}/display/recap.py << 'DNDEND'` … `DNDEND` (120–220 words, in the table's language, blank lines between paragraphs; with a split party say where each group stands) instead of `send.py` — it opens full screen on every screen and the narrator reads it where narration is on. Then go on with the first scene through `send.py` as usual: **the strong start from `prep.md`**, adapted to how the last session ended but never replaced by "you pick up where you left off". **Attendance:** if `absent:` names anyone, give each benched PC one in-fiction line explaining why they're not in the scene (see SKILL.md → *Absent players*). If a PC who was absent last session (`## Recent Events → Absent: …`) is back, write them back in with one line, and give their player a two-sentence out-of-character catch-up on what they missed.
 9. Enter active DM mode — no `/dm:dnd` prefix needed from this point.
 
@@ -507,7 +509,8 @@ If `graph.json` doesn't exist yet for this campaign, skip the sweep entirely (no
       python3 ${CLAUDE_SKILL_DIR}/scripts/backup.py save --campaign <campaign-name> --label end
       ```
       Say in one line where it went. If it fails, say so and carry on — the session is saved either way.
-   i. **Campaign book (when the DM wants it):** `python3 ${CLAUDE_SKILL_DIR}/scripts/campaign_book.py --campaign <campaign-name>` reprints the chronicle with tonight's chapter; with the display still up the players can download it from their menus. Run it before stopping the display.
+   i. **Downtime (when the fiction leaves time between this session and the next):** if the characters will have days or weeks to themselves before the next scene, open it now so the players can choose from their phones while the display is still up: `python3 ${CLAUDE_SKILL_DIR}/display/downtime.py open <days> --note "<where and why they have the time>"`. Say so in one line. Never open it when the next session starts in the middle of the action.
+   j. **Campaign book (when the DM wants it):** `python3 ${CLAUDE_SKILL_DIR}/scripts/campaign_book.py --campaign <campaign-name>` reprints the chronicle with tonight's chapter; with the display still up the players can download it from their menus. Run it before stopping the display.
 2. Stop the display (always — even if `_display_running` was unclear):
    ```bash
    kill $(cat ${CLAUDE_SKILL_DIR}/display/app.pid 2>/dev/null) 2>/dev/null

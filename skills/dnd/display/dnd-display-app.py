@@ -520,6 +520,8 @@ _DM_ENDPOINTS = {
     "factions_changed",
     # The party's supplies: supplies.py spends them, everyone sees them.
     "supplies_changed",
+    # Downtime: downtime.py opens and closes it; choosing is the players'.
+    "downtime_changed",
     # People met: people.py writes the notebook, everyone reads it.
     "people_changed",
     # The timeline: timeline.py writes it, everyone reads what is not secret.
@@ -3507,6 +3509,89 @@ def vote_cast():
         _vote_story(over)
     _broadcast({"vote_event": {"id": view["id"], "voter": name, "closed": bool(over)}})
     return jsonify({"vote": view}), 200
+
+
+# ─── Downtime (downtime.py) ──────────────────────────────────────────────────
+# The DM opens a stretch of free time with downtime.py; each player picks an
+# activity on their own screen. The choices are kept in the campaign
+# (<campaign>/downtime.json), so they wait for the DM across a restart; when
+# the last player has chosen, the DM gets a [[DOWNTIME: …]] line.
+import downtime as _downtime
+
+_downtime_lock = threading.Lock()
+
+
+def _downtime_file() -> Optional[str]:
+    camp = re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]
+    if not camp:
+        return None
+    try:
+        return str(_find_campaign(camp) / "downtime.json")
+    except Exception:
+        return None
+
+
+def _downtime_view(data: dict) -> Optional[dict]:
+    me = g.character if getattr(g, "role", None) == "player" else str(request.args.get("character") or "")[:50]
+    return _downtime.public_view(data, me or "", dm=getattr(g, "role", None) != "player")
+
+
+@app.route("/downtime", methods=["GET"])
+def downtime_get():
+    if not _token_ok():
+        return "Forbidden", 403
+    path = _downtime_file()
+    if not path:
+        return jsonify({"downtime": None}), 200
+    with _downtime_lock:
+        try:
+            data = _downtime.load(path)
+        except _downtime.DowntimeError:
+            return jsonify({"downtime": None}), 200
+    return jsonify({"downtime": _downtime_view(data)}), 200
+
+
+@app.route("/downtime", methods=["POST"])
+def downtime_changed():
+    """downtime.py opened or closed a stretch of downtime: tell every screen."""
+    data = request.get_json(silent=True) or {}
+    event = data.get("event") if isinstance(data.get("event"), dict) else {}
+    what = event.get("what") if event.get("what") in ("open", "closed") else "changed"
+    _broadcast({"downtime_event": {"what": what, "days": event.get("days")}})
+    return "", 204
+
+
+@app.route("/downtime/choose", methods=["POST"])
+def downtime_choose():
+    """A player's choice: {"character", "activity", "detail"}. It can be changed while the window is open."""
+    if not _token_ok():
+        return "Forbidden", 403
+    if not _rate_ok(request.remote_addr):
+        return "Too Many Requests", 429
+    body = request.get_json(silent=True) or {}
+    character = _acting_character(str(body.get("character", ""))[:50].strip())
+    path = _downtime_file()
+    if not path:
+        return jsonify({"error": "no campaign", "code": "closed"}), 409
+    ready = None
+    with _downtime_lock:
+        try:
+            data = _downtime.load(path)
+            name, everyone = _downtime.choose(data, character, str(body.get("activity", "")),
+                                              str(body.get("detail", "")))
+        except _downtime.DowntimeError as e:
+            code = "closed" if "no downtime" in str(e) else "detail" if "say what" in str(e) else "choice"
+            return jsonify({"error": str(e), "code": code}), 409
+        win = data["window"]
+        if everyone and not win.get("told"):
+            win["told"] = True
+            ready = _downtime.format_ready(win)
+        _downtime.save(path, data)
+        view = _downtime_view(data)
+    if ready:
+        _downtime.notes_add(ready)
+    _broadcast({"downtime_event": {"what": "chosen", "character": name, "everyone": everyone}})
+    return jsonify({"downtime": view}), 200
 
 
 # ─── Attacks (scripts/attacks.py) ────────────────────────────────────────────

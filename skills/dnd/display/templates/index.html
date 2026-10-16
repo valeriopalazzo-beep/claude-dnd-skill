@@ -1439,6 +1439,35 @@
   .sup-light small{ flex:none; font-size:14px; color:var(--ln-text-muted, #cdbfa6); }
   .sup-empty{ margin:30px 8px; text-align:center; font-size:16px; color:#b9ab92; }
 
+  /* ══ Downtime (downtime.py) — what each character does between adventures ══ */
+  #dt-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
+    align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  #dt-modal.open{ display:flex; }
+  #dt-panel{ width:min(560px, 100%); margin:auto 0; color:var(--ln-text, #ECE4D2); font-family:'Alegreya Sans','Syne',sans-serif; }
+  #dt-head{ display:flex; align-items:center; gap:10px; margin-bottom:10px; color:#ECE4D2; }
+  #dt-head h2{ flex:1; min-width:0; margin:0; font-size:22px; line-height:1.15; }
+  #dt-close{ flex:none; width:40px; height:40px; border-radius:999px; cursor:pointer; font-size:16px;
+    background:rgba(0,0,0,.35); color:inherit; border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #dt-body{ display:flex; flex-direction:column; gap:10px; }
+  .dt-box{ padding:13px 16px; border-radius:12px; background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
+  .dt-days{ font-size:19px; font-weight:800; }
+  .dt-note{ margin:4px 0 0; font-size:15.5px; color:var(--ln-text-muted, #cdbfa6); }
+  .dt-acts{ display:flex; flex-direction:column; gap:8px; }
+  .dt-act{ display:block; width:100%; padding:11px 14px; text-align:left; cursor:pointer; border-radius:10px; font:inherit; color:inherit;
+    background:rgba(255,255,255,.05); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
+  .dt-act b{ display:block; font-size:17px; }
+  .dt-act small{ display:block; margin-top:2px; font-size:14px; color:var(--ln-text-muted, #cdbfa6); }
+  .dt-act.on{ border-color:var(--ln-accent, #f2b544); box-shadow:0 0 0 2px var(--ln-accent, #f2b544) inset; }
+  #dt-detail{ width:100%; box-sizing:border-box; margin-top:8px; padding:10px 12px; border-radius:10px; font:inherit; font-size:16px;
+    color:inherit; background:rgba(0,0,0,.3); border:1px solid var(--ln-line, rgba(255,255,255,.2)); }
+  #dt-send{ margin-top:10px; width:100%; padding:12px; border-radius:10px; cursor:pointer; font:inherit; font-size:17px; font-weight:800;
+    background:var(--ln-accent, #f2b544); color:var(--ln-on-accent, #1a140c); border:0; }
+  #dt-send:disabled{ opacity:.5; cursor:default; }
+  .dt-msg{ margin:8px 0 0; font-size:15px; color:#e0a040; }
+  .dt-who{ margin:0; font-size:15px; color:var(--ln-text-muted, #cdbfa6); }
+  .dt-row{ margin:6px 0; font-size:16px; }
+  .dt-row b{ color:var(--ln-accent, #f2b544); }
+
   /* ══ People met (people.py) — who the party knows, and what of them ══ */
   #people-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
     align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
@@ -5342,6 +5371,7 @@
     <button class="ph-set-opt" id="ph-people-opt" type="button" hidden><span data-i18n="people.title">People met</span><strong>👤</strong></button>
     <button class="ph-set-opt" id="ph-clock-opt" type="button" hidden><span data-i18n="clock.title">Clocks</span><strong>◔</strong></button>
     <button class="ph-set-opt" id="ph-supplies-opt" type="button" hidden><span data-i18n="sup.title">Supplies</span><strong>🎒</strong></button>
+    <button class="ph-set-opt" id="ph-downtime-opt" type="button" hidden><span data-i18n="dt.title">Downtime</span><strong>⌂</strong></button>
     <label class="ph-set-opt ph-set-row" id="ph-skin-opt"><span data-i18n="ph.style">Style</span><select id="ph-skin-select" class="ph-set-select" aria-label="Display style"><option value="vellum">Vellum</option><option value="editorial">Editorial</option><option value="lanterna">Lanterna</option></select></label>
     <label class="ph-set-opt ph-set-row" id="ph-lang-opt"><span data-i18n="settings.language">Language</span><select id="ph-lang-select" class="ph-set-select" aria-label="Display language" data-i18n-aria="settings.language"></select></label>
     <button class="ph-set-opt" id="ph-sfx-opt" type="button"><span data-i18n="settings.sfx">Sound Effects</span><strong id="ph-sfx-val">On</strong></button>
@@ -5522,6 +5552,17 @@
       <button id="clock-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
     </div>
     <div id="clock-list"></div>
+  </div>
+</div>
+
+<!-- Downtime: what each character does between adventures, from downtime.py -->
+<div id="dt-modal">
+  <div id="dt-panel" role="dialog" aria-labelledby="dt-title">
+    <div id="dt-head">
+      <h2 id="dt-title" data-i18n="dt.title">Downtime</h2>
+      <button id="dt-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
+    </div>
+    <div id="dt-body"></div>
   </div>
 </div>
 
@@ -5719,6 +5760,7 @@
   <symbol id="ln-i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
   <symbol id="ln-i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2v10l7 7"/></symbol>
   <symbol id="ln-i-pack" viewBox="0 0 24 24"><path d="M8 7V5a4 4 0 0 1 8 0v2"/><rect x="4" y="7" width="16" height="14" rx="3"/><path d="M8 13h8v4H8z"/></symbol>
+  <symbol id="ln-i-downtime" viewBox="0 0 24 24"><path d="M4 21V9l8-6 8 6v12"/><path d="M9 21v-6h6v6"/><path d="M12 9.5v.01"/></symbol>
   <symbol id="ln-i-beast" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M9 8l1.5 2L12 8l1.5 2L15 8"/></symbol>
   <symbol id="ln-i-people" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M15 4h6v5h-3l-2 2V9h-1z"/></symbol>
   <symbol id="ln-i-timeline" viewBox="0 0 24 24"><path d="M6 3v18"/><circle cx="6" cy="6" r="2"/><circle cx="6" cy="13" r="2"/><circle cx="6" cy="19" r="1.4"/><path d="M11 6h9M11 13h7M11 19h5"/></symbol>
@@ -5773,6 +5815,7 @@
       <button class="ln-item" type="button" id="ln-region" title="Region map" data-i18n-title="region.title" hidden><svg class="ln-i"><use href="#ln-i-compass"/></svg><span class="ln-lbl" data-i18n="region.title">Region map</span><span class="ln-badge" id="ln-badge-region" data-i18n="region.new" hidden>New</span></button>
       <button class="ln-item" type="button" id="ln-clocks" title="Clocks" data-i18n-title="clock.title" hidden><svg class="ln-i"><use href="#ln-i-clock"/></svg><span class="ln-lbl" data-i18n="clock.title">Clocks</span></button>
       <button class="ln-item" type="button" id="ln-supplies" title="Supplies" data-i18n-title="sup.title" hidden><svg class="ln-i"><use href="#ln-i-pack"/></svg><span class="ln-lbl" data-i18n="sup.title">Supplies</span></button>
+      <button class="ln-item" type="button" id="ln-downtime" title="Downtime" data-i18n-title="dt.title" hidden><svg class="ln-i"><use href="#ln-i-downtime"/></svg><span class="ln-lbl" data-i18n="dt.title">Downtime</span></button>
       <button class="ln-item" type="button" id="ln-beast" title="Bestiary" data-i18n-title="beast.title" hidden><svg class="ln-i"><use href="#ln-i-beast"/></svg><span class="ln-lbl" data-i18n="beast.title">Bestiary</span><span class="ln-badge" id="ln-badge-beast" data-i18n="beast.new" hidden>New</span></button>
       <button class="ln-item" type="button" id="ln-people" title="People met" data-i18n-title="people.title" hidden><svg class="ln-i"><use href="#ln-i-people"/></svg><span class="ln-lbl" data-i18n="people.title">People met</span><span class="ln-badge" id="ln-badge-people" data-i18n="people.new" hidden>New</span></button>
       <button class="ln-item" type="button" id="ln-cal" title="Calendar" data-i18n-title="cal.title" hidden><svg class="ln-i"><use href="#ln-i-calendar"/></svg><span class="ln-lbl" data-i18n="cal.title">Calendar</span></button>
@@ -5855,6 +5898,7 @@
         <button class="ln-item" type="button" id="ln-region-more" data-ln-proxy="ln-region" hidden><svg class="ln-i"><use href="#ln-i-compass"/></svg><span class="ln-lbl" data-i18n="region.title">Region map</span></button>
         <button class="ln-item" type="button" id="ln-clocks-more" data-ln-proxy="ln-clocks" hidden><svg class="ln-i"><use href="#ln-i-clock"/></svg><span class="ln-lbl" data-i18n="clock.title">Clocks</span></button>
         <button class="ln-item" type="button" id="ln-supplies-more" data-ln-proxy="ln-supplies" hidden><svg class="ln-i"><use href="#ln-i-pack"/></svg><span class="ln-lbl" data-i18n="sup.title">Supplies</span></button>
+        <button class="ln-item" type="button" id="ln-downtime-more" data-ln-proxy="ln-downtime" hidden><svg class="ln-i"><use href="#ln-i-downtime"/></svg><span class="ln-lbl" data-i18n="dt.title">Downtime</span></button>
         <button class="ln-item" type="button" id="ln-beast-more" data-ln-proxy="ln-beast" hidden><svg class="ln-i"><use href="#ln-i-beast"/></svg><span class="ln-lbl" data-i18n="beast.title">Bestiary</span></button>
         <button class="ln-item" type="button" id="ln-people-more" data-ln-proxy="ln-people" hidden><svg class="ln-i"><use href="#ln-i-people"/></svg><span class="ln-lbl" data-i18n="people.title">People met</span></button>
         <button class="ln-item" type="button" id="ln-attack-more" data-ln-proxy="ln-attack" hidden><svg class="ln-i"><use href="#ln-i-sword"/></svg><span class="ln-lbl" data-i18n="atk.title">Attacks</span></button>
@@ -11157,6 +11201,7 @@ function connect() {
       _showToast((fe.delta < 0 ? '⚑ ' : '⚐ ') + _t('faction.toast.' + what, { name: fe.name, standing: word }, fe.name + ': ' + word)
         + (fe.reason ? ' — ' + fe.reason : ''), 6500);
     }
+    if (payload.downtime_event && typeof window._onDowntime === 'function') window._onDowntime(payload.downtime_event);
     if ((payload.supplies || payload.supplies_news) && typeof window._onSupplies === 'function') window._onSupplies(payload.supplies, payload.supplies_news);
     if ((payload.clocks || payload.clock_event) && typeof window._onClocks === 'function') window._onClocks(payload.clocks, payload.clock_event);
     if (payload.death_save && typeof window._onDeathSaveResult === 'function') window._onDeathSaveResult(payload.death_save);
@@ -11450,6 +11495,129 @@ function _clockPie(segments, filled, size) {
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   fetch('/clocks').then(r => r.ok ? r.json() : []).then(d => window._onClocks(d)).catch(() => {});
+})();
+
+// ── Downtime (downtime.py) ────────────────────────────────────────────
+// A player picks what their character does with the free time and says what,
+// exactly; the DM's screen lists every choice. The server keeps them with the
+// campaign, so a phone that reloads finds its own choice again.
+(function _initDowntime() {
+  const modal = document.getElementById('dt-modal');
+  if (!modal) return;
+  const body = document.getElementById('dt-body');
+  let view = null, picked = null, msg = '', typed = null;
+  const me = () => (typeof _turnMine === 'function' ? _turnMine() : '');
+
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  function render() {
+    const has = !!view;
+    ['ln-downtime', 'ln-downtime-more', 'ph-downtime-opt'].forEach(id => { const b = document.getElementById(id); if (b) b.hidden = !has; });
+    body.textContent = '';
+    if (!has) { body.appendChild(el('p', 'sup-empty', _t('dt.none', null, 'No downtime right now.'))); return; }
+    const head = el('div', 'dt-box');
+    head.appendChild(el('div', 'dt-days', _t('dt.days', { n: view.days }, view.days + ' days of downtime')));
+    if (view.note) head.appendChild(el('p', 'dt-note', view.note));
+    const who = view.chosen.length ? _t('dt.chosen', { names: view.chosen.join(', ') }, 'Chosen: ' + view.chosen.join(', '))
+      : _t('dt.nobody', null, 'Nobody has chosen yet.');
+    head.appendChild(el('p', 'dt-who', who));
+    body.appendChild(head);
+
+    if (view.choices) {                                   // the DM's screen: everyone's choice
+      const box = el('div', 'dt-box');
+      view.players.forEach(n => {
+        const c = view.choices[n];
+        const row = el('div', 'dt-row');
+        const b = el('b', '', n + ': ');
+        row.appendChild(b);
+        row.appendChild(document.createTextNode(c ? _t('dt.act.' + c.activity, null, c.activity) + (c.detail ? ' — ' + c.detail : '')
+                                                  : _t('dt.waiting', null, 'not chosen yet')));
+        box.appendChild(row);
+      });
+      body.appendChild(box);
+    }
+
+    if (view.asked) {                                     // a player's own screen: the choice
+      if (picked == null && view.mine) picked = view.mine.activity;
+      const box = el('div', 'dt-box');
+      const acts = el('div', 'dt-acts');
+      view.activities.forEach(k => {
+        const b = el('button', 'dt-act' + (picked === k ? ' on' : ''));
+        b.type = 'button';
+        b.appendChild(el('b', '', _t('dt.act.' + k, null, k)));
+        b.appendChild(el('small', '', _t('dt.desc.' + k, null, '')));
+        b.addEventListener('click', () => { picked = k; msg = ''; render(); });
+        acts.appendChild(b);
+      });
+      box.appendChild(acts);
+      const detail = el('input');
+      detail.id = 'dt-detail';
+      detail.type = 'text';
+      detail.maxLength = 300;
+      detail.placeholder = _t('dt.detail.' + (picked || 'other'), null, 'What, exactly?');
+      detail.value = typed != null ? typed : (view.mine && view.mine.activity === picked ? view.mine.detail : '');
+      detail.addEventListener('input', () => { typed = detail.value; });
+      box.appendChild(detail);
+      const send = el('button', '', view.mine ? _t('dt.change', null, 'Change my choice') : _t('dt.send', null, 'Choose'));
+      send.id = 'dt-send';
+      send.type = 'button';
+      send.disabled = !picked;
+      send.addEventListener('click', () => choose(picked, detail.value));
+      box.appendChild(send);
+      if (msg) box.appendChild(el('p', 'dt-msg', msg));
+      body.appendChild(box);
+    }
+
+    if ((view.projects || []).length) {
+      const box = el('div', 'dt-box');
+      box.appendChild(el('div', 'dt-days', _t('dt.projects', null, 'Under way')));
+      view.projects.forEach(p => {
+        const goal = p.kind === 'craft' && p.price_gp ? `${p.progress_gp}/${p.price_gp} gp`
+          : p.need_days ? `${p.days}/${p.need_days}` : String(p.days);
+        box.appendChild(el('div', 'dt-row', (view.choices ? p.character + ' · ' : '') + _t('dt.act.' + p.kind, null, p.kind) + ' — ' + p.what + ' (' + goal + ')'));
+      });
+      body.appendChild(box);
+    }
+  }
+
+  function load() {
+    const q = me() ? '?character=' + encodeURIComponent(me()) : '';
+    return fetch('/downtime' + q).then(r => r.ok ? r.json() : null).then(d => {
+      view = d && d.downtime ? d.downtime : null;
+      if (!view) picked = null;
+      render();
+    }).catch(() => {});
+  }
+
+  function choose(activity, detail) {
+    fetch('/downtime/choose', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ character: me(), activity, detail }) })
+      .then(r => r.json().then(d => ({ ok: r.ok, d })))
+      .then(({ ok, d }) => {
+        if (ok && d.downtime) { view = d.downtime; typed = null; msg = _t('dt.saved', null, 'Saved. You can change it until the DM closes it.'); }
+        else msg = d && d.code === 'detail' ? _t('dt.needDetail', null, 'Say what, exactly.') : (d && d.error) || '…';
+        render();
+      }).catch(() => { msg = '…'; render(); });
+  }
+
+  window._onDowntime = function (ev) {
+    if (ev && ev.what === 'open') _showToast('⌂ ' + _t('dt.toast.open', { n: ev.days }, 'Downtime: ' + ev.days + ' days'), 7000);
+    if (ev && ev.what === 'closed') { picked = null; msg = ''; typed = null; }
+    load();
+  };
+
+  const open = () => { modal.classList.add('open'); load(); };
+  const close = () => modal.classList.remove('open');
+  ['ln-downtime', 'ph-downtime-opt'].forEach(id => { const b = document.getElementById(id); if (b) b.addEventListener('click', open); });
+  document.getElementById('dt-close').addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  load();
 })();
 
 // ── Supplies (supplies.py) ────────────────────────────────────────────

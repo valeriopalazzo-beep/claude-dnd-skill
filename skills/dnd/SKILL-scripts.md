@@ -432,6 +432,36 @@ python3 ${CLAUDE_SKILL_DIR}/display/vote.py close    # end it now, print the res
 
 ---
 
+## Downtime — `display/downtime.py`
+
+What the characters do between adventures, chosen on the players' own screens. The stretch, the choices and the long projects live in `<campaign>/downtime.json`, so they wait for you even if the display is switched off in between.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/display/downtime.py open 7 --note "Una settimana a Vallombra, in attesa della neve"
+python3 ${CLAUDE_SKILL_DIR}/display/downtime.py open 10 --only "Lyra, Hernio"   # only these characters
+python3 ${CLAUDE_SKILL_DIR}/display/downtime.py show                            # who chose what so far
+python3 ${CLAUDE_SKILL_DIR}/display/downtime.py close --charge                  # outcomes, projects moved on, costs paid
+python3 ${CLAUDE_SKILL_DIR}/display/downtime.py close                           # the same, costs only reported
+python3 ${CLAUDE_SKILL_DIR}/display/downtime.py cancel                          # close it with nothing done
+python3 ${CLAUDE_SKILL_DIR}/display/downtime.py projects                        # the long projects, finished ones too
+```
+
+| Activity | What `close` works out (PHB 2014 p. 187) |
+|---|---|
+| craft | 5 gp of the item's value per day, raw materials for half of that; finished when the work reaches the price written in the choice ("Pozione di guarigione 50 mo"). Needs the tools' proficiency. |
+| work | a modest lifestyle paid (wealthy with Performance, comfortable in a guild) |
+| recuperate | at least 3 days: DC 15 Constitution save — one effect that stops HP recovery ends, or advantage against one disease or poison for 24 h |
+| research | 1 gp a day; you decide what is found (one or two real leads) |
+| train | a language or a tool: 250 days in all at 1 gp a day, with a teacher; the days add up across stretches |
+| carouse | the lifestyle's cost; roll on your carousing table |
+| other | what the player wrote; you decide |
+
+- When every player has chosen, `[[DOWNTIME: every player has chosen … Lyra: train (Elfico); …]]` arrives with `check_input.py` — information, not an action.
+- `close --charge` pays each cost with `inventory.py pay`; one that cannot be paid is reported and left to you.
+- `--campaign NAME` works on another campaign; only the campaign on the display talks to the display.
+
+---
+
 ## Attacks — `scripts/attacks.py`
 
 The weapons and attack spells of a sheet's `## Attacks` table, rolled to hit and for damage in one go. The players' **Attacks** panel is built on it; from the command line it serves roll_mode auto.
