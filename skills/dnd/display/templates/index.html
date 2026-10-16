@@ -11102,6 +11102,14 @@ function connect() {
       const qe = payload.quest_event;
       _showToast('📜 ' + _t('quest.toast.' + qe.what, { name: qe.name }, qe.name), qe.what === 'updated' ? 4500 : 6500);
     }
+    if (payload.concentration_result && payload.concentration_result.character) {
+      // A concentration save came back, or a caster dropped to 0 HP (the server applied it).
+      const cr = payload.concentration_result;
+      const vars = { name: cr.character, spell: cr.spell, total: cr.total, dc: cr.dc };
+      const key = cr.down ? 'conc.down' : cr.kept ? 'conc.kept' : 'conc.lost';
+      _showToast((cr.kept ? '✦ ' : '✧ ') + _t(key, vars, cr.character + ' — ' + cr.spell), cr.kept ? 5000 : 7000);
+      if (!cr.kept && navigator.vibrate && typeof _turnMine === 'function' && String(_turnMine() || '').toLowerCase() === String(cr.character).toLowerCase()) navigator.vibrate([90, 60, 90]);
+    }
     if (payload.faction_event && payload.faction_event.name) {
       const fe = payload.faction_event;
       const word = _t('faction.' + String(fe.standing || '').toLowerCase(), null, fe.standing || '');

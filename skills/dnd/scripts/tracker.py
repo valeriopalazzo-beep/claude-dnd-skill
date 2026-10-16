@@ -24,6 +24,10 @@ Usage:
     python3 tracker.py -c $CAMPAIGN effect end   <entity> "<spell>"
     python3 tracker.py -c $CAMPAIGN effect tick  <entity>   # call on that entity's turn start
 
+    # Damage to a creature that is concentrating (monsters, NPCs; the display does the PCs):
+    # rolls the CON save, DC 10 or half the damage, and breaks it on a failure
+    python3 tracker.py -c $CAMPAIGN hit <entity> <damage> [--con +3] [--adv|--dis] [--down]
+
     # Death saves (PC only — 3 successes = stable, 3 failures = dead)
     python3 tracker.py -c $CAMPAIGN saves <entity> success
     python3 tracker.py -c $CAMPAIGN saves <entity> failure
@@ -409,6 +413,48 @@ def cmd_concentrate(campaign: str, entity_name: str, spell_or_break: str) -> Non
     _save(campaign, state)
 
 
+def concentration_dc(damage: int) -> int:
+    """PHB 2014 p. 203: DC 10 or half the damage taken, whichever is higher."""
+    return max(10, int(damage) // 2)
+
+
+def cmd_hit(campaign: str, entity_name: str, damage: int, con: int = 0, adv: str = "normal",
+            down: bool = False, rng=None) -> dict:
+    """Damage to a concentrating creature: roll its save and break the spell on a failure."""
+    import random
+    rng = rng or random.SystemRandom()
+    state = _load(campaign)
+    ent = _entity(state, entity_name)
+    spell = ent.get("concentration")
+    if not spell:
+        print(f"  {entity_name}: not concentrating — nothing to roll")
+        return {"concentrating": False}
+    if damage < 1:
+        print(f"  {entity_name}: no damage, no save")
+        return {"concentrating": True, "kept": True}
+    if down:
+        kept, line = False, f"  {entity_name}: down to 0 HP — concentration on '{spell}' ends"
+        result = {"concentrating": True, "kept": False, "down": True}
+    else:
+        dc = concentration_dc(damage)
+        rolls = [rng.randint(1, 20)] + ([rng.randint(1, 20)] if adv in ("advantage", "disadvantage") else [])
+        d20 = max(rolls) if adv == "advantage" else min(rolls) if adv == "disadvantage" else rolls[0]
+        total = d20 + con
+        kept = total >= dc
+        shown = f"[{', '.join(map(str, rolls))}] → {d20}" if len(rolls) > 1 else str(d20)
+        line = (f"  {entity_name}: CON save {shown}{con:+d} = {total} vs DC {dc} — "
+                + (f"keeps concentrating on '{spell}'" if kept else f"FAILS: concentration on '{spell}' broken"))
+        result = {"concentrating": True, "kept": kept, "total": total, "dc": dc, "rolls": rolls}
+    print(line)
+    if not kept:
+        ent["concentration"] = None
+        ent["effects"] = [e for e in ent.get("effects", [])
+                          if not (e.get("concentration") and e.get("name", "").lower() == spell.lower())]
+        _send_announce(f"{entity_name} — concentration on {spell} broken")
+        _save(campaign, state)
+    return result
+
+
 def cmd_saves(campaign: str, entity_name: str, action: str) -> None:
     state = _load(campaign)
     ent   = _entity(state, entity_name)
@@ -539,6 +585,15 @@ def main() -> None:
     conc.add_argument("entity")
     conc.add_argument("spell", help="Spell name, or 'break' to end concentration")
 
+    # hit
+    hit = sub.add_parser("hit", help="Damage to a concentrating creature: roll the CON save")
+    hit.add_argument("entity")
+    hit.add_argument("damage", type=int)
+    hit.add_argument("--con", type=int, default=0, help="its Constitution save bonus")
+    hit.add_argument("--adv", action="store_true", help="advantage (War Caster)")
+    hit.add_argument("--dis", action="store_true", help="disadvantage")
+    hit.add_argument("--down", action="store_true", help="it dropped to 0 HP: concentration just ends")
+
     # saves
     sav = sub.add_parser("saves", help="Track death saving throws")
     sav.add_argument("entity")
@@ -563,6 +618,10 @@ def main() -> None:
         cmd_condition(args.campaign, args.entity, args.action, args.condition, args.duration)
     elif args.cmd == "concentrate":
         cmd_concentrate(args.campaign, args.entity, args.spell)
+    elif args.cmd == "hit":
+        cmd_hit(args.campaign, args.entity, args.damage, args.con,
+                "advantage" if args.adv and not args.dis else "disadvantage" if args.dis and not args.adv else "normal",
+                args.down)
     elif args.cmd == "saves":
         cmd_saves(args.campaign, args.entity, args.action)
     elif args.cmd == "status":

@@ -690,5 +690,9 @@
   "load.encumbered": "Encumbered: speed −10 ft",
   "load.heavy": "Heavily encumbered: speed −20 ft and disadvantage on STR, DEX and CON checks, attacks and saves",
   "load.over": "Over capacity: speed 5 ft until something is dropped",
-  "load.armour": "heavy armour without its Strength: speed −10 ft"
+  "load.armour": "heavy armour without its Strength: speed −10 ft",
+
+  "conc.kept": "{name} keeps concentrating on {spell} ({total} vs DC {dc})",
+  "conc.lost": "{name} loses concentration: {spell} ends ({total} vs DC {dc})",
+  "conc.down": "{name} is down: {spell} ends"
 }

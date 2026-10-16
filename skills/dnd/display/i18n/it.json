@@ -806,5 +806,9 @@
   "load.encumbered": "Ingombrato: velocità −3 m",
   "load.heavy": "Molto ingombrato: velocità −6 m e svantaggio a prove, attacchi e tiri salvezza di FOR, DES e COS",
   "load.over": "Oltre il limite: velocità 1,5 m finché non lascia qualcosa",
-  "load.armour": "armatura pesante senza la Forza richiesta: velocità −3 m"
+  "load.armour": "armatura pesante senza la Forza richiesta: velocità −3 m",
+
+  "conc.kept": "{name} resta concentrato su {spell} ({total} contro CD {dc})",
+  "conc.lost": "{name} perde la concentrazione: {spell} finisce ({total} contro CD {dc})",
+  "conc.down": "{name} è a 0 PF: {spell} finisce"
 }

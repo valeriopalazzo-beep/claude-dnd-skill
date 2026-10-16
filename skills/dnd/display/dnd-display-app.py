@@ -3138,6 +3138,119 @@ def spellbook_drop(character):
     return jsonify(_spell_view(character, text, lang)), 200
 
 
+# ─── Concentration saves ─────────────────────────────────────────────────────
+# A character concentrating on a spell who takes damage makes a Constitution
+# save, DC 10 or half the damage, whichever is higher; at 0 HP the
+# concentration simply ends (PHB 2014 p. 203). The /stats handler notices the
+# damage when an HP push lowers current or temporary HP; the save goes to the
+# player's screen as a dice request (the table screen rolls it for a player
+# with no phone) and the result is applied here: a failure ends the spell on
+# the display, and the DM gets a [[CONCENTRATION: …]] line from check_input.py.
+
+_conc_checks: dict = {}          # request_id → {"character", "spell", "dc", "damage"}
+_conc_lock = threading.Lock()
+_WAR_CASTER = re.compile(r"war caster|mago da guerra|incantatore da guerra", re.I)
+
+
+def _concentration_hit(p: dict, hp_before: dict) -> Optional[dict]:
+    """Damage just taken by a concentrating character: {name, spell, damage, down}. Call with _stats_lock held.
+
+    At 0 HP the concentration ends here and now (the character is unconscious)."""
+    spell = str(p.get("concentration") or "").strip()
+    after = p.get("hp") if isinstance(p.get("hp"), dict) else {}
+    if not spell or not isinstance(hp_before, dict) or "current" not in hp_before:
+        return None
+    try:
+        lost = max(0, int(hp_before.get("current", 0)) - int(after.get("current", 0)))
+        lost += max(0, int(hp_before.get("temp", 0) or 0) - int(after.get("temp", 0) or 0))
+        down = int(after.get("current", 1)) <= 0
+    except (TypeError, ValueError):
+        return None
+    if not lost:
+        return None
+    if down:
+        p["concentration"] = None
+        p["effects"] = [e for e in p.get("effects", []) if not (isinstance(e, dict) and e.get("concentration")
+                                                                and str(e.get("name", "")).lower() == spell.lower())]
+    return {"name": p.get("name", ""), "spell": spell, "damage": lost, "down": down}
+
+
+def _con_save(character: str) -> tuple:
+    """(Constitution save modifier, advantage) read from the sheet. War Caster gives advantage."""
+    path, _safe, _camp = _find_sheet_file(character)
+    try:
+        with open(path, encoding="utf-8") as f:
+            text = f.read()
+    except (OSError, TypeError):
+        return 0, "normal"
+    adv = "advantage" if _WAR_CASTER.search(text) else "normal"
+    for heading in (r"##\s+Saving Throws", r"##\s+Ability Scores"):
+        m = re.search(heading + r"[^\n]*\n(.*?)(?=\n##\s|\Z)", text, re.S)
+        if not m:
+            continue
+        rows = [r for r in m.group(1).splitlines() if r.strip().startswith("|")]
+        if len(rows) < 3:
+            continue
+        cols = [c.strip().upper() for c in rows[0].strip().strip("|").split("|")]
+        cells = [c.strip() for c in rows[2].strip().strip("|").split("|")]
+        if "CON" not in cols or cols.index("CON") >= len(cells):
+            continue
+        cell = cells[cols.index("CON")]
+        found = (re.search(r"\(([+\-\u2212]?\d+)\)", cell) if "Ability" in heading
+                 else re.search(r"([+\-\u2212]?\d+)", cell))
+        if found:
+            return int(found.group(1).replace("\u2212", "-")), adv
+    return 0, adv
+
+
+def _concentration_follow(hit: dict) -> None:
+    """After the stats went out: open the save, or tell the DM the spell ended at 0 HP."""
+    name, spell, damage = hit["name"], hit["spell"], hit["damage"]
+    if hit.get("down"):
+        _spellbook.casts_add({"character": name, "spell": spell, "concentration_save": "down", "damage": damage})
+        _broadcast({"concentration_result": {"character": name, "spell": spell, "kept": False, "down": True}})
+        return
+    dc = max(10, damage // 2)
+    modifier, adv = _con_save(name)
+    it = _spell_lang().startswith("it")
+    label = (f"Concentrazione: {spell}" if it else f"Concentration: {spell}")[:60]
+    request_id, _waiting = _open_dice_request([name], "1d20", modifier, adv, label, dc)
+    with _conc_lock:
+        _conc_checks[request_id] = {"character": name, "spell": spell, "dc": dc, "damage": damage}
+        while len(_conc_checks) > 50:
+            _conc_checks.pop(next(iter(_conc_checks)))
+
+
+def _concentration_result(request_id: str, character: str, total: int) -> None:
+    """A concentration save came back: below the DC, the spell ends."""
+    with _conc_lock:
+        check = _conc_checks.get(request_id)
+        if not check or check["character"].lower() != str(character).lower():
+            return
+        _conc_checks.pop(request_id, None)
+    kept = total >= check["dc"]
+    snapshot = None
+    if not kept:
+        with _stats_lock:
+            for p in _current_stats.get("players", []):
+                if p.get("name", "").lower() != check["character"].lower():
+                    continue
+                if str(p.get("concentration") or "").lower() == check["spell"].lower():
+                    p["concentration"] = None
+                    p["effects"] = [e for e in p.get("effects", []) if not (
+                        isinstance(e, dict) and e.get("concentration")
+                        and str(e.get("name", "")).lower() == check["spell"].lower())]
+                    snapshot = dict(_current_stats)
+        if snapshot is not None:
+            _persist_stats()
+            _broadcast({"stats": snapshot})
+    _spellbook.casts_add({"character": check["character"], "spell": check["spell"],
+                          "concentration_save": "kept" if kept else "lost",
+                          "damage": check["damage"], "dc": check["dc"], "total": total})
+    _broadcast({"concentration_result": {"character": check["character"], "spell": check["spell"], "kept": kept,
+                                         "total": total, "dc": check["dc"]}})
+
+
 # ─── "Previously on…" (recap.py) ─────────────────────────────────────────────
 # The DM's recap at the start of a session, as a full-screen card on every
 # screen; the narrator reads it where narration is on. Kept until cleared so a
@@ -3990,6 +4103,7 @@ def stats():
 
     _effect_expire_events: list[dict] = []
     ignored_players: list[str] = []
+    conc_hits: list[dict] = []      # damage taken while concentrating (see _concentration_hit)
     with _stats_lock:
         if "players" in data:
             # replace_players=true wipes the list first — used on campaign load
@@ -4024,6 +4138,7 @@ def stats():
                     "_death_save",
                 }
                 if match:
+                    hp_before = dict(match.get("hp") or {}) if "hp" in incoming else None
                     for key, val in incoming.items():
                         if key == "_inventory_add":
                             inv = match.setdefault("sheet", {}).setdefault("inventory", [])
@@ -4135,6 +4250,10 @@ def stats():
                         else:
                             match[key] = val
                     _death_saves_follow_hp(match)
+                    if hp_before is not None:
+                        hit = _concentration_hit(match, hp_before)
+                        if hit:
+                            conc_hits.append(hit)
                     # A full --conditions replace drops the timers of what it dropped.
                     if match.get("condition_timers"):
                         have = {str(c).lower() for c in match.get("conditions", [])}
@@ -4329,6 +4448,9 @@ def stats():
     # Broadcast any round-based effect expiries after the stats update
     for evt in _effect_expire_events:
         _broadcast({"effect_expired": evt})
+    # Concentration: a save on the player's screen, or the end of it at 0 HP.
+    for hit in conc_hits:
+        _concentration_follow(hit)
 
     # Update expected player count for staged-input auto-trigger
     global _expected_count
@@ -4974,6 +5096,8 @@ def player_dice():
                         })
     if pending_changed:
         _broadcast({"dice_pending": _dice_pending_snapshot()})
+    if req_id:
+        _concentration_result(req_id, character, total)
 
     return jsonify({
         "character": character,
@@ -5030,6 +5154,17 @@ def dice_request():
     modifier = max(-100, min(100, modifier))
     dc_val   = int(dc) if isinstance(dc, (int, float)) else None
 
+    request_id, trackable = _open_dice_request(chars, spec, modifier, adv, label, dc_val)
+    return jsonify({
+        "request_id": request_id,
+        "pending": sorted(trackable),
+        "complete": not trackable,
+    }), 200
+
+
+def _open_dice_request(chars: list, spec: str, modifier: int, adv: str, label: str, dc_val) -> tuple:
+    """Put a roll on the named players' screens; (request_id, the characters it waits for)."""
+    import time
     request_id = secrets.token_hex(6)
 
     # Only register pending entries for explicit named targets. "any" is fire-and-forget.
@@ -5062,11 +5197,7 @@ def dice_request():
         }
     }
     _broadcast(payload)
-    return jsonify({
-        "request_id": request_id,
-        "pending": sorted(trackable),
-        "complete": not trackable,
-    }), 200
+    return request_id, trackable
 
 
 @app.route("/dice-request/<request_id>", methods=["GET"])

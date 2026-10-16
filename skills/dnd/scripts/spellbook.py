@@ -273,6 +273,17 @@ def casts_add(note: dict) -> None:
 
 def format_cast(note: dict) -> str:
     who, spell = note.get("character", "?"), note.get("spell", "?")
+    save = note.get("concentration_save")
+    if save == "down":
+        return (f"[[CONCENTRATION: {who} dropped to 0 HP and stopped concentrating on {spell} — the spell ends now; "
+                "the display has already cleared it. Narrate what ends with it.]]")
+    if save in ("kept", "lost"):
+        roll = (f"{who} took {note.get('damage', '?')} damage and rolled {note.get('total', '?')} on the "
+                f"Constitution save against DC {note.get('dc', '?')}")
+        if save == "kept":
+            return f"[[CONCENTRATION: {roll}: still concentrating on {spell}.]]"
+        return (f"[[CONCENTRATION: {roll}: concentration on {spell} is broken — the spell ends now; "
+                "the display has already cleared it. Narrate what ends with it.]]")
     if note.get("dropped"):
         return f"[[SPELL: {who} stopped concentrating on {spell}.]]"
     if not note.get("slot"):

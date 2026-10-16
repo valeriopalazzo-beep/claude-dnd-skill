@@ -18,6 +18,9 @@ What the players bought from an open shop (shop.py) is printed first, one
 `[[SHOP: <Char> bought … ]]` line each — information, not an action. A puzzle
 that was solved, or ran out of attempts (puzzle.py), is a `[[PUZZLE …]]` line.
 
+Spells cast from a player's screen and concentration saves after damage
+are `[[SPELL: …]]` and `[[CONCENTRATION: …]]` lines, already applied.
+
 Secret notes the players wrote to the DM (whisper.py) are printed first, one
 `[[SECRET NOTE from <Char> — …]] text` line each, whether or not an action is queued.
 """
