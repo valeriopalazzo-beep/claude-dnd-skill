@@ -107,7 +107,8 @@ def push_turn_order(ordered: list[dict]) -> None:
     import os
     import subprocess
     script = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "display", "push_stats.py")
-    order = {"order": [c["name"] for c in ordered], "current": ordered[0]["name"], "round": 1}
+    order = {"order": [c["name"] for c in ordered], "current": ordered[0]["name"], "round": 1,
+             "init": {c["name"]: c["initiative"] for c in ordered if isinstance(c.get("initiative"), (int, float))}}
     try:
         subprocess.run([sys.executable, script, "--turn-order", json.dumps(order, ensure_ascii=False)],
                        capture_output=True, timeout=10)

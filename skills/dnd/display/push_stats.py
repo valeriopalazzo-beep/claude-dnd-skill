@@ -433,7 +433,34 @@ def main() -> None:
         print("Nothing to push. Use --help for usage.", file=sys.stderr)
         return
 
+    prev_turn = _saved_turn_order() if isinstance(payload.get("turn_order"), dict) else None
     _send(FLASK_URL, json.dumps(payload).encode("utf-8"), _read_token())
+    if prev_turn is not None:
+        _legendary_news(prev_turn, payload["turn_order"])
+
+
+def _saved_turn_order() -> dict:
+    """The turn order the display holds now (its stats.json), before this push moves it."""
+    try:
+        with open(rt("stats.json"), encoding="utf-8") as f:
+            to = json.load(f).get("turn_order")
+        return to if isinstance(to, dict) else {}
+    except (OSError, ValueError, AttributeError):
+        return {}
+
+
+def _legendary_news(prev: dict, new: dict) -> None:
+    """Legendary actions back, a legendary action due, a lair action on 20 (scripts/tracker.py). For the DM."""
+    try:
+        import media
+        camp = media.active_campaign()
+        if not camp:
+            return
+        import tracker
+        for line in tracker.turn_news(camp, prev, new):
+            print(line)
+    except Exception:
+        pass
 
 
 if __name__ == "__main__":

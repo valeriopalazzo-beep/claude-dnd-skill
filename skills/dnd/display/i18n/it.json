@@ -1120,5 +1120,9 @@
   "help.done": "Aiuti {name}: tira con vantaggio",
   "help.failed": "L'aiuto non è arrivato.",
 
-  "help.bar": "Aiuta un compagno"
+  "help.bar": "Aiuta un compagno",
+
+  "dms.leg.actions": "Azioni leggendarie rimaste",
+  "dms.leg.resist": "Resistenza leggendaria rimasta oggi",
+  "dms.leg.lair": "Azioni di tana al conteggio 20 (l'ultima usata)"
 }

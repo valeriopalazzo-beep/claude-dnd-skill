@@ -4103,7 +4103,8 @@ def dm_screen_data():
         if ent.get("hp") is None and str(ent.get("name", key)).lower() not in in_order:
             continue
         foes.append({"name": ent.get("name", key), "hp": ent.get("hp"), "max_hp": ent.get("max_hp"), "ac": ent.get("ac"),
-                     "conditions": ent.get("conditions") or [], "concentration": ent.get("concentration")})
+                     "conditions": ent.get("conditions") or [], "concentration": ent.get("concentration"),
+                     "legendary": ent.get("legendary") if isinstance(ent.get("legendary"), dict) else None})
     clocks = (_dm_json(folder, "clocks.json") or {}).get("clocks", []) if folder else []
     factions = []
     for f in ((_dm_json(folder, "factions.json") or {}).get("factions", []) if folder else []):

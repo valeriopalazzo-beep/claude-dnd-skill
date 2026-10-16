@@ -165,7 +165,11 @@
       names.map(n => {
         const e = byName[String(n).toLowerCase()] || { name: n };
         const cur = d.order && d.order.current && String(d.order.current).toLowerCase() === String(n).toLowerCase();
-        return `<tr class="${cur ? 'current' : ''}"><td>${cur ? '▶ ' : ''}${esc(n)}</td><td>${hp(e.hp, e.max_hp)}</td><td class="num">${esc(e.ac ?? '—')}</td><td>${tags(e.conditions, e.concentration)}</td></tr>`;
+        const lg = e.legendary;
+        const legend = lg ? [lg.actions ? `<span class="tag" title="${esc(_t('dms.leg.actions', null, 'Legendary actions'))}">⚔ ${esc(lg.left)}/${esc(lg.actions)}</span>` : '',
+          lg.resist ? `<span class="tag${lg.resist_left ? '' : ' warn'}" title="${esc(_t('dms.leg.resist', null, 'Legendary Resistance'))}">🛡 ${esc(lg.resist_left)}/${esc(lg.resist)}</span>` : '',
+          lg.lair ? `<span class="tag" title="${esc(_t('dms.leg.lair', null, 'Lair actions on initiative 20'))}">🏰${lg.lair_last ? ' ' + esc(lg.lair_last) : ''}</span>` : ''].join(' ') : '';
+        return `<tr class="${cur ? 'current' : ''}"><td>${cur ? '▶ ' : ''}${esc(n)}${legend ? '<br>' + legend : ''}</td><td>${hp(e.hp, e.max_hp)}</td><td class="num">${esc(e.ac ?? '—')}</td><td>${tags(e.conditions, e.concentration)}</td></tr>`;
       }).join('') + '</table>' : empty('dms.noFoes');
 
     // The party: passives and save DCs, for checks the players should not know about.

@@ -688,6 +688,8 @@ python3 ${CLAUDE_SKILL_DIR}/display/treasury.py close                     # no f
 ---
 
 ## Tracker Script — `scripts/tracker.py`
+
+**Legendary creatures:** `tracker.py -c <campaign> legendary "<name>" set [--as "Adult Red Dragon"] [--actions 3] [--resist 3] [--lair]` — with `--as` (or a name the SRD knows exactly) the options and their costs and the 3 legendary actions / 3 Legendary Resistances come from the SRD. `use ["Wing Attack" | --cost 2]` spends actions (refused when not enough are left), `resist` spends a Legendary Resistance, `lair "<action>"` records the lair action (refused if it is the one used last round), `reset` for a new day, `off`. When the turn moves with `push_stats.py --turn-current` / `--turn-round`, push_stats prints: the actions back at the start of the creature's turn; after every other creature's turn, that a legendary action may follow and which options it can still pay; the lair action at initiative count 20, losing ties (from the initiative numbers `combat.py init` puts in the turn order). `status` and the DM's screen show what is left; `clear` refills the actions and forgets the last lair action, but keeps Legendary Resistance for the day.
 Tracks conditions, concentration, timed effects, and death saves. State persists at `~/.claude/dnd/campaigns/<name>/tracker.json`.
 
 ```bash

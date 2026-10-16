@@ -986,5 +986,9 @@
   "help.done": "You help {name}: they roll with advantage",
   "help.failed": "The help did not go through.",
 
-  "help.bar": "Help a teammate"
+  "help.bar": "Help a teammate",
+
+  "dms.leg.actions": "Legendary actions left",
+  "dms.leg.resist": "Legendary Resistance left today",
+  "dms.leg.lair": "Lair actions on initiative 20 (the last one used)"
 }

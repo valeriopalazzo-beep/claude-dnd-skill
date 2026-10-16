@@ -31,6 +31,16 @@ Usage:
     # rolls the CON save — DC 10 or half the damage — and breaks it on a failure (at 0 HP it just ends)
     python3 tracker.py -c $CAMPAIGN hit <entity> <damage> [--con +3] [--adv|--dis] [--down]
 
+    # Legendary creatures: actions per round (back at the start of its own turn), Legendary Resistance
+    # per day, lair actions on initiative count 20 — counted here, announced when the turn moves
+    # (push_stats.py --turn-current) and shown on the DM's screen. --as reads the numbers from the SRD.
+    python3 tracker.py -c $CAMPAIGN legendary <entity> set [--actions 3] [--resist 3] [--lair] [--as "Adult Red Dragon"]
+    python3 tracker.py -c $CAMPAIGN legendary <entity> use [--cost 2]     # a legendary action, at the end of another's turn
+    python3 tracker.py -c $CAMPAIGN legendary <entity> resist             # Legendary Resistance: a failed save becomes a success
+    python3 tracker.py -c $CAMPAIGN legendary <entity> lair "<action>"    # the lair action it used (not the same one twice running)
+    python3 tracker.py -c $CAMPAIGN legendary <entity> reset              # a new day: Legendary Resistance back
+    python3 tracker.py -c $CAMPAIGN legendary <entity> off
+
     # Death saves (PC only — 3 successes = stable, 3 failures = dead)
     python3 tracker.py -c $CAMPAIGN saves <entity> success
     python3 tracker.py -c $CAMPAIGN saves <entity> failure
@@ -479,6 +489,155 @@ def cmd_hit(campaign: str, entity_name: str, damage: int, con: int = 0, adv: str
     return result
 
 
+# ─── Legendary creatures ──────────────────────────────────────────────────────
+
+def srd_legendary(name: str, exact: bool = False) -> dict:
+    """What the SRD says of a creature: {'actions': N, 'resist': N, 'options': [...]} (only what it says).
+
+    `exact`: only a creature with exactly that name (a tracker entity called "Drago" is not "Adult Red Dragon")."""
+    import re
+    try:
+        import encounter
+        rec = encounter.find_monster(name, encounter.load_monsters())
+    except Exception:
+        return {}
+    if exact and name.strip().lower() not in {str(rec.get("name", "")).lower(), *(str(a).replace("-", " ").lower()
+                                                                                    for a in rec.get("_alt_names") or [])}:
+        return {}
+    text = str(rec.get("description") or "")
+    out = {}
+    options = []
+    for m in re.finditer(r"^Legendary — ([^:\n]+?)(?: \(Costs (\d) Actions\))?:", text, re.M):
+        options.append({"name": m.group(1).strip(), "cost": int(m.group(2) or 1)})
+    if options:
+        # The SRD's legendary creatures all take 3 legendary actions; the dataset keeps the options, not the number.
+        m = re.search(r"can take (\d+) legendary actions", text, re.I)
+        out["actions"] = int(m.group(1)) if m else 3
+        out["options"] = options
+    if re.search(r"^Legendary Resistance", text, re.M):
+        m = re.search(r"Legendary Resistance \((\d+)/Day\)", text, re.I)
+        out["resist"] = int(m.group(1)) if m else 3
+    return out
+
+
+def _fmt_legendary(leg: dict) -> str:
+    bits = []
+    if leg.get("actions"):
+        bits.append(f"legendary actions {leg.get('left', 0)}/{leg['actions']}")
+    if leg.get("resist"):
+        bits.append(f"Legendary Resistance {leg.get('resist_left', 0)}/{leg['resist']}")
+    if leg.get("lair"):
+        bits.append("lair actions on 20" + (f" (last: {leg['lair_last']})" if leg.get("lair_last") else ""))
+    return ", ".join(bits) or "nothing legendary"
+
+
+def cmd_legendary(campaign: str, entity_name: str, action: str, actions=None, resist=None, lair=None,
+                  cost: int = 1, srd: str = "", value: str = "") -> dict:
+    """Legendary actions, Legendary Resistance and lair actions of one creature. Returns its record."""
+    state = _load(campaign)
+    ent = _entity(state, entity_name)
+    leg = ent.get("legendary") or {}
+    if action == "set":
+        found = srd_legendary(srd) if srd else srd_legendary(entity_name, exact=True)
+        n = actions if actions is not None else leg.get("actions", found.get("actions", 0))
+        r = resist if resist is not None else leg.get("resist", found.get("resist", 0))
+        leg = {"actions": max(0, int(n)), "left": max(0, int(n)), "resist": max(0, int(r)), "resist_left": max(0, int(r)),
+               "lair": bool(lair) if lair is not None else bool(leg.get("lair")), "lair_last": leg.get("lair_last", ""),
+               "options": found.get("options") or leg.get("options") or []}
+        if not (leg["actions"] or leg["resist"] or leg["lair"]):
+            raise SystemExit(f"  {entity_name}: nothing legendary to track — give --actions / --resist / --lair"
+                             + ("" if found or not srd else f" (the SRD has no legendary numbers for {srd!r})"))
+        msg = f"  {entity_name}: {_fmt_legendary(leg)}"
+    elif not leg:
+        raise SystemExit(f"  {entity_name}: not set up — tracker.py legendary {entity_name!r} set …")
+    elif action == "use":
+        named = next((o for o in leg.get("options") or [] if value and o["name"].lower() == value.lower()), None)
+        cost = max(1, int(named["cost"] if named else cost))
+        if leg.get("left", 0) < cost:
+            raise SystemExit(f"  {entity_name}: only {leg.get('left', 0)} legendary action(s) left this round — it cannot pay {cost}")
+        leg["left"] -= cost
+        msg = f"  {entity_name}: legendary action ({cost}) — {leg['left']}/{leg['actions']} left until its turn"
+    elif action == "resist":
+        if leg.get("resist_left", 0) < 1:
+            raise SystemExit(f"  {entity_name}: no Legendary Resistance left today — the failed save stands")
+        leg["resist_left"] -= 1
+        msg = f"  {entity_name}: Legendary Resistance — the save succeeds instead; {leg['resist_left']}/{leg['resist']} left today"
+    elif action == "lair":
+        if value and leg.get("lair_last", "").lower() == value.lower():
+            raise SystemExit(f"  {entity_name}: it used '{value}' last round — a lair action cannot be used twice in a row")
+        leg["lair_last"] = value
+        msg = f"  {entity_name}: lair action — {value}"
+    elif action == "reset":
+        leg["resist_left"], leg["left"] = leg.get("resist", 0), leg.get("actions", 0)
+        msg = f"  {entity_name}: {_fmt_legendary(leg)}"
+    elif action == "off":
+        ent.pop("legendary", None)
+        _save(campaign, state)
+        print(f"  {entity_name}: no longer tracked as legendary")
+        return {}
+    else:
+        raise SystemExit(f"  unknown action {action!r}")
+    ent["legendary"] = leg
+    _save(campaign, state)
+    print(msg)
+    return leg
+
+
+def _lair_now(inits: dict, prev_cur: str, new_cur: str, wrapped: bool) -> bool:
+    """Does initiative count 20 (losing ties) fall between these two turns?"""
+    p = inits.get(prev_cur.lower()) if prev_cur else None
+    n = inits.get(new_cur.lower()) if new_cur else None
+    if n is None or (p is None and not wrapped):
+        return False
+    if not wrapped:
+        return p >= 20 > n
+    return (p is not None and p >= 20) or n < 20
+
+
+def turn_news(campaign: str, prev: dict, new: dict) -> list:
+    """The turn moved (push_stats.py --turn-current / --turn-round): what the legendary creatures get. Lines."""
+    if not isinstance(new, dict):
+        return []
+    prev = prev if isinstance(prev, dict) else {}
+    order = [str(n) for n in (new.get("order") or prev.get("order") or [])]
+    prev_cur, new_cur = str(prev.get("current") or ""), str(new.get("current") or prev.get("current") or "")
+    prev_round, new_round = prev.get("round") or 1, new.get("round") or prev.get("round") or 1
+    if not new_cur or (prev_cur.lower() == new_cur.lower() and prev_round == new_round):
+        return []
+    try:
+        state = _load(campaign)
+    except Exception:
+        return []
+    legends = [e for e in state.values() if isinstance(e, dict) and e.get("legendary")
+               and (not order or e["name"].lower() in {n.lower() for n in order})]
+    if not legends:
+        return []
+    lines, changed = [], False
+    inits = {str(k).lower(): v for k, v in (new.get("init") or prev.get("init") or {}).items() if isinstance(v, (int, float))}
+    idx = {n.lower(): i for i, n in enumerate(order)}
+    wrapped = new_round != prev_round or (prev_cur.lower() in idx and new_cur.lower() in idx
+                                          and idx[new_cur.lower()] <= idx[prev_cur.lower()])
+    for ent in legends:
+        leg = ent["legendary"]
+        if leg.get("lair") and inits and _lair_now(inits, prev_cur, new_cur, wrapped):
+            lines.append(f"🏰 Initiative count 20 — {ent['name']}'s LAIR ACTION before {new_cur}'s turn"
+                         + (f" (last round: {leg['lair_last']} — not that one again)" if leg.get("lair_last") else ""))
+        if leg.get("actions") and new_cur.lower() == ent["name"].lower():
+            if leg.get("left", 0) != leg["actions"]:
+                changed = True
+            leg["left"] = leg["actions"]
+            lines.append(f"⚔ {ent['name']}'s turn: legendary actions back to {leg['actions']}/{leg['actions']}")
+        elif leg.get("actions") and prev_cur and prev_cur.lower() != ent["name"].lower() and leg.get("left", 0) > 0:
+            can = [o["name"] + (f" ({o['cost']})" if o.get("cost", 1) > 1 else "") for o in leg.get("options") or []
+                   if o.get("cost", 1) <= leg["left"]]
+            lines.append(f"⚔ {prev_cur}'s turn is over: {ent['name']} may take a legendary action "
+                         f"({leg['left']}/{leg['actions']} left" + (f": {', '.join(can)}" if can else "")
+                         + f") — tracker.py legendary \"{ent['name']}\" use")
+    if changed:
+        _save(campaign, state)
+    return lines
+
+
 def cmd_saves(campaign: str, entity_name: str, action: str) -> None:
     state = _load(campaign)
     ent   = _entity(state, entity_name)
@@ -553,6 +712,8 @@ def cmd_status(campaign: str, filter_name: str = "") -> None:
         if s or f:
             stable = " (stable)" if saves.get("stable") else ""
             parts.append(f"Death saves: {s}✓ {f}✗{stable}")
+        if ent.get("legendary"):
+            parts.append("Legendary: " + _fmt_legendary(ent["legendary"]))
 
         if parts:
             print(f"  {name}:")
@@ -571,6 +732,9 @@ def cmd_clear(campaign: str, clear_all: bool = False) -> None:
         ent["effects"] = []
         for k in ("hp", "max_hp", "ac"):       # the fight is over: the foes' numbers go with it
             ent.pop(k, None)
+        if ent.get("legendary"):               # actions back; Legendary Resistance waits for a new day
+            ent["legendary"]["left"] = ent["legendary"].get("actions", 0)
+            ent["legendary"]["lair_last"] = ""
         _push_conditions(ent["name"], [])
         if clear_all:
             ent["death_saves"] = {"successes": 0, "failures": 0, "stable": False}
@@ -627,6 +791,17 @@ def main() -> None:
     hit.add_argument("--dis", action="store_true", help="disadvantage")
     hit.add_argument("--down", action="store_true", help="it dropped to 0 HP: concentration just ends")
 
+    # legendary
+    leg = sub.add_parser("legendary", help="Legendary actions, Legendary Resistance and lair actions")
+    leg.add_argument("entity")
+    leg.add_argument("action", choices=["set", "use", "resist", "lair", "reset", "off"])
+    leg.add_argument("value", nargs="?", default="", help="lair: the lair action it used")
+    leg.add_argument("--actions", type=int, default=None)
+    leg.add_argument("--resist", type=int, default=None)
+    leg.add_argument("--lair", action="store_true", default=None)
+    leg.add_argument("--cost", type=int, default=1)
+    leg.add_argument("--as", dest="srd", default="", help="the SRD creature to read the numbers from")
+
     # saves
     sav = sub.add_parser("saves", help="Track death saving throws")
     sav.add_argument("entity")
@@ -657,6 +832,9 @@ def main() -> None:
         cmd_hit(args.campaign, args.entity, args.damage, args.con,
                 "advantage" if args.adv and not args.dis else "disadvantage" if args.dis and not args.adv else "normal",
                 args.down)
+    elif args.cmd == "legendary":
+        cmd_legendary(args.campaign, args.entity, args.action, args.actions, args.resist, args.lair,
+                      args.cost, args.srd, args.value)
     elif args.cmd == "saves":
         cmd_saves(args.campaign, args.entity, args.action)
     elif args.cmd == "status":
