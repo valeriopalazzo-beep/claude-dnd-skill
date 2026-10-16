@@ -394,6 +394,29 @@ If `check_input.py` returns output, prepend it to the player's terminal input wh
 
 ---
 
+## While you were away… — `display/missed.py`
+
+A personal recap for a player who missed a session, on their own screen only.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/display/missed.py absent                    # the PCs in state.md → absent:
+python3 ${CLAUDE_SKILL_DIR}/display/missed.py add "Lyra" --session 4 << 'DNDEND'
+Mentre eri a Vallombra a farti ricucire la spalla, Hernio e Lio…
+
+Ti hanno messo da parte 12 mo e…
+DNDEND
+python3 ${CLAUDE_SKILL_DIR}/display/missed.py add "Lyra" --title "Mentre eri a Vallombra…" --text "…"
+python3 ${CLAUDE_SKILL_DIR}/display/missed.py list [--unread]           # every recap, read or not
+python3 ${CLAUDE_SKILL_DIR}/display/missed.py show "Lyra"               # what Lyra will find
+python3 ${CLAUDE_SKILL_DIR}/display/missed.py remove <id>
+```
+
+- Kept in `<campaign>/missed.json`, so it waits across sessions with the display off. Character names as on the sheets (a part of the name that means one PC is enough). 3000 characters at most, 120–250 words read best; blank lines separate paragraphs.
+- When that player opens the display with their character (logged in, or `?char=` on this PC), the unread recaps open full screen — several missed sessions on one card, oldest first. *Listen* reads it with the narrator's voice; *Got it* marks it read. The menu keeps *While you were away* to read again. The shared table screen and the other players never get it.
+- The DM's screen lists every recap and whether its player has read it.
+
+---
+
 ## Previously on… — `display/recap.py`
 
 The recap at the start of a session, as a full-screen card on every screen.

@@ -1604,6 +1604,30 @@
   #recap-go{ padding:13px 26px; border-radius:12px; cursor:pointer; font:inherit; font-size:18px; font-weight:800;
     color:#1a140c; background:#f2b544; border:0; }
 
+  /* ══ "While you were away…" (missed.py) — a player's own recap, in the recap card's clothes ══ */
+  #missed-modal{ display:none; position:fixed; inset:0; z-index:10541; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    background-color:#05080b; background-image:radial-gradient(ellipse at 50% 0%, #12283c, #05080b 70%); }
+  #missed-modal.open{ display:flex; align-items:flex-start; justify-content:center; padding:24px 16px 32px; }
+  #missed-panel{ width:min(680px, 100%); margin:auto 0; color:#E2E8EE; text-align:center; animation:recap-in .9s ease both; }
+  #missed-title{ margin:0 0 6px; font-family:'Cinzel','Alegreya',serif; font-size:clamp(24px, 5vw, 38px); font-weight:700;
+    letter-spacing:.04em; color:#9fd0f2; text-shadow:0 2px 18px rgba(120,190,242,.35); }
+  #missed-who{ font-size:15px; letter-spacing:.08em; text-transform:uppercase; color:#9fb6c8; }
+  #missed-rule{ width:120px; height:2px; margin:10px auto 22px; background:linear-gradient(90deg, transparent, #78bef2, transparent); }
+  #missed-text{ text-align:left; font-family:'Alegreya','Alegreya Sans',serif; font-size:clamp(18px, 2.6vw, 22px); line-height:1.6; }
+  #missed-text p{ margin:0 0 14px; }
+  #missed-text h3{ margin:22px 0 8px; font-size:15px; letter-spacing:.08em; text-transform:uppercase; color:#9fd0f2; font-family:inherit; }
+  #missed-text h3:first-child{ margin-top:0; }
+  #missed-actions{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; align-items:center; margin-top:18px; }
+  #missed-listen-wrap{ display:inline-flex; align-items:center; gap:10px; padding:6px 18px 6px 6px; border-radius:999px; cursor:pointer;
+    border:2px solid #78bef2; }
+  #missed-listen-wrap[hidden]{ display:none; }
+  #missed-actions #missed-listen{ display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; padding:0;
+    border-radius:999px; cursor:pointer; color:#0c141a; background:#78bef2; border:0; opacity:1; }
+  #missed-actions #missed-listen svg{ width:20px; height:20px; }
+  #missed-listen-lbl{ font-size:17px; font-weight:700; color:#9fd0f2; }
+  #missed-go{ padding:13px 26px; border-radius:12px; cursor:pointer; font:inherit; font-size:18px; font-weight:800;
+    color:#0c141a; background:#78bef2; border:0; }
+
   /* ══ Voice input — speak the action instead of typing it (the browser's speech recognition) ══ */
   .mic-btn{ flex:none; width:40px; height:40px; padding:0; border-radius:999px; cursor:pointer; font-size:19px; line-height:1;
     color:rgba(220,185,100,1); background:rgba(20,14,6,0.6); border:1px solid rgba(180,140,60,0.48); }
@@ -5357,6 +5381,7 @@
     <button class="ph-set-opt" id="ph-puzzle-opt" type="button" hidden><span data-i18n="puzzle.title">Puzzle</span><strong>🧩</strong></button>
     <button class="ph-set-opt" id="ph-shop-opt" type="button" hidden><span data-i18n="shop.title">Shop</span><strong>🛒</strong></button>
     <button class="ph-set-opt" id="ph-recap-opt" type="button" hidden><span data-i18n="recap.menu">Previously on…</span><strong>📜</strong></button>
+    <button class="ph-set-opt" id="ph-missed-opt" type="button" hidden><span data-i18n="missed.menu">While you were away</span><strong>✉</strong></button>
     <button class="ph-set-opt" id="ph-vote-opt" type="button" hidden><span data-i18n="vote.title">Vote</span><strong>🗳</strong></button>
     <button class="ph-set-opt" id="ph-rest-opt" type="button" hidden><span data-i18n="rest.title">Rest</span><strong>🏕</strong></button>
     <button class="ph-set-opt" id="ph-theme-opt" type="button"><span data-i18n="ph.theme">Theme</span><strong id="ph-theme-val">Dark</strong></button>
@@ -5644,6 +5669,21 @@
   </div>
 </div>
 
+<!-- "While you were away…": a player's own recap of a session they missed (missed.py) -->
+<div id="missed-modal">
+  <div id="missed-panel" role="dialog" aria-labelledby="missed-title">
+    <div id="missed-who"></div>
+    <h2 id="missed-title" data-i18n="missed.title">While you were away…</h2>
+    <div id="missed-rule"></div>
+    <div id="missed-text"></div>
+    <div id="missed-actions">
+      <span id="missed-listen-wrap" hidden><button id="missed-listen" class="tts-play-btn" type="button" aria-label="Listen"></button>
+        <span id="missed-listen-lbl" data-i18n="recap.listen">Listen</span></span>
+      <button id="missed-go" type="button" data-i18n="missed.go">Got it</button>
+    </div>
+  </div>
+</div>
+
 <!-- Votes: the party decides on their phones (vote.py) -->
 <div id="vote-modal">
   <div id="vote-panel" role="dialog" aria-labelledby="vote-title">
@@ -5797,6 +5837,7 @@
       <button class="ln-item" type="button" id="ln-puzzle" title="Puzzle" data-i18n-title="puzzle.title" hidden><svg class="ln-i"><use href="#ln-i-puzzle"/></svg><span class="ln-lbl" data-i18n="puzzle.title">Puzzle</span><span class="ln-badge alert">!</span></button>
       <button class="ln-item" type="button" id="ln-shop" title="Shop" data-i18n-title="shop.title" hidden><svg class="ln-i"><use href="#ln-i-coins"/></svg><span class="ln-lbl" data-i18n="shop.title">Shop</span><span class="ln-badge" data-i18n="shop.open">Open</span></button>
       <button class="ln-item" type="button" id="ln-recap" title="Previously on…" data-i18n-title="recap.menu" hidden><svg class="ln-i"><use href="#ln-i-recap"/></svg><span class="ln-lbl" data-i18n="recap.menu">Previously on…</span></button>
+      <button class="ln-item" type="button" id="ln-missed" title="While you were away" data-i18n-title="missed.menu" hidden><svg class="ln-i"><use href="#ln-i-recap"/></svg><span class="ln-lbl" data-i18n="missed.menu">While you were away</span><span class="ln-badge alert" id="ln-missed-badge" hidden>!</span></button>
       <button class="ln-item" type="button" id="ln-vote" title="Vote" data-i18n-title="vote.title" hidden><svg class="ln-i"><use href="#ln-i-vote"/></svg><span class="ln-lbl" data-i18n="vote.title">Vote</span><span class="ln-badge alert">!</span></button>
       <button class="ln-item" type="button" id="ln-rest" title="Rest" data-i18n-title="rest.title" hidden><svg class="ln-i"><use href="#ln-i-rest"/></svg><span class="ln-lbl" data-i18n="rest.title">Rest</span><span class="ln-badge alert">!</span></button>
       <div class="ln-slot" id="ln-help-slot"></div>
@@ -5892,6 +5933,7 @@
         <button class="ln-item" type="button" id="ln-puzzle-more" data-ln-proxy="ln-puzzle" hidden><svg class="ln-i"><use href="#ln-i-puzzle"/></svg><span class="ln-lbl" data-i18n="puzzle.title">Puzzle</span></button>
         <button class="ln-item" type="button" id="ln-shop-more" data-ln-proxy="ln-shop" hidden><svg class="ln-i"><use href="#ln-i-coins"/></svg><span class="ln-lbl" data-i18n="shop.title">Shop</span></button>
         <button class="ln-item" type="button" id="ln-recap-more" data-ln-proxy="ln-recap" hidden><svg class="ln-i"><use href="#ln-i-recap"/></svg><span class="ln-lbl" data-i18n="recap.menu">Previously on…</span></button>
+        <button class="ln-item" type="button" id="ln-missed-more" data-ln-proxy="ln-missed" hidden><svg class="ln-i"><use href="#ln-i-recap"/></svg><span class="ln-lbl" data-i18n="missed.menu">While you were away</span></button>
         <button class="ln-item" type="button" id="ln-vote-more" data-ln-proxy="ln-vote" hidden><svg class="ln-i"><use href="#ln-i-vote"/></svg><span class="ln-lbl" data-i18n="vote.title">Vote</span></button>
         <button class="ln-item" type="button" id="ln-rest-more" data-ln-proxy="ln-rest" hidden><svg class="ln-i"><use href="#ln-i-rest"/></svg><span class="ln-lbl" data-i18n="rest.title">Rest</span></button>
         <button class="ln-item" type="button" data-ln-go="fazioni"><svg class="ln-i"><use href="#ln-i-flag"/></svg><span class="ln-lbl" data-i18n="ln.view.fazioni">Factions</span></button>
@@ -11182,6 +11224,7 @@ function connect() {
     if (payload.attack && typeof window._onAttack === 'function') window._onAttack(payload.attack);
     if (payload.vote_event && typeof window._onVote === 'function') window._onVote(payload.vote_event);
     if ('recap' in payload && typeof window._onRecap === 'function') window._onRecap(payload);
+    if (payload.missed_changed && typeof window._onMissed === 'function') window._onMissed(payload.missed_changed);
     if (payload.ambience && typeof window._onAmbience === 'function') window._onAmbience(payload.ambience);
     if (payload.timeline && typeof window._onTimeline === 'function') window._onTimeline(payload.timeline);
     if (payload.quest_event && payload.quest_event.name) {
@@ -12874,6 +12917,93 @@ function _recapShouldOpen(recap, seenId, nowSec) {
     triggers();
     if (_recapShouldOpen(recap, seen(), Date.now() / 1000)) open(false);
   }).catch(() => {});
+})();
+
+// ── "While you were away…" (missed.py) ───────────────────────────────
+// A player who missed a session finds, on their own screen, the recap the DM
+// wrote for them. The unread ones open by themselves (oldest first, all on one
+// card); "Got it" marks them read, and the menu keeps them all to read again.
+// The shared table screen has no character, so it never asks.
+function _missedToShow(recaps, all) {
+  const list = (Array.isArray(recaps) ? recaps : []).filter(r => r && r.id && r.text);
+  return all ? list : list.filter(r => !r.read_at);
+}
+function _missedHeading(r, many) {
+  if (!many) return '';
+  if (r.title) return r.title;
+  return r.session ? _t('missed.session', { n: r.session }, 'Session ' + r.session) : new Date((r.at || 0) * 1000).toLocaleDateString();
+}
+// ── end missed helpers ──
+
+(function _initMissed() {
+  const modal = document.getElementById('missed-modal');
+  if (!modal) return;
+  const $ = id => document.getElementById(id);
+  const qp = new URLSearchParams(location.search);
+  const me = String(window._LOGIN_CHAR || qp.get('char') || qp.get('character') || '').trim();
+  if (!me) return;
+  let recaps = [];
+  let shown = [];
+  const canSpeak = () => (typeof _TTS_AVAILABLE !== 'undefined' && _TTS_AVAILABLE) || (typeof _TTS_HAS_BROWSER !== 'undefined' && _TTS_HAS_BROWSER);
+
+  function triggers() {
+    const any = recaps.length > 0, unread = _missedToShow(recaps, false).length > 0;
+    ['ln-missed', 'ln-missed-more', 'ph-missed-opt'].forEach(id => { const e = $(id); if (e) e.hidden = !any; });
+    const b = $('ln-missed-badge');
+    if (b) b.hidden = !unread;
+    if (!any) modal.classList.remove('open');
+  }
+  function listen() {
+    const btn = $('missed-listen');
+    if (typeof _TTS_AVAILABLE !== 'undefined' && !_TTS_AVAILABLE) { _ttsBrowserSpeak(btn, $('missed-text').textContent); return; }
+    _ttsPlayBlock(btn, $('missed-text'));
+  }
+  function open(all) {
+    shown = _missedToShow(recaps, all);
+    if (!shown.length) return;
+    $('missed-who').textContent = me;
+    $('missed-title').textContent = (shown.length === 1 && shown[0].title) || _t('missed.title', null, 'While you were away…');
+    const box = $('missed-text');
+    box.textContent = '';
+    shown.forEach(r => {
+      const head = _missedHeading(r, shown.length > 1);
+      if (head) { const h = document.createElement('h3'); h.textContent = head; box.appendChild(h); }
+      _recapParagraphs(r.text).forEach(p => { const el = document.createElement('p'); el.textContent = p; box.appendChild(el); });
+    });
+    const btn = $('missed-listen');
+    if (btn && !btn.innerHTML) btn.innerHTML = _SVG_SPEAKER;
+    $('missed-listen-wrap').hidden = !canSpeak();
+    modal.classList.add('open');
+    modal.scrollTop = 0;
+  }
+  function close() {
+    modal.classList.remove('open');
+    const btn = $('missed-listen');
+    if (btn && btn.classList.contains('tts-playing')) _ttsStopActive();
+    shown.filter(r => !r.read_at).forEach(r => {
+      r.read_at = Date.now() / 1000;
+      fetch('/missed/read', { method: 'POST', headers: _authHeaders(), body: JSON.stringify({ id: r.id, character: me }) }).catch(() => {});
+    });
+    triggers();
+  }
+  function load(autoOpen) {
+    fetch('/missed?character=' + encodeURIComponent(me), { headers: _authHeaders() }).then(r => r.ok ? r.json() : null).then(d => {
+      if (!d) return;
+      recaps = Array.isArray(d.recaps) ? d.recaps : [];
+      triggers();
+      if (autoOpen && !modal.classList.contains('open') && _missedToShow(recaps, false).length) open(false);
+    }).catch(() => {});
+  }
+  window._onMissed = function (ev) {
+    if (!ev || String(ev.character || '').toLowerCase() !== me.toLowerCase()) return;
+    load(true);
+  };
+  $('missed-listen').addEventListener('click', e => { e.stopPropagation(); listen(); });
+  $('missed-listen-lbl').addEventListener('click', e => { e.stopPropagation(); listen(); });
+  $('missed-go').addEventListener('click', close);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && modal.classList.contains('open')) close(); });
+  ['ln-missed', 'ph-missed-opt'].forEach(id => { const e = $(id); if (e) e.addEventListener('click', () => open(true)); });
+  load(true);
 })();
 
 // ── Voice input ──────────────────────────────────────────────────────

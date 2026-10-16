@@ -112,6 +112,7 @@
   <section id="s-secrets"><h2 data-t="dms.secrets">Secret dates</h2><div></div></section>
   <section id="s-supplies"><h2 data-t="dms.supplies">Supplies</h2><div></div></section>
   <section id="s-downtime"><h2 data-t="dms.downtime">Downtime</h2><div></div></section>
+  <section id="s-missed"><h2 data-t="missed.menu">While you were away</h2><div></div></section>
   <section id="s-prep" class="wide"><h2 data-t="dms.prep">Session prep</h2><div></div></section>
 </main>
 
@@ -202,6 +203,12 @@
       const c = (dt.choices || {})[n];
       return `<tr><td>${esc(n)}</td><td>${c ? esc(_t('dt.act.' + c.activity, null, c.activity)) + (c.detail ? ' — ' + esc(c.detail) : '') : `<span class="muted">${esc(_t('dt.waiting', null, '…'))}</span>`}</td></tr>`;
     }).join('') + '</table>' : empty('dms.none');
+
+    // Recaps written for absent players (missed.py): who has read theirs.
+    const missed = d.missed || [];
+    body('s-missed').innerHTML = missed.length ? '<table>' + missed.map(m => `<tr><td>${esc(m.character)}</td>
+      <td class="muted">${m.session ? esc(_t('missed.session', { n: m.session }, 'Session ' + m.session)) : ''}</td>
+      <td class="${m.read ? 'good' : 'warn'}">${m.read ? '✓' : '…'}</td></tr>`).join('') + '</table>' : empty('dms.none');
 
     body('s-prep').innerHTML = d.prep ? `<pre>${esc(d.prep)}</pre>` : empty('dms.noPrep');
     renderRolls(d.rolls || []);

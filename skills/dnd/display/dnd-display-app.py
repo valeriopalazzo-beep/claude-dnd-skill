@@ -504,6 +504,8 @@ _DM_ENDPOINTS = {
     "vote_set",
     # The recap at the start of a session.
     "recap_set",
+    # A player's own "while you were away" recap: missed.py writes it, the player reads it.
+    "missed_changed",
     # The ambient sounds under the music.
     "ambience_set",
     # Where the party is — sets everyone's background and music.
@@ -3345,6 +3347,74 @@ def recap_set():
     return jsonify({"recap": recap}), 200
 
 
+# ─── "While you were away…" (missed.py) ──────────────────────────────────────
+# A personal recap for a player who missed a session, kept with the campaign
+# in <campaign>/missed.json. Only that player gets it (a logged-in player
+# their own; a phone view on this PC names its character), and they mark it
+# read. A broadcast only says whose recaps changed: each screen asks again.
+import missed as _missed
+
+
+def _missed_path() -> Optional[str]:
+    camp = re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]
+    if not camp:
+        return None
+    try:
+        return str(_find_campaign(camp) / "missed.json")
+    except Exception:
+        return None
+
+
+def _missed_viewer() -> str:
+    """Whose recaps this request may read: a player's own, or the character the DM's browser names."""
+    if getattr(g, "role", None) == "player":
+        return g.character or ""
+    return str(request.args.get("character") or (request.get_json(silent=True) or {}).get("character") or "")[:60].strip()
+
+
+@app.route("/missed", methods=["GET"])
+def missed_get():
+    if not _token_ok():
+        return "Forbidden", 403
+    path = _missed_path()
+    try:
+        recaps = _missed.load(path) if path else []
+    except _missed.MissedError:
+        recaps = []
+    if getattr(g, "role", None) != "player" and request.args.get("all"):
+        return jsonify({"recaps": recaps}), 200
+    who = _missed_viewer()
+    return jsonify({"recaps": _missed.for_character(recaps, who) if who else []}), 200
+
+
+@app.route("/missed/read", methods=["POST"])
+def missed_read():
+    """{"id"} — the player has read it (the DM's browser adds "character")."""
+    if not _token_ok():
+        return "Forbidden", 403
+    path, who = _missed_path(), _missed_viewer()
+    rid = str((request.get_json(silent=True) or {}).get("id") or "")[:16]
+    if not path or not who or not rid:
+        return jsonify({"error": "nothing to mark"}), 400
+    try:
+        recaps = _missed.load(path)
+        entry = _missed.mark_read(recaps, who, rid)
+        if entry is None:
+            return jsonify({"error": "not yours"}), 404
+        _missed.save(path, recaps)
+    except (OSError, _missed.MissedError) as e:
+        return jsonify({"error": str(e)}), 500
+    return jsonify({"recap": entry}), 200
+
+
+@app.route("/missed-changed", methods=["POST"])
+def missed_changed():
+    """missed.py wrote or removed a recap: tell the screens whose it is."""
+    who = str((request.get_json(silent=True) or {}).get("character") or "")[:60].strip()
+    _broadcast({"missed_changed": {"character": who}})
+    return jsonify({"ok": True}), 200
+
+
 # ─── Votes (vote.py) ─────────────────────────────────────────────────────────
 # The DM asks the table (or one group of a split party) a question; each voter
 # taps an answer on their own screen and may change it while the vote is open.
@@ -3728,7 +3798,15 @@ def dm_screen_data():
             downtime = None
     with _dm_rolls_lock:
         rolls = list(_dm_rolls)[::-1]
+    missed = []
+    if folder:
+        try:
+            missed = [{"character": r["character"], "session": r.get("session", ""), "read": bool(r.get("read_at"))}
+                      for r in _missed.load(str(folder / "missed.json"))][-12:]
+        except _missed.MissedError:
+            missed = []
     return jsonify({
+        "missed": missed,
         "campaign": camp, "world": {k: world.get(k) for k in ("date", "time", "weather") if world.get(k)},
         "order": order if isinstance(order, dict) else {}, "party": party, "foes": foes, "clocks": clocks,
         "factions": factions, "secrets": secrets_list, "prep": prep, "supplies": _public_supplies(),

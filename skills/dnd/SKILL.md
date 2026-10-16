@@ -524,7 +524,7 @@ When `state.md → ## Session Flags → absent:` names one or more PCs, their pl
 - **Display:** they are not in the sidebar (see `/dm:dnd load` step 6) and never targeted by `send.py --player` or `--stat-*` flags.
 - **A player arrives late:** remove them from `absent:`, push their full card with `push_stats.py --json` (no `--replace-players`, so the others stay), and write them into the scene with one line.
 
-When they come back at a later load, they rejoin the scene with one line of fiction — see `/dm:dnd load` step 8.
+When they come back at a later load, they rejoin the scene with one line of fiction — see `/dm:dnd load` step 8. At `/dm:dnd end`, write each of them a personal *While you were away…* recap with `missed.py` (`/dm:dnd end` step 1k): it opens on that player's own screen the next time they log in, and nobody else sees it.
 
 ## A Split Party
 
