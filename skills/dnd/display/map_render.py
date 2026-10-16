@@ -44,6 +44,18 @@ cached and the re-send is instant. Coordinates are the ruler's (column,row):
     @ 12,5 light                             one square, no label
 Kinds: fire, magic, cold, poison, acid, lightning, dark, light, blood, smoke.
 
+Areas of effect (spell templates, PHB 2014 p. 204), measured in feet, metres
+or squares (`20ft`, `6m`, `4q`; the scale line sets how big a square is,
+5 ft = 1,5 m by default). The squares whose centre falls inside are tinted,
+the exact shape is outlined, and the tokens caught in it are listed on the
+map and printed for the DM:
+    @ 9,8 sphere 20ft fire | Palla di fuoco      centred on square 9,8 (cylinder too)
+    @ 3,4 cone 15ft E fire | Mani brucianti      from the side of 3,4 that faces east
+    @ 3,4 line 30ft x5ft NE lightning | Fulmine  length, then width (default 5 ft)
+    @ 6,6 cube 10ft SE magic | Onda tonante      from the side (or corner) of 6,6
+Directions: N NE E SE S SW W NW (Italian O for W, NO and SO too). Italian
+shape names work: sfera, cilindro, cono, linea, cubo.
+
 Fog of war (header lines): the map shows only what the party can see.
     fog: on            what pc and ally tokens see from where they stand, stopped by
                        walls (#) and doors (+); what they saw on earlier sends stays
@@ -107,9 +119,18 @@ EFFECTS = {
 EFFECT_ALIASES = {"portal": "magic", "arcane": "magic", "explosion": "fire", "flame": "fire",
                   "ice": "cold", "frost": "cold", "shadow": "dark", "darkness": "dark",
                   "holy": "light", "radiant": "light", "thunder": "lightning", "fog": "smoke",
-                  "gas": "poison"}
+                  "gas": "poison", "fuoco": "fire", "fiamme": "fire", "magia": "magic", "arcano": "magic",
+                  "freddo": "cold", "gelo": "cold", "ghiaccio": "cold", "veleno": "poison", "acido": "acid",
+                  "fulmine": "lightning", "tuono": "lightning", "buio": "dark", "ombra": "dark", "luce": "light",
+                  "radioso": "light", "sangue": "blood", "fumo": "smoke", "nebbia": "smoke"}
 _EFFECT_RE = re.compile(r"^@\s*(\d+)\s*,\s*(\d+)(?:\s*-\s*(\d+)\s*,\s*(\d+))?"
                         r"(?:\s+r(\d+))?(?:\s+([A-Za-z]+))?\s*(?:\|\s*(.*))?$")
+SHAPES = {"sphere": "sphere", "sfera": "sphere", "radius": "sphere", "raggio": "sphere",
+          "cylinder": "sphere", "cilindro": "sphere", "cone": "cone", "cono": "cone",
+          "line": "line", "linea": "line", "cube": "cube", "cubo": "cube"}
+DIRECTIONS = {"N": (0, -1), "NE": (1, -1), "E": (1, 0), "SE": (1, 1), "S": (0, 1), "SW": (-1, 1),
+              "W": (-1, 0), "NW": (-1, -1), "O": (-1, 0), "NO": (-1, -1), "SO": (-1, 1)}
+_SIZE_RE = re.compile(r"^x?(\d+(?:[.,]\d+)?)\s*(ft|feet|piedi|m|metri|q|sq|squares|quadretti)?$", re.I)
 TEXTURED = ("floor", "wall", "water", "grass", "rough")   # map_art.TEXTURED
 PAINT_MARKERS = ("door", "trap", "stairs_up", "stairs_down")  # kept visible over painted art
 TEX_TILE = 4 * CELL   # one texture spans 4x4 squares; its seams fall on grid lines
@@ -147,6 +168,133 @@ class Effect:
     y1: int
     kind: str
     label: str = ""
+    cells: frozenset = None   # a spell template: exactly these squares (else the whole rectangle)
+    outline: tuple = None     # ("circle", cx, cy, r) or ("poly", [(x, y), …]) in squares
+    shape: str = ""           # sphere, cone, line or cube, and its size, for the DM's line
+
+
+def squares_per_foot(spec) -> float:
+    """1 / feet per square, read from the scale line (5 ft = 1,5 m when it says nothing)."""
+    m = re.search(r"=\s*(\d+(?:[.,]\d+)?)\s*(ft|feet|piedi|m|metri)", spec.scale or "", re.I)
+    if not m:
+        return 1 / 5
+    v = float(m.group(1).replace(",", "."))
+    feet = v * 5 / 1.5 if m.group(2).lower().startswith("m") else v
+    return 1 / feet if feet > 0 else 1 / 5
+
+
+def _size(token: str, per_foot: float):
+    """'20ft' / '6m' / '4q' / '20' (feet) → squares, or None."""
+    m = _SIZE_RE.match(token.strip())
+    if not m:
+        return None
+    v = float(m.group(1).replace(",", "."))
+    unit = (m.group(2) or "ft").lower()
+    if unit in ("q", "sq", "squares", "quadretti"):
+        return v
+    feet = v * 5 / 1.5 if unit in ("m", "metri") else v
+    return feet * per_foot
+
+
+def template_cells(shape: str, x: int, y: int, size: float, width: float = 1.0, direction=(1, 0)):
+    """(squares inside, outline) of a template from square x,y — sizes in squares.
+
+    A square is inside when its centre is (the DMG's "half a square" rule of thumb)."""
+    import math
+    eps = 1e-9
+    dx, dy = direction
+    if shape == "sphere":
+        ox, oy = x + 0.5, y + 0.5
+        cells = {(i, j) for j in range(int(y - size - 1), int(y + size + 2)) for i in range(int(x - size - 1), int(x + size + 2))
+                 if math.hypot(i + 0.5 - ox, j + 0.5 - oy) <= size + eps}
+        return frozenset(cells), ("circle", ox, oy, size)
+    # Cones, lines and cubes start from the side (or corner) of the square that faces the direction.
+    ox, oy = x + 0.5 + dx * 0.5, y + 0.5 + dy * 0.5
+    if shape == "cube" and dx and dy:
+        x0, x1 = sorted((ox, ox + dx * size))
+        y0, y1 = sorted((oy, oy + dy * size))
+        cells = {(i, j) for j in range(int(y0) - 1, int(y1) + 2) for i in range(int(x0) - 1, int(x1) + 2)
+                 if x0 - eps <= i + 0.5 <= x1 + eps and y0 - eps <= j + 0.5 <= y1 + eps}
+        return frozenset(cells), ("poly", [(x0, y0), (x1, y0), (x1, y1), (x0, y1)])
+    n = math.hypot(dx, dy)
+    ux, uy = dx / n, dy / n
+    px, py = -uy, ux
+    half = {"cone": None, "line": width / 2, "cube": size / 2}[shape]
+    reach = int(size + width + 2)
+    cells = set()
+    for j in range(int(oy) - reach, int(oy) + reach + 1):
+        for i in range(int(ox) - reach, int(ox) + reach + 1):
+            vx, vy = i + 0.5 - ox, j + 0.5 - oy
+            t, q = vx * ux + vy * uy, vx * px + vy * py
+            lim = t / 2 if half is None else half
+            if eps < t <= size + eps and abs(q) <= lim + eps:
+                cells.add((i, j))
+    far = (ox + ux * size, oy + uy * size)
+    w2 = size / 2 if half is None else half
+    if half is None:
+        poly = [(ox, oy), (far[0] + px * w2, far[1] + py * w2), (far[0] - px * w2, far[1] - py * w2)]
+    else:
+        poly = [(ox + px * w2, oy + py * w2), (far[0] + px * w2, far[1] + py * w2),
+                (far[0] - px * w2, far[1] - py * w2), (ox - px * w2, oy - py * w2)]
+    return frozenset(cells), ("poly", poly)
+
+
+def _parse_template(line: str, w: int, h: int, warnings: list, per_foot: float):
+    """An `@ x,y <shape> <size> …` line as an Effect; None when the line is not a template."""
+    body, _, label = line.strip()[1:].partition("|")
+    words = body.split()
+    if len(words) < 3 or words[1].lower() not in SHAPES:
+        return None
+    m = re.fullmatch(r"(\d+)\s*,\s*(\d+)", words[0])
+    if not m:
+        return None
+    shape = SHAPES[words[1].lower()]
+    x, y = int(m.group(1)) - 1, int(m.group(2)) - 1
+    size, width, direction, kind = None, None, None, None
+    for word in words[2:]:
+        if word.upper() in DIRECTIONS and direction is None:
+            direction = DIRECTIONS[word.upper()]
+        elif _size(word, per_foot) is not None and (size is None or width is None):
+            if size is None and not word.lower().startswith("x"):
+                size = _size(word, per_foot)
+            else:
+                width = _size(word, per_foot)
+        elif kind is None and word.isalpha():
+            kind = EFFECT_ALIASES.get(word.lower(), word.lower())
+        else:
+            warnings.append(f"template: {word!r} not understood in {line.strip()!r}")
+    if not size or size <= 0:
+        warnings.append(f"template without a size: {line.strip()!r} (write e.g. 20ft or 6m)")
+        return False
+    if shape in ("cone", "line", "cube") and direction is None:
+        if shape != "cube":
+            warnings.append(f"{shape} without a direction — pointing east: {line.strip()!r}")
+        direction = DIRECTIONS["E" if shape != "cube" else "SE"]
+    kind = kind or "fire"
+    if kind not in EFFECTS:
+        warnings.append(f"unknown effect kind {kind!r} — drawn as magic")
+        kind = "magic"
+    cells, outline = template_cells(shape, x, y, size, width or per_foot * 5, direction or (1, 0))
+    cells = frozenset((i, j) for i, j in cells if 0 <= i < w and 0 <= j < h)
+    if not cells:
+        warnings.append(f"template outside the map: {line.strip()!r}")
+        return False
+    xs, ys = [c[0] for c in cells], [c[1] for c in cells]
+    words_size = words[2] if _size(words[2], per_foot) is not None else ""
+    return Effect(min(xs), min(ys), max(xs), max(ys), kind, label.strip(), cells, outline,
+                  f"{shape} {words_size}".strip())
+
+
+def tokens_in(spec, e) -> list:
+    """(letter, name, side) of every token standing in the effect's squares, in reading order."""
+    out = []
+    for y, row in enumerate(spec.rows):
+        for x, ch in enumerate(row):
+            inside = (x, y) in e.cells if e.cells is not None else (e.x0 <= x <= e.x1 and e.y0 <= y <= e.y1)
+            if ch.isalpha() and inside:
+                name, side = spec.legend.get(ch, (ch, "pc" if ch.isupper() else "foe"))
+                out.append((ch, name, side))
+    return out
 
 
 def _parse_effect(line: str, w: int, h: int, warnings: list):
@@ -232,7 +380,9 @@ def parse(text: str) -> MapSpec:
     for sec in sections[1:]:
         for l in sec:
             if l.strip().startswith("@"):
-                eff = _parse_effect(l, width, len(spec.rows), spec.warnings)
+                eff = _parse_template(l, width, len(spec.rows), spec.warnings, squares_per_foot(spec))
+                if eff is None:
+                    eff = _parse_effect(l, width, len(spec.rows), spec.warnings)
                 if eff:
                     spec.effects.append(eff)
                 continue
@@ -470,7 +620,31 @@ def _draw_token(ch: str, spec: MapSpec, x: int, y: int) -> list:
     ]
 
 
+def _draw_template(e: Effect) -> list:
+    fill, glyph = EFFECTS[e.kind]
+    out = [f'<g><title>{escape(e.label or e.shape or e.kind)}</title>']
+    for (i, j) in sorted(e.cells):
+        out.append(f'<rect x="{PAD + i * CELL}" y="{PAD + j * CELL}" width="{CELL}" height="{CELL}" '
+                   f'fill="{fill}" fill-opacity="0.38"/>')
+    px = lambda v: round(PAD + v * CELL, 1)   # noqa: E731
+    if e.outline[0] == "circle":
+        _, cx, cy, r = e.outline
+        out.append(f'<circle cx="{px(cx)}" cy="{px(cy)}" r="{round(r * CELL, 1)}" fill="none" stroke="{fill}" '
+                   f'stroke-width="3" stroke-dasharray="8 4"/>')
+        gx, gy = px(cx), px(cy)
+    else:
+        pts = " ".join(f"{px(a)},{px(b)}" for a, b in e.outline[1])
+        out.append(f'<polygon points="{pts}" fill="none" stroke="{fill}" stroke-width="3" stroke-dasharray="8 4"/>')
+        gx = round(sum(px(a) for a, _ in e.outline[1]) / len(e.outline[1]), 1)
+        gy = round(sum(px(b) for _, b in e.outline[1]) / len(e.outline[1]), 1)
+    out.append(f'<text x="{gx}" y="{gy + 10}" font-size="28" text-anchor="middle" fill="{fill}" stroke="#000" '
+               f'stroke-width="0.8" opacity="0.9">{glyph}</text></g>')
+    return out
+
+
 def _draw_effect(e: Effect) -> list:
+    if e.cells is not None:
+        return _draw_template(e)
     fill, glyph = EFFECTS[e.kind]
     px, py = PAD + e.x0 * CELL, PAD + e.y0 * CELL
     w, h = (e.x1 - e.x0 + 1) * CELL, (e.y1 - e.y0 + 1) * CELL
@@ -482,6 +656,18 @@ def _draw_effect(e: Effect) -> list:
            f'text-anchor="middle" fill="{fill}" stroke="#000" stroke-width="0.8" '
            f'opacity="0.9">{glyph}</text></g>']
     return out
+
+
+def describe_templates(spec: MapSpec) -> list:
+    """One line per template for the DM: what it is and who is in it."""
+    lines = []
+    for e in spec.effects:
+        if e.cells is None:
+            continue
+        caught = tokens_in(spec, e)
+        who = ", ".join(f"{name} ({side})" for _ch, name, side in caught) or "nobody"
+        lines.append(f"{e.label or e.kind} [{e.shape}, {len(e.cells)} squares]: {who}")
+    return lines
 
 
 def kind_grid(spec: MapSpec) -> list:
@@ -594,8 +780,12 @@ def render_svg(spec: MapSpec, art=None, fog=None) -> str:
         yy = ly + (j // cols) * 24
         out.append(f'<rect x="{lx}" y="{yy - 14}" width="18" height="18" rx="4" fill="{fill}" '
                    f'fill-opacity="0.6" stroke="{fill}" stroke-width="2" stroke-dasharray="4 2"/>')
+        caught = list(dict.fromkeys(ch for y, row in enumerate(spec.rows) for x, ch in enumerate(row)
+                                    if ch.isalpha() and e.cells is not None and (x, y) in e.cells
+                                    and _token_shown(spec, ch, x, y, fog)))
+        text = e.label[:28] + (f": {', '.join(caught)}" if caught else "")
         out.append(f'<text x="{lx + 24}" y="{yy}" font-size="13" font-style="italic" '
-                   f'fill="{C["ink"]}">{escape(e.label[:28])}</text>')
+                   f'fill="{C["ink"]}">{escape(text[:40])}</text>')
     if spec.scale:
         out.append(f'<text x="{total_w - 12}" y="{total_h - 8}" font-size="11" text-anchor="end" '
                    f'font-style="italic" fill="{C["ink"]}" opacity="0.7">{escape(spec.scale)}</text>')
@@ -630,6 +820,8 @@ def main() -> int:
         return 2
     for w in spec.warnings[:10]:
         print(f"map_render: {w}", file=sys.stderr)
+    for line in describe_templates(spec):
+        print(f"map_render: area — {line}", file=sys.stderr)
     fog = None
     if spec.fog:
         now = visible_cells(spec)

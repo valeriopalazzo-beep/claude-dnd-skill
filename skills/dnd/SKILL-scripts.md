@@ -895,6 +895,17 @@ Tokens are letters. Legend line `X: Name | side`, side ∈ `pc`, `ally`, `npc`, 
 
 Kinds: `fire` `magic` `cold` `poison` `acid` `lightning` `dark` `light` `blood` `smoke` (aliases: explosion→fire, portal/arcane→magic, ice→cold, shadow→dark, holy/radiant→light, fog→smoke, gas→poison). Effects are drawn over the art and under the tokens and never change the terrain, so a re-send with an effect uses the cached painting and is instant. Labelled effects are listed in the map legend. Leave the line out on the next re-send once the effect is gone.
 
+**Areas of effect** — a spell's real template (PHB 2014 p. 204), with the exact shape and size:
+
+```
+@ 9,8 sphere 20ft fire | Palla di fuoco       # centred on square 9,8 (cylinder: the same on the map)
+@ 3,4 cone 15ft E cold | Cono di freddo       # from the side of 3,4 facing east
+@ 3,4 line 30ft x5ft NE lightning | Fulmine   # length, then width (default 5 ft)
+@ 6,6 cube 10ft SE magic | Onda tonante       # from the side or corner of 6,6
+```
+
+Sizes in feet (`20ft`, or a bare number), metres (`6m`) or squares (`4q`); the `scale:` line sets the size of a square (5 ft = 1,5 m when it says nothing). Directions `N NE E SE S SW W NW` (Italian `O`, `NO`, `SO` too); shapes and kinds have Italian names as well (`sfera cilindro cono linea cubo`, `fuoco freddo fulmine veleno acido magia buio luce fumo`). For a cone, line or cube the origin square is the caster's: the area starts at its side (or corner, on a diagonal). The squares whose centre falls inside are tinted and the shape is outlined; the legend says which tokens are caught (`Palla di fuoco: g, h`) and the script prints, for you, `map_render: area — Palla di fuoco [sphere 20ft, 13 squares]: Goblin (foe), Hobgoblin (foe)`. **That list is who makes the save** — apply the spell to exactly those creatures, and say it.
+
 Re-sending a map with the same title (or `--name <id>`) marks the older copy in the feed as superseded. `--caption TEXT` overrides the caption, `--no-send` only saves, `--out file.svg` writes a plain map elsewhere.
 
 **Fog of war** — for a place the party is exploring, add `fog: on` to the header and write the **whole** map, rooms not yet entered and creatures not yet seen included:
