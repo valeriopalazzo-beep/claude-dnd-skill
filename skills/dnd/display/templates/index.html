@@ -11686,7 +11686,7 @@ function _clockPie(segments, filled, size) {
         const bar = document.createElement('span');
         bar.className = 'bar';
         const fill = document.createElement('i');
-        const full = l.kind === 'lantern' ? 360 : 60;
+        const full = (l.kind === 'lantern' || l.kind === 'lamp') ? 360 : 60;
         fill.style.width = Math.max(0, Math.min(100, l.left / full * 100)) + '%';
         bar.appendChild(fill);
         const left = document.createElement('small');

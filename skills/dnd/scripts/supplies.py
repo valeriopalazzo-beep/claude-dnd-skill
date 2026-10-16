@@ -24,12 +24,12 @@ march (living off what it carries), each new day eats its share.
 
 Rations and water are counted in days for one person ("acqua 20" = twenty
 person-days of water: a waterskin holds about half a day). A torch burns 1
-hour, a candle 1 hour, a lantern 6 hours per flask of oil (PHB 2014). When
-the food or water is not enough, the script says so and gives the rule:
-without food a character lasts 3 + CON modifier days (at least 1), then gains
-a level of exhaustion each day; with less than half the water, a DC 15
-Constitution save or a level of exhaustion (none at all: exhaustion
-automatically). Anything that does not match exits non-zero and changes
+hour, a candle 1 hour, a lantern or a lamp 6 hours per flask of oil (PHB
+2014). When the food or water is not enough, the script says so and gives
+the rule (PHB p. 185): without food a character lasts 3 + CON modifier days
+(at least 1), then gains a level of exhaustion each day; with half the water,
+a DC 15 Constitution save or a level of exhaustion; with less, a level
+automatically; two levels for one already exhausted. Anything that does not match exits non-zero and changes
 nothing.
 """
 from __future__ import annotations
@@ -50,9 +50,10 @@ ALIASES = {"razioni": "rations", "razione": "rations", "cibo": "rations", "food"
            "olio": "oil", "ampolle": "oil", "flasks": "oil", "candele": "candles", "candela": "candles",
            "candle": "candles"}
 # What burns, for how many minutes, and what it eats from the stock when lit.
-LIGHTS = {"torch": (60, "torches"), "lantern": (360, "oil"), "candle": (60, "candles")}
+LIGHTS = {"torch": (60, "torches"), "lantern": (360, "oil"), "lamp": (360, "oil"), "candle": (60, "candles")}
 LIGHT_ALIASES = {"torcia": "torch", "torce": "torch", "torches": "torch", "lanterna": "lantern",
-                 "lanterns": "lantern", "candela": "candle", "candele": "candle", "candles": "candle"}
+                 "lanterns": "lantern", "lampada": "lamp", "lamps": "lamp", "candela": "candle", "candele": "candle",
+                 "candles": "candle"}
 MAX_STOCK = 99999
 MAX_LIGHTS = 12
 
@@ -128,7 +129,7 @@ def light_of(word: str) -> str:
     w = (word or "").strip().lower()
     w = LIGHT_ALIASES.get(w, w)
     if w not in LIGHTS:
-        raise SupplyError(f"{word!r} is not a light (torch, lantern, candle)")
+        raise SupplyError(f"{word!r} is not a light (torch, lantern, lamp, candle)")
     return w
 
 
@@ -233,14 +234,20 @@ def eat(data: dict, days: int) -> list:
             data["hungry_days"] = int(data.get("hungry_days") or 0) + 1
             news.append(f"FOOD: only {food} of {need_food} rations today — {need_food - food} go hungry "
                         f"(day {data['hungry_days']} without enough food). Each can go 3 + CON modifier days "
-                        "(at least 1) without food; after that, one level of exhaustion per day (half a ration counts as half a day).")
+                        "(at least 1) without food; after that, one level of exhaustion per day (half a ration counts as half a day), "
+                        "which does not go until they eat a full day's ration; a day of normal meals resets the count.")
         else:
             data["hungry_days"] = 0
         if water < need_water:
-            short = need_water - water
-            news.append(f"WATER: only {water} of {need_water} days of water today — " +
-                        ("those with none gain a level of exhaustion" if water == 0 else
-                         f"{short} short: with less than half, a DC 15 Constitution save or a level of exhaustion"))
+            # PHB 2014 p. 185: half the water → DC 15 Constitution save at the end of the day or one level of
+            # exhaustion; even less → one level automatically; already exhausted → two levels in either case.
+            if water * 2 >= need_water:
+                rule = ("shared out, each drinks at least half: a DC 15 Constitution save at the end of the day "
+                        "or one level of exhaustion")
+            else:
+                rule = "less than half each: one level of exhaustion at the end of the day, no save"
+            news.append(f"WATER: only {water} of {need_water} days of water today — {rule} (two levels in either "
+                        "case for a character already exhausted; it does not go until they drink the full amount)")
     left = days_left(data)
     if left is not None and not news and left < 2:
         news.append(f"supplies for {left:.1f} more day(s) at this pace")

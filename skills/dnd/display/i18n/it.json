@@ -926,5 +926,7 @@
   "dms.skill.Religion": "Religione",
   "dms.skill.Sleight of Hand": "Rapidità di Mano",
   "dms.skill.Stealth": "Furtività",
-  "dms.skill.Survival": "Sopravvivenza"
+  "dms.skill.Survival": "Sopravvivenza",
+
+  "sup.light.lamp": "Lampada"
 }

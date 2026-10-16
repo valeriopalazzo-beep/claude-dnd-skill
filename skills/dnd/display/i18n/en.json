@@ -792,5 +792,7 @@
   "dms.dc.medium": "Medium",
   "dms.dc.hard": "Hard",
   "dms.dc.very_hard": "Very hard",
-  "dms.dc.nearly_impossible": "Nearly impossible"
+  "dms.dc.nearly_impossible": "Nearly impossible",
+
+  "sup.light.lamp": "Lamp"
 }

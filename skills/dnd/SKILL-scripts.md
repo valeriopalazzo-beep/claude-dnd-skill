@@ -667,8 +667,8 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/supplies.py show
 python3 ${CLAUDE_SKILL_DIR}/scripts/supplies.py push
 ```
 
-- Rations and water are person-days: `water 20` feeds 4 people for 5 days (a waterskin holds about half a day). Torch 1 hour, candle 1 hour, lantern 6 hours per flask (PHB 2014).
-- Shortages print `⚠ FOOD:` / `⚠ WATER:` with the rule: without food a character lasts 3 + CON modifier days (at least 1), then gains a level of exhaustion per day; with less than half the water, a DC 15 Constitution save or a level of exhaustion; with none, exhaustion automatically. `⚠ NO LIGHT` when the last light goes out.
+- Rations and water are person-days: `water 20` feeds 4 people for 5 days (a waterskin holds about half a day). Torch 1 hour, candle 1 hour, lantern or lamp (`light lamp`) 6 hours per flask (PHB 2014).
+- Shortages print `⚠ FOOD:` / `⚠ WATER:` with the rule (PHB p. 185): without food a character lasts 3 + CON modifier days (at least 1), then gains a level of exhaustion per day; with half the water, a DC 15 Constitution save at the end of the day or a level of exhaustion; with less than half, a level automatically; a character already exhausted takes two levels in either case. Exhaustion from hunger or thirst does not go until they eat or drink the full amount. `⚠ NO LIGHT` when the last light goes out.
 - `-c NAME` works on another campaign; only the campaign on the display talks to it.
 
 ---

@@ -85,11 +85,20 @@ class StockTests(unittest.TestCase):
         self.assertTrue(news[0].startswith("FOOD: only 3 of 4"))
         self.assertIn("3 + CON modifier days", news[0])
         self.assertTrue(news[1].startswith("WATER: only 1 of 4"))
-        self.assertIn("DC 15 Constitution save", news[1])
+        self.assertIn("less than half each: one level of exhaustion", news[1])     # PHB p. 185: no save
         news = sp.eat(data, 1)
         self.assertIn("day 2 without enough food", news[0])
         self.assertIn("exhaustion", news[1])
         self.assertEqual(data["hungry_days"], 2)
+        half = _stock(rations=4, water=2)
+        half["mouths"] = 4
+        self.assertIn("a DC 15 Constitution save", sp.eat(half, 1)[0])
+        self.assertIn("two levels", sp.eat(_stock(rations=4, water=2) | {"mouths": 4}, 1)[0])
+
+    def test_a_lamp_burns_six_hours_on_a_flask(self):
+        data = _stock(oil=1)
+        sp.light(data, "lampada")
+        self.assertEqual((data["lights"][0]["kind"], data["lights"][0]["left"], data["stock"]["oil"]), ("lamp", 360, 0))
 
 
 class CommandTests(unittest.TestCase):
