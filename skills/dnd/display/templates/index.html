@@ -1783,6 +1783,16 @@
   .chase-log{ list-style:none; margin:0; padding:0; font-size:14.5px; color:var(--ln-text-muted, #cdbfa6); }
   .chase-log li{ padding:4px 0; }
 
+  /* ══ The Help action — a teammate's roll gets advantage ══ */
+  #help-bar{ display:none; position:fixed; left:50%; transform:translateX(-50%); bottom:calc(12px + env(safe-area-inset-bottom, 0px));
+    z-index:10400; width:min(520px, calc(100% - 24px)); flex-direction:column; gap:6px; }
+  #help-bar.on{ display:flex; }
+  #help-bar button{ display:flex; gap:10px; align-items:center; width:100%; padding:10px 14px; border-radius:12px; cursor:pointer;
+    font:inherit; font-size:15.5px; font-weight:700; text-align:left; color:#1a140c; background:#f2b544; border:0;
+    box-shadow:0 8px 24px rgba(0,0,0,.45); font-family:'Alegreya Sans','Syne',sans-serif; }
+  #help-bar button small{ display:block; font-weight:500; font-size:13px; opacity:.8; }
+  #help-bar button:disabled{ opacity:.5; }
+
   /* ══ Attacks (attacks.py) — weapon, target, roll: to hit and damage in one tap ══ */
   #atk-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
     align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
@@ -5870,6 +5880,9 @@
     <div id="chase-body"></div>
   </div>
 </div>
+
+<!-- The Help action: a teammate's pending roll, one tap to give it advantage -->
+<div id="help-bar" role="group" aria-label="Help a teammate" data-i18n-aria="help.bar"></div>
 
 <!-- Attacks: weapon, target, advantage — one roll for to hit and damage (scripts/attacks.py) -->
 <div id="atk-modal">
@@ -11368,6 +11381,7 @@ function connect() {
       window._onDiceRequestCancelled(payload.dice_request_cancelled);
     }
     if (payload.dice_pending !== undefined) {
+      if (typeof window._onHelpOffers === 'function') window._onHelpOffers(payload.dice_pending);
       _updateDicePendingBadge(payload.dice_pending);
     }
     if (payload.whisper && typeof window._onWhisper === 'function') window._onWhisper(payload.whisper);
@@ -13894,6 +13908,61 @@ function _chasePlan(chase, me) {
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   load();
+})();
+
+// ── The Help action ───────────────────────────────────────────────────
+// A roll the DM asked of a teammate shows on this phone as "Help <name>":
+// one tap and their roll gets advantage (the server rolls it so). Who already
+// has help, or the roll that is this character's own, is not offered.
+function _helpOffers(snapshot, me) {
+  const mine = String(me || '').trim().toLowerCase();
+  if (!mine) return [];
+  const out = [];
+  (Array.isArray(snapshot) ? snapshot : []).forEach(e => {
+    const helped = (e.helped || []).map(n => String(n).toLowerCase());
+    (e.pending || []).forEach(n => {
+      const low = String(n).toLowerCase();
+      if (low === mine || helped.indexOf(low) >= 0) return;
+      out.push({ request_id: e.request_id, target: n, label: e.label || '' });
+    });
+  });
+  return out.slice(0, 4);
+}
+// ── end help offers ──
+
+(function _initHelp() {
+  const bar = document.getElementById('help-bar');
+  if (!bar || !document.body.classList.contains('input-only')) return;
+  const qp = new URLSearchParams(location.search);
+  const me = String(window._LOGIN_CHAR || qp.get('char') || qp.get('character') || '').trim();
+  if (!me) return;
+  let busy = false;
+  window._onHelpOffers = function (snapshot) {
+    const offers = _helpOffers(snapshot, me);
+    bar.textContent = '';
+    bar.classList.toggle('on', offers.length > 0);
+    offers.forEach(o => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.disabled = busy;
+      b.textContent = '🤝 ' + _t('help.offer', { name: o.target }, 'Help ' + o.target);
+      if (o.label) { const s = document.createElement('small'); s.textContent = o.label; b.appendChild(s); }
+      b.addEventListener('click', () => {
+        if (busy) return;
+        busy = true; b.disabled = true;
+        fetch('/dice-request/' + encodeURIComponent(o.request_id) + '/help', {
+          method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json', 'X-DND-Device': _deviceId }, _authHeaders()),
+          body: JSON.stringify({ character: me, target: o.target }),
+        }).then(r => r.json().then(d => ({ ok: r.ok, d })).catch(() => ({ ok: false, d: {} })))
+          .then(({ ok, d }) => {
+            busy = false;
+            _showToast('🤝 ' + (ok ? _t('help.done', { name: d.target }, 'You help ' + d.target + ': advantage')
+                                   : _t('help.failed', null, d.error || 'It did not go through.')), 4500);
+          });
+      });
+      bar.appendChild(b);
+    });
+  };
 })();
 
 // ── Attacks (scripts/attacks.py) ──────────────────────────────────────

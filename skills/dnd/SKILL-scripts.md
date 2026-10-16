@@ -540,6 +540,24 @@ python3 ${CLAUDE_SKILL_DIR}/display/stronghold.py close
 
 ---
 
+## Group Checks — `display/group_check.py`
+
+The same check for several characters at once, each with their own bonus; the group succeeds when at least half succeed (PHB 2014 p. 175).
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/display/group_check.py Stealth --dc 13
+python3 ${CLAUDE_SKILL_DIR}/display/group_check.py Furtività --dc 13 --group Collina      # a split party's group
+python3 ${CLAUDE_SKILL_DIR}/display/group_check.py Athletics --dc 15 --who "Lyra, Hernio"
+python3 ${CLAUDE_SKILL_DIR}/display/group_check.py Survival --dc 12 --advantage advantage
+python3 ${CLAUDE_SKILL_DIR}/display/group_check.py Strength --dc 10                      # a plain ability check
+```
+
+- Skills and abilities in English or Italian. The bonus is the skill's row on the sheet, else the ability modifier. Disadvantage comes by itself from an exhaustion level in the sheet's Conditions and, for Stealth, from armour the AC line says hampers it; `--advantage` applies to everyone (advantage and disadvantage cancel).
+- One request per phone (a player without a phone rolls on the table screen). The script waits up to `--timeout` seconds (180), prints each roll (`Lyra: 15 (d20 12+3) — success`) and `→ 3 of 4 succeed …: the GROUP SUCCEEDS`, and puts `🎲 Prova di gruppo — Furtività (CD 13): 3 su 4 ci riescono — RIUSCITA` in the story (in the campaign's language).
+- **Help:** any roll you ask of a character shows on the other players' phones as "🤝 Help <name>". A tap gives that roll advantage (or cancels its disadvantage) — the server rolls it with advantage whatever the phone sends — and the result says `helped by <name>` (in `send.py --wait` output too). In a group check the helper's own roll is dropped and the script lists them as `helped instead of rolling`. One helper per roll.
+
+---
+
 ## Chases — `display/chase.py`
 
 A quarry and its pursuers on one line, kept by the display (DMG 2014 pp. 252-255). Every runner's phone has a Chase panel: the line, the distances, whose turn; on their own turn **run** (speed), **dash** (twice it) or **give up**.

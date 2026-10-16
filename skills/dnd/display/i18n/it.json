@@ -1114,5 +1114,11 @@
   "handout.lang": "In {language}",
   "handout.unreadable": "È scritto in {language}: non sai leggerlo.",
   "handout.readers": "Lo sa leggere: {names}.",
-  "handout.noReaders": "Nessuno del gruppo lo sa leggere."
+  "handout.noReaders": "Nessuno del gruppo lo sa leggere.",
+
+  "help.offer": "Aiuta {name}",
+  "help.done": "Aiuti {name}: tira con vantaggio",
+  "help.failed": "L'aiuto non è arrivato.",
+
+  "help.bar": "Aiuta un compagno"
 }

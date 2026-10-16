@@ -274,6 +274,8 @@ def _format_roll_result(result: dict, dc=None, label: str = "") -> str:
         line += " — natural 1"
     if label:
         line += f" — {label}"
+    if result.get("helped_by"):
+        line += f" — helped by {result['helped_by']}"
     if isinstance(dc, int) and isinstance(result.get("total"), int):
         line += f" — DC {dc}: {'success' if result['total'] >= dc else 'failure'}"
     return line

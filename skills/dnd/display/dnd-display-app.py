@@ -1816,13 +1816,17 @@ def _dice_results_entry(request_id: str):
     entry = _dice_results.get(request_id)
     if entry is None:
         return None
-    return {"label": entry["label"], "dc": entry["dc"], "results": [dict(r) for r in entry["results"]]}
+    out = {"label": entry["label"], "dc": entry["dc"], "results": [dict(r) for r in entry["results"]]}
+    if entry.get("helping"):
+        out["helping"] = list(entry["helping"])     # asked for this check, helped someone instead (the Help action)
+    return out
 
 
 def _dice_pending_snapshot() -> list:
     with _dice_pending_lock:
         return [
-            {"request_id": rid, "pending": sorted(e["chars"]), "label": e["meta"].get("label", "")}
+            {"request_id": rid, "pending": sorted(e["chars"]), "label": e["meta"].get("label", ""),
+             "helped": sorted((e["meta"].get("help") or {}).keys())}
             for rid, e in _dice_pending.items() if e["chars"]
         ]
 
@@ -5899,6 +5903,14 @@ def player_dice():
     adv       = str(data.get("advantage", "normal")).strip().lower()
     label     = re.sub(r"[`\\$]", "", str(data.get("label", ""))[:60]).strip()
     req_id    = str(data.get("request_id", "")).strip()[:24]
+    helped_by = ""
+    if req_id:                     # the Help action: a teammate gave this roll advantage (or cancelled a disadvantage)
+        with _dice_pending_lock:
+            _e = _dice_pending.get(req_id)
+            helped_by = ((_e or {}).get("meta", {}).get("help") or {}).get(character.lower(), "")
+        if helped_by and spec == "1d20":
+            adv = _helped_advantage(_e["meta"].get("advantage", "normal"))
+            label = (label + " — " if label else "") + f"🤝 {helped_by}"
 
     m = re.fullmatch(r"(\d{1,2})d(\d{1,3})", spec)
     if not m:
@@ -5970,6 +5982,7 @@ def player_dice():
                             "character": character, "spec": spec, "modifier": modifier, "advantage": adv,
                             "rolls": rolls, "kept": kept, "both": both, "total": total,
                             "natural": kept[0] if spec == "1d20" else None,
+                            **({"helped_by": helped_by} if helped_by else {}),
                         })
     if pending_changed:
         _broadcast({"dice_pending": _dice_pending_snapshot()})
@@ -6099,6 +6112,70 @@ def dice_request_status(request_id):
             "started_at": entry["started_at"],
             **got,
         }), 200
+
+
+def _helped_advantage(adv: str) -> str:
+    """Help gives advantage; with disadvantage the two cancel out."""
+    return "normal" if adv == "disadvantage" else "advantage"
+
+
+@app.route("/dice-request/<request_id>/help", methods=["POST"])
+def dice_request_help(request_id):
+    """The Help action from a player's phone: {"character": helper, "target": who rolls}.
+
+    The target's roll in this request gets advantage. A helper who was asked
+    for the same check (a group check) gives up their own roll to help."""
+    if not _token_ok():
+        return "Forbidden", 403
+    if not _rate_ok(request.remote_addr):
+        return "Too Many Requests", 429
+    data = request.get_json(silent=True) or {}
+    helper = _acting_character(str(data.get("character", ""))[:50].strip())
+    target = str(data.get("target", ""))[:50].strip()
+    with _stats_lock:
+        party = {str(p.get("name", "")).lower(): str(p.get("name", "")) for p in _current_stats.get("players", [])}
+    if helper.lower() not in party:
+        return jsonify({"error": "not at the table", "code": "helper"}), 403
+    helper = party[helper.lower()]
+    dropped = []
+    with _dice_pending_lock:
+        entry = _dice_pending.get(request_id)
+        name = next((c for c in (entry or {}).get("chars", ()) if c.lower() == target.lower()), None)
+        if entry is None or name is None:
+            return jsonify({"error": "that roll is not waiting", "code": "gone"}), 409
+        if name.lower() == helper.lower():
+            return jsonify({"error": "you cannot help yourself", "code": "self"}), 409
+        helps = entry["meta"].setdefault("help", {})
+        if name.lower() in helps:
+            return jsonify({"error": f"{helps[name.lower()]} is helping already", "code": "taken"}), 409
+        helps[name.lower()] = helper
+        meta = dict(entry["meta"])
+        label = meta.get("label", "")
+        for rid, other in list(_dice_pending.items()):       # the helper's own roll for the same check
+            mine = next((c for c in other["chars"] if c.lower() == helper.lower()), None)
+            if rid != request_id and mine and label and other["meta"].get("label", "") == label:
+                other["chars"].discard(mine)
+                got = _dice_results.get(rid)
+                if got is not None:
+                    got.setdefault("helping", []).append(helper)
+                if not other["chars"]:
+                    _dice_pending.pop(rid, None)
+                dropped.append(rid)
+    for rid in dropped:
+        _broadcast({"dice_request_cancelled": rid})
+    adv = _helped_advantage(meta.get("advantage", "normal"))
+    _broadcast({"dice_request": {"request_id": request_id, "characters": [name], "character": name,
+                                 "onscreen_targets": [] if _phone_present(name) else [name], "spec": meta.get("spec", "1d20"),
+                                 "modifier": meta.get("modifier", 0), "advantage": adv,
+                                 "label": (label + " — " if label else "") + f"🤝 {helper}", "dc": meta.get("dc")}})
+    line = {"text": f"🤝 {helper} → {name}" + (f" — {label}" if label else ""), "dice": True, "help": {"helper": helper, "target": name}}
+    camp = _active_campaign()
+    with _text_log_lock:
+        _text_log.append(dict(line, _camp=camp) if camp else dict(line))
+    _persist_log()
+    _broadcast(line)
+    _broadcast({"dice_pending": _dice_pending_snapshot()})
+    return jsonify({"target": name, "helper": helper, "advantage": adv}), 200
 
 
 @app.route("/dice-request/<request_id>", methods=["DELETE"])

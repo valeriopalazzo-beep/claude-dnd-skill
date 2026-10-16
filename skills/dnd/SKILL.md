@@ -564,6 +564,14 @@ When the party gets a place of its own — a tower they build, an inn they inher
 
 ---
 
+## Group checks and the Help action
+
+When the party does one thing together — sneak past a camp, climb a cliff, cross a bog, keep a story straight — it is a **group check** (PHB 2014 p. 175), not one roll per player you then weigh by feel: `display/group_check.py <skill or ability> --dc N` (`--group <name>` for one group of a split party, `--who "A, B"`, `--advantage` when the situation gives it to everyone). Each phone gets the check with its own bonus from the sheet, with disadvantage where the sheet calls for it (exhaustion; armour that hampers Stealth); the script waits, prints each roll and the outcome — **at least half succeed: the whole group succeeds** — and puts the line in the story. Narrate from the group's result (the clumsy one was carried along by the others, or gave them away).
+
+**Help.** On any roll you ask of a character, the other players' phones offer "Help <name>": one tap and that roll gets advantage (disadvantage and help cancel out) — the server rolls it so, and the result line says `helped by …`. In a group check a helper gives up their own roll. The helper must be able to help in the fiction (close by, able to do the task, PHB p. 192): if not, say so and roll without it — cancel and ask again (`send.py --dice-request`) in that case. Syntax: `SKILL-scripts.md` → *Group Checks*.
+
+---
+
 ## Chases
 
 When someone runs — a thief through the market, the party out of a collapsing crypt — play it as a chase (DMG 2014 pp. 252-255), not as a single roll: `display/chase.py start --quarry "<who runs>" --pursuers "<who follows>" --gap <metres> --setting urban|wild`. Characters at the table are read from their sheets; creatures are `Name:speed=9,con=1,stealth=5` or an SRD name (`Thug:2`). Everyone gets a Chase panel with the line, the distances and whose turn it is; on their turn a player taps **run**, **dash** or **give up** — the free dashes (3 + CON), the DC 10 Constitution save after them and the exhaustion are counted for them, and a pursuer who reaches the quarry catches it. At the end of every turn a d20 may throw a complication (a crowd, a cart, a ditch, a snare) at the NEXT runner: it shows on their phone with its check — ask that roll and apply the failure (`chase.py adjust "<name>" -3` for difficult terrain, damage as usual). You play the creatures: `chase.py act "<name>" move|dash|stop` when a `[[CHASE: … Now <name>'s turn …]]` line says so. When the quarry turns a corner or dives into a crowd, `chase.py sight off` (and `cover crowded|open`): at the end of the round it may slip away — creatures roll Stealth against the pursuers' best passive Perception by themselves, a PC is asked (`chase.py mark "<name>" escaped` when they make it). Attacks and spells work as usual during a chase, with no opportunity attacks between runners. `chase.py end` when it is over. Syntax: `SKILL-scripts.md` → *Chases*.

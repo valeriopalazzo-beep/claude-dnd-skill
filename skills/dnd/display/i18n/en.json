@@ -980,5 +980,11 @@
   "handout.lang": "In {language}",
   "handout.unreadable": "It is written in {language}: you cannot read it.",
   "handout.readers": "It can be read by: {names}.",
-  "handout.noReaders": "Nobody in the party can read it."
+  "handout.noReaders": "Nobody in the party can read it.",
+
+  "help.offer": "Help {name}",
+  "help.done": "You help {name}: they roll with advantage",
+  "help.failed": "The help did not go through.",
+
+  "help.bar": "Help a teammate"
 }
