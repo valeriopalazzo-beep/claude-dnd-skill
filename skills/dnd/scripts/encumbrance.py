@@ -177,6 +177,8 @@ def weight_of(name: str, extra: dict | None = None):
     n = norm(name)
     if not n:
         return None
+    if n.startswith(("oggetto insolito", "trinket")):     # a keepsake from the creation: weighs nothing
+        return 0.0
     found = _weight_of(n, extra)
     if found is None:
         # "Un pegno d'affetto", "la chiave del forno": the article is not part of the name.

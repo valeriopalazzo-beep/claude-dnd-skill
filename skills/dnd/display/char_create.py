@@ -91,6 +91,56 @@ PROF = 2   # proficiency bonus at level 1
 STANDARD_ARRAY = [15, 14, 13, 12, 10, 8]
 POINT_COST = {8: 0, 9: 1, 10: 2, 11: 3, 12: 4, 13: 5, 14: 7, 15: 9}
 
+# Equipment packs (PHB 2014 p. 151): key → (Italian name, contents). The sheet
+# gets one line per pack with its contents, which encumbrance.py weighs as a pack.
+PACKS = {
+    "dungeoneer": ("Dotazione da avventuriero", "zaino, piede di porco, martello, 10 chiodi da rocciatore, "
+                   "10 torce, acciarino e pietra focaia, 10 razioni, otre, 15 m di corda di canapa"),
+    "diplomat": ("Dotazione da diplomatico", "forziere, 2 custodie per mappe o pergamene, abito pregiato, "
+                 "boccetta d'inchiostro, pennino, lampada, 2 ampolle d'olio, 5 fogli di carta, "
+                 "fiala di profumo, cera per sigilli, sapone"),
+    "explorer": ("Dotazione da esploratore", "zaino, giaciglio, gavetta, acciarino e pietra focaia, 10 torce, "
+                 "10 razioni, otre, 15 m di corda di canapa"),
+    "entertainer": ("Dotazione da intrattenitore", "zaino, giaciglio, 2 costumi, 5 candele, 5 razioni, otre, "
+                    "trucchi per il camuffamento"),
+    "priest": ("Dotazione da sacerdote", "zaino, coperta, 10 candele, acciarino e pietra focaia, "
+               "cassetta per le offerte, 2 cubetti d'incenso, incensiere, veste, 2 razioni, otre"),
+    "burglar": ("Dotazione da scassinatore", "zaino, sacchetto con 1.000 biglie di metallo, 3 m di spago, "
+                "campanella, 5 candele, piede di porco, martello, 10 chiodi da rocciatore, "
+                "lanterna schermabile, 2 ampolle d'olio, 5 razioni, acciarino e pietra focaia, otre, "
+                "15 m di corda di canapa"),
+    "scholar": ("Dotazione da studioso", "zaino, libro di studio, boccetta d'inchiostro, pennino, "
+                "10 fogli di pergamena, sacchetto di sabbia, coltellino"),
+}
+# The packs each class may start with (PHB 2014, starting equipment of each class).
+CLASS_PACKS = {
+    "barbarian": ("explorer",), "bard": ("diplomat", "entertainer"), "cleric": ("priest", "explorer"),
+    "druid": ("explorer",), "fighter": ("dungeoneer", "explorer"), "monk": ("dungeoneer", "explorer"),
+    "paladin": ("priest", "explorer"), "ranger": ("dungeoneer", "explorer"),
+    "rogue": ("burglar", "dungeoneer", "explorer"), "sorcerer": ("dungeoneer", "explorer"),
+    "warlock": ("scholar", "dungeoneer"), "wizard": ("scholar", "explorer"),
+}
+# Starting wealth when the player buys their own equipment (PHB 2014 p. 143): (d4s, multiplier).
+STARTING_WEALTH = {
+    "barbarian": (2, 10), "bard": (5, 10), "cleric": (5, 10), "druid": (2, 10), "fighter": (5, 10),
+    "monk": (5, 1), "paladin": (5, 10), "ranger": (5, 10), "rogue": (4, 10), "sorcerer": (3, 10),
+    "warlock": (4, 10), "wizard": (4, 10),
+}
+ALIGNMENTS = ("Legale buono", "Neutrale buono", "Caotico buono", "Legale neutrale", "Neutrale",
+              "Caotico neutrale", "Legale malvagio", "Neutrale malvagio", "Caotico malvagio")
+_ALIGN_ALIASES = {"lawful good": 0, "neutral good": 1, "chaotic good": 2, "lawful neutral": 3, "neutral": 4,
+                  "true neutral": 4, "chaotic neutral": 5, "lawful evil": 6, "neutral evil": 7,
+                  "chaotic evil": 8, "neutrale puro": 4, "neutrale neutrale": 4}
+# Lifestyles (PHB 2014 p. 157) and their price a day: free time is lived at one of them.
+LIFESTYLES = (("Miserabile", "—"), ("Squallido", "1 ma"), ("Povero", "2 ma"), ("Modesto", "1 mo"),
+              ("Agiato", "2 mo"), ("Ricco", "4 mo"), ("Aristocratico", "almeno 10 mo"))
+_LIFE_ALIASES = {"wretched": 0, "squalid": 1, "poor": 2, "modest": 3, "comfortable": 4, "wealthy": 5,
+                 "aristocratic": 6}
+# Appearance: every one of these is asked; "sex" and "marks" may stay empty.
+APPEARANCE = ("age", "height", "weight", "eyes", "hair", "skin")
+APPEARANCE_IT = {"sex": "sesso", "age": "età", "height": "altezza", "weight": "peso", "eyes": "occhi",
+                 "hair": "capelli", "skin": "pelle", "marks": "segni particolari"}
+
 OPENING = (
     "Ciao! Ti aiuto a creare il tuo personaggio per Dungeons & Dragons 5e "
     "(regole 2014), al livello 1. Ti farò una domanda alla volta.\n\n"
@@ -109,9 +159,24 @@ Come lavori:
 - Quando dai delle scelte, o le elenchi TUTTE (per esempio tutte le razze, tutte le classi o tutti i background del Manuale, in una lista numerata compatta con il nome in grassetto) oppure non ne elenchi nessuna e fai una domanda aperta. MAI una lista parziale o "per esempio…". Puoi indicare un'opzione consigliata.
 - Quando il giocatore deve scegliere PIÙ voci dalla stessa lista (per esempio 4 abilità, 2 trucchetti, 2 lingue), chiedile tutte in UN solo messaggio: elenca tutte le opzioni possibili in lista numerata con il nome in grassetto e aggiungi, da sola su una riga, [[SCEGLI n]] dove n è quante ne deve scegliere. La pagina gli farà selezionare esattamente n voci e te le manderà insieme. Non chiedere mai una voce alla volta.
 - Il primo messaggio (già inviato) chiedeva come procedere: passo passo, descrivilo, oppure proponimi idee. Segui la strada scelta.
-  - Passo passo: nome, razza (e sottorazza), classe, background, una frase su chi è il personaggio, metodo delle caratteristiche, abilità, scelte di classe (stile di combattimento, incantesimi, maestria…), equipaggiamento.
-  - Descrivilo: ricava dalla descrizione una build legale, mostrala tutta in una volta e chiedi se cambiare qualcosa. Poi chiedi solo ciò che manca (di sicuro il nome, se non c'è).
-  - Proponimi idee: proponi 3 personaggi diversi in una riga ciascuno, poi procedi con quello scelto.
+  - Passo passo: fai TUTTE le domande della creazione del Manuale, in quest'ordine:
+    1. nome;
+    2. razza e sottorazza, con le scelte della razza (discendenza del dragonide, trucchetto e lingua dell'alto elfo, lingua in più dell'umano, le due caratteristiche +1, le due abilità e la lingua del mezzelfo, lo strumento da artigiano del nano…);
+    3. classe, e la sottoclasse se si sceglie al livello 1;
+    4. metodo delle caratteristiche e assegnazione dei punteggi;
+    5. background, con le sue scelte (abilità, lingue o strumenti a scelta; la specializzazione se il background ne ha una);
+    6. abilità della classe;
+    7. scelte di classe: stile di combattimento, nemico prescelto e terreno prediletto del ranger, maestria del ladro, trucchetti e incantesimi (i sei del libro del mago)…;
+    8. allineamento: elenca tutti e nove gli allineamenti;
+    9. personalità: due tratti caratteriali, un ideale, un legame, un difetto. Per ognuno elenca tutte le voci della tabella del suo background (tratti d8, ideali, legami e difetti d6) oppure lascia che lo scriva lui; i due tratti si scelgono insieme con [[SCEGLI 2]];
+    10. aspetto, in un solo messaggio: sesso, età, altezza, peso, occhi, capelli, pelle, segni particolari;
+    11. la frase su chi è il personaggio (il pilastro, vedi sotto);
+    12. equipaggiamento: prima chiedi se vuole l'equipaggiamento iniziale di classe e background oppure le monete d'oro per comprarlo. Con l'equipaggiamento, chiedi UNA PER UNA ogni scelta (a)/(b) della classe, compresa la dotazione (lo zaino): elenca tutte e sole le dotazioni che la classe consente, ognuna con il suo contenuto. Con le monete scrivi da sola la riga [[TIRA ORO class_key]] (es. [[TIRA ORO rogue]]): il sistema tira la ricchezza iniziale della classe; poi lo aiuti a comprare dalle liste del Manuale, senza l'equipaggiamento del background;
+    13. oggetto insolito: uno gratis, dalla tabella degli oggetti insoliti; può descriverlo lui oppure puoi proporne uno;
+    14. stile di vita, con il prezzo al giorno: Miserabile (—), Squallido (1 ma), Povero (2 ma), Modesto (1 mo), Agiato (2 mo), Ricco (4 mo), Aristocratico (almeno 10 mo). Spiega in una riga che è come vive tra un'avventura e l'altra, e quindi quanto gli costa il tempo libero.
+  - Descrivilo: ricava dalla descrizione una build legale, mostrala tutta in una volta e chiedi se cambiare qualcosa. Poi fai, una alla volta, tutte le domande dell'elenco qui sopra a cui la descrizione non ha già risposto (di sicuro il nome se non c'è, l'allineamento, la personalità, l'aspetto, le scelte dell'equipaggiamento con la dotazione, l'oggetto insolito e lo stile di vita).
+  - Proponimi idee: proponi 3 personaggi diversi in una riga ciascuno, poi procedi con quello scelto come nel passo passo.
+- Non saltare mai una domanda dell'elenco e non scegliere al posto del giocatore: se ti dice "scegli tu", proponi e chiedi conferma. Il sistema rifiuta una scheda a cui manca una di queste scelte.
 - Razze, classi e background: quelli del Manuale del Giocatore 2014. Le sottoclassi che si scelgono al livello 1 (dominio del Chierico, origine dello Stregone, patrono del Warlock) si scelgono ora; le altre si scelgono più avanti: dillo se il giocatore le chiede.
 - La frase su chi è il personaggio diventa un "pilastro": Legame, Difetto, Ideale oppure Obiettivo. Se il giocatore la salta, non inventarla.
 - Caratteristiche, tre metodi:
@@ -119,9 +184,10 @@ Come lavori:
   - point buy: 27 punti, ogni punteggio da 8 a 15 (costi 8=0, 9=1, 10=2, 11=3, 12=4, 13=5, 14=7, 15=9);
   - tiro dei dadi: scrivi la riga [[TIRA]] da sola nel messaggio. Il sistema tira davvero 4d6 (si scarta il più basso) e ti manda tre serie; il giocatore ne sceglie una. Non inventare MAI risultati di dadi.
   Poi aiuta ad assegnare i punteggi e applica i bonus razziali.
-- Abilità: quelle concesse da classe e background, senza doppioni (se coincidono, il giocatore ne sceglie un'altra). Lingue e strumenti come da razza, classe e background.
+- Abilità: quelle concesse da classe e background, senza doppioni (se coincidono, il giocatore ne sceglie un'altra). Lingue e strumenti come da razza, classe e background; quelli "a scelta" li sceglie il giocatore.
+- Privilegi di razza: scrivi la Scurovisione con la sua portata (es. "Scurovisione 18 m") quando la razza la dà: la mappa di battaglia la legge da lì.
 - Equipaggiamento: quello iniziale di classe e background (con le scelte previste), più le monete del background.
-- Prima di chiudere mostra un riepilogo completo e chiedi conferma esplicita.
+- Prima di chiudere mostra un riepilogo completo (anche allineamento, personalità, aspetto, dotazione, oggetto insolito e stile di vita) e chiedi conferma esplicita.
 
 Limiti:
 - Non chiedere MAI password, PIN, e-mail o altri dati personali: il PIN il giocatore lo sceglie dopo, sulla pagina.
@@ -137,7 +203,9 @@ con questo JSON (chiavi in inglese, testi nella lingua del giocatore):
   "class_key": "una tra barbarian, bard, cleric, druid, fighter, monk, paladin, ranger, rogue, sorcerer, warlock, wizard",
   "subclass": "sottoclasse scelta al livello 1, oppure stringa vuota",
   "background": "background, es. Criminale",
-  "alignment": "allineamento, oppure stringa vuota",
+  "alignment": "uno tra Legale buono, Neutrale buono, Caotico buono, Legale neutrale, Neutrale, Caotico neutrale, Legale malvagio, Neutrale malvagio, Caotico malvagio",
+  "personality": {"traits": ["tratto 1", "tratto 2"], "ideal": "...", "bond": "...", "flaw": "..."},
+  "appearance": {"sex": "", "age": "...", "height": "...", "weight": "...", "eyes": "...", "hair": "...", "skin": "...", "marks": ""},
   "ability_method": "standard | point buy | tiro",
   "ability_base": {"str": 0, "dex": 0, "con": 0, "int": 0, "wis": 0, "cha": 0},
   "ability_bonus": {"str": 0, "dex": 0, "con": 0, "int": 0, "wis": 0, "cha": 0},
@@ -152,7 +220,11 @@ con questo JSON (chiavi in inglese, testi nella lingua del giocatore):
   "attacks": [{"name": "...", "bonus": "+4", "damage": "1d8+2", "type": "perforante", "notes": "..."}],
   "features": [{"name": "...", "source": "classe | razza | background", "text": "cosa fa, in una o due frasi"}],
   "spellcasting": null oppure {"ability": "int|wis|cha", "slots_level1": 2, "cantrips": ["..."], "spells_level1": ["..."]},
-  "equipment": {"weapons": ["..."], "armour": ["..."], "gear": ["..."]},
+  "equipment_choice": "kit (equipaggiamento iniziale) | gold (comprato con le monete tirate)",
+  "pack": "la dotazione scelta: una tra dungeoneer (da avventuriero), diplomat, explorer (da esploratore), entertainer (da intrattenitore), priest (da sacerdote), burglar (da scassinatore), scholar (da studioso); stringa vuota solo se ha comprato con le monete e non l'ha presa",
+  "equipment": {"weapons": ["..."], "armour": ["..."], "gear": ["... (senza la dotazione: il sistema la scrive con il suo contenuto)"]},
+  "trinket": "l'oggetto insolito",
+  "lifestyle": "uno tra Miserabile, Squallido, Povero, Modesto, Agiato, Ricco, Aristocratico",
   "gold": 0,
   "pillar": {"sentence": "la frase del giocatore, o stringa vuota", "type": "Legame|Difetto|Ideale|Obiettivo|", "text": "il pilastro in una frase"},
   "image_look": "descrizione fisica IN INGLESE, massimo 15 parole (razza, corporatura, capelli, armatura, arma tipica)",
@@ -228,6 +300,7 @@ def new_conv(ip: str) -> dict:
         "ip": ip,
         "history": [{"role": "guide", "text": OPENING}],
         "rolls": [],
+        "gold_rolls": [],
         "sheet": None,
         "finished": False,
     }
@@ -325,10 +398,25 @@ def dice_text(arrays: list) -> str:
     return "\n".join(lines)
 
 
+def roll_gold(class_key: str) -> dict:
+    """The class's starting wealth in gp (PHB 2014 p. 143), rolled here."""
+    n, mult = STARTING_WEALTH[class_key]
+    dice = [secrets.randbelow(4) + 1 for _ in range(n)]
+    return {"class": class_key, "dice": dice, "gp": sum(dice) * mult}
+
+
+def gold_text(roll: dict) -> str:
+    n, mult = STARTING_WEALTH[roll["class"]]
+    times = f" × {mult}" if mult > 1 else ""
+    return (f"Ricchezza iniziale del {CLASSES[roll['class']][0]} ({n}d4{times}): "
+            f"{' + '.join(map(str, roll['dice']))}{times} = {roll['gp']} mo")
+
+
 # ─── The sheet ──────────────────────────────────────────────────────────────
 
 _SHEET_RX = re.compile(r"<scheda>\s*(.*?)\s*</scheda>", re.S)
 _PICK_RX = re.compile(r"[ \t]*\[\[SCEGLI\s+(\d+)\]\][ \t]*\n?")
+_GOLD_RX = re.compile(r"[ \t]*\[\[TIRA ORO\s+([a-z]+)\]\][ \t]*\n?", re.I)
 
 
 def split_reply(text: str) -> tuple:
@@ -367,11 +455,75 @@ def _strs(v, limit=40, length=200) -> list:
     return [str(x).strip()[:length] for x in v if str(x).strip()][:limit]
 
 
-def validate(data: dict, rolls: list) -> tuple:
+def _fold(text: str) -> str:
+    import unicodedata
+    t = unicodedata.normalize("NFKD", str(text or "")).encode("ascii", "ignore").decode().lower()
+    return " ".join(re.sub(r"[^a-z ]+", " ", t).split())
+
+
+def _alignment(text: str) -> str:
+    """One of ALIGNMENTS, or '' when the text is none of the nine."""
+    f = _fold(text)
+    for i, a in enumerate(ALIGNMENTS):
+        if f == _fold(a):
+            return a
+    return ALIGNMENTS[_ALIGN_ALIASES[f]] if f in _ALIGN_ALIASES else ""
+
+
+def _lifestyle(text: str) -> tuple:
+    """(name, price a day) from LIFESTYLES, or None. 'Modesto (1 mo)' and 'modest' are read too."""
+    f = _fold(text).split(" ")[0] if _fold(text) else ""
+    for i, (name, price) in enumerate(LIFESTYLES):
+        if f and _fold(name)[:5] == f[:5]:
+            return name, price
+    return LIFESTYLES[_LIFE_ALIASES[f]] if f in _LIFE_ALIASES else None
+
+
+def missing_choices(data: dict, gold_rolls: list | None = None) -> list:
+    """The PHB creation choices the sheet lacks: only the player can make them."""
+    m = []
+    if not isinstance(data, dict):
+        return m
+    if not _alignment(data.get("alignment", "")):
+        m.append("l'allineamento (uno dei nove)")
+    pers = data.get("personality") if isinstance(data.get("personality"), dict) else {}
+    if not _strs(pers.get("traits")):
+        m.append("i tratti caratteriali (due)")
+    for key, what in (("ideal", "l'ideale"), ("bond", "il legame"), ("flaw", "il difetto")):
+        if not str(pers.get(key, "")).strip():
+            m.append(what)
+    look = data.get("appearance") if isinstance(data.get("appearance"), dict) else {}
+    gaps = [APPEARANCE_IT[k] for k in APPEARANCE if not str(look.get(k, "")).strip()]
+    if gaps:
+        m.append("l'aspetto (" + ", ".join(gaps) + ")")
+    ck = str(data.get("class_key", "")).strip().lower()
+    choice = _fold(data.get("equipment_choice", ""))
+    pack = str(data.get("pack", "")).strip().lower()
+    if choice.startswith("gold") or choice.startswith("monet") or choice.startswith("oro"):
+        if not any(r.get("class") == ck for r in gold_rolls or []):
+            m.append("il tiro della ricchezza iniziale ([[TIRA ORO " + (ck or "class_key") + "]])")
+        if pack and pack not in PACKS:
+            m.append("la dotazione comprata (" + ", ".join(PACKS) + ")")
+    elif choice.startswith("kit") or choice.startswith("equip"):
+        allowed = CLASS_PACKS.get(ck, ())
+        if pack not in allowed:
+            names = " oppure ".join(PACKS[k][0] for k in allowed) or "una dotazione"
+            m.append(f"la dotazione (lo zaino): {names}")
+    else:
+        m.append("se prende l'equipaggiamento iniziale (kit) o le monete per comprarlo (gold)")
+    if not str(data.get("trinket", "")).strip():
+        m.append("l'oggetto insolito")
+    if not _lifestyle(data.get("lifestyle", "")):
+        m.append("lo stile di vita (" + ", ".join(n for n, _ in LIFESTYLES) + ")")
+    return m
+
+
+def validate(data: dict, rolls: list, gold_rolls: list | None = None) -> tuple:
     """Check a sheet from Claude and compute its numbers.
 
     Returns (sheet, problems). `sheet` is the normalised dict the renderer
     takes; `problems` lists what Claude must fix (empty when it's legal).
+    Choices only the player can make are checked by missing_choices().
     """
     p = []
     if not isinstance(data, dict):
@@ -419,11 +571,19 @@ def validate(data: dict, rolls: list) -> tuple:
     speed = _int(data.get("speed_ft"), 30)
     hp_bonus = max(0, min(2, _int(data.get("hp_bonus"))))
     gold = max(0, min(200, _int(data.get("gold"))))
+    choice = _fold(data.get("equipment_choice", ""))
+    bought = choice.startswith(("gold", "monet", "oro"))
+    rolled = [r["gp"] for r in gold_rolls or [] if r.get("class") == ck]
+    if bought and rolled and gold > rolled[-1]:
+        p.append(f"con le monete l'oro rimasto non può superare le {rolled[-1]} mo tirate")
     if p:
         return None, p
 
     cname, hd, saves = CLASSES[ck]
     mods = {a: _mod(scores[a]) for a in ABILS}
+    pers = data.get("personality") if isinstance(data.get("personality"), dict) else {}
+    look = data.get("appearance") if isinstance(data.get("appearance"), dict) else {}
+    pack = str(data.get("pack", "")).strip().lower()
     sheet = {
         "name": name,
         "race": str(data.get("race", "")).strip()[:80],
@@ -431,7 +591,14 @@ def validate(data: dict, rolls: list) -> tuple:
         "class_name": cname,
         "subclass": str(data.get("subclass", "")).strip()[:60],
         "background": str(data.get("background", "")).strip()[:60],
-        "alignment": str(data.get("alignment", "")).strip()[:40],
+        "alignment": _alignment(data.get("alignment", "")) or str(data.get("alignment", "")).strip()[:40],
+        "personality": dict({k: str(pers.get(k, "")).strip()[:240] for k in ("ideal", "bond", "flaw")},
+                            traits=_strs(pers.get("traits"), limit=4, length=240)),
+        "appearance": {k: str(look.get(k, "")).strip()[:80] for k in APPEARANCE_IT},
+        "equipment_choice": "gold" if bought else "kit",
+        "pack": pack if pack in PACKS else "",
+        "trinket": str(data.get("trinket", "")).strip()[:160],
+        "lifestyle": _lifestyle(data.get("lifestyle", "")),
         "ability_method": method,
         "ability_base": base,
         "ability_bonus": bonus,
@@ -488,17 +655,36 @@ def handle_message(conv: dict, text: str, ask=None) -> dict:
                 arrays = roll_arrays()
                 conv["rolls"].append(arrays)
                 dice = dice_text(arrays)
-            problems = [err] if err else []
+            g = _GOLD_RX.search(shown)
+            if g:
+                shown = _GOLD_RX.sub("", shown).strip()
+                if g.group(1).lower() in STARTING_WEALTH:
+                    roll = roll_gold(g.group(1).lower())
+                    conv.setdefault("gold_rolls", []).append(roll)
+                    dice = (dice + "\n\n" if dice else "") + gold_text(roll)
+            problems, ask_player = ([err] if err else []), []
             if data is not None:
-                sheet, problems = validate(data, conv["rolls"])
-                if sheet:
+                sheet, problems = validate(data, conv["rolls"], conv.get("gold_rolls"))
+                ask_player = missing_choices(data, conv.get("gold_rolls"))
+                if sheet and not ask_player:
                     conv["sheet"] = sheet
             if problems:
                 # Claude fixes the sheet itself; the player never sees this note.
                 conv["history"].append({"role": "draft", "text": raw})
                 conv["history"].append({"role": "system", "text":
                     "La scheda non è valida: " + "; ".join(problems)
-                    + ". Correggi senza chiedere niente al giocatore e rimanda il riepilogo con il blocco <scheda>."})
+                    + ". Correggi senza chiedere niente al giocatore e rimanda il riepilogo con il blocco <scheda>."
+                    + (" Mancano anche scelte che spettano al giocatore: " + "; ".join(ask_player)
+                       + ". Non inventarle: chiedile prima al giocatore." if ask_player else "")})
+                continue
+            if ask_player:
+                # The Manual's questions come before the sheet: Claude asks them now.
+                conv["history"].append({"role": "draft", "text": raw})
+                conv["history"].append({"role": "system", "text":
+                    "La scheda non è completa: il giocatore non ha ancora scelto " + "; ".join(ask_player)
+                    + ". Non inventarle e non scegliere per lui: fagli ora la prima di queste domande "
+                    "(una per messaggio, con tutte le opzioni o una domanda aperta), poi le altre; "
+                    "alla fine rimostra il riepilogo e chiedi di nuovo conferma."})
                 continue
             break
         else:
@@ -536,6 +722,14 @@ def render(sheet: dict, player: str = "", today: Optional[str] = None) -> str:
         "## Identity",
         f"- **Race:** {s['race']} | **Class:** {cls} | **Level:** 1 | **Background:** {s['background']}",
         f"- **Alignment:** {s['alignment'] or '—'} | **XP:** 0 / 300",
+    ]
+    look = s.get("appearance") or {}
+    seen = "; ".join(f"{APPEARANCE_IT[k]} {_cell(look[k])}" for k in APPEARANCE_IT if _cell(look.get(k)))
+    if seen:
+        out.append(f"- **Appearance:** {seen}")
+    if s.get("lifestyle"):
+        out.append(f"- **Lifestyle:** {s['lifestyle'][0]} ({s['lifestyle'][1]} al giorno)")
+    out += [
         f"- **Image look:** {s['image_look']}",
         "- **Inspiration:** —",
         "",
@@ -548,6 +742,13 @@ def render(sheet: dict, player: str = "", today: Optional[str] = None) -> str:
                 "- **Active hooks:** —"]
     else:
         out.append("*(Il giocatore non l'ha indicato.)*")
+    pers = s.get("personality") or {}
+    if any(pers.values()):
+        out += ["", "## Personality",
+                f"- **Personality traits:** {'; '.join(_cell(t) for t in pers.get('traits') or []) or '—'}",
+                f"- **Ideal:** {_cell(pers.get('ideal')) or '—'}",
+                f"- **Bond:** {_cell(pers.get('bond')) or '—'}",
+                f"- **Flaw:** {_cell(pers.get('flaw')) or '—'}"]
     out += ["", "## Campaign History", "- **Origin campaign:** — (creato dal web)", "- **Previous campaigns:** —", "",
             "## Ability Scores",
             "| STR | DEX | CON | INT | WIS | CHA |", "|-----|-----|-----|-----|-----|-----|",
@@ -602,7 +803,14 @@ def render(sheet: dict, player: str = "", today: Optional[str] = None) -> str:
     eq = s["equipment"]
     out += ["", "## Equipment & Inventory", "**Weapons:**"] + [f"- {x}" for x in _strs(eq.get("weapons")) or ["—"]]
     out += ["", "**Armour:**"] + [f"- {x}" for x in _strs(eq.get("armour")) or ["—"]]
-    out += ["", "**Adventuring Gear:**"] + [f"- {x}" for x in _strs(eq.get("gear")) or ["—"]]
+    gear = _strs(eq.get("gear"))
+    if s.get("pack"):
+        # The pack once, with what is inside it: a line Claude wrote for it would count twice.
+        gear = [x for x in gear if not re.match(r"(?i)\s*(dotazione|zaino da|pacchetto)\b", x)]
+        gear.insert(0, f"{PACKS[s['pack']][0]} ({PACKS[s['pack']][1]})")
+    if s.get("trinket"):
+        gear.append(f"Oggetto insolito: {s['trinket']}")
+    out += ["", "**Adventuring Gear:**"] + [f"- {x}" for x in gear or ["—"]]
     out += ["", f"**Currency:** {s['gold']}gp 0sp 0cp", "", "## Backstory & Notes", f"- {s['backstory'] or '—'}", ""]
     return "\n".join(out)
 

@@ -32,7 +32,12 @@ def _load(path: pathlib.Path, name: str):
 def _sheet(**over):
     d = {
         "name": "Trytyr", "race": "Dragonide (drago nero)", "class_key": "rogue", "subclass": "",
-        "background": "Criminale", "alignment": "", "ability_method": "standard",
+        "background": "Criminale", "alignment": "Caotico neutrale", "ability_method": "standard",
+        "personality": {"traits": ["Ho sempre un piano.", "Non mi fido di nessuno."], "ideal": "Libertà",
+                        "bond": "Devo un debito al mio vecchio capobanda", "flaw": "Non resisto a una borsa piena"},
+        "appearance": {"sex": "maschio", "age": "24", "height": "1,90 m", "weight": "100 kg", "eyes": "gialli",
+                       "hair": "nessuno", "skin": "scaglie nere", "marks": ""},
+        "equipment_choice": "kit", "pack": "burglar", "trinket": "un dente di drago forato", "lifestyle": "Modesto",
         "ability_base": {"str": 10, "dex": 15, "con": 14, "int": 8, "wis": 12, "cha": 13},
         "ability_bonus": {"str": 2, "dex": 0, "con": 0, "int": 0, "wis": 0, "cha": 1},
         "skills": ["Stealth", "Perception", "Deception", "Acrobatics"],
@@ -108,6 +113,68 @@ class CharCreateTests(unittest.TestCase):
             sheet, problems = self.cc.validate(data, [])
             self.assertIsNone(sheet, why)
             self.assertTrue(problems, why)
+
+    def test_every_manual_choice_is_the_players(self):
+        self.assertEqual(self.cc.missing_choices(_sheet()), [])
+        gaps = {
+            "allineamento": _sheet(alignment=""),
+            "tratti": _sheet(personality={"traits": [], "ideal": "x", "bond": "x", "flaw": "x"}),
+            "difetto": _sheet(personality={"traits": ["a", "b"], "ideal": "x", "bond": "x", "flaw": ""}),
+            "aspetto": _sheet(appearance={"age": "24"}),
+            "dotazione": _sheet(pack=""),
+            "kit": _sheet(equipment_choice=""),
+            "insolito": _sheet(trinket=""),
+            "stile di vita": _sheet(lifestyle="lussuoso"),
+        }
+        for word, data in gaps.items():
+            missing = self.cc.missing_choices(data)
+            self.assertTrue(any(word in m for m in missing), (word, missing))
+        # Only the packs the class allows: a rogue cannot start with the priest's.
+        self.assertTrue(self.cc.missing_choices(_sheet(pack="priest")))
+        self.assertEqual(self.cc.missing_choices(_sheet(alignment="chaotic neutral", lifestyle="modest")), [])
+
+    def test_starting_gold_is_rolled_by_the_server(self):
+        data = _sheet(equipment_choice="gold", pack="explorer", gold=30)
+        self.assertTrue(any("TIRA ORO" in m for m in self.cc.missing_choices(data, [])))
+        rolls = [{"class": "rogue", "dice": [3, 3, 2, 2], "gp": 100}]
+        self.assertEqual(self.cc.missing_choices(data, rolls), [])
+        sheet, p = self.cc.validate(data, [], rolls)
+        self.assertEqual(p, [])
+        sheet, p = self.cc.validate(dict(data, gold=150), [], rolls)
+        self.assertIsNone(sheet)
+        for _ in range(20):
+            r = self.cc.roll_gold("monk")                  # 5d4, not times ten
+            self.assertTrue(5 <= r["gp"] <= 20)
+
+    def test_missing_choices_go_back_to_the_player(self):
+        conv = self.cc.new_conv("1.2.3.4")
+        replies = iter([f"Ecco!<scheda>{json.dumps(_sheet(alignment=''))}</scheda>",
+                        "Prima una domanda: che allineamento ha? 1. **Legale buono** …"])
+        out = self.cc.handle_message(conv, "confermo", ask=lambda c: next(replies))
+        self.assertFalse(out["ready"])
+        self.assertIn("allineamento", out["reply"])
+        note = [m for m in conv["history"] if m["role"] == "system"][-1]["text"]
+        self.assertIn("fagli ora", note)
+        self.assertIn("allineamento", note)
+
+        replies = iter(["Tiro le monete.\n[[TIRA ORO rogue]]"])
+        out = self.cc.handle_message(conv, "monete", ask=lambda c: next(replies))
+        self.assertIn("Ricchezza iniziale", out["dice"])
+        self.assertNotIn("TIRA ORO", out["reply"])
+        self.assertEqual(conv["gold_rolls"][0]["class"], "rogue")
+
+    def test_sheet_has_personality_pack_and_lifestyle(self):
+        sheet, _ = self.cc.validate(_sheet(equipment={"weapons": [], "armour": [],
+                                                      "gear": ["Dotazione da scassinatore", "Arnesi da scasso"]}), [])
+        md = self.cc.render(sheet)
+        self.assertIn("**Alignment:** Caotico neutrale", md)
+        self.assertIn("## Personality", md)
+        self.assertIn("- **Flaw:** Non resisto a una borsa piena", md)
+        self.assertIn("**Appearance:** sesso maschio; età 24", md)
+        self.assertIn("**Lifestyle:** Modesto (1 mo al giorno)", md)
+        self.assertEqual(md.count("Dotazione da scassinatore"), 1)
+        self.assertIn("- Dotazione da scassinatore (zaino, sacchetto con 1.000 biglie", md)
+        self.assertIn("- Oggetto insolito: un dente di drago forato", md)
 
     def test_rolled_scores_must_match_a_server_roll(self):
         # Same shape as conv["rolls"]: one entry per [[TIRA]], three series each.

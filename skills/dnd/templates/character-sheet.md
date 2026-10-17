@@ -4,6 +4,8 @@
 ## Identity
 - **Race:** | **Class:** | **Level:** | **Background:**
 - **Alignment:** | **XP:** / <next level threshold>
+- **Appearance:** sex …; age …; height …; weight …; eyes …; hair …; skin …; distinguishing marks …
+- **Lifestyle:** <Wretched / Squalid / Poor / Modest / Comfortable / Wealthy / Aristocratic> (<price> a day)
 - **Image look:** <English, ≤ 15 words — how the character looks in pictures; reused verbatim in every image prompt>
 
 ## Character Pillar
@@ -12,6 +14,12 @@
 - **Active hooks:** <how the DM is currently using this pillar in play — update each session>
 
 *(Leave blank if player skipped — do not invent one.)*
+
+## Personality
+- **Personality traits:** <two>
+- **Ideal:**
+- **Bond:**
+- **Flaw:**
 
 ## Campaign History
 - **Origin campaign:** <campaign name this character was created in>
@@ -90,7 +98,8 @@
 -
 
 **Adventuring Gear:**
--
+- <pack> (<its contents>)
+- Trinket: <the free trinket>
 
 **Currency:** 0gp 0sp 0cp
 
