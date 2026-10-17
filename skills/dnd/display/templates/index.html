@@ -14947,10 +14947,17 @@ function _shopCoinText(coins) {
   const parts = ['pp', 'gp', 'ep', 'sp', 'cp'].filter(u => coins && coins[u]).map(u => coins[u] + u);
   return parts.join(' ') || '0gp';
 }
-// The DM opens a shop; every screen can read the price list. A browser bound
-// to a character (PIN login, or the phone view's ?char=) also sees that
+// The DM opens a shop for the characters inside it (all of them when the shop
+// lists no buyers); a character elsewhere never sees it. A browser bound to a
+// character (PIN login, or the phone view's ?char=) also sees that
 // character's purse and can buy: two taps (Buy, then Confirm), and the server
 // takes the coins and adds the item to the sheet before it answers.
+function _shopIsFor(shop, me) {
+  if (!shop) return false;
+  const buyers = shop.buyers || [];
+  const key = n => String(n || '').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+  return !me || !buyers.length || buyers.some(b => key(b) === key(me));
+}
 (function _initShop() {
   const q = new URLSearchParams(location.search);
   const me = (window._LOGIN_CHAR || q.get('char') || q.get('character') || '').trim();
@@ -14964,7 +14971,9 @@ function _shopCoinText(coins) {
   function render() {
     if (!shop) return;
     document.getElementById('shop-name').textContent = shop.name;
-    document.getElementById('shop-sub').textContent = [shop.keeper, shop.note].filter(Boolean).join(' — ');
+    const forWhom = !me && (shop.buyers || []).length
+      ? _t('shop.for', { names: shop.group || shop.buyers.join(', ') }, 'For: ' + (shop.group || shop.buyers.join(', '))) : '';
+    document.getElementById('shop-sub').textContent = [shop.keeper, shop.note, forWhom].filter(Boolean).join(' — ');
     const purseEl = document.getElementById('shop-purse');
     purseEl.textContent = !me ? _t('shop.hint.phone', null, 'Each player buys from their own phone.')
       : purse ? _t('shop.purse', { coins: coinText(purse.coins) }, 'You have: ' + coinText(purse.coins))
@@ -15061,7 +15070,7 @@ function _shopCoinText(coins) {
 
   window._onShop = (payload) => {
     if ('shop' in payload) {
-      shop = payload.shop;
+      shop = _shopIsFor(payload.shop, me) ? payload.shop : null;
       setOpen(!!shop);
       if (shop && payload.shop_opened) {
         _showToast(_t('shop.opened', { name: shop.name }, 'Shop open: ' + shop.name), 5000);
@@ -15070,7 +15079,7 @@ function _shopCoinText(coins) {
       if (shop && modal.classList.contains('open')) { render(); if (!purse) refresh(); }
     }
     const sale = payload.shop_sale;
-    if (sale && !(me && sale.character.toLowerCase() === me.toLowerCase())) {
+    if (sale && shop && !(me && sale.character.toLowerCase() === me.toLowerCase())) {
       _showToast(_t('shop.sale', { name: sale.character, item: sale.item }, sale.character + ' buys ' + sale.item), 4000);
     }
   };

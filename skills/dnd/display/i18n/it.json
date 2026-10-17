@@ -478,6 +478,7 @@
   "shop.err.stock": "Non ce n'è più",
   "shop.err.closed": "La bottega ha chiuso",
   "shop.err.generic": "Acquisto non riuscito: chiedi al DM",
+  "shop.for": "Per: {names}",
   "coin.pp": "mp",
   "coin.gp": "mo",
   "coin.ep": "me",

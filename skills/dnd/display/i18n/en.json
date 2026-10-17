@@ -478,6 +478,7 @@
   "shop.err.stock": "There is none left",
   "shop.err.closed": "The shop has closed",
   "shop.err.generic": "Could not buy — ask the DM",
+  "shop.for": "For: {names}",
   "coin.pp": "pp",
   "coin.gp": "gp",
   "coin.ep": "ep",

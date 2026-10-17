@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""shop.py — open a shop on the players' screens.
+"""shop.py — open a shop on the screens of the characters who are in it.
 
-The price list appears on every screen. A player taps an item on their own
-phone to buy it: the display checks the purse on the character sheet, takes
-the coins, makes change, adds the item and lowers the stock — the same
+The price list appears on the screens of the characters inside the shop
+(--only "A, B", or --group for one group of a split party); without them it
+goes on every screen, which is right only when the whole party is there. A
+player taps an item on their own phone to buy it: the display checks the
+purse on the character sheet, takes the coins, makes change, adds the item
+and lowers the stock — the same
 arithmetic as scripts/inventory.py, with nothing left to remember. What was
 sold reaches the DM with the next check_input.py / autorun_wait.py as
 
@@ -16,6 +19,10 @@ sold reaches the DM with the next check_input.py / autorun_wait.py as
     Razioni (1 giorno) | 5sp
     [weapons] Spada corta | 10gp | 1
     [armour] Scudo | 10gp
+    DNDEND
+
+    python3 shop.py open "Fucina di Ugo" --only "Berta Tully" << 'DNDEND'   # only Berta went in
+    Chiodi da rocciatore (10) | 5cp
     DNDEND
 
     python3 shop.py show      # what is on sale now, with the stock left
@@ -195,6 +202,9 @@ def main() -> int:
     p.add_argument("--keeper", default="", help="who runs it")
     p.add_argument("--note", default="", help="a line under the name (mood, a house rule)")
     p.add_argument("--items", help="the price list; without it the list is read from stdin")
+    p.add_argument("--only", default="", help='only these characters are in the shop, "A, B"')
+    p.add_argument("--group", default="", help="only this group of a split party is in the shop")
+    p.add_argument("--campaign", default="", help="campaign the groups are read from (default: the active one)")
     sub.add_parser("close", help="close the shop")
     sub.add_parser("show", help="print what is on sale now")
     sub.add_parser("sales", help="print what was sold since last time, then clear it")
@@ -223,11 +233,22 @@ def main() -> int:
     except ValueError as e:
         print(f"shop: {e}. Nothing was opened.", file=sys.stderr)
         return 1
-    status, body = _request("/shop", {"name": args.name, "keeper": args.keeper, "note": args.note, "items": items})
+    buyers, label = [], ""
+    if args.only or args.group:
+        try:
+            import split
+            buyers, label = split.audience(split._campaign(args.campaign), args.group, args.only)
+        except Exception as e:
+            print(f"shop: {e}. Nothing was opened.", file=sys.stderr)
+            return 1
+    status, body = _request("/shop", {"name": args.name, "keeper": args.keeper, "note": args.note, "items": items,
+                                      "buyers": buyers, "group": label})
     if status != 200 or not isinstance(body, dict):
         return _fail(status, body, "the shop was not opened")
     _print_shop(body.get("shop"))
-    print("→ open on every screen; players buy from their own phone")
+    who = (body.get("shop") or {}).get("buyers") or []
+    print(f"→ open for {', '.join(who)} only; they buy from their own phone" if who
+          else "→ open on every screen (the whole party is in the shop); players buy from their own phone")
     return 0
 
 

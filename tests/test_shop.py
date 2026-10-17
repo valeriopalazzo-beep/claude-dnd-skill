@@ -202,6 +202,41 @@ class ShopTests(unittest.TestCase):
         self.assertEqual(resp[1], 409, "Mira has 4sp: she cannot pay 5sp, and Aldric's purse is not hers")
         self.assertIn("**Currency:** 15gp 0sp 6cp", self._sheet("Aldric"))
 
+    def test_only_who_is_inside_sees_the_shop_and_buys(self):
+        r = self._open(buyers=["aldric"], group="")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.get_json()["shop"]["buyers"], ["Aldric"])      # the party's spelling
+        self.assertIsNotNone(self.client.get("/shop?character=Aldric").get_json()["shop"])
+        self.assertIsNone(self.client.get("/shop?character=Mira").get_json()["shop"])
+        self.assertIsNotNone(self.client.get("/shop").get_json()["shop"], "the DM's screen sees it")
+        r = self._buy("Mira", "i4")
+        self.assertEqual((r.status_code, r.get_json()["code"]), (403, "away"))
+        self.assertIn("**Currency:** 0gp 4sp 0cp", self._sheet("Mira"))
+        self.assertEqual(self._buy("Aldric", "i4").status_code, 200)
+        self.assertEqual(self._open(buyers=["Fantasma"]).status_code, 400)
+
+    def test_the_page_hides_a_shop_meant_for_others(self):
+        html = (DISPLAY / "templates" / "index.html").read_text(encoding="utf-8")
+        self.assertIn("function _shopIsFor(shop, me)", html)
+        self.assertIn("shop = _shopIsFor(payload.shop, me) ? payload.shop : null;", html)
+
+    def test_the_cli_names_who_is_inside(self):
+        import shop as cli
+        import split
+        sent = {}
+        orig = (cli._request, split.audience, split._campaign)
+        cli._request = lambda path, body=None: (sent.setdefault("body", body), (200, {"shop": dict(body, buyers=body["buyers"])}))[1]
+        split.audience = lambda camp, group, only: ([n.strip() for n in only.split(",")], "")
+        split._campaign = lambda c="": "test"
+        try:
+            argv = sys.argv
+            sys.argv = ["shop.py", "open", "Fucina", "--only", "Aldric", "--items", "Chiodi | 5cp"]
+            self.assertEqual(cli.main(), 0)
+        finally:
+            sys.argv = argv
+            cli._request, split.audience, split._campaign = orig
+        self.assertEqual(sent["body"]["buyers"], ["Aldric"])
+
     def test_only_the_dm_opens_and_closes(self):
         self.assertIn("shop_set", self.mod._DM_ENDPOINTS)
         self.assertNotIn("shop_buy", self.mod._DM_ENDPOINTS)

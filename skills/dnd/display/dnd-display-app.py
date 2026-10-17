@@ -2603,7 +2603,8 @@ def _known_pc_slugs(extra_campaign: str = "") -> set:
 
 
 # ─── Shop (shop.py) ──────────────────────────────────────────────────────────
-# The DM opens a shop with a price list; it shows on every screen. A player
+# The DM opens a shop with a price list; it shows on the screens of the
+# characters inside it ("buyers"; none listed = the whole table). A player
 # buys from their own phone and the purchase is applied here, at once, with
 # scripts/inventory.py: coins off the character sheet (with change), the item
 # on it, one less in stock. shop.py hands the DM what was sold.
@@ -2652,6 +2653,12 @@ def _open_shop_now() -> Optional[dict]:
     return _shop
 
 
+def _shop_for(shop: Optional[dict], character: str) -> bool:
+    """Whether this character is inside the shop (and so sees it and buys from it)."""
+    buyers = (shop or {}).get("buyers") or []
+    return not buyers or any(_sheet_key(b) == _sheet_key(character) for b in buyers)
+
+
 def _shop_purse(character: str) -> Optional[dict]:
     """Coins on the character's sheet, or None when there is no sheet to read."""
     if not character:
@@ -2678,6 +2685,8 @@ def shop_get():
         who = request.args.get("character", "").strip()[:50]
     with _shop_lock:
         shop = _open_shop_now()
+    if shop and who and not _shop_for(shop, who):
+        shop = None                              # not in the shop: nothing to see
     fund = None
     if shop and who:
         with _treasury_lock:
@@ -2733,8 +2742,19 @@ def shop_set():
             "note": " ".join(str(raw.get("note", "")).split())[:160],
             "section": section,
         })
+    with _stats_lock:
+        party = [str(p.get("name", "")) for p in _current_stats.get("players", []) if p.get("name")]
+    buyers = []
+    for n in (str(x).strip() for x in (data.get("buyers") or [])):
+        hit = next((p for p in party if _sheet_key(p) == _sheet_key(n)), None) if n else None
+        if n and not hit:
+            return jsonify({"error": f"not at the table: {n}"}), 400
+        if hit and hit not in buyers:
+            buyers.append(hit)
     shop = {
         "name": name,
+        "buyers": buyers,
+        "group": " ".join(str(data.get("group", "")).split())[:60],
         "keeper": " ".join(str(data.get("keeper", "")).split())[:60],
         "note": " ".join(str(data.get("note", "")).split())[:200],
         "campaign": _active_campaign(),
@@ -2777,6 +2797,8 @@ def shop_buy():
         shop = _open_shop_now()
         if shop is None:
             return jsonify({"error": "the shop is closed", "code": "closed"}), 409
+        if not _shop_for(shop, character):
+            return jsonify({"error": "not in the shop", "code": "away"}), 403
         item = next((it for it in shop["items"] if it["id"] == str(data.get("item", ""))), None)
         if item is None:
             return jsonify({"error": "the shop does not sell that", "code": "item"}), 404

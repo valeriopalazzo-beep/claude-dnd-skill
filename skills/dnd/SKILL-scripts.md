@@ -654,10 +654,16 @@ Razioni (1 giorno) | 5sp
 [armour] Scudo | 10gp
 DNDEND
 
+# Only who is inside sees it (Aerendyl and Finocchio stayed at the inn):
+python3 ${CLAUDE_SKILL_DIR}/display/shop.py open "Fucina di Ugo" --only "Berta Tully" << 'DNDEND'
+Chiodi da rocciatore (10) | 5cp
+DNDEND
+
 python3 ${CLAUDE_SKILL_DIR}/display/shop.py show     # what is on sale now, with the stock left
 python3 ${CLAUDE_SKILL_DIR}/display/shop.py close    # when the party leaves
 ```
 
+- **Only the characters inside see it:** `--only "A, B"` or `--group <name>` (split party). The others' screens show nothing and the server refuses their purchases. No `--only`/`--group` = every screen: right only when the whole party is in the shop.
 - Prices in `pp gp ep sp cp` (Italian `mp mo me ma mr` too). No stock = it never runs out. `[weapons]` / `[armour]` in front of a name files the item in that list of the buyer's sheet.
 - Use SRD prices as the baseline and move them for the place (frontier markup, a grateful merchant's discount). To change a price or restock, `open` the shop again with the new list — it replaces the old one.
 - **What was sold** reaches you with the next `check_input.py` / `autorun_wait.py` as `[[SHOP: Aldric bought Corda di canapa (15 m) for 1gp at "Emporio di Brakka" — already paid and added to the sheet …]]`. It is information, not an action: **do not charge or add it again**; mention it in the narration only if it matters.
