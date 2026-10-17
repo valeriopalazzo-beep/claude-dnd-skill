@@ -168,12 +168,14 @@ class CommandTests(unittest.TestCase):
             os.environ[var] = value
             self.addCleanup(lambda var=var, old=old: os.environ.pop(var, None) if old is None else os.environ.__setitem__(var, old))
         self.events = []
-        saved = (tv._announce, tv._story, tv._ask)
+        saved = (tv._announce, tv._story, tv._ask, tv._active_campaign)
         tv._announce, tv._story = self.events.append, lambda line: self.events.append(line)
+        tv._active_campaign = lambda: "prova"      # media keeps the first runtime folder it sees
         self.rolls = []
         tv._ask = lambda name, mod, adv, label, dc, timeout: (self.rolls.append((name, mod, adv, dc)) or self.next_total)
         self.next_total = 20
-        self.addCleanup(lambda: (setattr(tv, "_announce", saved[0]), setattr(tv, "_story", saved[1]), setattr(tv, "_ask", saved[2])))
+        self.addCleanup(lambda: (setattr(tv, "_announce", saved[0]), setattr(tv, "_story", saved[1]), setattr(tv, "_ask", saved[2]),
+                                 setattr(tv, "_active_campaign", saved[3])))
 
     def run_tv(self, *argv):
         out, err = io.StringIO(), io.StringIO()
