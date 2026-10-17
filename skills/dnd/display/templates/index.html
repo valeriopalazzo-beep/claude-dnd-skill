@@ -11734,7 +11734,7 @@ connect();
     describe(here || null);
     // A phone shows the map larger than the screen: start centred on the party.
     img.addEventListener('load', () => {
-      const p = here || { px: 50, py: 50 };
+      const p = here || region.lost_at || { px: 50, py: 50 };
       scroll.scrollLeft = p.px / 100 * mapEl.offsetWidth - scroll.clientWidth / 2;
       scroll.scrollTop = p.py / 100 * mapEl.offsetHeight - scroll.clientHeight / 2;
     });

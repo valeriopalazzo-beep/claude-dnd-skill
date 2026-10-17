@@ -145,6 +145,7 @@ class RegionTests(unittest.TestCase):
         view = rm.public_view(data)
         self.assertEqual((view["party"], view["lost"]), ("", True))
         self.assertTrue(all(p["days"] is None and not p["here"] for p in view["places"]))
+        self.assertTrue(0 < view["lost_at"]["px"] < 100 and 0 < view["lost_at"]["py"] < 100, "the phone centres on it")
         self.assertIn(">?</text>", rm.render(data))
         with self.assertRaises(rm.RegionError):
             rm.travel(data, "Carbonaia")

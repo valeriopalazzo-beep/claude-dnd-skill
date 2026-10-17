@@ -426,6 +426,7 @@ def public_view(data: dict) -> dict:
     lost = bool((data.get("lost") or {}).get("known"))
     reach = distances(data, data["party"]) if data.get("party") and not lost else {}
     tf = _transform(data)
+    spot = _lost_spot(data, {_key(p["name"]): p for p in data["places"]}, tf, _layout(data)) if lost else None
     places = []
     for p in data["places"]:
         X, Y = _xy(p, tf)
@@ -436,7 +437,8 @@ def public_view(data: dict) -> dict:
                        "dist": None if d is None else fmt_dist(data, d[0]),
                        "here": not lost and _key(p["name"]) == _key(data.get("party", ""))})
     return {"title": data.get("title", ""), "legend": data.get("legend", ""), "file": data.get("file", ""),
-            "party": "" if lost else data.get("party", ""), "unit": unit(data), "places": places, "lost": lost}
+            "party": "" if lost else data.get("party", ""), "unit": unit(data), "places": places, "lost": lost,
+            "lost_at": {"px": round(spot[0] / W * 100, 2), "py": round(spot[1] / H * 100, 2)} if spot else None}
 
 
 # ─── The drawing ──────────────────────────────────────────────────────────────
@@ -587,7 +589,7 @@ def render(data: dict) -> str:
     by_key = {_key(p["name"]): p for p in data["places"]}
     tf = _transform(data)
     labels = _layout(data)
-    lost_at = _lost_spot(data, by_key, tf)
+    lost_at = _lost_spot(data, by_key, tf, labels)
     busy = [spot[3] for spot in labels.values()]
     for p in data["places"]:
         X, Y = _xy(p, tf)
@@ -696,20 +698,43 @@ def render(data: dict) -> str:
     return "".join(o)
 
 
-def _lost_spot(data: dict, by_key: dict, tf: tuple):
-    """Where a party that knows it is lost is drawn: off the roads, a little way from the place it left."""
+def _lost_spot(data: dict, by_key: dict, tf: tuple, labels: dict):
+    """Where a party that knows it is lost is drawn: a little way from the place it left, on clear paper.
+
+    Of a ring of spots around that place, the one that covers the fewest names, icons and roads."""
     lost = data.get("lost") or {}
     if not lost.get("known"):
         return None
     near = by_key.get(_key(lost.get("near") or lost.get("from") or data.get("party", "")))
-    if near:
-        X, Y = _xy(near, tf)
-    else:
-        X, Y = W / 2, H / 2
-    seed = int(hashlib.sha256((near or {}).get("name", "?").encode("utf-8")).hexdigest()[:6], 16)
-    angle = (seed % 360) * math.pi / 180
-    x, y = X + 120 * math.cos(angle), Y + 120 * math.sin(angle)
-    return (min(max(x, PAD_X), W - PAD_X), min(max(y, PAD_TOP), H - PAD_BOTTOM))
+    X, Y = _xy(near, tf) if near else (W / 2, H / 2)
+    busy = [spot[3] for spot in labels.values()]
+    for p in data["places"]:
+        px, py = _xy(p, tf)
+        busy.append((px - 30, py - 32, px + 30, py + 20))
+    for r in data["roads"]:                  # a road is a row of small boxes along its curve
+        a, b = by_key.get(_key(r["from"])), by_key.get(_key(r["to"]))
+        if a and b:
+            (x1, y1), (x2, y2) = _xy(a, tf), _xy(b, tf)
+            _path, (cx, cy) = _curve((x1, y1), (x2, y2), _key(r["from"]) + "|" + _key(r["to"]))
+            for i in range(1, 12):
+                t = i / 12
+                mx = (1 - t) ** 2 * x1 + 2 * t * (1 - t) * cx + t * t * x2
+                my = (1 - t) ** 2 * y1 + 2 * t * (1 - t) * cy + t * t * y2
+                busy.append((mx - 18, my - 18, mx + 18, my + 18))
+    best, best_cost = None, None
+    for radius in (130, 170, 210):
+        for step in range(16):
+            angle = step * math.pi / 8
+            x, y = X + radius * math.cos(angle), Y + radius * math.sin(angle)
+            if not (PAD_X + 45 <= x <= W - PAD_X - 45 and PAD_TOP + 45 <= y <= H - PAD_BOTTOM - 45):
+                continue
+            box = (x - 45, y - 45, x + 45, y + 45)
+            cost = sum(_overlap(box, other) for other in busy)
+            if best_cost is None or cost < best_cost - 1e-9:
+                best, best_cost = (x, y), cost
+        if best_cost == 0:
+            break
+    return best or (min(max(X, PAD_X + 45), W - PAD_X - 45), min(max(Y + 130, PAD_TOP + 45), H - PAD_BOTTOM - 45))
 
 
 def write_image(data: dict, campaign: str = "") -> str:
