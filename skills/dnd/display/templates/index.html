@@ -1903,6 +1903,34 @@
   :root[data-skin="lanterna"] .sb-companions{ gap:6px; margin-top:8px; }
   :root[data-skin="lanterna"] .sb-comp-chip{ font-family:'Alegreya Sans',sans-serif; font-size:14.5px; padding:3px 11px;
     background:var(--ln-surface-2, rgba(255,255,255,.05)); border-color:var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #veh-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
+    align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  #veh-modal.open{ display:flex; }
+  #veh-panel{ width:min(520px, 100%); margin:auto 0; color:var(--ln-text, #ECE4D2); font-family:'Alegreya Sans','Syne',sans-serif; }
+  #veh-head{ display:flex; align-items:center; gap:10px; margin-bottom:12px; color:#ECE4D2; }
+  #veh-head h2{ flex:1; min-width:0; margin:0; font-size:22px; line-height:1.15; }
+  #veh-head button{ flex:none; width:40px; height:40px; border-radius:999px; cursor:pointer; font-size:16px;
+    background:rgba(0,0,0,.35); color:inherit; border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #veh-back[hidden]{ display:none; }
+  #veh-list{ display:flex; flex-direction:column; gap:8px; }
+  .veh-item{ display:flex; align-items:center; gap:12px; width:100%; padding:12px 15px; text-align:left; cursor:pointer;
+    border-radius:12px; font:inherit; font-size:18px; font-weight:700; color:inherit;
+    background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
+  .veh-item.aboard{ border-color:var(--ln-accent, #f2b544); }
+  .veh-item span{ flex:1; min-width:0; }
+  .veh-item small{ display:block; font-size:14px; font-weight:500; color:var(--ln-text-muted, #b9ab92); }
+  .veh-item b{ flex:none; font-size:15px; font-variant-numeric:tabular-nums; }
+  #veh-modal .veh-empty{ margin:30px 8px; text-align:center; font-size:16px; color:#b9ab92; }
+  #veh-sheet{ padding:16px 18px; border-radius:12px; font-size:16.5px; line-height:1.45;
+    background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
+  #veh-sheet:empty{ display:none; }
+  #veh-sheet .veh-meta{ margin:0 0 10px; font-size:14.5px; font-weight:700; color:var(--ln-accent, #f2b544); }
+  #veh-sheet .veh-hp{ display:flex; justify-content:space-between; font-weight:800; font-size:18px; }
+  #veh-sheet .veh-bar{ height:9px; margin:5px 0 12px; border-radius:999px; overflow:hidden; background:rgba(255,255,255,.12); }
+  #veh-sheet .veh-bar div{ height:100%; border-radius:999px; }
+  #veh-sheet p{ margin:0 0 6px; }
+  #veh-sheet h4{ margin:12px 0 4px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--ln-text-muted, #cdbfa6); }
+  #veh-sheet .veh-note{ font-style:italic; color:var(--ln-text-muted, #cdbfa6); }
   #comp-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
     align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
   #comp-modal.open{ display:flex; }
@@ -5555,6 +5583,7 @@
     <button class="ph-set-opt" id="ph-attack-opt" type="button" hidden><span data-i18n="atk.title">Attacks</span><strong>⚔</strong></button>
     <button class="ph-set-opt" id="ph-spells-opt" type="button" hidden><span data-i18n="spell.title">Spellbook</span><strong>✨</strong></button>
     <button class="ph-set-opt" id="ph-comp-opt" type="button" hidden><span data-i18n="comp.title">Companions</span><strong>🐾</strong></button>
+    <button class="ph-set-opt" id="ph-veh-opt" type="button" hidden><span data-i18n="veh.title">Vehicles</span><strong>⚓</strong></button>
     <button class="ph-set-opt" id="ph-beast-opt" type="button" hidden><span data-i18n="beast.title">Bestiary</span><strong>📖</strong></button>
     <button class="ph-set-opt" id="ph-people-opt" type="button" hidden><span data-i18n="people.title">People met</span><strong>👤</strong></button>
     <button class="ph-set-opt" id="ph-clock-opt" type="button" hidden><span data-i18n="clock.title">Clocks</span><strong>◔</strong></button>
@@ -5976,6 +6005,19 @@
   </div>
 </div>
 
+<!-- Vehicles: carts, barges and ships the party travels in, from vehicles.py -->
+<div id="veh-modal">
+  <div id="veh-panel" role="dialog" aria-labelledby="veh-title">
+    <div id="veh-head">
+      <button id="veh-back" type="button" title="All vehicles" aria-label="All vehicles" data-i18n-title="veh.all" data-i18n-aria="veh.all" hidden>‹</button>
+      <h2 id="veh-title" data-i18n="veh.title">Vehicles</h2>
+      <button id="veh-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
+    </div>
+    <div id="veh-list"></div>
+    <div id="veh-sheet"></div>
+  </div>
+</div>
+
 <!-- Puzzle: a lock, a riddle or a cipher the players try from their own screens (puzzle.py) -->
 <div id="puzzle-modal">
   <div id="puzzle-panel" role="dialog" aria-labelledby="puzzle-title">
@@ -6059,6 +6101,7 @@
   <symbol id="ln-i-vote" viewBox="0 0 24 24"><path d="M4 14h16v7H4z"/><path d="M8 14V6l4-3 4 3v8"/><path d="M10 9l1.5 1.5L14 8"/></symbol>
   <symbol id="ln-i-sword" viewBox="0 0 24 24"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/></symbol>
   <symbol id="ln-i-rest" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M6 21l6-9 6 9"/><path d="M12 12V9"/><path d="M15.5 4.5a3.5 3.5 0 1 1-4.2 4.2 2.8 2.8 0 0 0 4.2-4.2z"/></symbol>
+  <symbol id="ln-i-boat" viewBox="0 0 24 24"><path d="M12 3v11M12 4l6 8h-6M4 15h16l-2.5 4.5a2 2 0 0 1-1.8 1H8.3a2 2 0 0 1-1.8-1z"/></symbol>
   <symbol id="ln-i-paw" viewBox="0 0 24 24"><circle cx="6.5" cy="10" r="2"/><circle cx="10" cy="5.5" r="2"/><circle cx="14" cy="5.5" r="2"/><circle cx="17.5" cy="10" r="2"/><path d="M12 12c-3 0-5.5 2.6-5.5 5.2 0 1.7 1.3 2.8 2.9 2.8 1 0 1.7-.5 2.6-.5s1.6.5 2.6.5c1.6 0 2.9-1.1 2.9-2.8C17.500 14.6 15 12 12 12z"/></symbol>
   <symbol id="ln-i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M12 7v6m0 0-2.5-2.5M12 13l2.5-2.5"/></symbol>
   <symbol id="ln-i-puzzle" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="16" r="1.3"/></symbol>
@@ -6100,6 +6143,7 @@
       <button class="ln-item" type="button" id="ln-attack" title="Attacks" data-i18n-title="atk.title" hidden><svg class="ln-i"><use href="#ln-i-sword"/></svg><span class="ln-lbl" data-i18n="atk.title">Attacks</span></button>
       <button class="ln-item" type="button" id="ln-spells" title="Spellbook" data-i18n-title="spell.title" hidden><svg class="ln-i"><use href="#ln-i-spell"/></svg><span class="ln-lbl" data-i18n="spell.title">Spellbook</span></button>
       <button class="ln-item" type="button" id="ln-comp" title="Companions" data-i18n-title="comp.title" hidden><svg class="ln-i"><use href="#ln-i-paw"/></svg><span class="ln-lbl" data-i18n="comp.title">Companions</span></button>
+      <button class="ln-item" type="button" id="ln-veh" title="Vehicles" data-i18n-title="veh.title" hidden><svg class="ln-i"><use href="#ln-i-boat"/></svg><span class="ln-lbl" data-i18n="veh.title">Vehicles</span></button>
     </div>
     <div class="ln-group">
       <div class="ln-h" data-i18n="ln.group.world">World</div>
@@ -6207,6 +6251,7 @@
         <button class="ln-item" type="button" id="ln-attack-more" data-ln-proxy="ln-attack" hidden><svg class="ln-i"><use href="#ln-i-sword"/></svg><span class="ln-lbl" data-i18n="atk.title">Attacks</span></button>
         <button class="ln-item" type="button" id="ln-spells-more" data-ln-proxy="ln-spells" hidden><svg class="ln-i"><use href="#ln-i-spell"/></svg><span class="ln-lbl" data-i18n="spell.title">Spellbook</span></button>
         <button class="ln-item" type="button" id="ln-comp-more" data-ln-proxy="ln-comp" hidden><svg class="ln-i"><use href="#ln-i-paw"/></svg><span class="ln-lbl" data-i18n="comp.title">Companions</span></button>
+        <button class="ln-item" type="button" id="ln-veh-more" data-ln-proxy="ln-veh" hidden><svg class="ln-i"><use href="#ln-i-boat"/></svg><span class="ln-lbl" data-i18n="veh.title">Vehicles</span></button>
         <button class="ln-item" type="button" id="ln-book-more" data-ln-proxy="ln-book" hidden><svg class="ln-i"><use href="#ln-i-book"/></svg><span class="ln-lbl" data-i18n="book.title">Campaign book</span></button>
         <button class="ln-item" type="button" id="ln-timeline-more" data-ln-proxy="ln-timeline" hidden><svg class="ln-i"><use href="#ln-i-timeline"/></svg><span class="ln-lbl" data-i18n="tl.title">Timeline</span></button>
         <button class="ln-item" type="button" id="ln-cal-more" data-ln-proxy="ln-cal" hidden><svg class="ln-i"><use href="#ln-i-calendar"/></svg><span class="ln-lbl" data-i18n="cal.title">Calendar</span></button>
@@ -11524,6 +11569,7 @@ function connect() {
     if (('puzzle' in payload || payload.puzzle_event) && typeof window._onPuzzle === 'function') window._onPuzzle('puzzle' in payload ? payload.puzzle : undefined, payload.puzzle_event);
     if (payload.book && typeof window._onBook === 'function') window._onBook(payload.book, true);
     if ((payload.companions || payload.companion_event) && typeof window._onCompanions === 'function') window._onCompanions(payload.companions, payload.companion_event);
+    if ((payload.vehicles || payload.vehicle_event) && typeof window._onVehicles === 'function') window._onVehicles(payload.vehicles, payload.vehicle_event);
     if ((payload.bestiary || payload.bestiary_event) && typeof window._onBestiary === 'function') window._onBestiary(payload.bestiary, payload.bestiary_event);
     if ((payload.people || payload.people_event) && typeof window._onPeople === 'function') window._onPeople(payload.people, payload.people_event);
     if ((payload.split || payload.split_event) && typeof window._onSplit === 'function') window._onSplit(payload.split, payload.split_event);
@@ -12743,6 +12789,109 @@ function _personRows(p) {
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   fetch('/people').then(r => r.ok ? r.json() : []).then(d => window._onPeople(d)).catch(() => {});
+})();
+
+// ── Vehicles (vehicles.py) ────────────────────────────────────────────
+// _vehicleLines turns a vehicle into the lines its sheet shows, in order.
+function _vehicleLines(v) {
+  v = v || {};
+  const num = n => String(n).replace('.', (window._LANG || 'en').startsWith('it') ? ',' : '.');
+  const out = [];
+  if (v.kmh !== null && v.kmh !== undefined) {
+    out.push(_t('veh.speed', { kmh: num(v.kmh), km: num(v.km_day), h: v.hours_day },
+                v.kmh + ' km/h · ' + v.km_day + ' km a day (' + v.hours_day + ' hours)'));
+  } else {
+    out.push(_t('veh.pace', null, "At the pace of the animals that pull it"));
+  }
+  if (v.aboard && v.current && v.current !== 'none') out.push(_t('veh.current.' + v.current, null, v.current));
+  if (v.ac) out.push(_t('veh.ac', { ac: v.ac }, 'AC ' + v.ac) + (v.threshold ? ' · ' + _t('veh.threshold', { n: v.threshold }, 'damage threshold ' + v.threshold) : ''));
+  if (v.needs_crew) out.push(_t('veh.crew', { n: v.crew, of: v.needs_crew }, 'Crew ' + v.crew + '/' + v.needs_crew)
+                            + (v.passengers ? ' · ' + _t('veh.passengers', { n: v.passengers }, v.passengers + ' passengers') : '')
+                            + (v.cargo_t ? ' · ' + _t('veh.hold', { t: num(v.cargo_t) }, 'hold ' + v.cargo_t + ' t') : ''));
+  if (v.team && v.team.length) {
+    out.push(_t('veh.team', { team: v.team.map(a => a.n + ' ' + _t('veh.animal.' + a.animal, null, a.animal)).join(', ') }, 'Pulled by …')
+             + (v.capacity_kg ? ' · ' + _t('veh.carries', { kg: num(v.capacity_kg) }, 'carries ' + v.capacity_kg + ' kg') : ''));
+  }
+  return out;
+}
+// ── end vehicle lines ──
+
+(function _initVehicles() {
+  const modal = document.getElementById('veh-modal');
+  if (!modal) return;
+  const list = document.getElementById('veh-list');
+  const sheet = document.getElementById('veh-sheet');
+  const back = document.getElementById('veh-back');
+  const title = document.getElementById('veh-title');
+  let vehicles = [], openId = '';
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+  const kindWord = v => _t('veh.kind.' + v.kind, null, v.kind);
+  const whose = v => v.owner ? _t('veh.owner', { name: v.owner }, v.owner + "'s") : _t('veh.party', null, "The party's");
+  const meta = v => [kindWord(v), whose(v), v.aboard ? '⚓ ' + _t('veh.aboard', null, 'Aboard') : ''].filter(Boolean).join(' · ');
+
+  function drawSheet(v) {
+    sheet.textContent = '';
+    sheet.appendChild(el('p', 'veh-meta', meta(v)));
+    if (v.hp) {
+      const cur = v.hp.current, max = v.hp.max || 1;
+      const hp = el('div', 'veh-hp');
+      hp.append(el('span', '', _t('stat.hp', null, 'HP')), el('span', '', cur + ' / ' + max));
+      const bar = el('div', 'veh-bar'), fill = el('div');
+      const pct = Math.max(0, Math.min(100, cur / max * 100));
+      fill.style.width = pct + '%';
+      fill.style.backgroundColor = _hpColor(pct);
+      bar.appendChild(fill);
+      sheet.append(hp, bar);
+    }
+    _vehicleLines(v).forEach(line => sheet.appendChild(el('p', '', line)));
+    if ((v.cargo || []).length) {
+      sheet.appendChild(el('h4', '', _t('veh.cargo', null, 'Cargo')));
+      v.cargo.forEach(c => sheet.appendChild(el('p', '', '· ' + c)));
+    }
+    if (v.note) sheet.appendChild(el('p', 'veh-note', v.note));
+  }
+
+  function render() {
+    const v = openId ? vehicles.find(x => x.id === openId) : null;
+    back.hidden = !v || vehicles.length < 2;
+    list.hidden = !!v;
+    list.textContent = '';
+    sheet.textContent = '';
+    if (v) { title.textContent = v.name; drawSheet(v); return; }
+    title.textContent = _t('veh.title', null, 'Vehicles');
+    if (!vehicles.length) { list.appendChild(el('p', 'veh-empty', _t('veh.empty', null, 'No vehicles.'))); return; }
+    vehicles.slice().sort((a, b) => (b.aboard ? 1 : 0) - (a.aboard ? 1 : 0)).forEach(x => {
+      const item = el('button', 'veh-item' + (x.aboard ? ' aboard' : ''));
+      item.type = 'button';
+      const text = el('span', '', x.name);
+      text.appendChild(el('small', '', meta(x)));
+      item.append(text, el('b', '', x.hp ? x.hp.current + '/' + x.hp.max : ''));
+      item.addEventListener('click', () => { openId = x.id; render(); });
+      list.appendChild(item);
+    });
+  }
+
+  function open(id) { openId = id || ''; modal.classList.add('open'); render(); }
+  const close = () => modal.classList.remove('open');
+
+  window._onVehicles = function (next, event) {
+    if (Array.isArray(next)) {
+      vehicles = next;
+      const has = vehicles.length > 0;
+      ['ln-veh', 'ln-veh-more', 'ph-veh-opt'].forEach(id => { const e = document.getElementById(id); if (e) e.hidden = !has; });
+      if (!has) close(); else if (modal.classList.contains('open')) render();
+    }
+    if (event && event.name) {
+      const icon = event.what === 'sunk' ? '🌊 ' : '⚓ ';
+      _showToast(icon + _t('veh.toast.' + event.what, { name: event.name }, event.name), event.what === 'sunk' ? 7000 : 4500);
+    }
+  };
+  ['ln-veh', 'ph-veh-opt'].forEach(id => { const e = document.getElementById(id); if (e) e.addEventListener('click', () => open('')); });
+  back.addEventListener('click', () => { openId = ''; render(); });
+  document.getElementById('veh-close').addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  fetch('/vehicles').then(r => r.ok ? r.json() : []).then(d => window._onVehicles(d)).catch(() => {});
 })();
 
 // ── Companions (companion.py) ─────────────────────────────────────────

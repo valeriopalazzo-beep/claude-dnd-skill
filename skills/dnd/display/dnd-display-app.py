@@ -547,6 +547,8 @@ _DM_ENDPOINTS = {
     "split_changed",
     # Companions: companion.py keeps them, everyone sees them.
     "companions_changed",
+    # Vehicles: vehicles.py keeps them, everyone sees them.
+    "vehicles_changed",
     # The campaign book: campaign_book.py makes it, everyone may download it.
     "book_changed",
     # A puzzle: the DM sets it, hints and closes it; trying it is the players'.
@@ -5056,6 +5058,40 @@ def companions_changed():
     event = data.get("event")
     if isinstance(event, dict) and event.get("name"):
         payload["companion_event"] = {k: event.get(k) for k in ("name", "what", "delta", "current", "max")}
+    _broadcast(payload)
+    return "", 204
+
+
+# ─── Vehicles (vehicles.py) ──────────────────────────────────────────────────
+# Carts, barges and ships the party travels in, kept by vehicles.py in
+# <campaign>/vehicles.json: every screen sees them, the one aboard on top.
+import vehicles as _vehicles
+
+
+def _public_vehicles() -> list:
+    camp = re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]
+    if not camp:
+        return []
+    try:
+        data = _vehicles.load(str(_find_campaign(camp) / "vehicles.json"))
+        return _vehicles.public_view(data, _vehicles._wind_strong(camp))
+    except Exception:
+        return []
+
+
+@app.route("/vehicles", methods=["GET"])
+def vehicles_get():
+    return jsonify(_public_vehicles()), 200
+
+
+@app.route("/vehicles", methods=["POST"])
+def vehicles_changed():
+    """vehicles.py changed one: send every screen the list, and what happened."""
+    data = request.get_json(silent=True) or {}
+    payload = {"vehicles": _public_vehicles()}
+    event = data.get("event")
+    if isinstance(event, dict) and event.get("name") and event.get("what") in ("new", "board", "leave", "hit", "sunk", "repair"):
+        payload["vehicle_event"] = {"name": str(event["name"])[:50], "what": event["what"]}
     _broadcast(payload)
     return "", 204
 

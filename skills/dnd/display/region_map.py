@@ -769,6 +769,41 @@ def _at_pace(data: dict, days: float, campaign: str = "") -> str:
             else f" ({fmt_days(d)} days at the {t['pace']} pace)")
 
 
+def _aboard(data: dict, route: list, days: float, campaign: str = "") -> str:
+    """The same road aboard the party's boat or ship (vehicles.py): its speed, the current and the wind counted.
+
+    '' on foot, or aboard a cart (it goes at the animals' pace)."""
+    try:
+        import vehicles
+        vd = vehicles.load(vehicles.data_path(campaign))
+        wind = vehicles._wind_strong(vehicles._campaign(campaign))
+        jr = vehicles.journey(vd, days, wind)
+        v = vehicles.find(vd, vd["aboard"]) if jr else None
+    except Exception:
+        return ""
+    if not jr or jr.get("drawn"):
+        return f" (aboard {jr['vehicle']}, at the animals' pace)" if jr else ""
+    if jr.get("stuck"):
+        return f" — aboard {jr['vehicle']} it cannot go against this current"
+    land = []
+    if vehicles.KINDS[v["kind"]].get("water"):
+        for a, b in zip(route, route[1:]):
+            r = next((r for r in data["roads"] if {_key(r["from"]), _key(r["to"])} == {_key(a), _key(b)}), None)
+            if r and r.get("kind") not in ("river", "sea"):
+                land.append(f"{a}–{b}")
+    hours = jr["hours"]
+    took = (f"{hours:.0f}" if hours >= 10 else f"{hours:.1f}".rstrip("0").rstrip(".")) + " hours"
+    if jr["hours_day"] < 24 and hours > jr["hours_day"]:
+        took += f" ({fmt_days(round(jr['days'] * 2) / 2 or 0.5)} days at {jr['hours_day']} h a day)"
+    out = f" — aboard {jr['vehicle']}: {took}" + "".join(f"; {w}" for w in jr.get("why") or [])
+    if land:
+        out += f" ⚠ by land, where the {v['kind']} does not go: {', '.join(land)}"
+    import math
+    when = (f"{max(1, round(hours))} hours" if jr["hours_day"] >= 24 or hours <= jr["hours_day"]
+            else f"{math.ceil(jr['days'])} days")
+    return out + f" [aboard: calendar.py advance {when}]"
+
+
 def _announce(data: dict, story: bool) -> None:
     """Tell the display the map changed; `story` also puts it in the narration feed."""
     try:
@@ -877,9 +912,11 @@ def main(argv: list | None = None) -> int:
             hours = max(1, int(round(days * HOURS_PER_DAY)))
             took = (f'{fmt_hours(days)} hours of travel', f'{hours} hours') if unit(data) == "hours" else \
                    (f'{fmt_days(days)} days of travel', f'{fmt_days(days).replace("½", ".5")} days')
-            message = (" → ".join(route) + f': {took[0]}{_at_pace(data, days, args.campaign)}. '
+            boat = _aboard(data, route, days, args.campaign)
+            message = (" → ".join(route) + f': {took[0]}' + (" on foot" if boat.startswith(" — aboard") else "")
+                       + f'{_at_pace(data, days, args.campaign)}{boat}. '
                        f'The calendar has NOT moved — when the journey is played: '
-                       f'calendar.py -c <campaign> advance {took[1]}')
+                       f'calendar.py -c <campaign> advance {took[1]}' + (" (on foot)" if boat.startswith(" — aboard") else ""))
         elif args.cmd == "mark":
             pl = mark(data, args.name, args.status)
             message = f'{pl["name"]}: {"visited" if pl["status"] == "visited" else "a rumor"}'

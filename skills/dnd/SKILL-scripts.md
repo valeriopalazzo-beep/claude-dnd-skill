@@ -894,6 +894,41 @@ python3 ${CLAUDE_SKILL_DIR}/display/travel.py stop
 
 ---
 
+## Vehicles — `display/vehicles.py`
+
+Carts, barges and ships (PHB 2014 pp. 155-157, DMG 2014 p. 119), kept in `<campaign>/vehicles.json`; every screen has a **Vehicles** panel (the one aboard on top, with its speed, hit points, crew and cargo).
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/display/vehicles.py kinds                                   # the books' table
+python3 ${CLAUDE_SKILL_DIR}/display/vehicles.py add "Chiatta di Bortolo" --kind keelboat --owner "Bortolo"
+python3 ${CLAUDE_SKILL_DIR}/display/vehicles.py add "Carro" --kind wagon --pulled-by "2 cavalli da tiro"
+python3 ${CLAUDE_SKILL_DIR}/display/vehicles.py board "Chiatta" --current down          # up | none; --headwind
+python3 ${CLAUDE_SKILL_DIR}/display/vehicles.py leave
+python3 ${CLAUDE_SKILL_DIR}/display/vehicles.py hit "Chiatta" 14
+python3 ${CLAUDE_SKILL_DIR}/display/vehicles.py repair "Chiatta" 6 --pay fund           # or --pay "Lyra"
+python3 ${CLAUDE_SKILL_DIR}/display/vehicles.py cargo "Chiatta" add "10 barili di vino"  # cargo … remove "barili"
+python3 ${CLAUDE_SKILL_DIR}/display/vehicles.py set "Chiatta" --crew 1 --note "fa acqua a poppa"
+python3 ${CLAUDE_SKILL_DIR}/display/vehicles.py list | show "Chiatta" | remove "Carro"
+```
+
+| Kind | | km/h | Crew | Passengers | Hold | AC | HP | Threshold |
+|---|---|---|---|---|---|---|---|---|
+| `rowboat` | barca a remi | 2.25 | 1 | 3 | — | 11 | 50 | — |
+| `keelboat` | barcone | 1.5 | 1 | 6 | 0.5 t | 15 | 100 | 10 |
+| `longship` | nave lunga | 4.5 | 40 | 150 | 10 t | 15 | 300 | 15 |
+| `sailing-ship` | nave a vela | 3 | 20 | 20 | 100 t | 15 | 300 | 15 |
+| `warship` | nave da guerra | 3.75 | 60 | 60 | 200 t | 15 | 500 | 20 |
+| `galley` | galea | 6 | 80 | — | 150 t | 15 | 500 | 20 |
+| `airship` | aeronave | 12 | 10 | 20 | 1 t | 13 | 300 | — |
+
+`cart` (carretto), `wagon` (carro), `carriage` (carrozza), `chariot` (biga), `sled` (slitta) have no speed of their own: they go at the pace of the animals pulling them, which carry five times their capacity, the vehicle's weight included (`--pulled-by "2 cavalli da tiro, 1 mulo"`).
+
+- **Aboard** (`board`), `region_map.py travel` counts the route at the vessel's speed after the walking time: `— aboard Chiatta: 6 hours; downstream: +4.5 km/h [aboard: calendar.py advance 6 hours]` — advance the calendar by that, not by the walking days. A sailing vessel with its full crew goes day and night in shifts; one short of crew, or a rowed boat, 8 hours a day. On a river `--current down` adds 4.5 km/h, `up` takes it off (a boat that cannot make headway is refused: tow it from the bank); `--headwind` halves a sailing vessel's speed when the day's wind is strong (weather.py). A route with a land road prints `⚠ by land, where the keelboat does not go`. Aboard a cart nothing changes: the travel pace is the animals'.
+- **Damage** below the damage threshold does nothing; at 0 hit points the vessel sinks or breaks up. Repairs in port: 1 hit point a day for 20 gp each — `--pay fund` takes it from the common fund (treasury.py), `--pay "<name>"` from a sheet.
+- **In a dead calm** a sailing ship moves by oars; at sea the lookout sees 15 km in clear weather, half that under clouds (DMG p. 119) — narrate them, the script does not count them.
+
+---
+
 ## Diseases, Poisons and Madness — `display/afflictions.py`
 
 Afflictions with a course (SRD; DMG 2014 pp. 256-260), kept in `<campaign>/afflictions.json` and moved by the clock: `calendar.py advance`, `rest` and `time` call it, and at every **dawn** (06:00) the saves due go to the phones; the display settles each one as it comes back, applies the conditions (exhaustion, poisoned, unconscious…) and the damage (temporary hit points first; damage to a concentrating character opens its concentration save), asks the next one due, and tells you with `[[AFFLICTION: …]]` (check_input.py / autorun_wait.py). Every screen has an **Ailments** panel with its own character's (the DM's screen shows everyone's, incubating ones too).
