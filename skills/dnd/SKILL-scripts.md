@@ -1262,6 +1262,11 @@ light 2,4 candle
 
 Doors, known traps and stairs stay marked on top of painted art; tokens always do. Art is cached per terrain + `art:` line, so re-sends with moved tokens are instant — keep `art:` identical for the same place. New terrain: the plain map is shown immediately, the art version supersedes it when ready (run it with `run_in_background: true`). Any art failure leaves the plain map (stderr line, exit 0).
 
+**Cover** (PHB 2014 p. 196, on the grid as DMG p. 251 draws it). From the corner of the attacker's square that sees best, a line to each corner of the target's square: 1-2 blocked = **half cover** (+2 AC and Dexterity saves), 3-4 blocked = **three-quarters** (+5), all of them stopped by walls from every corner = **total** (cannot be targeted directly; an area of effect may still reach it). Walls `#`, doors `+`, pillars `&` and the void block a line; a creature, a tree `*` or furniture `=` in the way gives half cover at most. A line that only runs along a wall's edge or past its corner is clear; one between two walls, along their shared edge or where they touch corner to corner, is not.
+- After every send the script prints `map_render: cover — Goblin 2 has half cover from Hernio` for each party member and foe that matter (foes from the party and the party from the foes).
+- `map_render.py --cover "Lyra" "Goblin 1"` answers on the last map sent in the campaign (`--file` for another); names as in the legend, any unique part, or the token's letter.
+- The last map sent is kept as `<campaign>/media/last-battle-map.txt`. The Attacks panel reads it: when the attacker and the target are both on it, the line carries the cover — `· mezza copertura: +2 alla CA del bersaglio (il tiro vale 15)` (compare that number with the AC), `+2 al TS Destrezza dei bersagli` for a save attack, or `copertura totale: secondo la mappa non si può bersagliare direttamente`. Re-send the map when people move, or the cover is the old one.
+
 ## Progress Clocks — `display/clock.py`
 
 A circle cut in segments that fills as something gets closer: a ritual, the guards' patience, a collapsing bridge, the party's own progress on a long task. Every screen shows the public ones — small in the top bar, large in the **Clocks** panel — and a toast says when one moves.

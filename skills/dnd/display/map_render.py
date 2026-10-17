@@ -96,6 +96,14 @@ the DM, who sees whom and how well — dim light and darkvision mean lightly
 obscured (disadvantage on Perception by sight); not seen means attacks
 against it have advantage and its own attacks disadvantage.
 
+Cover (PHB 2014 p. 196, DMG p. 251): from the best corner of the attacker's
+square, a line to each corner of the target's; 1-2 blocked = half cover (+2
+AC and Dexterity saves), 3-4 = three quarters (+5), all of them by walls =
+total. Walls, doors and pillars block a line; a creature, a tree or furniture
+gives half cover at most. After a send the script prints who has cover from
+whom; the Attacks panel reads the last map to put the cover in the roll.
+    python3 map_render.py --cover "Lyra" "Goblin 1"    # on the last map sent (or --file)
+
 Usage:
     python3 map_render.py << 'DNDEND'  ...map...  DNDEND      # render + show
     python3 map_render.py --file map.txt --no-send             # render only
@@ -1240,6 +1248,157 @@ def hidden_tokens(spec: MapSpec, fog) -> list:
             if ch.isalpha() and not _token_shown(spec, ch, x, y, fog)]
 
 
+# ── Cover ────────────────────────────────────────────────────────────────────
+# PHB 2014 p. 196, on the grid as the DMG (p. 251) draws it: from the corner of
+# the attacker's square that sees best, a line to each corner of the target's
+# square. One or two lines blocked: half cover (+2 to AC and Dexterity saves);
+# three or four but the attack still gets through (an arrow slit): three
+# quarters (+5); every line from every corner stopped by a wall: total cover,
+# the target cannot be targeted directly. A creature, a tree or a piece of
+# furniture in the way gives half cover at most; walls, doors and pillars
+# block the line altogether. A line that only runs along an edge or through a
+# corner is not blocked.
+
+COVER_SOLID = ("wall", "door", "void", "pillar")
+COVER_PARTIAL = ("tree", "furniture")
+COVER_LEVELS = ("none", "half", "three-quarters", "total")
+COVER_BONUS = {"none": 0, "half": 2, "three-quarters": 5, "total": None}
+COVER_NAMES = {"it": {"half": "mezza copertura", "three-quarters": "copertura di tre quarti", "total": "copertura totale"},
+               "en": {"half": "half cover", "three-quarters": "three-quarters cover", "total": "total cover"}}
+
+
+def _crosses(x0: float, y0: float, x1: float, y1: float, cx: int, cy: int) -> bool:
+    """The segment passes through the inside of square (cx, cy)."""
+    t0, t1 = 0.0, 1.0
+    dx, dy = x1 - x0, y1 - y0
+    for p, q in ((-dx, x0 - cx), (dx, cx + 1 - x0), (-dy, y0 - cy), (dy, cy + 1 - y0)):
+        if p == 0:
+            if q <= 0:
+                return False
+            continue
+        r = q / p
+        if p < 0:
+            t0 = max(t0, r)
+        else:
+            t1 = min(t1, r)
+        if t0 >= t1:
+            return False
+    return t1 - t0 > 1e-12
+
+
+def _segment_block(spec: MapSpec, a: tuple, b: tuple, ends: set) -> int:
+    worst = 0
+    for cy in range(int(min(a[1], b[1])) - 1, int(max(a[1], b[1])) + 2):
+        for cx in range(int(min(a[0], b[0])) - 1, int(max(a[0], b[0])) + 2):
+            if (cx, cy) in ends or not _crosses(a[0], a[1], b[0], b[1], cx, cy):
+                continue
+            kind = _cell_kind(spec, cx, cy)
+            if kind in COVER_SOLID:
+                return 2
+            if kind in COVER_PARTIAL or (0 <= cy < len(spec.rows) and 0 <= cx < len(spec.rows[0])
+                                         and spec.rows[cy][cx].isalpha()):
+                worst = 1
+    return worst
+
+
+def _line_block(spec: MapSpec, a: tuple, b: tuple, ends: set) -> int:
+    """0 clear, 1 a creature, tree or furniture in the way, 2 a wall in the way.
+
+    The line is moved a hair to either side and is blocked only as much as both
+    copies are: one that runs along a wall's edge, or past its corner, is clear;
+    one that runs between two walls — along their shared edge, or through the
+    point where two of them touch corner to corner — is not."""
+    import math
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    n = math.hypot(dx, dy)
+    if n == 0:
+        return 0
+    # The ends are corners: trimmed a little, the copies do not start in the squares the corner only touches.
+    a, b = (a[0] + dx * 1e-4, a[1] + dy * 1e-4), (b[0] - dx * 1e-4, b[1] - dy * 1e-4)
+    ox, oy = -dy / n * 1e-6, dx / n * 1e-6
+    return min(_segment_block(spec, (a[0] + ox, a[1] + oy), (b[0] + ox, b[1] + oy), ends),
+               _segment_block(spec, (a[0] - ox, a[1] - oy), (b[0] - ox, b[1] - oy), ends))
+
+
+def cover(spec: MapSpec, frm: tuple, to: tuple) -> str:
+    """The cover the target on square `to` has against an attack from square `frm`: none, half, three-quarters, total."""
+    ends = {tuple(frm), tuple(to)}
+    corners = lambda x, y: ((x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1))   # noqa: E731
+    best = len(COVER_LEVELS) - 1
+    for a in corners(*frm):
+        blocks = [_line_block(spec, a, b, ends) for b in corners(*to)]
+        solid, any_ = sum(1 for v in blocks if v == 2), sum(1 for v in blocks if v)
+        if solid == 4:
+            level = 3
+        elif any_ == 0:
+            level = 0
+        elif any_ <= 2 or solid == 0:
+            level = 1
+        else:
+            level = 2
+        best = min(best, level)
+        if best == 0:
+            break
+    return COVER_LEVELS[best]
+
+
+def token_named(spec: MapSpec, name: str) -> str:
+    """The letter of the token called `name` (its legend name, or the letter itself), '' when none or several."""
+    want = " ".join((name or "").split()).casefold()
+    if not want:
+        return ""
+    on_map = {ch for row in spec.rows for ch in row if ch.isalpha()}
+    if len(want) == 1 and name.strip() in on_map:
+        return name.strip()
+    names = {ch: str(spec.legend.get(ch, (ch, ""))[0]) for ch in on_map}
+    exact = [ch for ch, n in names.items() if n.casefold() == want]
+    if len(exact) == 1:
+        return exact[0]
+    part = [ch for ch, n in names.items() if want in n.casefold() or n.casefold() in want.split()]
+    return part[0] if len(part) == 1 else ""
+
+
+def cover_between(spec: MapSpec, attacker: str, target: str):
+    """{"cover", "bonus", "from", "to"} for two creatures named on the map; None when either is not on it."""
+    a, t = token_named(spec, attacker), token_named(spec, target)
+    if not a or not t or a == t:
+        return None
+    level = cover(spec, token_position(spec, a), token_position(spec, t))
+    return {"cover": level, "bonus": COVER_BONUS[level], "from": spec.legend.get(a, (a, ""))[0],
+            "to": spec.legend.get(t, (t, ""))[0]}
+
+
+def cover_report(spec: MapSpec, limit: int = 12) -> list:
+    """For the DM, after a send: which foes have cover from which party members (and the other way round)."""
+    tokens = [(ch, spec.legend.get(ch, (ch, "pc" if ch.isupper() else "foe"))) for ch in
+              dict.fromkeys(ch for row in spec.rows for ch in row if ch.isalpha())]
+    party = [(ch, n) for ch, (n, side, *_r) in tokens if side in ("pc", "ally")]
+    foes = [(ch, n) for ch, (n, side, *_r) in tokens if side == "foe"]
+    out = []
+    for pc, pc_name in party:
+        for foe, foe_name in foes:
+            there, back = (cover(spec, token_position(spec, pc), token_position(spec, foe)),
+                           cover(spec, token_position(spec, foe), token_position(spec, pc)))
+            if there != "none":
+                out.append(f"{foe_name} has {there} cover from {pc_name}")
+            if back != "none":
+                out.append(f"{pc_name} has {back} cover from {foe_name}")
+    return out[:limit] + ([f"…and {len(out) - limit} more (map_render.py --cover A B)"] if len(out) > limit else [])
+
+
+LAST_MAP = "last-battle-map.txt"
+
+
+def last_map(campaign: str = ""):
+    """The battle map sent last in this campaign, parsed; None when there is none."""
+    try:
+        import media
+        text = (media.media_dir(campaign) / LAST_MAP).read_text(encoding="utf-8")
+        return parse(text)
+    except Exception:
+        return None
+
+
 def _draw_fog(spec: MapSpec, fog) -> list:
     """Dark over what was never seen, a veil over what is remembered; one rect per run of squares."""
     visible, explored = fog
@@ -1478,11 +1637,32 @@ def main() -> int:
     p.add_argument("--art", choices=("auto", "paint", "tiles", "off"),
                    help="terrain art from the image backend (default: map_art in images.json, else auto)")
     p.add_argument("--symbols", action="store_true", help="print the terrain/token key and exit")
+    p.add_argument("--cover", nargs=2, metavar=("FROM", "TO"),
+                   help="the cover TO has against an attack from FROM, on the last map sent (or --file); names or letters")
     args = p.parse_args()
 
     if args.symbols:
         key = __doc__.split("Terrain", 1)[1].split("Usage:", 1)[0]
         print("Terrain" + key.rstrip())
+        return 0
+
+    if args.cover:
+        try:
+            spec = parse(open(args.file, encoding="utf-8").read()) if args.file else last_map(args.campaign or "")
+        except ValueError as e:
+            print(f"map_render: {e}", file=sys.stderr)
+            return 2
+        if spec is None:
+            print("map_render: no battle map sent in this campaign yet (or pass --file)", file=sys.stderr)
+            return 2
+        res = cover_between(spec, *args.cover)
+        if res is None:
+            print(f"map_render: {args.cover[0]!r} or {args.cover[1]!r} is not a token on the map", file=sys.stderr)
+            return 2
+        bonus = res["bonus"]
+        print(f"{res['to']} has {res['cover']} cover from {res['from']}"
+              + (f": +{bonus} to AC and Dexterity saves" if bonus else
+                 ": cannot be targeted directly (an area may still reach it)" if res["cover"] == "total" else ""))
         return 0
 
     text = open(args.file, encoding="utf-8").read() if args.file else sys.stdin.read()
@@ -1495,6 +1675,8 @@ def main() -> int:
         print(f"map_render: {w}", file=sys.stderr)
     for line in describe_templates(spec):
         print(f"map_render: area — {line}", file=sys.stderr)
+    for line in cover_report(spec):
+        print(f"map_render: cover — {line}", file=sys.stderr)
     lang = "en"
     if spec.light:
         # The PCs' darkvision from their sheets, the torches burning in the supplies.
@@ -1534,6 +1716,10 @@ def main() -> int:
         return 2
     map_id = media.slug(args.name or spec.title or "map")
     caption = args.caption if args.caption is not None else spec.title
+    try:
+        (d / LAST_MAP).write_text(text, encoding="utf-8")      # where everyone stands, for the cover of the attacks
+    except OSError:
+        pass
     if fog is not None:
         size = (len(spec.rows[0]), len(spec.rows))
         before = set() if spec.fog_reset else load_explored(d, map_id, *size)

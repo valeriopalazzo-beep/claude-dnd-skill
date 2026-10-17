@@ -1854,6 +1854,7 @@
   .atk-result .crit{ color:#ffd76a; font-weight:800; }
   .atk-result .fumble{ color:#e88; font-weight:800; }
   .atk-note{ margin:0; text-align:center; color:var(--ln-text-muted, #cdbfa6); font-size:15px; }
+  .atk-result .atk-cover{ margin:6px 0 0; color:#9fc3e8; font-weight:700; font-size:15.5px; }
   .atk-weapon small.atk-ammo{ color:var(--ln-accent, #f2b544); font-weight:700; }
   .atk-weapon small.atk-ammo.out{ color:#e88; }
 
@@ -14289,6 +14290,11 @@ function _attackChoices(attack) {
         render();
       }).catch(() => {});
   }
+  function coverLabel(r) {
+    if (r.cover === 'total') return _t('atk.cover.total', null, 'Total cover: it cannot be targeted directly.');
+    if (r.save) return r.save.ability === 'DEX' ? _t('atk.coverSave.' + r.cover, { b: r.cover_bonus }, 'Cover: +' + r.cover_bonus + ' to their Dexterity save') : '';
+    return _t('atk.cover.' + r.cover, { b: r.cover_bonus, v: r.vs_ac }, 'Cover: +' + r.cover_bonus + ' to its AC (your roll counts as ' + r.vs_ac + ')');
+  }
   function ammoLabel(kind, n) {
     return _t('atk.ammo.' + kind, { n: n }, n + ' ' + kind + (n === 1 ? '' : 's') + ' left');
   }
@@ -14344,6 +14350,7 @@ function _attackChoices(attack) {
       res.appendChild(el('div', 'big', saveLabel(last.save)));
       if (last.damage !== null && last.damage !== undefined) res.appendChild(el('div', 'big', _t('atk.damage', { n: last.damage }, last.damage + ' damage')));
       if (last.save.half === true) res.appendChild(el('p', 'atk-note', _t('atk.saveHalf', null, 'Half damage to whoever makes the save.')));
+      if (last.cover) res.appendChild(el('p', 'atk-cover', coverLabel(last)));
       else if (last.save.half === false) res.appendChild(el('p', 'atk-note', _t('atk.saveNone', null, 'No damage to whoever makes the save.')));
       res.appendChild(el('p', 'atk-note', _t('atk.sentSave', null, 'Sent to the DM: the targets roll the save.')));
       body.appendChild(res);
@@ -14351,6 +14358,7 @@ function _attackChoices(attack) {
       const res = el('div', 'atk-result');
       res.appendChild(el('div', 'big', _t('atk.toHit', { n: last.to_hit }, last.to_hit + ' to hit')));
       if (last.crit) res.appendChild(el('div', 'crit', _t('atk.crit', null, 'Critical hit!')));
+      if (last.cover) res.appendChild(el('p', 'atk-cover', coverLabel(last)));
       if (last.fumble) res.appendChild(el('div', 'fumble', _t('atk.fumble', null, 'Natural 1')));
       if (last.damage !== null && last.damage !== undefined) res.appendChild(el('div', 'big', _t('atk.damage', { n: last.damage }, last.damage + ' damage')));
       if (last.ammo_left !== undefined && last.ammo_left !== null) res.appendChild(el('p', 'atk-note', ammoLabel(last.ammo_kind, last.ammo_left)));

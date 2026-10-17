@@ -4752,6 +4752,7 @@ def attacks_roll(character):
         code = "ammo" if "left for" in str(e) else "attack"
         return jsonify({"error": str(e), "code": code}), 409
     path, _safe, camp = _find_sheet_file(character)
+    _attacks.with_cover(result, _attacks.map_cover(_active_campaign(), name, target))   # the last battle map
     if path:
         _attacks.spend_ammo(attack, result, path, camp or "")       # an arrow off the sheet (ammo.py)
     lang = _spell_lang(data.get("lang", ""))

@@ -255,7 +255,7 @@ def _save_numbers(r: dict, lang: str) -> str:
             line += f", {w['half']}"
         elif r["save"].get("half") is False:
             line += f", {w['none']}"
-    return line
+    return line + _cover_numbers(r, lang)
 
 
 def spend_ammo(attack: dict, r: dict, path, campaign: str = "") -> None:
@@ -270,6 +270,52 @@ def spend_ammo(attack: dict, r: dict, path, campaign: str = "") -> None:
         r["ammo_kind"] = a["kind"]
     except (ammo.AmmoError, inventory.InventoryError, OSError):
         pass
+
+
+def map_cover(campaign: str, attacker: str, target: str) -> dict | None:
+    """The target's cover against the attacker on the battle map sent last (map_render.py); None off the map."""
+    if not (campaign and attacker and target):
+        return None
+    try:
+        if str(paths.display_dir()) not in sys.path:
+            sys.path.insert(0, str(paths.display_dir()))
+        import map_render
+        spec = map_render.last_map(campaign)
+        return map_render.cover_between(spec, attacker, target) if spec else None
+    except Exception:
+        return None
+
+
+def with_cover(r: dict, cover: dict | None) -> dict:
+    """Put the map's cover in the result (PHB 2014 p. 196): +2 or +5 to the target's AC and Dexterity saves."""
+    if cover and cover.get("cover") in ("half", "three-quarters", "total"):
+        r["cover"] = cover["cover"]
+        r["cover_bonus"] = cover["bonus"]
+        if r.get("to_hit") is not None and cover["bonus"]:
+            r["vs_ac"] = r["to_hit"] - cover["bonus"]
+    return r
+
+
+_COVER_WORDS = {
+    "it": {"half": "mezza copertura", "three-quarters": "copertura di tre quarti", "total": "copertura totale",
+           "ac": "+{b} alla CA del bersaglio (il tiro vale {v})", "dex": "+{b} al TS Destrezza dei bersagli",
+           "no": "secondo la mappa non si può bersagliare direttamente"},
+    "en": {"half": "half cover", "three-quarters": "three-quarters cover", "total": "total cover",
+           "ac": "+{b} to the target's AC (the roll counts as {v})", "dex": "+{b} to the targets' Dexterity saves",
+           "no": "by the map it cannot be targeted directly"},
+}
+
+
+def _cover_numbers(r: dict, lang: str) -> str:
+    c = r.get("cover")
+    if not c:
+        return ""
+    w = _COVER_WORDS.get(lang, _COVER_WORDS["en"])
+    if c == "total":
+        return f" · {w['total']}: {w['no']}"
+    if r.get("save"):
+        return f" · {w[c]}: " + w["dex"].format(b=r["cover_bonus"]) if r["save"].get("ability") == "DEX" else ""
+    return f" · {w[c]}: " + w["ac"].format(b=r["cover_bonus"], v=r.get("vs_ac"))
 
 
 def _ammo_numbers(r: dict, lang: str) -> str:
@@ -295,7 +341,7 @@ def _numbers(r: dict, lang: str) -> str:
     if r["damage"] is not None:
         dice = ", ".join(str(x) for x in r["dice"] + r["extra_dice"])
         line += f" · {r['damage']} {w['dmg']} (" + (f"{r['type']}, " if r.get("type") else "") + f"{r['damage_text']}: {dice})"
-    return line + _ammo_numbers(r, lang)
+    return line + _cover_numbers(r, lang) + _ammo_numbers(r, lang)
 
 
 def story_line(character: str, target: str, r: dict, lang: str = "en") -> str:
@@ -347,6 +393,7 @@ def main(argv: list | None = None) -> int:
         adv = "advantage" if args.advantage else "disadvantage" if args.disadvantage else "normal"
         attack = find(attacks, args.attack)
         r = roll(attack, adv, args.alt, args.extra)
+        with_cover(r, map_cover(camp, name, args.target))
         spend_ammo(attack, r, path, camp)
         lang = paths.campaign_language(camp) if camp else "en"
         print(story_line(name, args.target, r, lang))
