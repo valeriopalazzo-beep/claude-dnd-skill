@@ -104,6 +104,50 @@ class SheetTests(unittest.TestCase):
         self.assertTrue(attacks.action_line("", attacks.roll(martello, alt=1, rng=FixedDice(9, 2))).startswith("⚔ Martello da guerra (Versatile):"))
 
 
+BREATH = """# Finocchio
+
+## Attacks
+| Name | Attack Bonus | Damage | Type | Notes |
+|------|-------------|--------|------|-------|
+| Ascia bipenne | +5 | 1d12+3 | tagliente | Pesante, due mani |
+| Soffio acido | CD 12 | 2d6 | acido | Linea di 1,5 x 9 m, TS Destrezza; una volta per riposo breve o lungo |
+| Fiamma sacra | DC 13 | 1d8 | radiant | DEX save, no damage on a success |
+| Ruggito | CD 11 | — | tuono | TS con vantaggio per chi è sordo; metà danni |
+"""
+
+
+class SaveAttackTests(unittest.TestCase):
+    """A row whose bonus is a save DC is not an attack roll (the dragonborn's breath, Sacred Flame)."""
+
+    def test_the_dc_is_a_save_not_a_bonus(self):
+        axe, breath, flame, roar = attacks.read_attacks(BREATH)
+        self.assertEqual((axe["bonus"], axe["save"]), (5, None))
+        self.assertEqual((breath["bonus"], breath["save"]), (None, {"dc": 12, "ability": "DEX", "half": None}))
+        self.assertEqual(flame["save"], {"dc": 13, "ability": "DEX", "half": False})
+        # "TS con vantaggio" is not a Constitution save; "metà" says a made save halves it.
+        self.assertEqual(roar["save"], {"dc": 11, "ability": "", "half": True})
+
+    def test_only_the_damage_is_rolled(self):
+        breath = attacks.find(attacks.read_attacks(BREATH), "soffio")
+        r = attacks.roll(breath, "advantage", rng=FixedDice(3, 5))
+        self.assertEqual((r["d20"], r["to_hit"], r["crit"], r["dice"], r["damage"]), ([], None, False, [3, 5], 8))
+        self.assertEqual(attacks.story_line("Finocchio", "Goblin 1", r, "it"),
+                         "⚔ Finocchio → Goblin 1 · Soffio acido: TS Destrezza CD 12 · 8 danni (acido, 2d6: 3, 5)")
+        flame = attacks.find(attacks.read_attacks(BREATH), "fiamma")
+        self.assertEqual(attacks.action_line("", attacks.roll(flame, rng=FixedDice(6))),
+                         "⚔ Fiamma sacra: DC 13 Dexterity save · 6 damage (radiant, 1d8: 6), nothing on a success")
+        roar = attacks.find(attacks.read_attacks(BREATH), "ruggito")
+        r = attacks.roll(roar)
+        self.assertEqual((r["damage"], attacks.action_line("", r, "it")), (None, "⚔ Ruggito: TS CD 11"))
+
+    def test_the_real_sheet_of_the_dragonborn(self):
+        sheet = pathlib.Path.home() / ".claude" / "dnd" / "campaigns" / "il-tentativo-del-trio" / "characters" / "finocchio.md"
+        if not sheet.is_file():
+            raise unittest.SkipTest("no Finocchio on this machine")
+        breath = attacks.find(attacks.read_attacks(sheet.read_text(encoding="utf-8")), "soffio")
+        self.assertEqual((breath["bonus"], breath["save"]["dc"], breath["save"]["ability"]), (None, 12, "DEX"))
+
+
 class CommandTests(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -202,6 +246,18 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(self.triggered, [True])
         self.assertEqual(self.mod._text_log[-1]["text"], body["line"])
 
+    def test_a_breath_weapon_asks_the_targets_for_a_save(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        sheet = pathlib.Path(tmp.name) / "finocchio.md"
+        sheet.write_text(BREATH, encoding="utf-8")
+        self.mod._find_sheet_file = lambda name: (str(sheet), name, "prova")
+        r = self.client.post("/attacks/Lyra/roll", json={"attack": "soffio", "target": "Goblin 1", "lang": "it"},
+                             headers={"X-DND-Device": "tel-lyra"})
+        self.assertEqual(r.status_code, 200, r.get_data(as_text=True))
+        self.assertEqual(r.get_json()["result"]["save"]["dc"], 12)
+        self.assertRegex(self.mod._staged["Lyra"]["text"], r"^⚔ Soffio acido → Goblin 1: TS Destrezza CD 12 · \d+ danni \(acido, 2d6: ")
+
     def test_what_cannot_be_rolled_is_refused(self):
         r = self.client.post("/attacks/Lyra/roll", json={"attack": "grido"}, headers={"X-DND-Device": "tel"})
         self.assertEqual((r.status_code, r.get_json()["code"]), (409, "attack"))
@@ -241,7 +297,25 @@ class PageTests(unittest.TestCase):
         self.assertEqual((stocco["bonusText"], stocco["extra"], stocco["canRoll"]), ("+5", {"label": "Attacco furtivo", "text": "1d6"}, True))
         self.assertEqual(martello["damages"], [{"alt": 0, "label": "", "text": "1d8+4"}, {"alt": 1, "label": "Versatile", "text": "1d10+4"}])
         self.assertEqual((grido["canRoll"], grido["damages"]), (False, []))
-        self.assertEqual((dardo["extra"], blank["canRoll"]), (None, False))
+        self.assertEqual((dardo["extra"], blank["canRoll"], stocco["save"]), (None, False, None))
+
+    def test_a_save_attack_can_be_used_without_a_bonus(self):
+        if NODE is None:
+            raise unittest.SkipTest("node not available")
+        m = _SLICE.search(HTML.read_text(encoding="utf-8"))
+        rows = attacks.read_attacks(BREATH)
+        script = m.group(1) + "\nconsole.log(JSON.stringify(%s.map(_attackChoices)));\n" % json.dumps(rows)
+        with tempfile.NamedTemporaryFile("w", suffix=".mjs", delete=False, encoding="utf-8") as f:
+            f.write(script)
+            path = f.name
+        try:
+            r = subprocess.run([NODE, path], capture_output=True, text=True, encoding="utf-8", timeout=30)
+            self.assertEqual(r.returncode, 0, r.stderr[:500])
+            axe, breath, flame, roar = json.loads(r.stdout.strip().splitlines()[-1])
+        finally:
+            pathlib.Path(path).unlink(missing_ok=True)
+        self.assertEqual((breath["canRoll"], breath["save"], breath["extra"]), (True, {"dc": 12, "ability": "DEX", "half": None}, None))
+        self.assertEqual((flame["save"]["half"], roar["save"]["half"], axe["save"]), (False, True, None))
 
     def test_the_page_has_the_panel_and_every_way_in(self):
         src = HTML.read_text(encoding="utf-8")
@@ -252,7 +326,8 @@ class PageTests(unittest.TestCase):
     def test_strings_exist_in_every_language(self):
         keys = ["atk.title", "atk.titleOf", "atk.target", "atk.targetPh", "atk.weapon", "atk.normal", "atk.adv", "atk.dis",
                 "atk.go", "atk.toHit", "atk.damage", "atk.crit", "atk.fumble", "atk.sent", "atk.empty", "atk.failed",
-                "atk.pending", "atk.toast", "atk.toastNoTarget"]
+                "atk.pending", "atk.toast", "atk.toastNoTarget", "atk.dc", "atk.save", "atk.saveAny", "atk.saveHint",
+                "atk.saveHalf", "atk.saveNone", "atk.sentSave", "atk.use"] + [f"atk.ab.{a}" for a in ("STR", "DEX", "CON", "INT", "WIS", "CHA")]
         for path in sorted((DISPLAY / "i18n").glob("*.json")):
             data = json.loads(path.read_text(encoding="utf-8"))
             for key in keys:

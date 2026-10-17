@@ -7,6 +7,12 @@ rolled to hit and for damage together. A natural 20 doubles the damage dice.
 A natural 1 misses, so no damage is rolled. A note that carries another damage ("Versatile: 1d10+4 a due mani") is offered
 as a choice, one that adds dice ("Attacco furtivo +1d6") as an extra.
 
+A row whose bonus is a save DC ("CD 12", "DC 13") is not an attack roll: a
+breath weapon, a spell like Sacred Flame. Nothing is rolled to hit; the
+damage is rolled once and the targets make the save — the ability is read
+from the row ("TS Destrezza", "DEX save"), and "metà"/"half" in the notes says
+a made save halves it (PHB 2014 p. 205).
+
     attacks.py -c <campaign> list "Ajeje"
     attacks.py -c <campaign> roll "Ajeje" "spadone" [--target "Goblin 1"] [--advantage|--disadvantage]
                                                   [--alt 1] [--extra 1]
@@ -32,7 +38,20 @@ _HEAD = re.compile(r"^##\s+(?:Attacks|Attacchi)\b.*$", re.M | re.I)
 _NEXT_HEAD = re.compile(r"^##\s", re.M)
 _DICE = re.compile(r"(\d+)\s*d\s*(\d+)(?:\s*([+-−])\s*(\d+))?", re.I)
 _BONUS = re.compile(r"([+-−]?)\s*(\d+)")
+_SAVE_DC = re.compile(r"\b(?:CD|DC)\s*:?\s*(\d{1,2})\b", re.I)
 ADVANTAGE = ("normal", "advantage", "disadvantage")
+# The full names in any case; the short ones only in capitals ("TS con vantaggio" is not a CON save).
+_ABILITY_WORDS = {
+    "STR": ("strength", "forza", "STR", "FOR"), "DEX": ("dexterity", "destrezza", "DEX", "DES"),
+    "CON": ("constitution", "costituzione", "CON", "COS"), "INT": ("intelligence", "intelligenza", "INT"),
+    "WIS": ("wisdom", "saggezza", "WIS", "SAG"), "CHA": ("charisma", "carisma", "CHA", "CAR"),
+}
+_ABILITY_NAMES = {"en": {"STR": "Strength", "DEX": "Dexterity", "CON": "Constitution", "INT": "Intelligence",
+                         "WIS": "Wisdom", "CHA": "Charisma"},
+                  "it": {"STR": "Forza", "DEX": "Destrezza", "CON": "Costituzione", "INT": "Intelligenza",
+                         "WIS": "Saggezza", "CHA": "Carisma"}}
+_HALF = re.compile(r"\bmet[àa]\b|\bdimezz|\bhalf\b", re.I)
+_NO_DAMAGE = re.compile(r"nessun danno|no damage|nothing on a success", re.I)
 
 
 class AttackError(Exception):
@@ -76,8 +95,27 @@ def _note_options(note: str) -> tuple:
     return alts, extras
 
 
+def save_of(bonus_cell: str, note: str) -> dict | None:
+    """'CD 12' + 'TS Destrezza; metà se riesce' → {"dc": 12, "ability": "DEX", "half": True}; None for an attack roll.
+
+    "half" is None when the row does not say what a made save does."""
+    m = _SAVE_DC.search(bonus_cell or "")
+    if not m:
+        return None
+    text = f"{bonus_cell} {note}"
+    ability = ""
+    for code, words in _ABILITY_WORDS.items():
+        pat = "|".join(re.escape(w) if w.isupper() else "(?i:" + re.escape(w) + ")" for w in words)
+        if re.search(rf"\b(?i:TS|save|saving throw|tiro salvezza)\s+(?i:su\s+|di\s+)?(?:{pat})\b"
+                     rf"|\b(?:{pat})\s+(?i:save|saving throw)\b", text):
+            ability = code
+            break
+    half = True if _HALF.search(note or "") else False if _NO_DAMAGE.search(note or "") else None
+    return {"dc": int(m.group(1)), "ability": ability, "half": half}
+
+
 def read_attacks(text: str) -> list:
-    """The rows of the sheet's Attacks table: name, bonus, damage, type, notes, alts, extras."""
+    """The rows of the sheet's Attacks table: name, bonus (or save), damage, type, notes, alts, extras."""
     m = _HEAD.search(text or "")
     if not m:
         return []
@@ -105,10 +143,11 @@ def read_attacks(text: str) -> list:
         if not name or name in ("—", "-") or set(name) <= {"-", " ", ":"}:
             continue
         cell = lambda i: cells[i] if i is not None and i < len(cells) else ""  # noqa: E731
-        b = _BONUS.search(cell(i_bonus))
+        save = save_of(cell(i_bonus), cell(i_note))
+        b = None if save else _BONUS.search(cell(i_bonus))
         bonus = None if not b else int(b.group(2)) * (-1 if b.group(1) in ("-", "−") else 1)
         alts, extras = _note_options(cell(i_note))
-        out.append({"name": name, "bonus": bonus, "damage": parse_dice(cell(i_dmg)), "type": cell(i_type),
+        out.append({"name": name, "bonus": bonus, "save": save, "damage": parse_dice(cell(i_dmg)), "type": cell(i_type),
                     "notes": cell(i_note), "alts": alts, "extras": extras})
     return out
 
@@ -134,6 +173,8 @@ def roll(attack: dict, advantage: str = "normal", alt: int = 0, extra: bool = Fa
     """Roll to hit and for damage. `alt` 1.. picks another damage from the notes; `extra` adds the extra dice."""
     if advantage not in ADVANTAGE:
         advantage = "normal"
+    if attack.get("save"):
+        return _roll_save(attack, alt, rng)
     if attack.get("bonus") is None:
         raise AttackError(f"{attack['name']} has no attack bonus on the sheet")
     d20s = [_d(20, rng)] + ([_d(20, rng)] if advantage != "normal" else [])
@@ -163,14 +204,59 @@ def roll(attack: dict, advantage: str = "normal", alt: int = 0, extra: bool = Fa
     return out
 
 
+def _roll_save(attack: dict, alt: int = 0, rng=None) -> dict:
+    """A save attack: no roll to hit, no critical; the damage once, for every target (PHB 2014 p. 196)."""
+    damage = attack.get("damage")
+    out = {"attack": attack["name"], "advantage": "normal", "d20": [], "natural": None, "bonus": None, "to_hit": None,
+           "crit": False, "fumble": False, "save": dict(attack["save"]), "type": attack.get("type", ""),
+           "damage": None, "damage_text": "", "dice": [], "extra_dice": [], "extra_label": ""}
+    if alt:
+        if not 1 <= int(alt) <= len(attack.get("alts") or []):
+            raise AttackError("no such alternative damage")
+        damage = attack["alts"][int(alt) - 1]["dice"]
+        out["alt_label"] = attack["alts"][int(alt) - 1]["label"]
+    if damage:
+        out["dice"] = [_d(damage["sides"], rng) for _ in range(damage["count"])]
+        out["damage"] = max(0, sum(out["dice"]) + damage["bonus"])
+        out["damage_text"] = damage["text"]
+    return out
+
+
 _WORDS = {
-    "en": {"hit": "to hit", "dmg": "damage", "crit": "critical", "fumble": "natural 1", "adv": "advantage", "dis": "disadvantage"},
-    "it": {"hit": "per colpire", "dmg": "danni", "crit": "critico", "fumble": "1 naturale", "adv": "vantaggio", "dis": "svantaggio"},
+    "en": {"hit": "to hit", "dmg": "damage", "crit": "critical", "fumble": "natural 1", "adv": "advantage", "dis": "disadvantage",
+           "save": "save", "dc": "DC", "half": "half on a success", "none": "nothing on a success"},
+    "it": {"hit": "per colpire", "dmg": "danni", "crit": "critico", "fumble": "1 naturale", "adv": "vantaggio", "dis": "svantaggio",
+           "save": "TS", "dc": "CD", "half": "metà a chi lo supera", "none": "niente a chi lo supera"},
 }
+
+
+def save_text(save: dict, lang: str = "en") -> str:
+    """'TS Destrezza CD 12' / 'DC 12 Dexterity save' — 'DC 12 save' when the row does not name the ability."""
+    w = _WORDS.get(lang, _WORDS["en"])
+    ability = _ABILITY_NAMES.get(lang, _ABILITY_NAMES["en"]).get(save.get("ability") or "", "")
+    if lang == "it":
+        return f"TS {ability + ' ' if ability else ''}CD {save['dc']}"
+    return f"DC {save['dc']} {ability + ' ' if ability else ''}save"
+
+
+def _save_numbers(r: dict, lang: str) -> str:
+    """'TS Destrezza CD 12 · 7 danni (acido, 2d6: 3, 4), metà a chi lo supera'."""
+    w = _WORDS.get(lang, _WORDS["en"])
+    line = save_text(r["save"], lang)
+    if r["damage"] is not None:
+        line += f" · {r['damage']} {w['dmg']} (" + (f"{r['type']}, " if r.get("type") else "") \
+                + f"{r['damage_text']}: {', '.join(str(x) for x in r['dice'])})"
+        if r["save"].get("half") is True:
+            line += f", {w['half']}"
+        elif r["save"].get("half") is False:
+            line += f", {w['none']}"
+    return line
 
 
 def _numbers(r: dict, lang: str) -> str:
     """'20 to hit (d20 14 +6) · 11 damage (slashing, 2d6+4: 3, 4)', in the table's language."""
+    if r.get("save"):
+        return _save_numbers(r, lang)
     w = _WORDS.get(lang, _WORDS["en"])
     d20 = "d20 " + ("/".join(str(x) for x in r["d20"]) if len(r["d20"]) > 1 else str(r["d20"][0])) + f" {r['bonus']:+d}"
     if r["advantage"] != "normal":
@@ -222,7 +308,8 @@ def main(argv: list | None = None) -> int:
         if args.cmd == "list":
             print(name)
             for a in attacks:
-                print(f"  {a['name']}: " + (f"{a['bonus']:+d}" if a["bonus"] is not None else "—")
+                print(f"  {a['name']}: " + (save_text(a["save"]) if a.get("save") else
+                                            f"{a['bonus']:+d}" if a["bonus"] is not None else "—")
                       + (f", {a['damage']['text']}" if a["damage"] else "") + (f" {a['type']}" if a["type"] else "")
                       + "".join(f" | or {x['dice']['text']} ({x['label']})" for x in a["alts"])
                       + "".join(f" | +{x['dice']['text']} {x['label']}" for x in a["extras"]))

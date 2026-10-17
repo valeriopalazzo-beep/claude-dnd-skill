@@ -14242,11 +14242,13 @@ function _attackChoices(attack) {
   if (attack.damage) damages.push({ alt: 0, label: '', text: attack.damage.text });
   (attack.alts || []).forEach((a, i) => damages.push({ alt: i + 1, label: a.label || '', text: a.dice.text }));
   const ex = (attack.extras || [])[0];
+  const sv = attack.save || null;
   return {
-    bonusText: b === null || b === undefined ? '' : (b >= 0 ? '+' + b : String(b)),
+    bonusText: sv ? 'DC ' + sv.dc : b === null || b === undefined ? '' : (b >= 0 ? '+' + b : String(b)),
     damages: damages,
-    extra: ex ? { label: ex.label || '', text: ex.dice.text } : null,
-    canRoll: b !== null && b !== undefined,
+    extra: sv ? null : ex ? { label: ex.label || '', text: ex.dice.text } : null,
+    save: sv ? { dc: sv.dc, ability: sv.ability || '', half: sv.half === undefined ? null : sv.half } : null,
+    canRoll: !!sv || (b !== null && b !== undefined),
   };
 }
 // ── end attack choices ──
@@ -14284,6 +14286,11 @@ function _attackChoices(attack) {
         if (target && (d.targets || []).indexOf(target) < 0 && !modal.dataset.typed) target = '';
         render();
       }).catch(() => {});
+  }
+  function saveLabel(sv) {
+    const ab = sv.ability ? _t('atk.ab.' + sv.ability, null, sv.ability) : '';
+    return ab ? _t('atk.save', { ability: ab, dc: sv.dc }, 'DC ' + sv.dc + ' ' + ab + ' save')
+              : _t('atk.saveAny', { dc: sv.dc }, 'DC ' + sv.dc + ' save');
   }
   function chips(items, selected, onPick) {
     const box = el('div', 'atk-chips');
@@ -14325,7 +14332,15 @@ function _attackChoices(attack) {
         v => { who = v; data = null; pick = ''; last = null; render(); loadData(); }));
     }
     if (!data) return;
-    if (last) {
+    if (last && last.save) {
+      const res = el('div', 'atk-result');
+      res.appendChild(el('div', 'big', saveLabel(last.save)));
+      if (last.damage !== null && last.damage !== undefined) res.appendChild(el('div', 'big', _t('atk.damage', { n: last.damage }, last.damage + ' damage')));
+      if (last.save.half === true) res.appendChild(el('p', 'atk-note', _t('atk.saveHalf', null, 'Half damage to whoever makes the save.')));
+      else if (last.save.half === false) res.appendChild(el('p', 'atk-note', _t('atk.saveNone', null, 'No damage to whoever makes the save.')));
+      res.appendChild(el('p', 'atk-note', _t('atk.sentSave', null, 'Sent to the DM: the targets roll the save.')));
+      body.appendChild(res);
+    } else if (last) {
       const res = el('div', 'atk-result');
       res.appendChild(el('div', 'big', _t('atk.toHit', { n: last.to_hit }, last.to_hit + ' to hit')));
       if (last.crit) res.appendChild(el('div', 'crit', _t('atk.crit', null, 'Critical hit!')));
@@ -14355,7 +14370,7 @@ function _attackChoices(attack) {
       const text = el('span', '', a.name);
       text.appendChild(el('small', '', [a.damage ? a.damage.text : '', a.type, a.notes].filter(Boolean).join(' · ')));
       btn.appendChild(text);
-      btn.appendChild(el('b', '', c.bonusText));
+      btn.appendChild(el('b', '', c.save ? _t('atk.dc', { n: c.save.dc }, 'DC ' + c.save.dc) : c.bonusText));
       btn.disabled = !c.canRoll;
       btn.addEventListener('click', () => { pick = a.name; alt = 0; extra = false; last = null; render(); });
       body.appendChild(btn);
@@ -14366,12 +14381,16 @@ function _attackChoices(attack) {
       if (c.extra) {
         body.appendChild(chips([{ value: true, label: '+' + c.extra.text + (c.extra.label ? ' ' + c.extra.label : '') }], extra, () => { extra = !extra; render(); }));
       }
-      body.appendChild(chips([
-        { value: 'normal', label: _t('atk.normal', null, 'Normal') },
-        { value: 'advantage', label: _t('atk.adv', null, 'Advantage') },
-        { value: 'disadvantage', label: _t('atk.dis', null, 'Disadvantage') },
-      ], adv, v => { adv = v; render(); }));
-      const go = el('button', 'atk-go', _t('atk.go', null, '⚔ Attack'));
+      if (c.save) {
+        body.appendChild(el('p', 'atk-note', _t('atk.saveHint', { save: saveLabel(c.save) }, 'No attack roll: the targets make a ' + saveLabel(c.save) + '.')));
+      } else {
+        body.appendChild(chips([
+          { value: 'normal', label: _t('atk.normal', null, 'Normal') },
+          { value: 'advantage', label: _t('atk.adv', null, 'Advantage') },
+          { value: 'disadvantage', label: _t('atk.dis', null, 'Disadvantage') },
+        ], adv, v => { adv = v; render(); }));
+      }
+      const go = el('button', 'atk-go', c.save ? _t('atk.use', null, '✦ Use') : _t('atk.go', null, '⚔ Attack'));
       go.type = 'button';
       go.disabled = busy;
       go.addEventListener('click', () => roll(a));
