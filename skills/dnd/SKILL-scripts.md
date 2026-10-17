@@ -792,6 +792,7 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP time night   # dawn mor
 python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP weather roll                 # from season and climate
 python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP weather set fog cold --text "nebbia che non si alza"
 python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP weather auto on              # every new day rolls its own
+python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP weather set snow freezing --wind strong --precip heavy --extreme cold
 
 # Coming events
 python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP event add "Notte delle Lanterne Basse" "30 Brumosa" --yearly --note "festa di Morwen"
@@ -806,11 +807,35 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP push
 
 - **Seasons** say which months they hold. The weather roll needs to know which is the winter: names like Winter / Inverno / Hiver are recognised, anything else takes `Name=winter:Month,…` (`winter`, `spring`, `summer`, `autumn`).
 - **Moon:** a cycle length and the date of one full moon; the script and the players' calendar work out every phase from that.
-- **Weather** is stored as keys the display translates into each player's language; `--text` replaces them with your own words (keep the key right — it picks the icon and the sky). With `weather auto on` the script rolls when a day begins and prints the result: **narrate it**. Yesterday's weather often lingers. Without it, the script reminds you at each new day that the weather is still what you last set.
+- **Weather** is stored as keys the display translates into each player's language; `--text` replaces them with your own words (keep the key right — it picks the icon and the sky). With `weather auto on` the script rolls when a day begins and prints the result: **narrate it**. Yesterday's weather often lingers. Without it, the script reminds you at each new day that the weather is still what you last set. A roll also gives the wind (`none`/`light`/`strong`), the precipitation (`none`/`light`/`heavy`) and an extreme cold or heat, with the DMG's d20s (p. 109); `weather set` takes them as `--wind`, `--precip`, `--extreme cold|heat` (without them, what the key says: a storm is strong wind and heavy rain). Whatever does something to the game is printed as `⚠ …` lines — see *Weather effects* below.
 - **Events** the players know about go on their calendar with the days to go; `--secret` ones are yours alone and are never sent. `--yearly` for a recurring feast (a date with no year). When time advances the script prints `★ TODAY: …` for an event that has come and `★ PASSED …` for one skipped over, and `☾ … is full tonight` — act on them.
 - A campaign with an old `calendar.json` keeps working; `setup` adds what it lacks.
 
 **When to run:** after every rest; after significant travel or time skip; when the time of day changes in the fiction (`time`); when the weather changes (`weather set`, or leave it to `weather auto on`); when the party learns of a dated event (`event add`); when manually updating `state.md` date — use `calendar.py set` to keep them in sync.
+
+## Weather effects — `scripts/weather.py`
+
+What the calendar's weather does to the game (DMG 2014 pp. 109-110), and the hours out in extreme cold or heat.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/scripts/weather.py -c $CAMP show                      # today's weather and what it does
+python3 ${CLAUDE_SKILL_DIR}/scripts/weather.py -c $CAMP expose --hours 3          # everyone at the table, out in it 3 hours
+python3 ${CLAUDE_SKILL_DIR}/scripts/weather.py -c $CAMP expose --hours 2 --only "Lyra, Hernio" --gear "Lyra" --adapted "Berta"
+python3 ${CLAUDE_SKILL_DIR}/scripts/weather.py -c $CAMP expose --hours 4 --no-water --start 3   # heat, from the 3rd hour
+python3 ${CLAUDE_SKILL_DIR}/scripts/weather.py -c $CAMP expose --hours 1 --roll   # roll behind the screen, not on the phones
+```
+
+| Weather | Effect |
+|---|---|
+| strong wind | disadvantage on ranged weapon attacks and on Perception by hearing; open flames go out, fog is blown away; flying without magic: land at the end of the turn or fall |
+| heavy rain or snow | lightly obscured: disadvantage on Perception by sight; pouring rain also puts out open flames and disadvantages hearing |
+| fog | lightly obscured (PHB p. 183 — dense fog is heavily obscured: say so) |
+| storm (strong wind + heavy rain) | at sea, no landmarks but a lighthouse, and disadvantage to find the way |
+| extreme cold | DC 10 Constitution save at the end of every hour exposed, or a level of exhaustion; resistance or immunity to cold, cold-weather gear, adapted creatures succeed |
+| extreme heat, no drinkable water | Constitution save at the end of every hour, DC 5 the first hour and +1 each hour after, or a level of exhaustion; disadvantage in medium or heavy armour or heavy clothing; resistance or immunity to fire, adapted creatures succeed |
+
+- **Applied by itself:** the Attacks panel rolls ranged weapons (bows, crossbows, slings, rows whose notes say *a distanza*) with disadvantage in a strong wind — an advantage cancels it; `travel.py` takes 5 off the lookouts' passive Perception in wind, heavy rain or snow and fog (not on top of the fast pace's −5); `travel.py navigate` at sea in a storm rolls with disadvantage. Every screen shows the effects under the weather in the calendar, with a notice when they start; the DM's screen has them on its top line.
+- **Exposure.** `calendar.py advance`/`rest` in extreme weather prints `❄ Extreme cold: … weather.py expose --hours N` — run it for those who were out in it, not for a party under a roof. It reads protection from the sheets (resistance, *Abiti da freddo* / cold-weather gear, medium or heavy armour for the heat's disadvantage); `--gear` and `--adapted` name the ones the sheet does not show. The saves go to the phones one hour at a time (`--roll` rolls them here); each failure adds a level of exhaustion on the display. In heat, with water in `supplies.py` (or not counted) nothing is rolled: pass `--no-water` when they have none.
 
 ---
 

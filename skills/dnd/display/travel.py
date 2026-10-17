@@ -202,17 +202,22 @@ def with_role(data: dict, role: str) -> list:
     return [n for n, r in (data.get("roles") or {}).items() if r == role]
 
 
-def watch(data: dict, passives: dict) -> dict:
+def watch(data: dict, passives: dict, weather_mod: int = 0) -> dict:
     """The party's watch: the best passive Perception of those keeping watch, the pace counted (PHB p. 183).
 
     Lookouts keep watch, and so does whoever has picked no other task;
-    whoever guides, maps or forages is busy and does not count."""
+    whoever guides, maps or forages is busy and does not count. `weather_mod`
+    is -5 when the weather gives disadvantage on Perception (wind, rain, fog —
+    weather.py); it does not add to the fast pace's -5, both being the same
+    disadvantage's worth (PHB p. 175)."""
     busy = {_key(n) for n, r in (data.get("roles") or {}).items() if r in ("guide", "mapper", "forager")}
     lookouts = [n for n in data.get("players") or [] if _key(n) not in busy]
-    mod = PACES[data.get("pace", "normal")]["perception"]
+    pace = PACES[data.get("pace", "normal")]["perception"]
+    mod = min(pace, weather_mod) if pace and weather_mod else pace + weather_mod
     scores = {n: int(passives[n]) + mod for n in lookouts if passives.get(n) is not None}
     best = max(scores.items(), key=lambda kv: kv[1]) if scores else None
-    return {"lookouts": scores, "best": best[1] if best else None, "by": best[0] if best else "", "mod": mod}
+    return {"lookouts": scores, "best": best[1] if best else None, "by": best[0] if best else "", "mod": mod,
+            "weather": weather_mod}
 
 
 def ready_line(data: dict) -> str:
@@ -255,7 +260,7 @@ def forage_yield(wis_mod: int, rng: random.Random) -> dict:
     return {"rations": food, "water": water, "kg": food * 0.5, "litres": water * 4}
 
 
-def public_view(data: dict, me: str = "", dm: bool = False, passives: dict | None = None) -> dict | None:
+def public_view(data: dict, me: str = "", dm: bool = False, passives: dict | None = None, weather_mod: int = 0) -> dict | None:
     """What a screen sees. The players learn they are lost only when the DM reveals it."""
     if not data.get("on"):
         return None
@@ -268,13 +273,13 @@ def public_view(data: dict, me: str = "", dm: bool = False, passives: dict | Non
             "mine": next((r for n, r in data["roles"].items() if me and _key(n) == _key(me)), None),
             "asked": bool(me) and any(_key(p) == _key(me) for p in data["players"])}
     if passives is not None:
-        view["watch"] = watch(data, passives)
+        view["watch"] = watch(data, passives, weather_mod)
     if dm:
         view.update({"terrain": data.get("terrain", ""), "lost_detail": lost, "history": list(data.get("history") or [])})
     return view
 
 
-def describe(data: dict, passives: dict | None = None) -> str:
+def describe(data: dict, passives: dict | None = None, weather_mod: int = 0) -> str:
     if not data.get("on"):
         return "the party is not on the road"
     pace = data["pace"]
@@ -290,8 +295,9 @@ def describe(data: dict, passives: dict | None = None) -> str:
     for n in data["players"]:
         lines.append(f"  {n}: {data['roles'].get(n, 'no role yet')}")
     if passives is not None:
-        w = watch(data, passives)
-        lines.append("  watch: " + (f"best passive Perception {w['best']} ({w['by']})" if w["by"] else "NOBODY is keeping watch"))
+        w = watch(data, passives, weather_mod)
+        lines.append("  watch: " + (f"best passive Perception {w['best']} ({w['by']})" if w["by"] else "NOBODY is keeping watch")
+                     + (" — the weather gives disadvantage: -5 counted" if weather_mod and w["by"] else ""))
     lost = data.get("lost")
     if lost:
         lines.append(f"  LOST near {lost.get('from') or 'the road'} — the players "
@@ -365,6 +371,18 @@ def tick(campaign: str, now_h=None) -> list:
         return ["the party has spent its hours finding the way: the guide may try again — travel.py navigate"
                 + ("" if lost.get("known") else " (the players still do not know they are lost: travel.py reveal)")]
     return []
+
+
+# ─── The weather (scripts/weather.py) ────────────────────────────────────────
+
+def _weather(camp: str) -> dict:
+    """{"perception": 0 or -5, "storm": bool} from today's weather; nothing without a calendar."""
+    try:
+        import weather
+        w = weather.current(camp)
+        return {"perception": weather.perception_penalty(w), "storm": "storm" in weather.effects(w)}
+    except Exception:
+        return {"perception": 0, "storm": False}
 
 
 # ─── The sheets ───────────────────────────────────────────────────────────────
@@ -528,15 +546,16 @@ def main(argv: list | None = None) -> int:
         it = paths.campaign_language(camp) == "it"
         if args.cmd in ("show", "watch"):
             passives = passives_of(data, camp)
+            wmod = _weather(camp)["perception"]
             if args.cmd == "watch":
                 if not data.get("on"):
                     raise TravelError("the party is not on the road")
-                w = watch(data, passives)
+                w = watch(data, passives, wmod)
                 for n, s in w["lookouts"].items():
-                    print(f"  {n}: passive Perception {s}" + (f" ({w['mod']} for the fast pace)" if w["mod"] else ""))
+                    print(f"  {n}: passive Perception {s}" + (f" ({w['mod']} for the pace and the weather)" if w["mod"] else ""))
                 print(f"watch: {w['best']} ({w['by']})" if w["by"] else "NOBODY is keeping watch: nobody notices a threat passively")
             else:
-                print(describe(data, passives))
+                print(describe(data, passives, wmod))
             return 0
         if args.cmd == "start":
             players = [n.strip() for n in args.only.split(",") if n.strip()] or _party()
@@ -592,9 +611,13 @@ def main(argv: list | None = None) -> int:
                 nums = sheet_numbers(guide, camp)
                 pace_mod = PACES[data["pace"]]["nav"]
                 mod = nums["survival"] + pace_mod
-                adv = "advantage" if args.map else "normal"
-                if nums["why"]:
-                    adv = "normal" if adv == "advantage" else "disadvantage"
+                where = (args.terrain or data.get("terrain") or "").lower()
+                storm = _weather(camp)["storm"] and ("sea" in where or "mare" in where)
+                if storm:                                             # a storm at sea (DMG p. 110)
+                    print("  a storm at sea: no landmarks — disadvantage to find the way")
+                # Any advantage and any disadvantage cancel out, however many of each (PHB p. 173).
+                has_dis = bool(nums["why"]) or storm
+                adv = ("normal" if has_dis else "advantage") if args.map else ("disadvantage" if has_dis else "normal")
                 label = (f"Orientarsi (Sopravvivenza)" if it else "Find the way (Survival)")
                 print(f"{nums['name']} guides: Survival {nums['survival']:+d}"
                       + (f", {pace_mod:+d} for the {data['pace']} pace" if pace_mod else "")

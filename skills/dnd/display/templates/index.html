@@ -1971,6 +1971,7 @@
   .pz-tries .no{ color:#e2574c; font-weight:800; }
 
   /* ── Calendar (calendar.py) — the month, the moon, the weather, what is coming ── */
+  #cal-now .cal-wxfx{ color:#f2c46a; font-size:14.5px; line-height:1.35; }
   #world-clock.has-cal{ pointer-events:auto; cursor:pointer; }
   :root[data-skin="lanterna"] body.ln-on #ln-top #world-clock.has-cal{ cursor:pointer; }
   #cal-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
@@ -11325,6 +11326,12 @@ function _weatherLabel(wt) {
   return wt.temp_key ? sky + ', ' + _t('temp.' + wt.temp_key, null, wt.temp_key) : sky;
 }
 
+// What the day's weather does to the game (scripts/weather.py, DMG pp. 109-110).
+function _weatherEffects(wt) {
+  return ((wt && wt.weather_effects) || []).map(code => ({
+    code: code, short: _t('wxfx.short.' + code, null, code), text: _t('wxfx.' + code, null, code) }));
+}
+
 function _weatherIcon(wt) {
   const said = ((wt && (wt.weather_key || wt.weather)) || '').toLowerCase();
   const key = Object.keys(WEATHER_ICONS).find(k => said.includes(k)) || '';
@@ -11341,6 +11348,14 @@ function updateWorldClock(wt) {
   _wcDate.textContent = wt.date    || '';
   _wcSub.textContent  = [wt.season, wt.day_name, wt.weather_key ? weather : ''].filter(Boolean).join(' · ');
   _wcEl.title = [_t('time.' + timeKey, null, wt.time || ''), weather].filter(Boolean).join(' · ');
+
+  const fx = _weatherEffects(wt);
+  const fxSig = fx.map(f => f.code).join(',');
+  if (window._wxFxSig !== undefined && fxSig && fxSig !== window._wxFxSig) {
+    _showToast('⚠ ' + fx.map(f => f.short).join(' · '), 7000);
+  }
+  window._wxFxSig = fxSig;
+  if (fx.length) _wcEl.title += ' · ⚠ ' + fx.map(f => f.short).join(', ');
 
   _wcEl.classList.add('has-data');
   skyRenderer.setState(wt);
@@ -13097,6 +13112,7 @@ function _calEventsOn(c, day, month, year) {
     if (head) line(now, 'span', head);
     const weather = _weatherLabel(wt);
     if (weather) line(now, 'span', (_weatherIcon(wt) + ' ' + weather).trim());
+    _weatherEffects(wt).forEach(fx => { line(now, 'span', '⚠ ' + fx.text).className = 'cal-wxfx'; });
     const moonNow = _calMoon(c, today);
     if (moonNow) line(now, 'span', moonText(moonNow));
 
@@ -14359,6 +14375,7 @@ function _attackChoices(attack) {
       res.appendChild(el('div', 'big', _t('atk.toHit', { n: last.to_hit }, last.to_hit + ' to hit')));
       if (last.crit) res.appendChild(el('div', 'crit', _t('atk.crit', null, 'Critical hit!')));
       if (last.cover) res.appendChild(el('p', 'atk-cover', coverLabel(last)));
+      if (last.wind) res.appendChild(el('p', 'atk-cover', '💨 ' + _t('atk.wind', null, 'Strong wind: disadvantage on ranged weapons')));
       if (last.fumble) res.appendChild(el('div', 'fumble', _t('atk.fumble', null, 'Natural 1')));
       if (last.damage !== null && last.damage !== undefined) res.appendChild(el('div', 'big', _t('atk.damage', { n: last.damage }, last.damage + ' damage')));
       if (last.ammo_left !== undefined && last.ammo_left !== null) res.appendChild(el('p', 'atk-note', ammoLabel(last.ammo_kind, last.ammo_left)));

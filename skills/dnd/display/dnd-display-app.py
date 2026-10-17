@@ -4229,11 +4229,20 @@ def _travel_passives(data: dict) -> dict:
     return out
 
 
+def _weather_perception() -> int:
+    """What today's weather takes off the lookouts' passive Perception (weather.py)."""
+    try:
+        import weather as _weather
+        return _weather.perception_penalty(_weather.current(_active_campaign()))
+    except Exception:
+        return 0
+
+
 def _travel_view(data: dict, dm: Optional[bool] = None, me: str = "") -> Optional[dict]:
     me = me or (g.character if getattr(g, "role", None) == "player" else str(request.args.get("character") or "")[:50])
     if dm is None:
         dm = getattr(g, "role", None) != "player" and not me
-    return _travel.public_view(data, me or "", dm=dm, passives=_travel_passives(data))
+    return _travel.public_view(data, me or "", dm=dm, passives=_travel_passives(data), weather_mod=_weather_perception())
 
 
 @app.route("/travel", methods=["GET"])
@@ -4464,7 +4473,7 @@ def dm_screen_data():
         "travel": travel,
         "wander": wander,
         "missed": missed,
-        "campaign": camp, "world": {k: world.get(k) for k in ("date", "time", "weather") if world.get(k)},
+        "campaign": camp, "world": {k: world.get(k) for k in ("date", "time", "weather", "weather_effects") if world.get(k)},
         "order": order if isinstance(order, dict) else {}, "party": party, "foes": foes, "clocks": clocks,
         "factions": factions, "secrets": secrets_list, "prep": prep, "supplies": _public_supplies(),
         "downtime": downtime, "dice_pending": _dice_pending_snapshot(), "rolls": rolls,
@@ -4747,7 +4756,8 @@ def attacks_roll(character):
     target = re.sub(r"[`\\$<>\[\]]", "", str(data.get("target", ""))).strip()[:40]
     try:
         attack = _attacks.find(rows, str(data.get("attack", ""))[:80])
-        result = _attacks.roll(attack, str(data.get("advantage", "normal")), int(data.get("alt") or 0), bool(data.get("extra")))
+        result = _attacks.roll(attack, str(data.get("advantage", "normal")), int(data.get("alt") or 0), bool(data.get("extra")),
+                               wind=_attacks.weather_wind(_active_campaign()))     # a strong wind today (weather.py)
     except (_attacks.AttackError, ValueError, TypeError) as e:
         code = "ammo" if "left for" in str(e) else "attack"
         return jsonify({"error": str(e), "code": code}), 409

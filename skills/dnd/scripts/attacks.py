@@ -172,10 +172,24 @@ def _d(sides: int, rng) -> int:
     return (rng.randbelow(sides) if rng else secrets.randbelow(sides)) + 1
 
 
-def roll(attack: dict, advantage: str = "normal", alt: int = 0, extra: bool = False, rng=None) -> dict:
-    """Roll to hit and for damage. `alt` 1.. picks another damage from the notes; `extra` adds the extra dice."""
+_RANGED_NOTE = re.compile(r"\ba distanza\b|\branged\b", re.I)
+
+
+def is_ranged_weapon(attack: dict) -> bool:
+    """A bow, a crossbow, a sling, a blowgun — or a row whose notes say it is a ranged weapon attack."""
+    return bool((attack.get("ammo") or {}).get("kind")) or bool(_RANGED_NOTE.search(attack.get("notes") or ""))
+
+
+def roll(attack: dict, advantage: str = "normal", alt: int = 0, extra: bool = False, rng=None, wind: bool = False) -> dict:
+    """Roll to hit and for damage. `alt` 1.. picks another damage from the notes; `extra` adds the extra dice.
+
+    `wind`: a strong wind blows today (weather.py) — ranged weapons roll with disadvantage, which cancels
+    an advantage (DMG p. 110, PHB p. 173)."""
     if advantage not in ADVANTAGE:
         advantage = "normal"
+    blown = bool(wind) and not attack.get("save") and is_ranged_weapon(attack)
+    if blown:
+        advantage = "normal" if advantage == "advantage" else "disadvantage"
     if attack.get("save"):
         return _roll_save(attack, alt, rng)
     if attack.get("bonus") is None:
@@ -184,7 +198,7 @@ def roll(attack: dict, advantage: str = "normal", alt: int = 0, extra: bool = Fa
         raise AttackError(f"no {ammo.NAMES['en'][attack['ammo']['kind']]} left for {attack['name']}")
     d20s = [_d(20, rng)] + ([_d(20, rng)] if advantage != "normal" else [])
     natural = max(d20s) if advantage == "advantage" else min(d20s) if advantage == "disadvantage" else d20s[0]
-    out = {"attack": attack["name"], "advantage": advantage, "d20": d20s, "natural": natural,
+    out = {"attack": attack["name"], "advantage": advantage, "d20": d20s, "natural": natural, "wind": blown,
            "bonus": attack["bonus"], "to_hit": natural + attack["bonus"], "crit": natural == 20, "fumble": natural == 1,
            "type": attack.get("type", ""), "damage": None, "damage_text": "", "dice": [], "extra_dice": [], "extra_label": ""}
     damage = attack.get("damage")
@@ -296,6 +310,15 @@ def with_cover(r: dict, cover: dict | None) -> dict:
     return r
 
 
+def weather_wind(campaign: str) -> bool:
+    """A strong wind today in the campaign's calendar (weather.py)."""
+    try:
+        import weather
+        return weather.ranged_disadvantage(weather.current(campaign)) if campaign else False
+    except Exception:
+        return False
+
+
 _COVER_WORDS = {
     "it": {"half": "mezza copertura", "three-quarters": "copertura di tre quarti", "total": "copertura totale",
            "ac": "+{b} alla CA del bersaglio (il tiro vale {v})", "dex": "+{b} al TS Destrezza dei bersagli",
@@ -334,6 +357,10 @@ def _numbers(r: dict, lang: str) -> str:
     if r["advantage"] != "normal":
         d20 += f", {w['adv'] if r['advantage'] == 'advantage' else w['dis']}"
     line = f"{r['to_hit']} {w['hit']} ({d20})"
+    if r.get("wind"):
+        line += " · vento forte" if lang == "it" else " · strong wind"
+        if r["advantage"] == "normal":
+            line += ": vantaggio e svantaggio si annullano" if lang == "it" else ": advantage and disadvantage cancel out"
     if r["crit"]:
         line += f" — {w['crit']}!"
     elif r["fumble"]:
@@ -392,7 +419,7 @@ def main(argv: list | None = None) -> int:
             return 0
         adv = "advantage" if args.advantage else "disadvantage" if args.disadvantage else "normal"
         attack = find(attacks, args.attack)
-        r = roll(attack, adv, args.alt, args.extra)
+        r = roll(attack, adv, args.alt, args.extra, wind=weather_wind(camp))
         with_cover(r, map_cover(camp, name, args.target))
         spend_ammo(attack, r, path, camp)
         lang = paths.campaign_language(camp) if camp else "en"

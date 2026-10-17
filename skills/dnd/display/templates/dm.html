@@ -154,7 +154,9 @@
   }
 
   function render(d) {
-    $('meta').textContent = [d.campaign, d.world && d.world.date, d.world && d.world.time].filter(Boolean).join(' · ');
+    const wfx = ((d.world && d.world.weather_effects) || []).map(c => _t('wxfx.short.' + c, null, c));
+    $('meta').textContent = [d.campaign, d.world && d.world.date, d.world && d.world.time, d.world && d.world.weather,
+                             wfx.length ? '⚠ ' + wfx.join(', ') : ''].filter(Boolean).join(' · ');
 
     // Initiative: the order with the numbers the players do not see.
     const order = (d.order && d.order.order) || [];

@@ -45,9 +45,11 @@ Usage:
     # Time of day only
     python3 calendar.py -c <campaign> time <dawn|morning|midday|afternoon|dusk|evening|night|midnight>
 
-    # Weather: roll it for today, set it by hand, or let each new day roll its own
+    # Weather: roll it for today, set it by hand, or let each new day roll its own. A roll also gives the
+    # wind, the precipitation and an extreme cold or heat (DMG p. 109); what they do: weather.py show
     python3 calendar.py -c <campaign> weather roll
     python3 calendar.py -c <campaign> weather set fog cold --text "nebbia che non si alza"
+    python3 calendar.py -c <campaign> weather set snow freezing --wind strong --precip heavy --extreme cold
     python3 calendar.py -c <campaign> weather auto on
     python3 calendar.py -c <campaign> weather show
 
@@ -367,13 +369,37 @@ def _roll_weather(cal: dict, rng: random.Random) -> dict:
         key = "rain"
     elif key == "rain" and temp == "freezing":
         key = "snow"
-    return {"key": key, "temp": temp, "text": "", "day": today}
+    import weather as _wx                          # the wind, the rain, an extreme day (DMG p. 109)
+    more = _wx.intensity(key, temp, climate, rng)
+    return {"key": more["key"], "temp": temp, "text": "", "day": today,
+            "wind": more["wind"], "precip": more["precip"], "extreme": more["extreme"]}
 
 
 def _weather_text(weather: dict) -> str:
     if not weather or not weather.get("key"):
         return ""
-    return weather.get("text") or ", ".join(x for x in (weather.get("key"), weather.get("temp")) if x)
+    text = weather.get("text") or ", ".join(x for x in (weather.get("key"), weather.get("temp")) if x)
+    extra = [f"{weather['wind']} wind" if weather.get("wind") in ("light", "strong") else "",
+             f"{weather['precip']} precipitation" if weather.get("precip") == "heavy" else "",
+             f"EXTREME {weather['extreme'].upper()}" if weather.get("extreme") else ""]
+    return text + "".join(f" · {x}" for x in extra if x)
+
+
+def _weather_effects(weather: dict) -> list:
+    """What the day's weather does to the game, for the DM (weather.py)."""
+    try:
+        import weather as _wx
+        return _wx.describe(weather or {})
+    except Exception:
+        return []
+
+
+def _weather_effect_codes(weather: dict) -> list:
+    try:
+        import weather as _wx
+        return _wx.effects(weather or {})
+    except Exception:
+        return []
 
 
 def _event_date(cal: dict, e: dict) -> tuple:
@@ -420,6 +446,7 @@ def world_time(cal: dict) -> dict:
         "weather_key": weather.get("key", ""),
         "temp_key": weather.get("temp", ""),
         "weather_text": weather.get("text", ""),
+        "weather_effects": _weather_effect_codes(weather),
         "calendar": {
             "day": cal.get("day", 1), "month": cal.get("month", 1), "year": cal.get("year", 1),
             "months": _month_list(cal), "month_length": _month_length(cal),
@@ -478,6 +505,8 @@ def _after_change(campaign: str, cal: dict, before_day=None, rng=None) -> None:
         if weather.get("auto"):
             cal["weather"] = dict(_roll_weather(cal, rng or random.Random()), auto=True)
             print(f"  Weather today: {_weather_text(cal['weather'])}")
+            for line in _weather_effects(cal["weather"]):
+                print(f"    ⚠ {line}")
         elif weather.get("key"):
             print(f"  Weather is still set to: {_weather_text(weather)} — a new day; "
                   "`weather roll` or `weather set` if it changed")
@@ -596,7 +625,9 @@ def cmd_advance(campaign: str, amount: int, unit: str) -> None:
 
     label = f"+{amount} {unit}"
     print(f"  {label} → {_format_date(cal)}")
+    extreme = (cal.get("weather") or {}).get("extreme")
     _after_change(campaign, cal, before)
+    _exposure_note(extreme, total_hours)
     _spend_supplies(campaign, total_hours, _abs_day(cal) - before)
     _keep_stronghold(campaign, _abs_day(cal) - before)
     _wander(campaign, total_hours, _format_date(cal))
@@ -617,12 +648,23 @@ def cmd_rest(campaign: str, rest_type: str) -> None:
         label = "Long rest (+8 hours)"
 
     print(f"  {label} → {_format_date(cal)}")
+    extreme = (cal.get("weather") or {}).get("extreme")
     _after_change(campaign, cal, before)
+    _exposure_note(extreme, 1 if rest_type == "short" else 8)
     _spend_supplies(campaign, 1 if rest_type == "short" else 8, _abs_day(cal) - before)
     _keep_stronghold(campaign, _abs_day(cal) - before)
     _wander(campaign, 1 if rest_type == "short" else 8, _format_date(cal))
     _travel(campaign, cal)
     _afflictions(campaign, before_h, _abs_hour(cal))
+
+
+def _exposure_note(extreme: str, hours: int) -> None:
+    """Hours went by in extreme cold or heat: whoever was out in it makes the saves (weather.py expose)."""
+    if extreme in ("cold", "heat") and hours >= 1:
+        n = min(int(hours), 24)
+        print(f"  {'❄' if extreme == 'cold' else '☀'} Extreme {extreme}: whoever spent these {n} hour(s) "
+              f"out in it saves at the end of each hour — weather.py expose --hours {n}"
+              + (" (only without drinkable water)" if extreme == "heat" else "") + "; not if they were sheltered")
 
 
 def _spend_supplies(campaign: str, hours: float, days_crossed: int) -> None:
@@ -758,6 +800,8 @@ def cmd_weather(campaign: str, args) -> None:
     auto = bool(weather.get("auto"))
     if args.action == "show":
         print(f"  Weather: {_weather_text(weather) or 'not set'}" + ("  (rolled each new day)" if auto else ""))
+        for line in _weather_effects(weather):
+            print(f"    ⚠ {line}")
         return
     if args.action == "roll":
         if not _season(cal).get("kind"):
@@ -773,8 +817,16 @@ def cmd_weather(campaign: str, args) -> None:
                                 "(the words the players read go in --text)")
         if temp and temp not in TEMP_KEYS:
             raise CalendarError(f"temperature is one of {', '.join(TEMP_KEYS)} — not {temp!r}")
-        cal["weather"] = {"key": key, "temp": temp, "text": (args.text or "").strip(),
-                          "day": _abs_day(cal), "auto": auto}
+        import weather as _wx
+        try:
+            base = _wx.filled({"key": key})
+            cal["weather"] = {"key": key, "temp": temp, "text": (args.text or "").strip(),
+                              "day": _abs_day(cal), "auto": auto,
+                              "wind": _wx.wind_of(args.wind) if args.wind else base["wind"],
+                              "precip": _wx.precip_of(args.precip) if args.precip else base["precip"],
+                              "extreme": _wx.extreme_of(args.extreme) if args.extreme else ""}
+        except _wx.WeatherError as e:
+            raise CalendarError(str(e))
     elif args.action == "auto":
         want = (args.values[0] if args.values else "").lower()
         if want not in ("on", "off"):
@@ -786,6 +838,8 @@ def cmd_weather(campaign: str, args) -> None:
     _save(campaign, cal)
     print(f"  Weather: {_weather_text(cal['weather']) or 'not set'}"
           + ("  (rolled each new day)" if cal["weather"].get("auto") else ""))
+    for line in _weather_effects(cal["weather"]):
+        print(f"    ⚠ {line}")
     _push_world(campaign, cal)
 
 
@@ -892,6 +946,9 @@ def main(argv=None) -> None:
     wx.add_argument("values", nargs="*", help="set: KEY [TEMP] · auto: on|off")
     wx.add_argument("--text", default="", help="set: the words the players read instead of the plain key")
     wx.add_argument("--seed", default=None, help="roll: make it repeatable")
+    wx.add_argument("--wind", default="", help="set: none | light | strong")
+    wx.add_argument("--precip", default="", help="set: none | light | heavy (rain or snow)")
+    wx.add_argument("--extreme", default="", help="set: cold | heat — extreme, with hourly saves (DMG p. 110)")
 
     ev = sub.add_parser("event", help="Add or remove a coming event")
     ev.add_argument("action", choices=["add", "remove"])
