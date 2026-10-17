@@ -8,7 +8,11 @@ broadcast, input-queue poll, /queue/consumed POST) using python I/O only.
 
 Prints the queued player action(s) to stdout, or nothing on timeout (9 min).
 A secret note from a player (whisper.py) also ends the wait: it is printed as a
-`[[SECRET NOTE from <Char> — …]]` line, before any queued action.
+`[[SECRET NOTE from <Char> — …]]` line, before any queued action. So do a
+solved puzzle, the end of a vote, a turn in a chase and a rest that is over
+for everybody (rest.py). When the wait ends, the news check_input.py would
+print is printed too (rests, spells cast from a phone, the common fund,
+downtime), since in autorun mode check_input.py is not run every turn.
 """
 import os
 import sys
@@ -38,6 +42,10 @@ try:
     import chase as _chase
 except Exception:
     _chase = None
+try:
+    import rest as _rest
+except Exception:
+    _rest = None
 PUSH = os.path.join(DISPLAY_DIR, "push_stats.py")
 
 try:
@@ -88,6 +96,8 @@ for _ in range(1800):  # 0.3s * 1800 = 9 min
         break
     if _chase and _chase.notes_pending():     # a player ran: the creatures' turn, or a complication
         break
+    if _rest and _rest.over_pending():        # everybody finished resting: the DM moves the clock on
+        break
     try:
         if open(SESSION_FILE, encoding="utf-8").read().strip() != my_session:
             break
@@ -126,6 +136,13 @@ notes = _whisper.drain_inbox() if _whisper else []
 notes += _puzzle.drain_news() if _puzzle else []
 notes += _vote.drain_notes() if _vote else []
 notes += _chase.drain_notes() if _chase else []
+notes += _rest.drain_notes() if _rest else []
+# The rest of what check_input.py reports: already applied, information for the DM.
+for _mod, _fn in (("spellbook", "drain_casts"), ("treasury", "drain_notes"), ("downtime", "drain_notes")):
+    try:
+        notes += getattr(__import__(_mod), _fn)()
+    except Exception:
+        pass
 if notes:
     content = "\n".join(notes + ([content] if content else []))
 

@@ -236,6 +236,16 @@ def format_note(note: dict) -> str:
     return ""
 
 
+def over_pending() -> bool:
+    """True when a rest has ended for everybody and the DM has not been told yet."""
+    try:
+        with open(_notes_file(), encoding="utf-8") as f:
+            notes = json.load(f)
+    except (OSError, ValueError):
+        return False
+    return isinstance(notes, list) and any(isinstance(n, dict) and n.get("kind") == "over" for n in notes)
+
+
 def drain_notes() -> list:
     """Rest news not yet reported, as lines for the DM; clears the list."""
     path = _notes_file()

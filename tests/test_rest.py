@@ -210,6 +210,35 @@ class CommandTests(unittest.TestCase):
         self.assertIn("Hit Dice 2 of 2", r.stdout)
 
 
+class AutorunTests(unittest.TestCase):
+    def test_the_end_of_a_rest_wakes_the_autorun_wait(self):
+        # A rest over for everybody used to leave the wait asleep until a player typed.
+        with tempfile.TemporaryDirectory() as tmp:
+            notes = [{"kind": "hd", "character": "Ajeje", "die": 10, "roll": 6, "con": 2, "gained": 8,
+                      "hp": 20, "max": 24, "left": 1, "hd_max": 2},
+                     {"kind": "over", "rest": "short"}]
+            pathlib.Path(tmp, "rest_notes.json").write_text(json.dumps(notes), encoding="utf-8")
+            env = dict(os.environ, DND_RUNTIME_DIR=tmp, DND_CAMPAIGN_ROOT=tmp, PYTHONUTF8="1")
+            out = subprocess.run([sys.executable, str(DISPLAY / "autorun_wait.py")], capture_output=True,
+                                 text=True, encoding="utf-8", env=env, timeout=60).stdout
+            self.assertIn("[[REST: Ajeje spent a Hit Die", out)
+            self.assertIn("[[REST: the short rest is over for everybody", out)
+            self.assertFalse(pathlib.Path(tmp, "rest_notes.json").exists(), "told once")
+
+    def test_a_hit_die_alone_does_not_wake_it(self):
+        old = rest._notes_file
+        with tempfile.TemporaryDirectory() as tmp:
+            rest._notes_file = lambda: os.path.join(tmp, "rest_notes.json")
+            try:
+                self.assertFalse(rest.over_pending())
+                rest.notes_add({"kind": "hd", "character": "Ajeje"})
+                self.assertFalse(rest.over_pending())
+                rest.notes_add({"kind": "over", "rest": "long"})
+                self.assertTrue(rest.over_pending())
+            finally:
+                rest._notes_file = old
+
+
 class ServerTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

@@ -588,7 +588,7 @@ Every character with an `## Attacks` table on the sheet has an Attacks panel on 
 
 ## Rests
 
-With the display running, a rest is taken from the players' screens: `scripts/rest.py open short|long` puts a Rest panel on every resting player's screen (Hit Dice spent one at a time on a short rest, everything back in one tap on a long one), writes the sheets and the display, and reports each step as a `[[REST: …]]` line through `check_input.py` — already applied, never apply it twice. Procedure and the parts left to you: `SKILL-commands.md` → *rest*; syntax: `SKILL-scripts.md` → *Rests*.
+With the display running, a rest is taken from the players' screens: `scripts/rest.py open short|long` puts a Rest panel on every resting player's screen (Hit Dice spent one at a time on a short rest, everything back in one tap on a long one), writes the sheets and the display, and reports each step as a `[[REST: …]]` line through `check_input.py` — already applied, never apply it twice. In autorun the wait wakes by itself when the rest is over for everybody, with all the `[[REST: …]]` lines: go straight on with the scene. Procedure and the parts left to you: `SKILL-commands.md` → *rest*; syntax: `SKILL-scripts.md` → *Rests*.
 
 ---
 
