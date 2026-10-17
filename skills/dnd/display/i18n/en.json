@@ -1054,5 +1054,6 @@
   "ail.toast.better": "{name} is easing",
   "ail.toast.cured": "{name} is over",
   "ail.toast.hit": "{name}: you take damage",
-  "ail.dc": "DC"
+  "ail.dc": "DC",
+  "dms.travel.retryNow": "the guide may try again now"
 }

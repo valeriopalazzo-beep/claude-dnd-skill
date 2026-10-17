@@ -222,7 +222,8 @@
       + (tr.watch ? `<br><small class="muted">${esc(tr.watch.by ? _t('trv.watch', { n: tr.watch.best, name: tr.watch.by }, '') : _t('trv.nowatch', null, ''))}</small>` : '') + '</p>'
       + (tr.lost_detail ? `<p><span class="tag warn">${esc(_t('dms.travel.lost', null, 'LOST'))}</span> ${esc(tr.lost_detail.from || '')}`
         + (tr.lost_detail.known ? '' : ` <small class="muted">(${esc(_t('dms.travel.unknown', null, ''))})</small>`)
-        + `<br><small class="muted">${esc(_t('dms.travel.retry', { n: tr.lost_detail.retry_hours }, ''))}</small></p>` : '')
+        + `<br><small class="muted">${esc(tr.lost_detail.retry_due ? _t('dms.travel.retryNow', null, 'the guide may try again now')
+          : _t('dms.travel.retry', { n: tr.lost_detail.retry_hours }, ''))}</small></p>` : '')
       + '<table>' + tr.players.map(n => `<tr><td>${esc(n)}</td><td>${tr.roles[n] ? esc(_t('trv.role.' + tr.roles[n], null, tr.roles[n]))
         : `<span class="muted">${esc(_t('trv.norole', null, '—'))}</span>`}${tr.watch && tr.watch.lookouts[n] != null ? ` <span class="muted">· ${esc(tr.watch.lookouts[n])}</span>` : ''}</td></tr>`).join('') + '</table>'
       : empty('dms.none');

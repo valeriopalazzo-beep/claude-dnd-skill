@@ -1194,5 +1194,6 @@
   "ail.toast.better": "{name} migliora",
   "ail.toast.cured": "{name}: è passato tutto",
   "ail.toast.hit": "{name}: subisci danni",
-  "ail.dc": "CD"
+  "ail.dc": "CD",
+  "dms.travel.retryNow": "la guida può riprovare ora"
 }
