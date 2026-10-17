@@ -12,7 +12,8 @@ A secret note from a player (whisper.py) also ends the wait: it is printed as a
 solved puzzle, the end of a vote, a turn in a chase and a rest that is over
 for everybody (rest.py). When the wait ends, the news check_input.py would
 print is printed too (rests, spells cast from a phone, the common fund,
-downtime), since in autorun mode check_input.py is not run every turn.
+downtime), since in autorun mode check_input.py is not run every turn, and
+after the players' actions a `[[QUESTS — still open: …]]` line (quests.py).
 """
 import os
 import sys
@@ -155,5 +156,15 @@ except Exception:
     _sales = []
 if _sales:
     content = "\n".join(_sales + [content])
+
+# The quest steps still open, after the players' actions: the DM ticks what they achieved this turn.
+if content:
+    try:
+        import quests as _quests
+        _line = _quests.reminder_line()
+        if _line:
+            content = content + "\n" + _line
+    except Exception:
+        pass
 
 sys.stdout.write(content)

@@ -42,6 +42,25 @@ class QuestTests(unittest.TestCase):
                 qs.add(rows, bad[0], **bad[1])
         self.assertEqual(len(rows), 1)
 
+    def test_the_dm_is_reminded_of_every_open_step(self):
+        rows = []
+        qs.add(rows, "Il lampionaio", objectives=["Raggiungere Via dei Lampioni", "Decidere cosa fare di Tobia"])
+        qs.mark(rows[0], "Raggiungere")
+        qs.add(rows, "Il cantiere", objectives=["Presentarsi all'alba"])
+        qs.mark(rows[1], "Presentarsi")
+        qs.add(rows, "Vecchia storia", status="resolved", objectives=["Fatto"])
+        qs.add(rows, "Il sesto nome", status="threat")
+        line = qs.reminder(rows)
+        self.assertTrue(line.startswith("[[QUESTS — still open: «Il lampionaio» → Decidere cosa fare di Tobia |"))
+        self.assertNotIn("Raggiungere", line)                                   # ticked steps are not repeated
+        self.assertIn("«Il cantiere» → no step left open: resolve it", line)    # all done, quest still open
+        self.assertIn("«Il sesto nome»", line)                                  # threats are open too
+        self.assertNotIn("Vecchia storia", line)
+        self.assertIn("quests.py done", line)
+        self.assertEqual(qs.reminder([]), "")
+        for script in ("check_input.py", "autorun_wait.py"):
+            self.assertIn("reminder_line", (DISPLAY / script).read_text(encoding="utf-8"))
+
     def test_fields_change_empty_and_rename(self):
         rows = []
         q = qs.add(rows, "Il sesto nome", status="threat", deadline="Luna piena")

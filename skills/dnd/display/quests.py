@@ -260,6 +260,32 @@ def describe(quest: dict) -> str:
     return "\n".join(lines)
 
 
+def reminder(quests: list, limit: int = 8) -> str:
+    """One line for the DM with every step still open, so the panel keeps up with play.
+
+    check_input.py and autorun_wait.py print it after the players' actions:
+    the DM ticks in the same turn what those actions achieved.
+    """
+    parts = []
+    for q in [q for q in quests if q.get("status") in OPEN][:limit]:
+        steps = [_clean(o["text"], LINE) for o in q.get("objectives") or [] if not o.get("done")]
+        steps = [t if len(t) <= 90 else t[:89].rstrip() + "…" for t in steps]
+        parts.append(f"«{q['name']}» → " + ("; ".join(steps) if steps else "no step left open: resolve it, or add the next step"))
+    if not parts:
+        return ""
+    return ("[[QUESTS — still open: " + " | ".join(parts) + ". If this turn achieved, failed or changed any of it, "
+            "or gave a lead, update it in the same Bash as the narration (quests.py done / objective / clue / "
+            "set / resolve / fail). Not a player action.]]")
+
+
+def reminder_line(campaign: str = "") -> str:
+    """reminder() for the active campaign; '' when there is none or nothing is open."""
+    try:
+        return reminder(load(data_path(campaign)))
+    except Exception:
+        return ""
+
+
 def _display_quests() -> list:
     """The quests the display is showing, from its saved stats (works with the display off)."""
     from runtime_paths import rt

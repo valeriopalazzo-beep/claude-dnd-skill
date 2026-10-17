@@ -30,6 +30,10 @@ it at the shop (treasury.py), are `[[TREASURY: …]]` lines, already applied.
 Spells cast from a player's screen and concentration saves after damage
 are `[[SPELL: …]]` and `[[CONCENTRATION: …]]` lines, already applied.
 
+After the players' actions comes a `[[QUESTS — still open: …]]` line with the
+quest steps not yet ticked (quests.py): the DM updates in the same turn what
+those actions achieved.
+
 Secret notes the players wrote to the DM (whisper.py) are printed first, one
 `[[SECRET NOTE from <Char> — …]] text` line each, whether or not an action is queued.
 """
@@ -170,5 +174,10 @@ try:
                 if d:
                     print(d)
             print(content)
+            # The quest steps still open: tick what these actions achieved, this turn.
+            from quests import reminder_line
+            line = reminder_line()
+            if line:
+                print(line)
 except Exception:
     pass
