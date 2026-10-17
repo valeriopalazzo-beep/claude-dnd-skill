@@ -3309,6 +3309,8 @@ def people_changed():
     event = data.get("event")
     if isinstance(event, dict) and event.get("name"):
         payload["people_event"] = {"name": str(event["name"])[:60], "new": bool(event.get("new"))}
+        if isinstance(event.get("card"), dict):          # the card every screen shows (who, what they look like, where)
+            payload["people_event"]["card"] = {k: str(event["card"].get(k) or "")[:160] for k in ("role", "look", "where")}
     _broadcast(payload)
     return "", 204
 

@@ -5,8 +5,10 @@ Not the DM's NPC file: a notebook that starts empty and holds only what the
 characters have seen and heard — who someone is, where they met, what the
 party found out about them and what they said.
 
-    people.py meet "Padre Oderico" --role "prete di Vallombra" --where "Cappella della Luce Vigile"
+    people.py meet "Padre Oderico" --role "prete di Vallombra" --where "Cappella della Luce Vigile" \
+                   --look "vecchio, tonaca rattoppata, una lanterna spenta al collo"
     people.py meet "L'Incappucciato" --role "adepto della Confraternita" --attitude hostile
+    people.py card "oderico"                                   # show his card on every screen again
     people.py learn "oderico" "Compagno di seminario di Isolda Fenn"
     people.py said "oderico" "A me risponde. A me ha sempre risposto."
     people.py seen "oderico" "Cimitero della Collina"          # where the party last saw them
@@ -22,7 +24,9 @@ alive (the default), dead, prisoner, missing, gone. Italian words are
 understood (amico, ostile, morto, prigioniero, scomparso…).
 
 The notebook lives in <campaign>/people.json. Every screen has a People panel
-and is told when a page is added or grows. A person can be named by any part
+and is told when a page is added or grows. Meeting someone new puts a card on
+every screen — name, who they are, what they look like (--look, one line),
+where — so the table knows at once who is speaking; `card` shows it again. A person can be named by any part
 of the name that means one page only. Anything that does not match exits
 non-zero and changes nothing.
 """
@@ -51,8 +55,8 @@ STATUSES = ("alive", "dead", "prisoner", "missing", "gone")
 STATUS_ALIASES = {"vivo": "alive", "viva": "alive", "morto": "dead", "morta": "dead", "prigioniero": "prisoner",
                   "prigioniera": "prisoner", "captured": "prisoner", "scomparso": "missing", "scomparsa": "missing",
                   "partito": "gone", "partita": "gone", "left": "gone"}
-FIELDS = ("role", "where", "seen", "faction")
-LIMITS = {"name": 60, "role": 120, "where": 120, "seen": 120, "faction": 80}
+FIELDS = ("role", "where", "seen", "faction", "look")
+LIMITS = {"name": 60, "role": 120, "where": 120, "seen": 120, "faction": 80, "look": 160}
 LINE = 240
 MAX_LINES = 40          # facts, or things said, on one page
 
@@ -129,7 +133,8 @@ def _one_of(value: str, table: tuple, aliases: dict, what: str, empty: str = "")
 
 # ─── Operations ───────────────────────────────────────────────────────────────
 
-def meet(people: list, name: str, role: str = "", where: str = "", attitude: str = "", faction: str = "") -> tuple:
+def meet(people: list, name: str, role: str = "", where: str = "", attitude: str = "", faction: str = "",
+         look: str = "") -> tuple:
     """A meeting. Returns (page, True if it is a new one). Meeting again updates where they were seen."""
     try:
         page = find(people, name)
@@ -144,6 +149,7 @@ def meet(people: list, name: str, role: str = "", where: str = "", attitude: str
         raise PeopleError("a person needs a name, or what the party calls them")
     page = {"id": secrets.token_hex(4), "name": name, "role": _clean(role, LIMITS["role"]),
             "where": _clean(where, LIMITS["where"]), "seen": "", "faction": _clean(faction, LIMITS["faction"]),
+            "look": _clean(look, LIMITS["look"]),
             "attitude": _one_of(attitude, ATTITUDES, ATTITUDE_ALIASES, "attitude"), "status": "alive",
             "facts": [], "said": [], "ts": time.time()}
     people.append(page)
@@ -218,10 +224,17 @@ def public_view(people: list) -> list:
     return sorted(rows, key=lambda p: _key(p["name"]))
 
 
+def card(page: dict) -> dict:
+    """What the card on every screen shows: who they are, what they look like, where."""
+    return {"role": page.get("role", ""), "look": page.get("look", ""), "where": page.get("seen") or page.get("where", "")}
+
+
 def describe(page: dict) -> str:
     head = page["name"] + (f" — {page['role']}" if page.get("role") else "")
     tags = [t for t in (page.get("attitude", ""), page.get("status", "alive") if page.get("status", "alive") != "alive" else "") if t]
     lines = [head + (f"  [{', '.join(tags)}]" if tags else "")]
+    if page.get("look"):
+        lines.append(f"  looks: {page['look']}")
     lines += [f"  {label}: {page[f]}" for f, label in (("where", "met"), ("seen", "last seen"), ("faction", "faction"))
               if page.get(f)]
     lines += [f"  · {f}" for f in page.get("facts") or []]
@@ -251,6 +264,7 @@ def main(argv: list | None = None) -> int:
     p.add_argument("--where", default="", help="where (the first time: where they met; later: where they were seen)")
     p.add_argument("--attitude", default="", help=", ".join(ATTITUDES))
     p.add_argument("--faction", default="")
+    p.add_argument("--look", default="", help="what they look like, in one line: it goes on the card every screen shows")
     for cmd, arg, what in (("learn", "fact", "the party finds something out about them"),
                            ("said", "words", "something they told the party"),
                            ("seen", "place", "where the party last saw them")):
@@ -262,6 +276,7 @@ def main(argv: list | None = None) -> int:
     p.add_argument("--role", default=None)
     p.add_argument("--where", default=None, help="where the party first met them")
     p.add_argument("--faction", default=None)
+    p.add_argument("--look", default=None)
     p.add_argument("--attitude", default=None, help=", ".join(ATTITUDES) + ' ("" = unknown)')
     p.add_argument("--status", default=None, help=", ".join(STATUSES))
     p = sub.add_parser("rename", help="the party learns their name")
@@ -273,6 +288,7 @@ def main(argv: list | None = None) -> int:
     p.add_argument("--said", default="")
     for cmd in ("forget", "show"):
         sub.add_parser(cmd).add_argument("name")
+    sub.add_parser("card", help="show their card on every screen again").add_argument("name")
     sub.add_parser("list")
     args = ap.parse_args(argv)
 
@@ -290,11 +306,20 @@ def main(argv: list | None = None) -> int:
         if args.cmd == "show":
             print(describe(find(people, args.name)))
             return 0
+        if args.cmd == "card":
+            page = find(people, args.name)
+            if camp == media.active_campaign():
+                _announce({"name": page["name"], "new": False, "card": card(page)})
+            print(describe(page))
+            return 0
         if args.cmd == "meet":
-            page, fresh = meet(people, args.name, args.role, args.where, args.attitude, args.faction)
+            page, fresh = meet(people, args.name, args.role, args.where, args.attitude, args.faction, args.look)
             if not fresh:
-                change(page, args.attitude or None, None, role=args.role or None, faction=args.faction or None)
-            event = {"name": page["name"], "new": True} if fresh else None
+                change(page, args.attitude or None, None, role=args.role or None, faction=args.faction or None,
+                       look=args.look or None)
+            event = {"name": page["name"], "new": True, "card": card(page)} if fresh else None
+            if fresh and not page.get("look"):
+                print("  (no --look: the card says who they are but not what they look like — people.py set --look)")
             print(("+ " if fresh else "") + describe(page))
         elif args.cmd in ("learn", "said"):
             page = find(people, args.name)
@@ -308,9 +333,10 @@ def main(argv: list | None = None) -> int:
             print(describe(page))
         elif args.cmd == "set":
             page = find(people, args.name)
-            changed = change(page, args.attitude, args.status, role=args.role, where=args.where, faction=args.faction)
+            changed = change(page, args.attitude, args.status, role=args.role, where=args.where, faction=args.faction,
+                             look=args.look)
             if not changed:
-                raise PeopleError("set what? give --role, --where, --faction, --attitude or --status")
+                raise PeopleError("set what? give --role, --where, --faction, --look, --attitude or --status")
             event = {"name": page["name"], "new": False} if "status" in changed else None
             print(describe(page))
         elif args.cmd == "rename":

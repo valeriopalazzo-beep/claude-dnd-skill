@@ -1903,6 +1903,21 @@
   :root[data-skin="lanterna"] .sb-companions{ gap:6px; margin-top:8px; }
   :root[data-skin="lanterna"] .sb-comp-chip{ font-family:'Alegreya Sans',sans-serif; font-size:14.5px; padding:3px 11px;
     background:var(--ln-surface-2, rgba(255,255,255,.05)); border-color:var(--ln-line-strong, rgba(255,255,255,.25)); }
+  /* ── The card of someone the party has just met (people.py meet) ── */
+  .people-look{ margin:-4px 0 10px; font-style:italic; color:var(--ln-text-muted, #cdbfa6); }
+  #npc-card{ display:none; position:fixed; inset:0; z-index:10560; align-items:center; justify-content:center; padding:16px;
+    background:rgba(8,6,4,.72); }
+  #npc-card.open{ display:flex; }
+  #npc-card-box{ width:min(420px, 100%); padding:20px 22px 18px; border-radius:16px; text-align:center;
+    color:#ECE4D2; font-family:'Alegreya Sans','Syne',sans-serif; background:#1d1813;
+    border:1px solid rgba(242,181,68,.55); box-shadow:0 18px 50px rgba(0,0,0,.55); }
+  #npc-card-box .npc-eyebrow{ margin:0 0 6px; font-size:13px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#f2b544; }
+  #npc-card-box h3{ margin:0 0 4px; font-size:28px; line-height:1.1; }
+  #npc-card-box .npc-role{ margin:0 0 10px; font-size:18px; font-weight:700; }
+  #npc-card-box .npc-look{ margin:0 0 10px; font-size:17px; font-style:italic; color:#d8ccb4; }
+  #npc-card-box .npc-where{ margin:0 0 14px; font-size:14px; color:#b9ab92; }
+  #npc-card-box button{ padding:10px 26px; border-radius:999px; cursor:pointer; font:inherit; font-size:16px; font-weight:800;
+    color:#1a140c; background:#f2b544; border:none; }
   #rumor-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
     align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
   #rumor-modal.open{ display:flex; }
@@ -6018,6 +6033,18 @@
     </div>
     <div id="comp-list"></div>
     <div id="comp-sheet"></div>
+  </div>
+</div>
+
+<!-- The card of someone just met: who they are and what they look like (people.py meet / card) -->
+<div id="npc-card" role="dialog" aria-labelledby="npc-card-name">
+  <div id="npc-card-box">
+    <p class="npc-eyebrow" id="npc-card-eyebrow"></p>
+    <h3 id="npc-card-name"></h3>
+    <p class="npc-role" id="npc-card-role"></p>
+    <p class="npc-look" id="npc-card-look"></p>
+    <p class="npc-where" id="npc-card-where"></p>
+    <button type="button" id="npc-card-ok" data-i18n="people.cardOk">Got it</button>
   </div>
 </div>
 
@@ -12713,7 +12740,7 @@ function _personRows(p) {
                 ['attitude', p.attitude], ['status', p.status === 'alive' ? '' : p.status]]
     .filter(r => r[1]).map(r => ({ key: r[0], value: String(r[1]) }));
   const facts = p.facts || [], said = p.said || [];
-  return { role: p.role || '', meta: meta, facts: facts, said: said,
+  return { role: p.role || '', look: p.look || '', meta: meta, facts: facts, said: said,
            sig: [facts.length, said.length, p.status || '', p.seen || '', p.name || ''].join(':') };
 }
 // ── end people rows ──
@@ -12749,6 +12776,7 @@ function _personRows(p) {
     page.textContent = '';
     const rows = _personRows(p);
     if (rows.role) page.appendChild(el('p', 'people-role', rows.role));
+    if (rows.look) page.appendChild(el('p', 'people-look', rows.look));
     if (rows.meta.length) {
       const dl = el('dl');
       rows.meta.forEach(m => {
@@ -12804,8 +12832,33 @@ function _personRows(p) {
     });
   }
 
+  // The card of someone just met, on every screen until it is tapped away (or for half a minute).
+  const cardBox = document.getElementById('npc-card');
+  let cardTimer = 0;
+  function showCard(event) {
+    if (!cardBox) return false;
+    const c = event.card || {};
+    document.getElementById('npc-card-eyebrow').textContent = event.new ? _t('people.cardNew', null, 'You meet') : _t('people.cardAgain', null, 'Who is this?');
+    document.getElementById('npc-card-name').textContent = event.name;
+    [['npc-card-role', c.role], ['npc-card-look', c.look],
+     ['npc-card-where', c.where ? _t('people.cardWhere', { place: c.where }, c.where) : '']].forEach(([id, text]) => {
+      const e = document.getElementById(id);
+      e.textContent = text || '';
+      e.hidden = !text;
+    });
+    cardBox.classList.add('open');
+    clearTimeout(cardTimer);
+    cardTimer = setTimeout(() => cardBox.classList.remove('open'), 30000);
+    return true;
+  }
+  if (cardBox) {
+    document.getElementById('npc-card-ok').addEventListener('click', () => cardBox.classList.remove('open'));
+    cardBox.addEventListener('click', e => { if (e.target === cardBox) cardBox.classList.remove('open'); });
+  }
+
   window._onPeople = function (next, event) {
     if (Array.isArray(next)) { people = next; triggers(); if (modal.classList.contains('open')) render(); }
+    if (event && event.name && event.card && showCard(event)) return;
     if (event && event.name) {
       _showToast('👤 ' + (event.new ? _t('people.toastNew', { name: event.name }, 'You meet: ' + event.name)
                                     : _t('people.toastMore', { name: event.name }, 'You learn more about: ' + event.name)), 5000);

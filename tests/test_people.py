@@ -95,8 +95,55 @@ class NotebookTests(unittest.TestCase):
         page["attitude"], page["status"] = "strana", "boh"                    # a file edited by hand
         view = pp.public_view(rows)
         self.assertEqual([p["name"] for p in view], ["Ada Brenn", "Oderico"])
-        self.assertEqual(set(view[0]), {"id", "name", "role", "where", "seen", "faction", "attitude", "status", "facts", "said"})
+        self.assertEqual(set(view[0]), {"id", "name", "role", "where", "seen", "faction", "look", "attitude", "status", "facts", "said"})
         self.assertEqual((view[0]["attitude"], view[0]["status"], view[0]["said"]), ("", "alive", ["Vi ho dato Tomas."]))
+
+
+class CardTests(unittest.TestCase):
+    """Someone met for the first time — even made up on the spot — gets a card on every screen."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = pathlib.Path(self._tmp.name)
+        self._old = os.environ.get("DND_CAMPAIGN_ROOT")
+        os.environ["DND_CAMPAIGN_ROOT"] = str(self.root)
+        (self.root / "campaigns" / "prova").mkdir(parents=True)
+        self.events = []
+        self._saved = (pp._announce, media.active_campaign)
+        pp._announce = lambda event=None: self.events.append(event)
+        media.active_campaign = lambda: "prova"
+
+    def tearDown(self):
+        pp._announce, media.active_campaign = self._saved
+        if self._old is None:
+            os.environ.pop("DND_CAMPAIGN_ROOT", None)
+        else:
+            os.environ["DND_CAMPAIGN_ROOT"] = self._old
+        self._tmp.cleanup()
+
+    def run_pp(self, *argv):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = pp.main(["--campaign", "prova", *argv])
+        return code, out.getvalue() + err.getvalue()
+
+    def test_the_card_of_pippo(self):
+        code, out = self.run_pp("meet", "Pippo", "--role", "figlio del cordaio, un Granello", "--where", "Mantice Rotto",
+                                "--look", "ragazzino ustionato in faccia, legato col lazo di Berta")
+        self.assertEqual(code, 0, out)
+        self.assertIn("looks: ragazzino ustionato in faccia", out)
+        self.assertEqual(self.events[-1]["card"], {"role": "figlio del cordaio, un Granello",
+                                                   "look": "ragazzino ustionato in faccia, legato col lazo di Berta",
+                                                   "where": "Mantice Rotto"})
+        self.run_pp("seen", "pippo", "Isola dei Ricambi")
+        code, out = self.run_pp("card", "pippo")                      # who was that again?
+        self.assertEqual(self.events[-1], {"name": "Pippo", "new": False,
+                                           "card": {"role": "figlio del cordaio, un Granello",
+                                                    "look": "ragazzino ustionato in faccia, legato col lazo di Berta",
+                                                    "where": "Isola dei Ricambi"}})
+        self.run_pp("set", "pippo", "--look", "un occhio bendato")
+        self.assertEqual(pp.find(pp.load(pp.data_path("prova")), "pippo")["look"], "un occhio bendato")
+        self.assertEqual(self.run_pp("card", "nessuno")[0], 1)
 
 
 class CommandTests(unittest.TestCase):
@@ -133,7 +180,9 @@ class CommandTests(unittest.TestCase):
         code, out = self.run_pp("meet", "L'Incappucciato", "--role", "adepto", "--where", "Pozzo del Corvo")
         self.assertEqual(code, 0, out)
         self.assertIn("+ L'Incappucciato — adepto", out)
-        self.assertEqual(self.events[-1], {"name": "L'Incappucciato", "new": True})
+        self.assertEqual(self.events[-1], {"name": "L'Incappucciato", "new": True,
+                                           "card": {"role": "adepto", "look": "", "where": "Pozzo del Corvo"}})
+        self.assertIn("no --look", out)
         self.assertEqual(self.run_pp("learn", "incapp", "Aspetta da undici anni uno del sangue")[0], 0)
         self.assertEqual(self.events[-1], {"name": "L'Incappucciato", "new": False})
         self.run_pp("learn", "incapp", "aspetta da undici anni uno del sangue")
@@ -207,6 +256,9 @@ class ServerTests(unittest.TestCase):
         self.assertEqual((got[0]["name"], got[0]["role"], got[0]["said"]), ("Oderico", "prete", ["A me risponde."]))
         self.assertEqual(self.client.post("/people", json={"event": {"name": "Oderico", "new": True, "x": 1}}).status_code, 204)
         self.assertEqual(sent[-1]["people_event"], {"name": "Oderico", "new": True})
+        self.client.post("/people", json={"event": {"name": "Oderico", "new": True,
+                                                    "card": {"role": "prete", "look": "vecchio", "where": "Cappella", "x": "<b>"}}})
+        self.assertEqual(sent[-1]["people_event"]["card"], {"role": "prete", "look": "vecchio", "where": "Cappella"})
         self.assertEqual(sent[-1]["people"][0]["name"], "Oderico")
         self.assertIn("people_changed", self.mod._DM_ENDPOINTS)
         self.assertNotIn("people_get", self.mod._DM_ENDPOINTS)
@@ -239,7 +291,7 @@ class PageTests(unittest.TestCase):
         finally:
             pathlib.Path(path).unlink(missing_ok=True)
         self.assertEqual(first["meta"], [{"key": "where", "value": "Cappella"}, {"key": "attitude", "value": "friendly"}])
-        self.assertEqual((first["role"], first["facts"], first["said"]), ("prete", ["Uno"], []))
+        self.assertEqual((first["role"], first["facts"], first["said"], first["look"]), ("prete", ["Uno"], [], ""))
         self.assertEqual(third["meta"][-1], {"key": "status", "value": "dead"})
         self.assertEqual(len({first["sig"], second["sig"], third["sig"]}), 3)
         self.assertEqual((blank["meta"], blank["facts"], blank["said"]), ([], [], []))
@@ -258,6 +310,18 @@ class PageTests(unittest.TestCase):
         for path in sorted((DISPLAY / "i18n").glob("*.json")):
             data = json.loads(path.read_text(encoding="utf-8"))
             for key in keys:
+                with self.subTest(lang=path.stem, key=key):
+                    self.assertTrue(data.get(key))
+
+
+class CardPageTests(unittest.TestCase):
+    def test_the_card_is_on_the_page_in_every_language(self):
+        src = HTML.read_text(encoding="utf-8")
+        for needle in ('id="npc-card"', 'id="npc-card-look"', "event.card && showCard(event)", "people-look"):
+            self.assertIn(needle, src)
+        for path in sorted((DISPLAY / "i18n").glob("*.json")):
+            data = json.loads(path.read_text(encoding="utf-8"))
+            for key in ("people.cardNew", "people.cardAgain", "people.cardWhere", "people.cardOk"):
                 with self.subTest(lang=path.stem, key=key):
                     self.assertTrue(data.get(key))
 

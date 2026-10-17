@@ -1443,7 +1443,8 @@ python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py show "ghoul"
 The party's own notebook of the people it has met: who someone is, where they met, what the characters found out and what was said to them. It starts empty. Every screen has a **People met** panel, with a search box once the list grows; a badge marks the pages that changed.
 
 ```bash
-python3 ${CLAUDE_SKILL_DIR}/display/people.py meet "Padre Oderico" --role "prete di Vallombra" --where "Cappella della Luce Vigile"
+python3 ${CLAUDE_SKILL_DIR}/display/people.py meet "Padre Oderico" --role "prete di Vallombra" --where "Cappella della Luce Vigile" --look "vecchio, tonaca rattoppata, una lanterna spenta al collo"
+python3 ${CLAUDE_SKILL_DIR}/display/people.py card "oderico"            # his card on every screen again
 python3 ${CLAUDE_SKILL_DIR}/display/people.py meet "L'Incappucciato" --role "adepto della Confraternita" --attitude hostile
 python3 ${CLAUDE_SKILL_DIR}/display/people.py learn "oderico" "Compagno di seminario di Isolda Fenn"
 python3 ${CLAUDE_SKILL_DIR}/display/people.py said "oderico" "A me risponde. A me ha sempre risposto."
@@ -1463,6 +1464,7 @@ python3 ${CLAUDE_SKILL_DIR}/display/people.py show "oderico"
 
 **How to keep it:** a page for everyone the party is likely to meet again, look for or talk about — not for every guard at a gate. Write the role as the characters would say it ("il prete", "il comandante dei Valtrenna"). Add a fact the moment it is learned and a quote when a line carries weight: a promise, a threat, a clue. Until the party knows a name, use what it calls the person and `rename` later. **Only what the characters know**: `npcs.md` stays yours, with the secrets. Monsters go in the Bestiary, not here.
 
+- **The card.** A new page puts a card on every screen — the name, `--role`, `--look` (what they look like, one line) and where — until it is tapped away or for half a minute; the toast is not enough to tell the table who is talking. `card` shows it again for someone met before (with where they were last seen). `set --look` changes the looks.
 
 ## Rumors — `display/rumors.py`
 
