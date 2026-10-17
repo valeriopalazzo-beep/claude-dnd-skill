@@ -484,6 +484,15 @@ If `graph.json` doesn't exist yet for this campaign, skip the sweep entirely (no
 ---
 
 ## `/dm:dnd end`
+0. **Tell the table first — before any save work** (display running): the players are looking at their phones, and the save, the prep and the questions below take minutes. In the very first Bash of the end, send the closing beat and the goodbye, so nobody thinks the game froze:
+   ```bash
+   python3 ${CLAUDE_SKILL_DIR}/display/send.py << 'DNDEND'
+   <the last image of tonight, two or three sentences, closing on what is left open>
+
+   Fine della sessione: grazie a tutti! Sto salvando la partita; la prossima volta si riparte da qui.
+   DNDEND
+   ```
+   (In the table's language.) If the session ends because of a vote (`[[VOTE: …]]`), this is the answer to that vote: send it in the same response the vote result arrived in. Do not start the autorun wait again after it.
 1. Run `/dm:dnd save`, then:
    a. Append **Session Recap** block to session-log.md with key events and open threads.
    b. Ask: *"Quick calibration — what worked this session, and what would you adjust next time?"* Write answers to `### DM Calibration`. If skipped, leave blank.
