@@ -96,21 +96,21 @@ class CourseTests(unittest.TestCase):
         self.assertEqual((entry["status"], entry["onset_h"], ch["event"]), ("incubating", 148, "secret"))
         self.assertEqual(af.public_view(data, "Lyra"), [], "the player does not know yet")
         changes = af.tick(data, 100, 148 + 10, Rng(2))   # one dawn after the symptoms (hour 150)
-        self.assertEqual(changes[0]["add"], ["Exhaustion 1"])
+        self.assertEqual(changes[0]["add"], ["Exhaustion (1)"])
         self.assertEqual(entry["due"], 1, "only the dawn after the symptoms")
         ch = af.settle(data, entry, 5, Rng(2))
-        self.assertEqual((entry["level"], ch["event"], ch["add"]), (2, "worse", ["Exhaustion 2"]))
-        self.assertIn("Exhaustion 1", ch["remove"])
+        self.assertEqual((entry["level"], ch["event"], ch["add"]), (2, "worse", ["Exhaustion (2)"]))
+        self.assertIn("Exhaustion (1)", ch["remove"])
         entry["due"] = 2
         af.settle(data, entry, 15, Rng(2))
         ch = af.settle(data, entry, 15, Rng(2))
-        self.assertEqual((ch["event"], data["list"], ch["remove"][:1]), ("cured", [], ["Exhaustion 1"]))
+        self.assertEqual((ch["event"], data["list"], ch["remove"][:1]), ("cured", [], ["Exhaustion (1)"]))
 
     def test_cackle_fever_drops_its_dc_and_three_failures_bring_madness(self):
         data = af.blank()
         entry, _ = af.infect(data, "Lyra", "cackle_fever", 10, Rng(1))
         af.tick(data, 10, 11, Rng(1))
-        self.assertEqual((entry["status"], entry["conditions"]), ("active", ["Exhaustion 1"]))
+        self.assertEqual((entry["status"], entry["conditions"]), ("active", ["Exhaustion (1)"]))
         af.settle(data, entry, 20, Rng(4))
         self.assertEqual(entry["dc"], 9)
         for _ in range(3):
@@ -321,7 +321,7 @@ class ServerTests(unittest.TestCase):
         entry, _ = af.custom(data, "Lyra", "Epidemia", None, 11)
         entry["due"] = 2
         af.save(str(self.camp / "afflictions.json"), data)
-        self.client.post("/stats", json={"players": [{"name": "Lyra", "_conditions_add": "Exhaustion 1"}]})
+        self.client.post("/stats", json={"players": [{"name": "Lyra", "_conditions_add": "Exhaustion (1)"}]})
         r = self.client.post("/afflictions/ask", json={})
         self.assertEqual(r.get_json()["asked"], ["Lyra"])
         req = [p["dice_request"] for p in self.sent if "dice_request" in p][-1]
@@ -330,8 +330,8 @@ class ServerTests(unittest.TestCase):
         r = self.client.post("/player-input/dice", json={"character": "Lyra", "spec": "1d20", "modifier": 4,
                                                            "request_id": req["request_id"]})
         self.assertEqual(r.status_code, 200)
-        self.assertIn("Exhaustion 2", self.player()["conditions"])
-        self.assertNotIn("Exhaustion 1", self.player()["conditions"])
+        self.assertIn("Exhaustion (2)", self.player()["conditions"])
+        self.assertNotIn("Exhaustion (1)", self.player()["conditions"])
         self.assertIn("[[AFFLICTION:", self.notes[-1])
         self.assertIn({"afflictions_event": {"character": "Lyra", "what": "worse", "name": "Epidemia"}}, self.sent)
         again = [p["dice_request"] for p in self.sent if "dice_request" in p][-1]

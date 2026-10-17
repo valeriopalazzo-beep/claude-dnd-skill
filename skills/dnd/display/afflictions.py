@@ -59,7 +59,7 @@ ABILITIES = ("STR", "DEX", "CON", "INT", "WIS", "CHA")
 ABILITY_IT = {"STR": "FOR", "DEX": "DES", "CON": "COS", "INT": "INT", "WIS": "SAG", "CHA": "CAR"}
 ABILITY_NAME = {"en": {"CON": "Constitution", "WIS": "Wisdom", "CHA": "Charisma"},
                 "it": {"CON": "Costituzione", "WIS": "Saggezza", "CHA": "Carisma"}}
-EXHAUSTION = [f"Exhaustion {n}" for n in range(1, 7)]
+EXHAUSTION = [f"Exhaustion ({n})" for n in range(1, 7)]     # as the display writes it
 MADNESS_KINDS = {"short": "short", "breve": "short", "long": "long", "lunga": "long", "indefinite": "indefinite",
                  "indefinita": "indefinite"}
 HISTORY_KEPT = 12
@@ -418,9 +418,9 @@ def activate(data: dict, entry: dict) -> dict:
     model = entry.get("model")
     if model == "exhaustion":
         entry["level"] = 1
-        _set_conditions(data, entry, ["Exhaustion 1"], ch)
+        _set_conditions(data, entry, [EXHAUSTION[0]], ch)
     elif model == "dc_drop":
-        _set_conditions(data, entry, ["Exhaustion 1"], ch)
+        _set_conditions(data, entry, [EXHAUSTION[0]], ch)
     elif model == "worsen":
         entry["level"] = 1
     _log(entry, "symptoms")
@@ -552,7 +552,7 @@ def settle(data: dict, entry: dict, total: int, rng: random.Random) -> dict:
             out = end(data, entry, "the save brought it below one level")
             out["lines"] = [head + "made: it is over"]
             return out
-        _set_conditions(data, entry, [f"Exhaustion {min(6, entry['level'])}"], ch)
+        _set_conditions(data, entry, [EXHAUSTION[min(6, entry["level"]) - 1]], ch)
         ch["event"] = "better" if ok else "worse"
         ch["lines"].append(head + ("made" if ok else "failed") + f": exhaustion {entry['level']}"
                            + (" — DEAD (exhaustion 6)" if entry["level"] >= 6 else ""))
