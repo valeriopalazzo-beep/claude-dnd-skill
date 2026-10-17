@@ -1854,6 +1854,8 @@
   .atk-result .crit{ color:#ffd76a; font-weight:800; }
   .atk-result .fumble{ color:#e88; font-weight:800; }
   .atk-note{ margin:0; text-align:center; color:var(--ln-text-muted, #cdbfa6); font-size:15px; }
+  .atk-weapon small.atk-ammo{ color:var(--ln-accent, #f2b544); font-weight:700; }
+  .atk-weapon small.atk-ammo.out{ color:#e88; }
 
   /* ══ Rests (rest.py) — Hit Dice on a short rest, everything back on a long one ══ */
   #rest-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
@@ -14287,6 +14289,9 @@ function _attackChoices(attack) {
         render();
       }).catch(() => {});
   }
+  function ammoLabel(kind, n) {
+    return _t('atk.ammo.' + kind, { n: n }, n + ' ' + kind + (n === 1 ? '' : 's') + ' left');
+  }
   function saveLabel(sv) {
     const ab = sv.ability ? _t('atk.ab.' + sv.ability, null, sv.ability) : '';
     return ab ? _t('atk.save', { ability: ab, dc: sv.dc }, 'DC ' + sv.dc + ' ' + ab + ' save')
@@ -14314,9 +14319,11 @@ function _attackChoices(attack) {
         busy = false;
         if (ok && d.result) {
           last = d.result;
+          loadData();                       // the arrows left, re-read from the sheet
           if (navigator.vibrate) navigator.vibrate(d.result.crit ? [40, 60, 40] : 30);
         } else {
           _showToast('⚔ ' + (status === 202 ? _t('atk.pending', null, 'Waiting for the DM to approve this device.')
+                            : d && d.code === 'ammo' ? _t('atk.noAmmo', null, 'No ammunition left for this weapon.')
                                             : _t('atk.failed', null, 'Could not roll — ask the DM.')), 5000);
         }
         render();
@@ -14346,6 +14353,7 @@ function _attackChoices(attack) {
       if (last.crit) res.appendChild(el('div', 'crit', _t('atk.crit', null, 'Critical hit!')));
       if (last.fumble) res.appendChild(el('div', 'fumble', _t('atk.fumble', null, 'Natural 1')));
       if (last.damage !== null && last.damage !== undefined) res.appendChild(el('div', 'big', _t('atk.damage', { n: last.damage }, last.damage + ' damage')));
+      if (last.ammo_left !== undefined && last.ammo_left !== null) res.appendChild(el('p', 'atk-note', ammoLabel(last.ammo_kind, last.ammo_left)));
       res.appendChild(el('p', 'atk-note', _t('atk.sent', null, 'Sent to the DM as your action.')));
       body.appendChild(res);
     }
@@ -14369,9 +14377,12 @@ function _attackChoices(attack) {
       btn.type = 'button';
       const text = el('span', '', a.name);
       text.appendChild(el('small', '', [a.damage ? a.damage.text : '', a.type, a.notes].filter(Boolean).join(' · ')));
+      const am = a.ammo && a.ammo.left !== null && a.ammo.left !== undefined ? a.ammo : null;
+      if (am) text.appendChild(el('small', 'atk-ammo' + (am.left ? '' : ' out'), am.left ? ammoLabel(am.kind, am.left)
+                                                                                 : _t('atk.ammoOut.' + am.kind, null, 'No ammunition left')));
       btn.appendChild(text);
       btn.appendChild(el('b', '', c.save ? _t('atk.dc', { n: c.save.dc }, 'DC ' + c.save.dc) : c.bonusText));
-      btn.disabled = !c.canRoll;
+      btn.disabled = !c.canRoll || (am && !am.left);
       btn.addEventListener('click', () => { pick = a.name; alt = 0; extra = false; last = null; render(); });
       body.appendChild(btn);
       if (pick !== a.name) return;

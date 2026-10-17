@@ -595,6 +595,22 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/attacks.py -c $CAMP roll "Ajeje" "martello" 
 - **What it reads.** `| Name | Attack Bonus | Damage | Type | Notes |`. The first dice expression of Damage is the damage; a Notes part with another one (`Versatile: 1d10+4 a due mani`) is an alternative (`--alt 1`), one written `+1d6` (`Attacco furtivo +1d6`) an extra (`--extra`). A row with no bonus cannot be rolled. A bonus written as a DC (`CD 12`, `DC 13`) makes the row a save attack: no d20, the damage rolled once (no critical), the ability read from the row (`TS Destrezza`, `DEX save`; abbreviations only in capitals), `metà`/`half` in the notes = half on a success, `nessun danno`/`no damage` = nothing.
 - **A natural 20** doubles every damage die (the extra too); the bonus is added once. Advantage rolls two d20 and keeps the higher.
 - **From the panel** the server writes the line in the story (`⚔ Lyra → Goblin 1 · Stocco: 19 per colpire (d20 14 +5) · 6 danni (perforante, 1d8+3: 3)`) and stages the player's action, ready, in the same language (`⚔ Stocco → Goblin 1: 19 per colpire (d20 14 +5) · 6 danni (…)` — *do not roll again*; see SKILL.md → *Attacks from the phone*). The panel's target list is the initiative order minus the party.
+- **Ammunition.** A row whose name is a bow, a crossbow, a sling or a blowgun (or whose notes say *Munizioni* / *Ammunition* and name one) spends one piece of its kind with every roll, from the panel and from `roll` alike, and the line ends with what is left (`· frecce rimaste: 18`). With none left the roll is refused; with no number on the sheet it is rolled and nothing is spent.
+
+## Ammunition — `scripts/ammo.py`
+
+Arrows, bolts, sling bullets and blowgun needles counted on the sheet (PHB 2014 p. 146): one piece per attack, half of what was spent found again after the battle with a minute of searching.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/scripts/ammo.py -c $CAMP show "Lyra"                  # what is left, line by line
+python3 ${CLAUDE_SKILL_DIR}/scripts/ammo.py -c $CAMP spend "Lyra" [--kind arrow] [--n 2]
+python3 ${CLAUDE_SKILL_DIR}/scripts/ammo.py -c $CAMP spent                        # what this fight has cost
+python3 ${CLAUDE_SKILL_DIR}/scripts/ammo.py -c $CAMP recover [--who "Lyra"]       # half back, rounded down
+python3 ${CLAUDE_SKILL_DIR}/scripts/ammo.py -c $CAMP recover --none               # nothing can be found
+```
+
+- **What it reads.** Any equipment line with the kind's word and a number: `Frecce ×20`, `20 frecce`, `Faretra con 20 frecce`, `Arco corto con faretra e 20 frecce`, `Frecce (20)`, `Aghi: 5`. Kinds: `arrow` (frecce), `bolt` (quadrelli), `bullet` (proiettili da fionda), `needle` (aghi da cerbottana). Spending rewrites only that number; a line that is only the ammunition goes with the last piece. Magic ones (`Frecce +1 ×2`) are spent last; what comes back goes to the plain ones.
+- **The fight's count** is kept in `<campaign>/ammo.json` until `recover`; `tracker.py clear` runs it at the end of the encounter and prints `🏹 Lyra finds again 2 of 5 arrows`.
 
 ---
 

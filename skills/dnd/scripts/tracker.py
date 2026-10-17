@@ -57,7 +57,8 @@ Usage:
     # Status display
     python3 tracker.py -c $CAMPAIGN status [entity]   # all entities or one
 
-    # Clear (end of encounter — wipes conditions/concentrations/effects; preserves saves)
+    # Clear (end of encounter — wipes conditions/concentrations/effects; preserves saves). It also gives
+    # back half the ammunition shot in the fight (ammo.py recover; `ammo.py recover --none` before it if lost)
     python3 tracker.py -c $CAMPAIGN clear [--all]     # --all also clears saves
 """
 
@@ -880,6 +881,17 @@ def cmd_clear(campaign: str, clear_all: bool = False) -> None:
     _save(campaign, state)
     scope = "all state" if clear_all else "conditions and concentration"
     print(f"  Cleared {scope} for {len(state)} entities.")
+    _recover_ammo(campaign)
+
+
+def _recover_ammo(campaign: str) -> None:
+    """The fight is over: half the arrows and bolts shot can be found again (ammo.py, PHB p. 146)."""
+    try:
+        import ammo
+        for line in ammo.recover(campaign):
+            print(f"  🏹 {line}")
+    except Exception:
+        pass   # a courtesy: the encounter is cleared anyway
 
 
 # ─── Main ────────────────────────────────────────────────────────────────────

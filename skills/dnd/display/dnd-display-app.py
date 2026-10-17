@@ -4749,7 +4749,11 @@ def attacks_roll(character):
         attack = _attacks.find(rows, str(data.get("attack", ""))[:80])
         result = _attacks.roll(attack, str(data.get("advantage", "normal")), int(data.get("alt") or 0), bool(data.get("extra")))
     except (_attacks.AttackError, ValueError, TypeError) as e:
-        return jsonify({"error": str(e), "code": "attack"}), 409
+        code = "ammo" if "left for" in str(e) else "attack"
+        return jsonify({"error": str(e), "code": code}), 409
+    path, _safe, camp = _find_sheet_file(character)
+    if path:
+        _attacks.spend_ammo(attack, result, path, camp or "")       # an arrow off the sheet (ammo.py)
     lang = _spell_lang(data.get("lang", ""))
     line = _attacks.story_line(name, target, result, lang)
     entry = {"text": line, "dice": True}

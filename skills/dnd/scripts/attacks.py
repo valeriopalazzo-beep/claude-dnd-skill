@@ -33,6 +33,7 @@ if str(_HERE) not in sys.path:
     sys.path.insert(0, str(_HERE))
 import paths  # noqa: E402,F401  (also forces UTF-8 output on Windows)
 import inventory  # noqa: E402  (finding and reading a sheet)
+import ammo  # noqa: E402  (bows and crossbows spend their ammunition)
 
 _HEAD = re.compile(r"^##\s+(?:Attacks|Attacchi)\b.*$", re.M | re.I)
 _NEXT_HEAD = re.compile(r"^##\s", re.M)
@@ -147,8 +148,10 @@ def read_attacks(text: str) -> list:
         b = None if save else _BONUS.search(cell(i_bonus))
         bonus = None if not b else int(b.group(2)) * (-1 if b.group(1) in ("-", "−") else 1)
         alts, extras = _note_options(cell(i_note))
+        kind = "" if save else ammo.weapon_kind(name, cell(i_note))
         out.append({"name": name, "bonus": bonus, "save": save, "damage": parse_dice(cell(i_dmg)), "type": cell(i_type),
-                    "notes": cell(i_note), "alts": alts, "extras": extras})
+                    "notes": cell(i_note), "alts": alts, "extras": extras,
+                    "ammo": {"kind": kind, "left": ammo.count(text, kind)} if kind else None})
     return out
 
 
@@ -177,6 +180,8 @@ def roll(attack: dict, advantage: str = "normal", alt: int = 0, extra: bool = Fa
         return _roll_save(attack, alt, rng)
     if attack.get("bonus") is None:
         raise AttackError(f"{attack['name']} has no attack bonus on the sheet")
+    if attack.get("ammo") and attack["ammo"].get("left") == 0:
+        raise AttackError(f"no {ammo.NAMES['en'][attack['ammo']['kind']]} left for {attack['name']}")
     d20s = [_d(20, rng)] + ([_d(20, rng)] if advantage != "normal" else [])
     natural = max(d20s) if advantage == "advantage" else min(d20s) if advantage == "disadvantage" else d20s[0]
     out = {"attack": attack["name"], "advantage": advantage, "d20": d20s, "natural": natural,
@@ -253,6 +258,27 @@ def _save_numbers(r: dict, lang: str) -> str:
     return line
 
 
+def spend_ammo(attack: dict, r: dict, path, campaign: str = "") -> None:
+    """A shot from a bow or a crossbow: one piece off the sheet; r["ammo_left"] says what is left.
+
+    Nothing is spent when the sheet does not say how many there are."""
+    a = attack.get("ammo") or {}
+    if not a.get("kind") or a.get("left") is None:
+        return
+    try:
+        r["ammo_left"] = ammo.spend_on_sheet(path, a["kind"], campaign)
+        r["ammo_kind"] = a["kind"]
+    except (ammo.AmmoError, inventory.InventoryError, OSError):
+        pass
+
+
+def _ammo_numbers(r: dict, lang: str) -> str:
+    if r.get("ammo_left") is None:
+        return ""
+    word = ammo.NAMES.get(lang, ammo.NAMES["en"])[r["ammo_kind"]]
+    return f" · {word} rimaste: {r['ammo_left']}" if lang == "it" else f" · {r['ammo_left']} {word} left"
+
+
 def _numbers(r: dict, lang: str) -> str:
     """'20 to hit (d20 14 +6) · 11 damage (slashing, 2d6+4: 3, 4)', in the table's language."""
     if r.get("save"):
@@ -269,7 +295,7 @@ def _numbers(r: dict, lang: str) -> str:
     if r["damage"] is not None:
         dice = ", ".join(str(x) for x in r["dice"] + r["extra_dice"])
         line += f" · {r['damage']} {w['dmg']} (" + (f"{r['type']}, " if r.get("type") else "") + f"{r['damage_text']}: {dice})"
-    return line
+    return line + _ammo_numbers(r, lang)
 
 
 def story_line(character: str, target: str, r: dict, lang: str = "en") -> str:
@@ -312,12 +338,16 @@ def main(argv: list | None = None) -> int:
                                             f"{a['bonus']:+d}" if a["bonus"] is not None else "—")
                       + (f", {a['damage']['text']}" if a["damage"] else "") + (f" {a['type']}" if a["type"] else "")
                       + "".join(f" | or {x['dice']['text']} ({x['label']})" for x in a["alts"])
-                      + "".join(f" | +{x['dice']['text']} {x['label']}" for x in a["extras"]))
+                      + "".join(f" | +{x['dice']['text']} {x['label']}" for x in a["extras"])
+                      + (f" | {'?' if a['ammo']['left'] is None else a['ammo']['left']} {ammo.NAMES['en'][a['ammo']['kind']]}"
+                         if a.get("ammo") else ""))
             if not attacks:
                 print("  no attacks on the sheet")
             return 0
         adv = "advantage" if args.advantage else "disadvantage" if args.disadvantage else "normal"
-        r = roll(find(attacks, args.attack), adv, args.alt, args.extra)
+        attack = find(attacks, args.attack)
+        r = roll(attack, adv, args.alt, args.extra)
+        spend_ammo(attack, r, path, camp)
         lang = paths.campaign_language(camp) if camp else "en"
         print(story_line(name, args.target, r, lang))
     except Exception as e:      # AttackError, InventoryError, SpellError (a name that means two characters)
