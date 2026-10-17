@@ -1463,6 +1463,26 @@ python3 ${CLAUDE_SKILL_DIR}/display/people.py show "oderico"
 
 **How to keep it:** a page for everyone the party is likely to meet again, look for or talk about — not for every guard at a gate. Write the role as the characters would say it ("il prete", "il comandante dei Valtrenna"). Add a fact the moment it is learned and a quote when a line carries weight: a promise, a threat, a clue. Until the party knows a name, use what it calls the person and `rename` later. **Only what the characters know**: `npcs.md` stays yours, with the secrets. Monsters go in the Bestiary, not here.
 
+
+## Rumors — `display/rumors.py`
+
+What is said in the taverns, true, false or half true. You write them; the characters pick them up; the players see what they heard, never whether it is true. Kept in `<campaign>/rumors.json`; every screen has a **Rumors** panel, the DM's screen the truth of each one heard and how many are left.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/display/rumors.py seeds                     # what the campaign offers to write them from
+python3 ${CLAUDE_SKILL_DIR}/display/rumors.py add "Dicono che l'Isola compri prigionieri" --truth true --about "segreto: anime" --where "Ferrovalle"
+python3 ${CLAUDE_SKILL_DIR}/display/rumors.py add "La Gran Maestra è morta da anni" --truth false
+python3 ${CLAUDE_SKILL_DIR}/display/rumors.py hear --who "Berta" [--where "Mantice Rotto"] [--dc 10]   # Charisma on her phone
+python3 ${CLAUDE_SKILL_DIR}/display/rumors.py hear --who "Berta" --total 14                            # already rolled
+python3 ${CLAUDE_SKILL_DIR}/display/rumors.py tell "Berta" "isola"      # one given by hand: by id or a part of the text
+python3 ${CLAUDE_SKILL_DIR}/display/rumors.py list                      # all of them, with their truth and who heard them
+python3 ${CLAUDE_SKILL_DIR}/display/rumors.py forget "isola"
+```
+
+- **Seeds** lists the secrets of `prep.md` not out yet (`- [ ]` under *Secrets*), the open quests, the factions, the clocks (secret ones too), the places only heard of on the region map and the people met. Write from them: a true rumor brings a secret out the cheap way, a half-true one twists it (a name wrong, a reason wrong), a false one is what someone wants believed.
+- **Hearing** is a Charisma check, to find the people who talk (PHB 2014 p. 179); `--dc` as the place deserves (10 a busy tavern, 15 a wary village). Under the DC nothing; at it one rumor, 5 over two, 10 over three — a reading of the PHB, not a number from it. The ones nobody has heard come first; one with `--where` is said only where the name matches (default: where the region map has the party). The script prints them with their truth: **say them in the story**, in the voice of whoever tells them.
+- **Carousing** in downtime (`downtime.py close`) brings each reveller one rumor without a check; the close line says which.
+
 ---
 
 ## Timeline — `display/timeline.py`

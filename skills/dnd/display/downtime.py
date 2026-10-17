@@ -223,6 +223,20 @@ def outcome(data: dict, name: str, choice: dict, days: int) -> dict:
     return out
 
 
+def _carouse_rumor(campaign: str, who: str) -> str:
+    """Days of revelry bring a rumor with them, without a check (rumors.py)."""
+    try:
+        import rumors
+        got = rumors.give(campaign, who, 1)
+        if not got:
+            return ""
+        r = got[0]
+        rumors._announce({"what": "heard", "who": who, "n": 1})
+        return f" The revelry brings a rumor ({r['truth']}): «{r['text']}» — tell it."
+    except Exception:
+        return ""
+
+
 def close_window(data: dict) -> list:
     """End the stretch: outcomes per character (those who did not choose are listed too)."""
     win = data.get("window")
@@ -408,6 +422,8 @@ def main(argv: list | None = None) -> int:
             for r in results:
                 if r.get("activity") == "business":
                     r["text"] = _run_business(camp, r)
+                if r.get("activity") == "carouse":
+                    r["text"] += _carouse_rumor(camp, r["character"])
                 line = f"{r['character']}: {r['text']}"
                 if args.charge and r["cost_gp"]:
                     try:

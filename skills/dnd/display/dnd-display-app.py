@@ -549,6 +549,8 @@ _DM_ENDPOINTS = {
     "companions_changed",
     # Vehicles: vehicles.py keeps them, everyone sees them.
     "vehicles_changed",
+    # Rumors: rumors.py writes and hands them out; the players see what they heard.
+    "rumors_changed",
     # The campaign book: campaign_book.py makes it, everyone may download it.
     "book_changed",
     # A puzzle: the DM sets it, hints and closes it; trying it is the players'.
@@ -4469,7 +4471,14 @@ def dm_screen_data():
             wander = _wander.dm_view(_wander.load(str(folder / "wander.json")), camp)
         except Exception:
             wander = None
+    rumors = None
+    if folder and (folder / "rumors.json").is_file():       # rumors: how many are left, and which were true
+        try:
+            rumors = _rumors.dm_view(_rumors.load(str(folder / "rumors.json")))
+        except Exception:
+            rumors = None
     return jsonify({
+        "rumors": rumors,
         "traps": traps,
         "afflictions": afflictions,
         "travel": travel,
@@ -5092,6 +5101,48 @@ def vehicles_changed():
     event = data.get("event")
     if isinstance(event, dict) and event.get("name") and event.get("what") in ("new", "board", "leave", "hit", "sunk", "repair"):
         payload["vehicle_event"] = {"name": str(event["name"])[:50], "what": event["what"]}
+    _broadcast(payload)
+    return "", 204
+
+
+# ─── Rumors (rumors.py) ──────────────────────────────────────────────────────
+# What is said in the taverns, kept by rumors.py in <campaign>/rumors.json.
+# The players' screens get the rumors the party has heard — never whether
+# they are true; the DM's screen gets that too.
+import rumors as _rumors
+
+
+def _rumors_file() -> Optional[str]:
+    camp = re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]
+    if not camp:
+        return None
+    try:
+        return str(_find_campaign(camp) / "rumors.json")
+    except Exception:
+        return None
+
+
+def _public_rumors() -> list:
+    path = _rumors_file()
+    try:
+        return _rumors.public_view(_rumors.load(path)) if path else []
+    except Exception:
+        return []
+
+
+@app.route("/rumors", methods=["GET"])
+def rumors_get():
+    return jsonify(_public_rumors()), 200
+
+
+@app.route("/rumors", methods=["POST"])
+def rumors_changed():
+    """rumors.py changed them: send every screen what the party has heard, and who just heard something."""
+    data = request.get_json(silent=True) or {}
+    payload = {"rumors": _public_rumors()}
+    event = data.get("event")
+    if isinstance(event, dict) and event.get("what") == "heard" and event.get("who"):
+        payload["rumor_event"] = {"who": str(event["who"])[:50], "n": int(event.get("n") or 0)}
     _broadcast(payload)
     return "", 204
 

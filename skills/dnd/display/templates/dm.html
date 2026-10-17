@@ -113,6 +113,7 @@
   <section id="s-supplies"><h2 data-t="dms.supplies">Supplies</h2><div></div></section>
   <section id="s-downtime"><h2 data-t="dms.downtime">Downtime</h2><div></div></section>
   <section id="s-travel"><h2 data-t="dms.travel">On the road</h2><div></div></section>
+  <section id="s-rumors"><h2 data-t="dms.rumors">Rumors</h2><div></div></section>
   <section id="s-ail"><h2 data-t="ail.title">Ailments</h2><div></div></section>
   <section id="s-traps"><h2 data-t="dms.traps">Traps</h2><div></div></section>
   <section id="s-wander"><h2 data-t="dms.wander">Random encounters</h2><div></div></section>
@@ -217,6 +218,12 @@
       const c = (dt.choices || {})[n];
       return `<tr><td>${esc(n)}</td><td>${c ? esc(_t('dt.act.' + c.activity, null, c.activity)) + (c.detail ? ' — ' + esc(c.detail) : '') : `<span class="muted">${esc(_t('dt.waiting', null, '…'))}</span>`}</td></tr>`;
     }).join('') + '</table>' : empty('dms.none');
+
+    // Rumors (rumors.py): how many are still unheard, and the truth of those the party heard.
+    const ru = d.rumors;
+    body('s-rumors').innerHTML = ru ? `<p class="muted">${esc(_t('dms.rumors.unheard', { n: ru.unheard }, ru.unheard + ' not heard yet'))}</p>`
+      + (ru.heard || []).map(r => `<div class="roll"><span class="tag${r.truth === 'false' ? ' warn' : ''}">${esc(_t('dms.rumors.' + r.truth, null, r.truth))}</span> ${esc(r.text)}
+        <small class="muted">${esc(r.by.join(', '))}</small></div>`).join('') : empty('dms.none');
 
     // On the road (travel.py): the pace, who does what, the watch, and whether the party is lost (secret).
     const tr = d.travel;

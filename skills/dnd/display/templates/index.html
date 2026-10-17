@@ -1903,6 +1903,21 @@
   :root[data-skin="lanterna"] .sb-companions{ gap:6px; margin-top:8px; }
   :root[data-skin="lanterna"] .sb-comp-chip{ font-family:'Alegreya Sans',sans-serif; font-size:14.5px; padding:3px 11px;
     background:var(--ln-surface-2, rgba(255,255,255,.05)); border-color:var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #rumor-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
+    align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  #rumor-modal.open{ display:flex; }
+  #rumor-panel{ width:min(520px, 100%); margin:auto 0; color:var(--ln-text, #ECE4D2); font-family:'Alegreya Sans','Syne',sans-serif; }
+  #rumor-head{ display:flex; align-items:center; gap:10px; margin-bottom:12px; color:#ECE4D2; }
+  #rumor-head h2{ flex:1; min-width:0; margin:0; font-size:22px; line-height:1.15; }
+  #rumor-head button{ flex:none; width:40px; height:40px; border-radius:999px; cursor:pointer; font-size:16px;
+    background:rgba(0,0,0,.35); color:inherit; border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #rumor-list{ display:flex; flex-direction:column; gap:10px; }
+  .rumor-item{ padding:13px 16px; border-radius:12px; font-size:17px; line-height:1.4;
+    background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
+  .rumor-item.new{ border-color:var(--ln-accent, #f2b544); }
+  .rumor-item q{ display:block; font-style:italic; quotes:"«" "»"; }
+  .rumor-item small{ display:block; margin-top:6px; font-size:13.5px; color:var(--ln-text-muted, #b9ab92); }
+  #rumor-modal .rumor-empty{ margin:30px 8px; text-align:center; font-size:16px; color:#b9ab92; }
   #veh-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
     align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
   #veh-modal.open{ display:flex; }
@@ -5584,6 +5599,7 @@
     <button class="ph-set-opt" id="ph-spells-opt" type="button" hidden><span data-i18n="spell.title">Spellbook</span><strong>✨</strong></button>
     <button class="ph-set-opt" id="ph-comp-opt" type="button" hidden><span data-i18n="comp.title">Companions</span><strong>🐾</strong></button>
     <button class="ph-set-opt" id="ph-veh-opt" type="button" hidden><span data-i18n="veh.title">Vehicles</span><strong>⚓</strong></button>
+    <button class="ph-set-opt" id="ph-rumor-opt" type="button" hidden><span data-i18n="rum.title">Rumors</span><strong>🗣</strong></button>
     <button class="ph-set-opt" id="ph-beast-opt" type="button" hidden><span data-i18n="beast.title">Bestiary</span><strong>📖</strong></button>
     <button class="ph-set-opt" id="ph-people-opt" type="button" hidden><span data-i18n="people.title">People met</span><strong>👤</strong></button>
     <button class="ph-set-opt" id="ph-clock-opt" type="button" hidden><span data-i18n="clock.title">Clocks</span><strong>◔</strong></button>
@@ -6005,6 +6021,17 @@
   </div>
 </div>
 
+<!-- Rumors: what the party has heard in the taverns, from rumors.py — never whether it is true -->
+<div id="rumor-modal">
+  <div id="rumor-panel" role="dialog" aria-labelledby="rumor-title">
+    <div id="rumor-head">
+      <h2 id="rumor-title" data-i18n="rum.title">Rumors</h2>
+      <button id="rumor-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
+    </div>
+    <div id="rumor-list"></div>
+  </div>
+</div>
+
 <!-- Vehicles: carts, barges and ships the party travels in, from vehicles.py -->
 <div id="veh-modal">
   <div id="veh-panel" role="dialog" aria-labelledby="veh-title">
@@ -6101,6 +6128,7 @@
   <symbol id="ln-i-vote" viewBox="0 0 24 24"><path d="M4 14h16v7H4z"/><path d="M8 14V6l4-3 4 3v8"/><path d="M10 9l1.5 1.5L14 8"/></symbol>
   <symbol id="ln-i-sword" viewBox="0 0 24 24"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/></symbol>
   <symbol id="ln-i-rest" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M6 21l6-9 6 9"/><path d="M12 12V9"/><path d="M15.5 4.5a3.5 3.5 0 1 1-4.2 4.2 2.8 2.8 0 0 0 4.2-4.2z"/></symbol>
+  <symbol id="ln-i-rumor" viewBox="0 0 24 24"><path d="M4 5h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 3v-3H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M19 9h1a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-1v3l-3-3"/></symbol>
   <symbol id="ln-i-boat" viewBox="0 0 24 24"><path d="M12 3v11M12 4l6 8h-6M4 15h16l-2.5 4.5a2 2 0 0 1-1.8 1H8.3a2 2 0 0 1-1.8-1z"/></symbol>
   <symbol id="ln-i-paw" viewBox="0 0 24 24"><circle cx="6.5" cy="10" r="2"/><circle cx="10" cy="5.5" r="2"/><circle cx="14" cy="5.5" r="2"/><circle cx="17.5" cy="10" r="2"/><path d="M12 12c-3 0-5.5 2.6-5.5 5.2 0 1.7 1.3 2.8 2.9 2.8 1 0 1.7-.5 2.6-.5s1.6.5 2.6.5c1.6 0 2.9-1.1 2.9-2.8C17.500 14.6 15 12 12 12z"/></symbol>
   <symbol id="ln-i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M12 7v6m0 0-2.5-2.5M12 13l2.5-2.5"/></symbol>
@@ -6144,6 +6172,7 @@
       <button class="ln-item" type="button" id="ln-spells" title="Spellbook" data-i18n-title="spell.title" hidden><svg class="ln-i"><use href="#ln-i-spell"/></svg><span class="ln-lbl" data-i18n="spell.title">Spellbook</span></button>
       <button class="ln-item" type="button" id="ln-comp" title="Companions" data-i18n-title="comp.title" hidden><svg class="ln-i"><use href="#ln-i-paw"/></svg><span class="ln-lbl" data-i18n="comp.title">Companions</span></button>
       <button class="ln-item" type="button" id="ln-veh" title="Vehicles" data-i18n-title="veh.title" hidden><svg class="ln-i"><use href="#ln-i-boat"/></svg><span class="ln-lbl" data-i18n="veh.title">Vehicles</span></button>
+      <button class="ln-item" type="button" id="ln-rumor" title="Rumors" data-i18n-title="rum.title" hidden><svg class="ln-i"><use href="#ln-i-rumor"/></svg><span class="ln-lbl" data-i18n="rum.title">Rumors</span><span class="ln-badge" id="ln-badge-rumor" data-i18n="ln.badge.new" hidden>New</span></button>
     </div>
     <div class="ln-group">
       <div class="ln-h" data-i18n="ln.group.world">World</div>
@@ -6252,6 +6281,7 @@
         <button class="ln-item" type="button" id="ln-spells-more" data-ln-proxy="ln-spells" hidden><svg class="ln-i"><use href="#ln-i-spell"/></svg><span class="ln-lbl" data-i18n="spell.title">Spellbook</span></button>
         <button class="ln-item" type="button" id="ln-comp-more" data-ln-proxy="ln-comp" hidden><svg class="ln-i"><use href="#ln-i-paw"/></svg><span class="ln-lbl" data-i18n="comp.title">Companions</span></button>
         <button class="ln-item" type="button" id="ln-veh-more" data-ln-proxy="ln-veh" hidden><svg class="ln-i"><use href="#ln-i-boat"/></svg><span class="ln-lbl" data-i18n="veh.title">Vehicles</span></button>
+        <button class="ln-item" type="button" id="ln-rumor-more" data-ln-proxy="ln-rumor" hidden><svg class="ln-i"><use href="#ln-i-rumor"/></svg><span class="ln-lbl" data-i18n="rum.title">Rumors</span></button>
         <button class="ln-item" type="button" id="ln-book-more" data-ln-proxy="ln-book" hidden><svg class="ln-i"><use href="#ln-i-book"/></svg><span class="ln-lbl" data-i18n="book.title">Campaign book</span></button>
         <button class="ln-item" type="button" id="ln-timeline-more" data-ln-proxy="ln-timeline" hidden><svg class="ln-i"><use href="#ln-i-timeline"/></svg><span class="ln-lbl" data-i18n="tl.title">Timeline</span></button>
         <button class="ln-item" type="button" id="ln-cal-more" data-ln-proxy="ln-cal" hidden><svg class="ln-i"><use href="#ln-i-calendar"/></svg><span class="ln-lbl" data-i18n="cal.title">Calendar</span></button>
@@ -11570,6 +11600,7 @@ function connect() {
     if (payload.book && typeof window._onBook === 'function') window._onBook(payload.book, true);
     if ((payload.companions || payload.companion_event) && typeof window._onCompanions === 'function') window._onCompanions(payload.companions, payload.companion_event);
     if ((payload.vehicles || payload.vehicle_event) && typeof window._onVehicles === 'function') window._onVehicles(payload.vehicles, payload.vehicle_event);
+    if ((payload.rumors || payload.rumor_event) && typeof window._onRumors === 'function') window._onRumors(payload.rumors, payload.rumor_event);
     if ((payload.bestiary || payload.bestiary_event) && typeof window._onBestiary === 'function') window._onBestiary(payload.bestiary, payload.bestiary_event);
     if ((payload.people || payload.people_event) && typeof window._onPeople === 'function') window._onPeople(payload.people, payload.people_event);
     if ((payload.split || payload.split_event) && typeof window._onSplit === 'function') window._onSplit(payload.split, payload.split_event);
@@ -12789,6 +12820,53 @@ function _personRows(p) {
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   fetch('/people').then(r => r.ok ? r.json() : []).then(d => window._onPeople(d)).catch(() => {});
+})();
+
+// ── Rumors (rumors.py) ────────────────────────────────────────────────
+// What the party has heard, newest first. Whether it is true is the DM's.
+(function _initRumors() {
+  const modal = document.getElementById('rumor-modal');
+  if (!modal) return;
+  const list = document.getElementById('rumor-list');
+  let rumors = [];
+  let seen = {};
+  try { seen = JSON.parse(localStorage.getItem('dnd-rumors-seen') || '{}') || {}; } catch (_) {}
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+
+  function triggers() {
+    const has = rumors.length > 0;
+    ['ln-rumor', 'ln-rumor-more', 'ph-rumor-opt'].forEach(id => { const e = document.getElementById(id); if (e) e.hidden = !has; });
+    const badge = document.getElementById('ln-badge-rumor');
+    if (badge) badge.hidden = !rumors.some(r => !seen[r.id]);
+    if (!has) modal.classList.remove('open');
+  }
+  function render() {
+    list.textContent = '';
+    if (!rumors.length) { list.appendChild(el('p', 'rumor-empty', _t('rum.empty', null, 'Nothing heard yet.'))); return; }
+    rumors.forEach(r => {
+      const item = el('div', 'rumor-item' + (seen[r.id] ? '' : ' new'));
+      item.appendChild(el('q', '', r.text));
+      const who = _t('rum.heardBy', { names: (r.by || []).join(', ') }, 'Heard by ' + (r.by || []).join(', '));
+      item.appendChild(el('small', '', [who, r.where, r.when].filter(Boolean).join(' · ')));
+      list.appendChild(item);
+    });
+    rumors.forEach(r => { seen[r.id] = 1; });
+    try { localStorage.setItem('dnd-rumors-seen', JSON.stringify(seen)); } catch (_) {}
+  }
+  function open() { modal.classList.add('open'); render(); triggers(); }
+  const close = () => modal.classList.remove('open');
+
+  window._onRumors = function (next, event) {
+    if (Array.isArray(next)) { rumors = next; triggers(); if (modal.classList.contains('open')) render(); }
+    if (event && event.who && event.n) {
+      _showToast('🗣 ' + _t('rum.toast', { name: event.who, n: event.n }, event.who + ' heard ' + event.n + ' rumor(s)'), 5000);
+    }
+  };
+  ['ln-rumor', 'ph-rumor-opt'].forEach(id => { const e = document.getElementById(id); if (e) e.addEventListener('click', open); });
+  document.getElementById('rumor-close').addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  fetch('/rumors').then(r => r.ok ? r.json() : []).then(d => window._onRumors(d)).catch(() => {});
 })();
 
 // ── Vehicles (vehicles.py) ────────────────────────────────────────────

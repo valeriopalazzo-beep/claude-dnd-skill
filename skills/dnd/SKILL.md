@@ -717,6 +717,8 @@ The players have a Bestiary panel that fills up with what their characters learn
 
 The players have a People panel: their own notebook of the people in the story. Open a page with `display/people.py meet "<name>" --role "<who they are>" --where "<place>"` the first time the party meets someone who matters, and add to it as play goes on — `learn "<name>" "fact"` for what the characters find out, `said "<name>" "words"` for a line worth remembering, `seen` when they turn up somewhere else, `set --attitude … --status dead|prisoner|missing|gone` when things change, `rename` when a nickname gives way to a name. It is what the characters know, never what `npcs.md` knows: no secret, no hidden motive, no true name before it is learned. Do it in the same turn, without being asked. Syntax: `SKILL-scripts.md` → *People met*.
 
+**Rumors.** Keep a handful of rumors where the party is going: `display/rumors.py seeds` lists what the campaign offers (the secrets of `prep.md` not out yet, open quests, factions, clocks, places only heard of), and `rumors.py add "<words>" --truth true|false|half` writes one — true ones bring secrets out, half-true ones twist them, false ones are what someone wants believed. When a character listens in a tavern or asks around, `rumors.py hear --who "<name>"` sends a Charisma check to the phone (DC 10 a busy tavern, 15 a wary village) and prints what they hear with its truth: tell it in the story, in the voice of whoever says it. The players' Rumors panel keeps what they heard, never the truth; carousing in downtime brings one by itself. When you write `prep.md`, add three or four rumors for the places of the next session. Syntax: `SKILL-scripts.md` → *Rumors*.
+
 ---
 
 ## Timeline
