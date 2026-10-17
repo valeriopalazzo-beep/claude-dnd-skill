@@ -27,6 +27,7 @@ import hmac
 import json
 import os
 import queue
+import random
 import re
 import secrets
 import subprocess
@@ -530,6 +531,8 @@ _DM_ENDPOINTS = {
     "downtime_changed",
     # A journey: travel.py sets the pace and finds the way; the roles on the road are the players'.
     "travel_changed",
+    # Diseases, poisons, madness: afflictions.py and the clock change them; the saves are the players'.
+    "afflictions_apply", "afflictions_ask",
     # The party's common fund: treasury.py changes it; putting in and taking out is the players'.
     "treasury_changed",
     # The party's stronghold: stronghold.py and the calendar change it, everyone reads it.
@@ -3655,6 +3658,174 @@ def _concentration_result(request_id: str, character: str, total: int) -> None:
                                          "total": total, "dc": check["dc"]}})
 
 
+# ─── Diseases, poisons and madness (afflictions.py) ──────────────────────────
+# afflictions.py keeps them in <campaign>/afflictions.json and the calendar
+# runs their course: at dawn a disease's save is opened on its character's
+# phone (POST /afflictions/ask) and settled here when the roll comes back —
+# exhaustion up or down, a DC that drops, damage — then the next save still
+# due is asked. Conditions and damage reach the display through
+# _afflictions_apply; the DM gets an [[AFFLICTION: …]] line from check_input.py.
+import afflictions as _afflictions
+
+_afflictions_lock = threading.Lock()
+
+
+def _afflictions_file() -> Optional[str]:
+    camp = re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]
+    if not camp:
+        return None
+    try:
+        return str(_find_campaign(camp) / "afflictions.json")
+    except Exception:
+        return None
+
+
+def _afflictions_apply(character: str, add: list, remove: list, damage: int) -> None:
+    """Conditions on and off, damage taken (temporary hit points first), as a push would do it."""
+    snapshot, hit = None, None
+    with _stats_lock:
+        for p in _current_stats.get("players", []):
+            if _sheet_key(p.get("name", "")) != _sheet_key(character):
+                continue
+            conds = [c for c in p.get("conditions", []) if c.lower() not in {str(r).lower() for r in remove}]
+            timers = p.setdefault("condition_timers", {})
+            for r in remove:
+                timers.pop(str(r).lower(), None)
+            for one in add:
+                name = str(one.get("name", "") if isinstance(one, dict) else one).strip()
+                if not name:
+                    continue
+                if name.lower() not in [c.lower() for c in conds]:
+                    conds.append(name)
+                timer = _condition_timer(one) if isinstance(one, dict) else None
+                if timer:
+                    timers[name.lower()] = timer
+            p["conditions"] = conds
+            if damage and isinstance(p.get("hp"), dict):
+                before = dict(p["hp"])
+                temp = int(p["hp"].get("temp", 0) or 0)
+                soak = min(temp, damage)
+                p["hp"]["temp"] = temp - soak
+                p["hp"]["current"] = max(0, int(p["hp"].get("current", 0) or 0) - (damage - soak))
+                hit = _concentration_hit(p, before)
+            snapshot = dict(_current_stats)
+            break
+    if snapshot is not None:
+        _persist_stats()
+        _broadcast({"stats": snapshot})
+    if hit:
+        _concentration_follow(hit)
+
+
+def _afflictions_open_due(path: str, again: bool = False) -> list:
+    """Open on the phones the course saves that are due and not already waiting. Call with _afflictions_lock held."""
+    data = _afflictions.load(path)
+    with _dice_pending_lock:
+        live = set(_dice_pending)
+    lang = "it" if _spell_lang().startswith("it") else "en"
+    asked = []
+    seen = set()
+    for e in data["list"]:
+        if not e.get("due") or e.get("status") != "active":
+            continue
+        if e.get("pending") and (e["pending"] in live or not again):
+            seen.add(_sheet_key(e["who"]))
+            continue
+        if _sheet_key(e["who"]) in seen:            # one save at a time per character: the next when this one is back
+            continue
+        path_s, _safe, _camp = _find_sheet_file(e["who"])
+        try:
+            with open(path_s, encoding="utf-8") as f:
+                text = f.read()
+        except (OSError, TypeError):
+            text = ""
+        mod = _afflictions.save_bonus(text, e.get("save", "CON")) if text else 0
+        request_id, _waiting = _open_dice_request([e["who"]], "1d20", mod, "normal", _afflictions.label(e, lang), int(e["dc"]))
+        e["pending"] = request_id
+        seen.add(_sheet_key(e["who"]))
+        asked.append(e["who"])
+    _afflictions.save(path, data)
+    return asked
+
+
+def _affliction_result(request_id: str, character: str, total: int) -> None:
+    """A course save came back: settle it, put the change on the display, ask the next one due."""
+    path = _afflictions_file()
+    if not path or not os.path.isfile(path):
+        return
+    with _afflictions_lock:
+        try:
+            data = _afflictions.load(path)
+        except _afflictions.AfflictionError:
+            return
+        entry = next((e for e in data["list"] if e.get("pending") == request_id
+                      and _sheet_key(e["who"]) == _sheet_key(character)), None)
+        if entry is None:
+            return
+        try:
+            ch = _afflictions.settle(data, entry, int(total), random.Random())
+        except _afflictions.AfflictionError:
+            return
+        _afflictions.save(path, data)
+        _afflictions_open_due(path)
+    _afflictions_apply(ch["who"], ch["add"], ch["remove"], ch["damage"])
+    _afflictions.notes_add(_afflictions.note_line(ch))
+    _broadcast({"afflictions_event": {"character": ch["who"], "what": ch["event"], "name": ch["name"]}})
+
+
+@app.route("/afflictions", methods=["GET"])
+def afflictions_get():
+    if not _token_ok():
+        return "Forbidden", 403
+    path = _afflictions_file()
+    if not path:
+        return jsonify({"afflictions": []}), 200
+    me = g.character if getattr(g, "role", None) == "player" else str(request.args.get("character") or "")[:50]
+    with _afflictions_lock:
+        try:
+            data = _afflictions.load(path)
+        except _afflictions.AfflictionError:
+            return jsonify({"afflictions": []}), 200
+    camp = re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]
+    view = _afflictions.public_view(data, me or "", dm=getattr(g, "role", None) != "player" and not me,
+                                    now_h=_afflictions.now_hours(camp) if camp else None)
+    return jsonify({"afflictions": view}), 200
+
+
+@app.route("/afflictions/apply", methods=["POST"])
+def afflictions_apply():
+    """afflictions.py changed a character: {"character", "add", "remove", "damage", "event", "name"}."""
+    body = request.get_json(silent=True) or {}
+    character = str(body.get("character", ""))[:50].strip()
+    add = [a for a in (body.get("add") or []) if isinstance(a, (str, dict))][:12]
+    remove = [str(r)[:40] for r in (body.get("remove") or [])][:12]
+    try:
+        damage = max(0, min(500, int(body.get("damage") or 0)))
+    except (TypeError, ValueError):
+        damage = 0
+    if character and (add or remove or damage):
+        _afflictions_apply(character, add, remove, damage)
+    what = str(body.get("event") or "changed")[:20]
+    if what != "secret":
+        _broadcast({"afflictions_event": {"character": character, "what": what, "name": str(body.get("name") or "")[:60]}})
+    return "", 204
+
+
+@app.route("/afflictions/ask", methods=["POST"])
+def afflictions_ask():
+    """The clock reached a dawn (or midnight): open the saves due on the phones. {"again": true} re-asks lost ones."""
+    path = _afflictions_file()
+    if not path or not os.path.isfile(path):
+        return jsonify({"asked": []}), 200
+    body = request.get_json(silent=True) or {}
+    with _afflictions_lock:
+        try:
+            asked = _afflictions_open_due(path, again=bool(body.get("again")))
+        except _afflictions.AfflictionError:
+            asked = []
+    return jsonify({"asked": asked}), 200
+
+
 # ─── "Previously on…" (recap.py) ─────────────────────────────────────────────
 # The DM's recap at the start of a session, as a full-screen card on every
 # screen; the narrator reads it where narration is on. Kept until cleared so a
@@ -4267,6 +4438,13 @@ def dm_screen_data():
         if isinstance(t, dict) and t.get("name"):
             traps.append({k: t.get(k) for k in ("name", "where", "at", "status", "spot", "investigate", "disarm", "dispel",
                                                  "magic", "noticed_by", "found_by", "trigger")})
+    afflictions = []
+    if folder and (folder / "afflictions.json").is_file():     # every affliction, incubating ones too
+        try:
+            afflictions = _afflictions.public_view(_afflictions.load(str(folder / "afflictions.json")), dm=True,
+                                                   now_h=_afflictions.now_hours(camp))
+        except Exception:
+            afflictions = []
     travel = None
     if folder and (folder / "travel.json").is_file():     # the journey: pace, roles, watch, lost (secret)
         try:
@@ -4282,6 +4460,7 @@ def dm_screen_data():
             wander = None
     return jsonify({
         "traps": traps,
+        "afflictions": afflictions,
         "travel": travel,
         "wander": wander,
         "missed": missed,
@@ -6115,6 +6294,7 @@ def player_dice():
         _broadcast({"dice_pending": _dice_pending_snapshot()})
     if req_id:
         _concentration_result(req_id, character, total)
+        _affliction_result(req_id, character, total)
 
     return jsonify({
         "character": character,

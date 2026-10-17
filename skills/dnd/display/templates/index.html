@@ -1547,6 +1547,21 @@
   .trv-lost{ border-color:#c0503a !important; background:rgba(192,80,58,.18) !important; }
   .trv-roles{ display:flex; flex-direction:column; gap:8px; }
 
+  /* ══ Ailments (afflictions.py) — diseases, poisons and madness on their course ══ */
+  #ail-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
+    align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  #ail-modal.open{ display:flex; }
+  #ail-panel{ width:min(560px, 100%); margin:auto 0; color:var(--ln-text, #ECE4D2); font-family:'Alegreya Sans','Syne',sans-serif; }
+  #ail-head{ display:flex; align-items:center; gap:10px; margin-bottom:10px; color:#ECE4D2; }
+  #ail-head h2{ flex:1; min-width:0; margin:0; font-size:22px; line-height:1.15; }
+  #ail-close{ flex:none; width:40px; height:40px; border-radius:999px; cursor:pointer; font-size:16px;
+    background:rgba(0,0,0,.35); color:inherit; border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #ail-body{ display:flex; flex-direction:column; gap:10px; }
+  .ail-kind{ display:inline-block; margin-left:6px; padding:1px 8px; border-radius:999px; font-size:12px; font-weight:800; vertical-align:middle;
+    background:rgba(255,255,255,.1); color:var(--ln-text-muted, #cdbfa6); }
+  .ail-due{ display:inline-block; margin-top:6px; padding:2px 9px; border-radius:999px; font-size:13px; font-weight:800;
+    background:var(--ln-accent, #f2b544); color:var(--ln-on-accent, #1a140c); }
+
   /* ══ People met (people.py) — who the party knows, and what of them ══ */
   #people-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
     align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
@@ -5544,6 +5559,7 @@
     <button class="ph-set-opt" id="ph-stronghold-opt" type="button" hidden><span data-i18n="sh.title">Our stronghold</span><strong>🏰</strong></button>
     <button class="ph-set-opt" id="ph-downtime-opt" type="button" hidden><span data-i18n="dt.title">Downtime</span><strong>⌂</strong></button>
     <button class="ph-set-opt" id="ph-travel-opt" type="button" hidden><span data-i18n="trv.title">On the road</span><strong>🧭</strong></button>
+    <button class="ph-set-opt" id="ph-ail-opt" type="button" hidden><span data-i18n="ail.title">Ailments</span><strong>🤒</strong></button>
     <label class="ph-set-opt ph-set-row" id="ph-skin-opt"><span data-i18n="ph.style">Style</span><select id="ph-skin-select" class="ph-set-select" aria-label="Display style"><option value="vellum">Vellum</option><option value="editorial">Editorial</option><option value="lanterna">Lanterna</option></select></label>
     <label class="ph-set-opt ph-set-row" id="ph-lang-opt"><span data-i18n="settings.language">Language</span><select id="ph-lang-select" class="ph-set-select" aria-label="Display language" data-i18n-aria="settings.language"></select></label>
     <button class="ph-set-opt" id="ph-sfx-opt" type="button"><span data-i18n="settings.sfx">Sound Effects</span><strong id="ph-sfx-val">On</strong></button>
@@ -5748,6 +5764,17 @@
       <button id="trv-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
     </div>
     <div id="trv-body"></div>
+  </div>
+</div>
+
+<!-- Ailments: diseases, poisons and madness, from afflictions.py -->
+<div id="ail-modal">
+  <div id="ail-panel" role="dialog" aria-labelledby="ail-title">
+    <div id="ail-head">
+      <h2 id="ail-title" data-i18n="ail.title">Ailments</h2>
+      <button id="ail-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
+    </div>
+    <div id="ail-body"></div>
   </div>
 </div>
 
@@ -6017,6 +6044,7 @@
   <symbol id="ln-i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
   <symbol id="ln-i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2v10l7 7"/></symbol>
   <symbol id="ln-i-pack" viewBox="0 0 24 24"><path d="M8 7V5a4 4 0 0 1 8 0v2"/><rect x="4" y="7" width="16" height="14" rx="3"/><path d="M8 13h8v4H8z"/></symbol>
+  <symbol id="ln-i-ail" viewBox="0 0 24 24"><path d="M9 3h6M10 3v5l-5 9a3 3 0 0 0 2.6 4.5h8.8A3 3 0 0 0 19 17l-5-9V3"/><path d="M7.5 14h9"/></symbol>
   <symbol id="ln-i-road" viewBox="0 0 24 24"><path d="M7 21c0-5 10-4 10-9S8 8 9 3"/><path d="M3 21h8M14 3h7"/></symbol>
   <symbol id="ln-i-downtime" viewBox="0 0 24 24"><path d="M4 21V9l8-6 8 6v12"/><path d="M9 21v-6h6v6"/><path d="M12 9.5v.01"/></symbol>
   <symbol id="ln-i-beast" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M9 8l1.5 2L12 8l1.5 2L15 8"/></symbol>
@@ -6079,6 +6107,7 @@
       <button class="ln-item" type="button" id="ln-stronghold" title="Our stronghold" data-i18n-title="sh.title" hidden><svg class="ln-i"><use href="#ln-i-castle"/></svg><span class="ln-lbl" data-i18n="sh.title">Our stronghold</span></button>
       <button class="ln-item" type="button" id="ln-downtime" title="Downtime" data-i18n-title="dt.title" hidden><svg class="ln-i"><use href="#ln-i-downtime"/></svg><span class="ln-lbl" data-i18n="dt.title">Downtime</span></button>
       <button class="ln-item" type="button" id="ln-travel" title="On the road" data-i18n-title="trv.title" hidden><svg class="ln-i"><use href="#ln-i-road"/></svg><span class="ln-lbl" data-i18n="trv.title">On the road</span></button>
+      <button class="ln-item" type="button" id="ln-ail" title="Ailments" data-i18n-title="ail.title" hidden><svg class="ln-i"><use href="#ln-i-ail"/></svg><span class="ln-lbl" data-i18n="ail.title">Ailments</span><span class="ln-badge" id="ln-badge-ail" hidden>!</span></button>
       <button class="ln-item" type="button" id="ln-beast" title="Bestiary" data-i18n-title="beast.title" hidden><svg class="ln-i"><use href="#ln-i-beast"/></svg><span class="ln-lbl" data-i18n="beast.title">Bestiary</span><span class="ln-badge" id="ln-badge-beast" data-i18n="beast.new" hidden>New</span></button>
       <button class="ln-item" type="button" id="ln-people" title="People met" data-i18n-title="people.title" hidden><svg class="ln-i"><use href="#ln-i-people"/></svg><span class="ln-lbl" data-i18n="people.title">People met</span><span class="ln-badge" id="ln-badge-people" data-i18n="people.new" hidden>New</span></button>
       <button class="ln-item" type="button" id="ln-cal" title="Calendar" data-i18n-title="cal.title" hidden><svg class="ln-i"><use href="#ln-i-calendar"/></svg><span class="ln-lbl" data-i18n="cal.title">Calendar</span></button>
@@ -6168,6 +6197,7 @@
         <button class="ln-item" type="button" id="ln-stronghold-more" data-ln-proxy="ln-stronghold" hidden><svg class="ln-i"><use href="#ln-i-castle"/></svg><span class="ln-lbl" data-i18n="sh.title">Our stronghold</span></button>
         <button class="ln-item" type="button" id="ln-downtime-more" data-ln-proxy="ln-downtime" hidden><svg class="ln-i"><use href="#ln-i-downtime"/></svg><span class="ln-lbl" data-i18n="dt.title">Downtime</span></button>
         <button class="ln-item" type="button" id="ln-travel-more" data-ln-proxy="ln-travel" hidden><svg class="ln-i"><use href="#ln-i-road"/></svg><span class="ln-lbl" data-i18n="trv.title">On the road</span></button>
+        <button class="ln-item" type="button" id="ln-ail-more" data-ln-proxy="ln-ail" hidden><svg class="ln-i"><use href="#ln-i-ail"/></svg><span class="ln-lbl" data-i18n="ail.title">Ailments</span></button>
         <button class="ln-item" type="button" id="ln-beast-more" data-ln-proxy="ln-beast" hidden><svg class="ln-i"><use href="#ln-i-beast"/></svg><span class="ln-lbl" data-i18n="beast.title">Bestiary</span></button>
         <button class="ln-item" type="button" id="ln-people-more" data-ln-proxy="ln-people" hidden><svg class="ln-i"><use href="#ln-i-people"/></svg><span class="ln-lbl" data-i18n="people.title">People met</span></button>
         <button class="ln-item" type="button" id="ln-attack-more" data-ln-proxy="ln-attack" hidden><svg class="ln-i"><use href="#ln-i-sword"/></svg><span class="ln-lbl" data-i18n="atk.title">Attacks</span></button>
@@ -11511,6 +11541,7 @@ function connect() {
     }
     if (payload.downtime_event && typeof window._onDowntime === 'function') window._onDowntime(payload.downtime_event);
     if (payload.travel_event && typeof window._onTravel === 'function') window._onTravel(payload.travel_event);
+    if (payload.afflictions_event && typeof window._onAfflictions === 'function') window._onAfflictions(payload.afflictions_event);
     if ((payload.supplies || payload.supplies_news) && typeof window._onSupplies === 'function') window._onSupplies(payload.supplies, payload.supplies_news);
     if ((payload.clocks || payload.clock_event) && typeof window._onClocks === 'function') window._onClocks(payload.clocks, payload.clock_event);
     if (payload.death_save && typeof window._onDeathSaveResult === 'function') window._onDeathSaveResult(payload.death_save);
@@ -12042,6 +12073,96 @@ function _clockPie(segments, filled, size) {
   const close = () => modal.classList.remove('open');
   ['ln-travel', 'ph-travel-opt'].forEach(id => { const b = document.getElementById(id); if (b) b.addEventListener('click', open); });
   document.getElementById('trv-close').addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  load();
+})();
+
+// ── Ailments (afflictions.py) ─────────────────────────────────────────
+// A character's diseases, poisons and madness, each with where its course
+// stands: the exhaustion it gives, the DC that drops, the successes counted,
+// the hours left. The dawn's saving throw arrives as an ordinary dice request
+// and the display applies the result by itself; this panel says what changed.
+// A screen sees its own character's; the DM's sees everyone's.
+(function _initAfflictions() {
+  const modal = document.getElementById('ail-modal');
+  if (!modal) return;
+  const body = document.getElementById('ail-body');
+  let list = [];
+  const me = () => (typeof _turnMine === 'function' ? _turnMine() : '');
+  const lang = () => window._LANG || 'en';
+  const named = e => (e.names && (e.names[lang()] || e.names.en)) || '';
+
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  function state(e) {
+    const save = _t('ail.save.' + (e.save || 'CON'), null, e.save || 'CON');
+    if (e.status === 'incubating') return _t('ail.incubating', null, 'Incubating: no symptoms yet');
+    if (e.model === 'exhaustion') return _t('ail.st.exhaustion', { n: e.level, save, dc: e.dc }, 'Exhaustion ' + e.level + ' · ' + save + ' DC ' + e.dc + ' at each dawn');
+    if (e.model === 'dc_drop') return _t('ail.st.dcdrop', { save, dc: e.dc, f: e.failures || 0 }, save + ' DC ' + e.dc + ' at each dawn · failures ' + (e.failures || 0) + ' of 3');
+    if (e.model === 'worsen') return _t('ail.st.worsen', { n: e.level }, '-' + e.level + ' to sight')
+      + (e.level >= (e.max || 5) ? ' · ' + _condLabel('Blinded') : '') + (e.doses ? ' · ' + _t('ail.st.doses', { n: e.doses }, e.doses + ' of 3 doses') : '');
+    if (e.model === 'successes') return _t('ail.st.successes', { n: e.successes || 0, need: e.need || 7, save, dc: e.dc }, (e.successes || 0) + ' of ' + (e.need || 7) + ' successes · ' + save + ' DC ' + e.dc + ' each day');
+    if (e.model === 'indefinite') return _t('ail.st.indefinite', null, 'Until cured');
+    if (e.minutes) return _t('ail.st.minutes', { n: e.minutes }, e.minutes + ' minutes');
+    if (e.hours_left != null) return _t('ail.st.hours', { n: e.hours_left }, 'Ends in ' + e.hours_left + ' h');
+    return '';
+  }
+
+  function render() {
+    const has = list.length > 0;
+    ['ln-ail', 'ln-ail-more', 'ph-ail-opt'].forEach(id => { const b = document.getElementById(id); if (b) b.hidden = !has; });
+    const badge = document.getElementById('ln-badge-ail');
+    if (badge) badge.hidden = !list.some(e => e.save_due);
+    body.textContent = '';
+    if (!has) { body.appendChild(el('p', 'sup-empty', _t('ail.none', null, 'No disease, poison or madness.'))); return; }
+    const dm = !me();
+    list.forEach(e => {
+      const box = el('div', 'dt-box');
+      const head = el('div', 'dt-days', (dm ? e.who + ' · ' : '') + named(e));
+      head.appendChild(el('span', 'ail-kind', _t('ail.kind.' + e.kind, null, e.kind)));
+      box.appendChild(head);
+      const st = state(e);
+      if (st) box.appendChild(el('p', 'dt-who', st));
+      if ((e.conditions || []).length) box.appendChild(el('p', 'dt-who', e.conditions.map(c => _condLabel(c)).join(' · ')));
+      const fx = e.effect && (e.effect[lang()] || e.effect.en);
+      if (fx) box.appendChild(el('p', 'dt-note', fx));
+      if (e.save_due) box.appendChild(el('span', 'ail-due', _t('ail.due', null, "Today's saving throw is waiting")));
+      body.appendChild(box);
+    });
+  }
+
+  function load() {
+    const q = me() ? '?character=' + encodeURIComponent(me()) : '';
+    return fetch('/afflictions' + q).then(r => r.ok ? r.json() : null).then(d => {
+      list = d && Array.isArray(d.afflictions) ? d.afflictions : [];
+      render();
+    }).catch(() => {});
+  }
+
+  window._onAfflictions = function (ev) {
+    const mine = me();
+    if (ev && mine && ev.character && typeof _turnSame === 'function' && _turnSame(ev.character, mine)
+        && ['new', 'worse', 'better', 'cured', 'hit'].includes(ev.what)) {
+      load().then(() => {
+        const e = list.find(x => x.names && x.names.en === ev.name);
+        const name = e ? named(e) : ev.name;
+        _showToast('🤒 ' + _t('ail.toast.' + ev.what, { name }, name), 8000);
+      });
+      return;
+    }
+    load();
+  };
+
+  const open = () => { modal.classList.add('open'); load(); };
+  const close = () => modal.classList.remove('open');
+  ['ln-ail', 'ph-ail-opt'].forEach(id => { const b = document.getElementById(id); if (b) b.addEventListener('click', open); });
+  document.getElementById('ail-close').addEventListener('click', close);
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   load();

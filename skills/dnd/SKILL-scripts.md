@@ -853,6 +853,34 @@ python3 ${CLAUDE_SKILL_DIR}/display/travel.py stop
 
 ---
 
+## Diseases, Poisons and Madness — `display/afflictions.py`
+
+Afflictions with a course (SRD; DMG 2014 pp. 256-260), kept in `<campaign>/afflictions.json` and moved by the clock: `calendar.py advance`, `rest` and `time` call it, and at every **dawn** (06:00) the saves due go to the phones; the display settles each one as it comes back, applies the conditions (exhaustion, poisoned, unconscious…) and the damage (temporary hit points first; damage to a concentrating character opens its concentration save), asks the next one due, and tells you with `[[AFFLICTION: …]]` (check_input.py / autorun_wait.py). Every screen has an **Ailments** panel with its own character's (the DM's screen shows everyone's, incubating ones too).
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/display/afflictions.py list                                  # the catalogue, English / Italian names
+python3 ${CLAUDE_SKILL_DIR}/display/afflictions.py expose Lyra "veleno di serpente"      # the save on the phone, then the effect
+python3 ${CLAUDE_SKILL_DIR}/display/afflictions.py expose Lyra "epidemia fognaria" --total 8   # already rolled
+python3 ${CLAUDE_SKILL_DIR}/display/afflictions.py add Lyra "febbre da gallina"          # the save already failed
+python3 ${CLAUDE_SKILL_DIR}/display/afflictions.py custom Hernio "Febbre di palude" --dc 12 --onset 2d --effect "Brividi e deliri"
+python3 ${CLAUDE_SKILL_DIR}/display/afflictions.py madness Lyra short                    # long | indefinite (breve, lunga, indefinita)
+python3 ${CLAUDE_SKILL_DIR}/display/afflictions.py madness Lyra long --save WIS --dc 15  # resisted on a made save
+python3 ${CLAUDE_SKILL_DIR}/display/afflictions.py treat Lyra "vista putrefatta"         # a dose of eyebright before the night
+python3 ${CLAUDE_SKILL_DIR}/display/afflictions.py cure Lyra "epidemia fognaria"         # or --all
+python3 ${CLAUDE_SKILL_DIR}/display/afflictions.py resolve Lyra "epidemia fognaria" --total 12   # a dawn save with no phone
+python3 ${CLAUDE_SKILL_DIR}/display/afflictions.py ask                                   # send the saves still due again
+python3 ${CLAUDE_SKILL_DIR}/display/afflictions.py dawn                                  # a dawn, for a campaign with no calendar
+python3 ${CLAUDE_SKILL_DIR}/display/afflictions.py show [--who Lyra]
+```
+
+- **Diseases:** sewer plague (DC 11, symptoms in 1d4 days: exhaustion 1; each dawn a failed save +1 level, a made one -1, below 1 it is over), cackle fever (DC 13, 1d4 hours: exhaustion 1 that stays; a made save lowers the DC by 1d6, at 0 it is over; three failures add an indefinite madness; stress saves are yours to ask), sight rot (DC 15, a day: -1 to sight, 1 worse each dawn, blinded at -5; `treat` stops a night's worsening, three doses cure). `custom` models: `exhaustion` (default), `dc_drop`, `successes --need N`, `worsen`. Incubation is a secret: `expose`/`add` print when the symptoms will show; the players learn of it then.
+- **Poisons:** the SRD's fourteen and the PHB's basic poison. Damage is rolled by the script (half on a made save where the SRD says so); conditions last their hours on the campaign clock (`hours` / 1d10-minute ones also count down in rounds on the display). Pale tincture asks a save every day from the day after the dose until seven successes; midnight tears do nothing until midnight. Effects that repeat every turn (burnt othur fumes, crawler mucus) are printed for you to run in combat.
+- **Madness:** short (1d10 minutes; paralyzed, incapacitated, frightened, stunned or unconscious where the table says so, counted in rounds), long (1d10 × 10 hours), indefinite (until cured: a flaw for the player to play). The effect is read from the SRD's tables in the table's language (`--d100 N` picks a row).
+- **The book says "after a long rest"** for the disease saves: at this table they come at dawn, once a day, which is when the night's rest ends. A save asked while the display was off stays due: `ask` sends it again (also after `/dm:dnd load`), or `resolve --total N`.
+- Without a calendar nothing runs by itself: `dawn` for each new day, `cure` when a timed effect is over.
+
+---
+
 ## Traps — `scripts/trap.py`
 
 Traps kept in `<campaign>/traps.json`, with the rules done for you (SRD 5.1 *Traps*, DMG 2014 pp. 120-123).

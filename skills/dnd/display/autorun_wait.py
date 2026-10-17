@@ -140,7 +140,7 @@ notes += _chase.drain_notes() if _chase else []
 notes += _rest.drain_notes() if _rest else []
 # The rest of what check_input.py reports: already applied, information for the DM.
 for _mod, _fn in (("spellbook", "drain_casts"), ("treasury", "drain_notes"), ("downtime", "drain_notes"),
-                  ("travel", "drain_notes")):
+                  ("travel", "drain_notes"), ("afflictions", "drain_notes")):
     try:
         notes += getattr(__import__(_mod), _fn)()
     except Exception:

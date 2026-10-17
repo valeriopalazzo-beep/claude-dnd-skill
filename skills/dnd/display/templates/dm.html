@@ -113,6 +113,7 @@
   <section id="s-supplies"><h2 data-t="dms.supplies">Supplies</h2><div></div></section>
   <section id="s-downtime"><h2 data-t="dms.downtime">Downtime</h2><div></div></section>
   <section id="s-travel"><h2 data-t="dms.travel">On the road</h2><div></div></section>
+  <section id="s-ail"><h2 data-t="ail.title">Ailments</h2><div></div></section>
   <section id="s-traps"><h2 data-t="dms.traps">Traps</h2><div></div></section>
   <section id="s-wander"><h2 data-t="dms.wander">Random encounters</h2><div></div></section>
   <section id="s-missed"><h2 data-t="missed.menu">While you were away</h2><div></div></section>
@@ -225,6 +226,19 @@
       + '<table>' + tr.players.map(n => `<tr><td>${esc(n)}</td><td>${tr.roles[n] ? esc(_t('trv.role.' + tr.roles[n], null, tr.roles[n]))
         : `<span class="muted">${esc(_t('trv.norole', null, '—'))}</span>`}${tr.watch && tr.watch.lookouts[n] != null ? ` <span class="muted">· ${esc(tr.watch.lookouts[n])}</span>` : ''}</td></tr>`).join('') + '</table>'
       : empty('dms.none');
+
+    // Ailments (afflictions.py): everyone's, incubating ones too (the players do not see those yet).
+    const ail = d.afflictions || [];
+    body('s-ail').innerHTML = ail.length ? '<table>' + ail.map(e => {
+      const st = e.status === 'incubating' ? `<span class="tag warn">${esc(_t('ail.incubating', null, 'incubating'))}</span>`
+        : e.model === 'exhaustion' ? esc(_t('cond.exhaustion', null, 'Exhaustion')) + ' ' + esc(e.level) + ` · ${esc(_t('ail.dc', null, 'DC'))} ${esc(e.dc)}`
+        : e.model === 'dc_drop' ? `${esc(_t('ail.dc', null, 'DC'))} ${esc(e.dc)} · ${esc(e.failures || 0)}/3 ✗`
+        : e.model === 'worsen' ? '-' + esc(e.level)
+        : e.model === 'successes' ? `${esc(e.successes || 0)}/${esc(e.need || 7)} ✓`
+        : e.hours_left != null ? esc(e.hours_left) + ' h' : e.model === 'indefinite' ? '∞' : '';
+      return `<tr><td>${esc(e.who)}</td><td>${esc((e.names || {})[window._LANG] || (e.names || {}).en || '')}
+        <br><small class="muted">${esc(_t('ail.kind.' + e.kind, null, e.kind))}</small></td><td>${st}${e.save_due ? ` <span class="tag">${esc(_t('ail.dueShort', null, 'save due'))}</span>` : ''}</td></tr>`;
+    }).join('') + '</table>' : empty('dms.none');
 
     // Traps (trap.py): where they are, their DCs, who has noticed or found them. The armed ones first.
     const trapOrder = ['armed', 'noticed', 'found', 'sprung', 'disarmed'];

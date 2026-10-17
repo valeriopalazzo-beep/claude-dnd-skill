@@ -588,6 +588,7 @@ def cmd_setup(campaign: str, args) -> None:
 def cmd_advance(campaign: str, amount: int, unit: str) -> None:
     cal = _need(campaign)
     before = _abs_day(cal)
+    before_h = _abs_hour(cal)
 
     hours = {"hour": 1, "hours": 1, "day": 24, "days": 24, "week": 168, "weeks": 168}.get(unit, 1)
     total_hours = amount * hours
@@ -600,11 +601,13 @@ def cmd_advance(campaign: str, amount: int, unit: str) -> None:
     _keep_stronghold(campaign, _abs_day(cal) - before)
     _wander(campaign, total_hours, _format_date(cal))
     _travel(campaign, cal)
+    _afflictions(campaign, before_h, _abs_hour(cal))
 
 
 def cmd_rest(campaign: str, rest_type: str) -> None:
     cal = _need(campaign)
     before = _abs_day(cal)
+    before_h = _abs_hour(cal)
 
     if rest_type == "short":
         _advance_hours(cal, 1)
@@ -619,6 +622,7 @@ def cmd_rest(campaign: str, rest_type: str) -> None:
     _keep_stronghold(campaign, _abs_day(cal) - before)
     _wander(campaign, 1 if rest_type == "short" else 8, _format_date(cal))
     _travel(campaign, cal)
+    _afflictions(campaign, before_h, _abs_hour(cal))
 
 
 def _spend_supplies(campaign: str, hours: float, days_crossed: int) -> None:
@@ -637,6 +641,25 @@ def _wander(campaign: str, hours: float, when: str = "") -> None:
         import wander
         for line in wander.tick(campaign, hours, when):
             print(("  ⚔ " if line.startswith("ENCOUNTER") else "  Wander: ") + line)
+    except Exception:
+        pass   # a courtesy: the time has moved anyway
+
+
+def _abs_hour(cal: dict) -> int:
+    return _abs_day(cal) * 24 + int(cal.get("hour", 8))
+
+
+def _afflictions(campaign: str, before_h: int, after_h: int) -> None:
+    """Diseases, poisons and madness run their course (display/afflictions.py): saves at dawn, ends, onsets."""
+    if after_h <= before_h:
+        return
+    try:
+        import paths
+        if str(paths.display_dir()) not in sys.path:
+            sys.path.insert(0, str(paths.display_dir()))
+        import afflictions
+        for line in afflictions.clock_moved(campaign, before_h, after_h):
+            print("  🤒 Afflictions: " + line)
     except Exception:
         pass   # a courtesy: the time has moved anyway
 
@@ -722,9 +745,11 @@ def cmd_time(campaign: str, time_str: str) -> None:
     if not cal:
         print("Calendar not initialised.")
         sys.exit(1)
+    before_h = _abs_hour(cal)
     cal["hour"] = HOURS_PER_TIME.get(time_str.lower(), cal.get("hour", 8))
     print(f"  Time set: {_format_date(cal)}")
     _after_change(campaign, cal)
+    _afflictions(campaign, before_h, _abs_hour(cal))     # later the same day: a dawn may have come
 
 
 def cmd_weather(campaign: str, args) -> None:

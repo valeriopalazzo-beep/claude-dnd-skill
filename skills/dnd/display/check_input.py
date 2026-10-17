@@ -20,7 +20,9 @@ that was solved, or ran out of attempts (puzzle.py), is a `[[PUZZLE …]]` line.
 
 When every player has chosen a downtime activity (downtime.py) the DM gets a
 `[[DOWNTIME: …]]` line. When everybody on a journey has picked a role on the
-road (travel.py), a `[[MARCH: …]]` line.
+road (travel.py), a `[[MARCH: …]]` line. A disease, poison or madness that
+moved (afflictions.py: a dawn save came back from a phone) is an
+`[[AFFLICTION: …]]` line, already applied on the display.
 
 A player's turn in a chase (chase.py) is a `[[CHASE: …]]` line: already
 applied, with whose turn it is now.
@@ -147,6 +149,13 @@ except Exception:
 try:
     from downtime import drain_notes as drain_downtime
     for line in drain_downtime():
+        print(line)
+except Exception:
+    pass
+
+try:
+    from afflictions import drain_notes as drain_afflictions
+    for line in drain_afflictions():
         print(line)
 except Exception:
     pass

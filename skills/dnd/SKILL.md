@@ -749,6 +749,12 @@ When the journey itself is the adventure (played hour by hour, not summed up in 
 
 ---
 
+## Diseases, poisons and madness
+
+A disease, a poison that lasts or a madness is a course, not a single roll: keep it with `display/afflictions.py` (SRD / DMG 2014 pp. 256-260) from the moment a character is exposed. `expose <PC> "<disease or poison>"` asks the Constitution save on their phone (or `--total N`) and applies what follows: damage and conditions go on the display at once (write them on the sheet), a disease starts incubating — **secret** until its symptoms show, then the player sees it in an **Ailments** panel. From then on the clock runs it: every `calendar.py advance`, `rest` or `time` that passes a **dawn** sends that day's save to the phone (sewer plague: exhaustion up or down; cackle fever: the DC drops by 1d6, three failures bring an indefinite madness; pale tincture: seven successes, 1d6 for each failure), and the display settles it when the roll comes back — you get an `[[AFFLICTION: …]]` line to narrate how they feel. Sight rot worsens by itself each dawn unless `treat`ed; midnight tears strike at midnight; oil of taggit, essence of ether, torpor and the like end when their hours are over. For a horror moment, `madness <PC> short|long|indefinite` (`--save WIS --dc 15` to resist first) rolls the SRD's table and its duration — tell the player the effect and play it. `cure` when magic or care ends it (`lesser restoration`: any disease, short or long madness; an indefinite madness needs `greater restoration`). A disease of your own: `custom`. Syntax: `SKILL-scripts.md` → *Diseases, Poisons and Madness*.
+
+---
+
 ## Traps
 
 Set a trap before the party reaches it with `scripts/trap.py add` — a sample trap from the SRD (`--preset poison-darts`, `hidden-pit`, `collapsing-roof`…, `trap.py presets` lists them) or your own numbers (`trap.py rate --level N` gives the SRD's DCs, attack bonuses and damage by severity) — so its trigger, DCs and effect are fixed before anyone rolls. Then the script does the rules (SRD *Traps*, DMG pp. 120-123):
