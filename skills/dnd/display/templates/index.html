@@ -1534,6 +1534,19 @@
   .dt-row{ margin:6px 0; font-size:16px; }
   .dt-row b{ color:var(--ln-accent, #f2b544); }
 
+  /* ══ On the road (travel.py) — the pace and each character's role on the march ══ */
+  #trv-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
+    align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  #trv-modal.open{ display:flex; }
+  #trv-panel{ width:min(560px, 100%); margin:auto 0; color:var(--ln-text, #ECE4D2); font-family:'Alegreya Sans','Syne',sans-serif; }
+  #trv-head{ display:flex; align-items:center; gap:10px; margin-bottom:10px; color:#ECE4D2; }
+  #trv-head h2{ flex:1; min-width:0; margin:0; font-size:22px; line-height:1.15; }
+  #trv-close{ flex:none; width:40px; height:40px; border-radius:999px; cursor:pointer; font-size:16px;
+    background:rgba(0,0,0,.35); color:inherit; border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #trv-body{ display:flex; flex-direction:column; gap:10px; }
+  .trv-lost{ border-color:#c0503a !important; background:rgba(192,80,58,.18) !important; }
+  .trv-roles{ display:flex; flex-direction:column; gap:8px; }
+
   /* ══ People met (people.py) — who the party knows, and what of them ══ */
   #people-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
     align-items:flex-start; justify-content:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
@@ -5530,6 +5543,7 @@
     <button class="ph-set-opt" id="ph-treasury-opt" type="button" hidden><span data-i18n="tre.title">Common fund</span><strong>💰</strong></button>
     <button class="ph-set-opt" id="ph-stronghold-opt" type="button" hidden><span data-i18n="sh.title">Our stronghold</span><strong>🏰</strong></button>
     <button class="ph-set-opt" id="ph-downtime-opt" type="button" hidden><span data-i18n="dt.title">Downtime</span><strong>⌂</strong></button>
+    <button class="ph-set-opt" id="ph-travel-opt" type="button" hidden><span data-i18n="trv.title">On the road</span><strong>🧭</strong></button>
     <label class="ph-set-opt ph-set-row" id="ph-skin-opt"><span data-i18n="ph.style">Style</span><select id="ph-skin-select" class="ph-set-select" aria-label="Display style"><option value="vellum">Vellum</option><option value="editorial">Editorial</option><option value="lanterna">Lanterna</option></select></label>
     <label class="ph-set-opt ph-set-row" id="ph-lang-opt"><span data-i18n="settings.language">Language</span><select id="ph-lang-select" class="ph-set-select" aria-label="Display language" data-i18n-aria="settings.language"></select></label>
     <button class="ph-set-opt" id="ph-sfx-opt" type="button"><span data-i18n="settings.sfx">Sound Effects</span><strong id="ph-sfx-val">On</strong></button>
@@ -5723,6 +5737,17 @@
       <button id="dt-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
     </div>
     <div id="dt-body"></div>
+  </div>
+</div>
+
+<!-- On the road: the pace and the roles on the march, from travel.py -->
+<div id="trv-modal">
+  <div id="trv-panel" role="dialog" aria-labelledby="trv-title">
+    <div id="trv-head">
+      <h2 id="trv-title" data-i18n="trv.title">On the road</h2>
+      <button id="trv-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
+    </div>
+    <div id="trv-body"></div>
   </div>
 </div>
 
@@ -5992,6 +6017,7 @@
   <symbol id="ln-i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
   <symbol id="ln-i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2v10l7 7"/></symbol>
   <symbol id="ln-i-pack" viewBox="0 0 24 24"><path d="M8 7V5a4 4 0 0 1 8 0v2"/><rect x="4" y="7" width="16" height="14" rx="3"/><path d="M8 13h8v4H8z"/></symbol>
+  <symbol id="ln-i-road" viewBox="0 0 24 24"><path d="M7 21c0-5 10-4 10-9S8 8 9 3"/><path d="M3 21h8M14 3h7"/></symbol>
   <symbol id="ln-i-downtime" viewBox="0 0 24 24"><path d="M4 21V9l8-6 8 6v12"/><path d="M9 21v-6h6v6"/><path d="M12 9.5v.01"/></symbol>
   <symbol id="ln-i-beast" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M9 8l1.5 2L12 8l1.5 2L15 8"/></symbol>
   <symbol id="ln-i-people" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M15 4h6v5h-3l-2 2V9h-1z"/></symbol>
@@ -6052,6 +6078,7 @@
       <button class="ln-item" type="button" id="ln-treasury" title="Common fund" data-i18n-title="tre.title" hidden><svg class="ln-i"><use href="#ln-i-chest"/></svg><span class="ln-lbl" data-i18n="tre.title">Common fund</span></button>
       <button class="ln-item" type="button" id="ln-stronghold" title="Our stronghold" data-i18n-title="sh.title" hidden><svg class="ln-i"><use href="#ln-i-castle"/></svg><span class="ln-lbl" data-i18n="sh.title">Our stronghold</span></button>
       <button class="ln-item" type="button" id="ln-downtime" title="Downtime" data-i18n-title="dt.title" hidden><svg class="ln-i"><use href="#ln-i-downtime"/></svg><span class="ln-lbl" data-i18n="dt.title">Downtime</span></button>
+      <button class="ln-item" type="button" id="ln-travel" title="On the road" data-i18n-title="trv.title" hidden><svg class="ln-i"><use href="#ln-i-road"/></svg><span class="ln-lbl" data-i18n="trv.title">On the road</span></button>
       <button class="ln-item" type="button" id="ln-beast" title="Bestiary" data-i18n-title="beast.title" hidden><svg class="ln-i"><use href="#ln-i-beast"/></svg><span class="ln-lbl" data-i18n="beast.title">Bestiary</span><span class="ln-badge" id="ln-badge-beast" data-i18n="beast.new" hidden>New</span></button>
       <button class="ln-item" type="button" id="ln-people" title="People met" data-i18n-title="people.title" hidden><svg class="ln-i"><use href="#ln-i-people"/></svg><span class="ln-lbl" data-i18n="people.title">People met</span><span class="ln-badge" id="ln-badge-people" data-i18n="people.new" hidden>New</span></button>
       <button class="ln-item" type="button" id="ln-cal" title="Calendar" data-i18n-title="cal.title" hidden><svg class="ln-i"><use href="#ln-i-calendar"/></svg><span class="ln-lbl" data-i18n="cal.title">Calendar</span></button>
@@ -6140,6 +6167,7 @@
         <button class="ln-item" type="button" id="ln-treasury-more" data-ln-proxy="ln-treasury" hidden><svg class="ln-i"><use href="#ln-i-chest"/></svg><span class="ln-lbl" data-i18n="tre.title">Common fund</span></button>
         <button class="ln-item" type="button" id="ln-stronghold-more" data-ln-proxy="ln-stronghold" hidden><svg class="ln-i"><use href="#ln-i-castle"/></svg><span class="ln-lbl" data-i18n="sh.title">Our stronghold</span></button>
         <button class="ln-item" type="button" id="ln-downtime-more" data-ln-proxy="ln-downtime" hidden><svg class="ln-i"><use href="#ln-i-downtime"/></svg><span class="ln-lbl" data-i18n="dt.title">Downtime</span></button>
+        <button class="ln-item" type="button" id="ln-travel-more" data-ln-proxy="ln-travel" hidden><svg class="ln-i"><use href="#ln-i-road"/></svg><span class="ln-lbl" data-i18n="trv.title">On the road</span></button>
         <button class="ln-item" type="button" id="ln-beast-more" data-ln-proxy="ln-beast" hidden><svg class="ln-i"><use href="#ln-i-beast"/></svg><span class="ln-lbl" data-i18n="beast.title">Bestiary</span></button>
         <button class="ln-item" type="button" id="ln-people-more" data-ln-proxy="ln-people" hidden><svg class="ln-i"><use href="#ln-i-people"/></svg><span class="ln-lbl" data-i18n="people.title">People met</span></button>
         <button class="ln-item" type="button" id="ln-attack-more" data-ln-proxy="ln-attack" hidden><svg class="ln-i"><use href="#ln-i-sword"/></svg><span class="ln-lbl" data-i18n="atk.title">Attacks</span></button>
@@ -11482,6 +11510,7 @@ function connect() {
         + (fe.reason ? ' — ' + fe.reason : ''), 6500);
     }
     if (payload.downtime_event && typeof window._onDowntime === 'function') window._onDowntime(payload.downtime_event);
+    if (payload.travel_event && typeof window._onTravel === 'function') window._onTravel(payload.travel_event);
     if ((payload.supplies || payload.supplies_news) && typeof window._onSupplies === 'function') window._onSupplies(payload.supplies, payload.supplies_news);
     if ((payload.clocks || payload.clock_event) && typeof window._onClocks === 'function') window._onClocks(payload.clocks, payload.clock_event);
     if (payload.death_save && typeof window._onDeathSaveResult === 'function') window._onDeathSaveResult(payload.death_save);
@@ -11619,14 +11648,21 @@ connect();
 
   function describe(place) {
     detail.textContent = '';
-    if (!place) { detail.textContent = _t('region.hint', null, 'Tap a place to see what you know about it.'); return; }
+    if (!place) {
+      detail.textContent = region && region.lost ? _t('region.lost', null, 'You are lost: you do not know how far it is')
+        : _t('region.hint', null, 'Tap a place to see what you know about it.');
+      return;
+    }
     const name = document.createElement('b');
     name.textContent = place.name;
     const meta = document.createElement('span');
     meta.className = 'region-meta';
     const parts = [];
     if (place.here) parts.push(_t('region.here', null, 'You are here'));
-    else {
+    else if (region.lost) {
+      parts.push(place.status === 'visited' ? _t('region.visited', null, 'Visited') : _t('region.known', null, 'Heard of, never seen'));
+      parts.push(_t('region.lost', null, 'You are lost: you do not know how far it is'));
+    } else {
       parts.push(place.status === 'visited' ? _t('region.visited', null, 'Visited') : _t('region.known', null, 'Heard of, never seen'));
       if (region.party) {
         parts.push(place.days === null ? _t('region.noroute', null, 'No known road from here')
@@ -11897,6 +11933,115 @@ function _clockPie(segments, filled, size) {
   const close = () => modal.classList.remove('open');
   ['ln-downtime', 'ph-downtime-opt'].forEach(id => { const b = document.getElementById(id); if (b) b.addEventListener('click', open); });
   document.getElementById('dt-close').addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  load();
+})();
+
+// ── On the road (travel.py) ───────────────────────────────────────────
+// The DM sets the pace; each player picks their character's role on the march
+// (PHB 2014 pp. 182-183): guide, lookout, mapper or forager. Only lookouts
+// keep watch; a fast pace costs them 5 on passive Perception, a slow one lets
+// the party sneak. A lost party sees it here once the DM reveals it.
+(function _initTravel() {
+  const modal = document.getElementById('trv-modal');
+  if (!modal) return;
+  const body = document.getElementById('trv-body');
+  let view = null, msg = '';
+  const me = () => (typeof _turnMine === 'function' ? _turnMine() : '');
+
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  const roleName = r => r ? _t('trv.role.' + r, null, r) : _t('trv.norole', null, 'no role yet');
+
+  function render() {
+    const has = !!view;
+    ['ln-travel', 'ln-travel-more', 'ph-travel-opt'].forEach(id => { const b = document.getElementById(id); if (b) b.hidden = !has; });
+    body.textContent = '';
+    if (!has) { body.appendChild(el('p', 'sup-empty', _t('trv.none', null, 'The party is not on the road.'))); return; }
+    if (view.lost) {
+      const box = el('div', 'dt-box trv-lost');
+      box.appendChild(el('div', 'dt-days', '🧭 ' + _t('trv.lost', null, 'You are lost')));
+      box.appendChild(el('p', 'dt-note', _t('trv.lostHint', null, 'The guide can try again after some hours spent finding the way.')));
+      body.appendChild(box);
+    }
+    const head = el('div', 'dt-box');
+    head.appendChild(el('div', 'dt-days', _t('trv.pace.' + view.pace, null, view.pace)));
+    head.appendChild(el('p', 'dt-note', _t('trv.speed', { kmh: String(view.kmh).replace('.', ','), km: view.km_day },
+      view.kmh + ' km/h, ' + view.km_day + ' km a day')));
+    const fx = view.perception ? _t('trv.fx.fast', null, '-5 to passive Perception; no foraging')
+      : view.stealth ? _t('trv.fx.slow', null, 'You can move stealthily') : _t('trv.fx.normal', null, 'No penalty');
+    head.appendChild(el('p', 'dt-who', fx));
+    if (view.to) head.appendChild(el('p', 'dt-who', _t('trv.to', { place: view.to }, 'Heading for ' + view.to)));
+    if (view.watch) {
+      const w = view.watch;
+      head.appendChild(el('p', 'dt-who', w.by ? _t('trv.watch', { n: w.best, name: w.by }, 'Watch: passive Perception ' + w.best + ' (' + w.by + ')')
+        : _t('trv.nowatch', null, 'Nobody is keeping watch')));
+    }
+    body.appendChild(head);
+
+    const list = el('div', 'dt-box');
+    view.players.forEach(n => {
+      const row = el('div', 'dt-row');
+      row.appendChild(el('b', '', n + ': '));
+      row.appendChild(document.createTextNode(roleName(view.roles[n])));
+      list.appendChild(row);
+    });
+    body.appendChild(list);
+
+    if (view.asked) {
+      const box = el('div', 'dt-box');
+      box.appendChild(el('p', 'dt-who', _t('trv.pick', null, 'What do you do on the road?')));
+      const acts = el('div', 'trv-roles');
+      view.roles_list.forEach(k => {                      // tapping one's own role again lets it go
+        const b = el('button', 'dt-act' + (view.mine === k ? ' on' : ''));
+        b.type = 'button';
+        b.appendChild(el('b', '', roleName(k)));
+        b.appendChild(el('small', '', _t('trv.desc.' + k, null, '')));
+        b.addEventListener('click', () => choose(view.mine === k ? 'none' : k));
+        acts.appendChild(b);
+      });
+      box.appendChild(acts);
+      if (msg) box.appendChild(el('p', 'dt-msg', msg));
+      body.appendChild(box);
+    }
+  }
+
+  function load() {
+    const q = me() ? '?character=' + encodeURIComponent(me()) : '';
+    return fetch('/travel' + q).then(r => r.ok ? r.json() : null).then(d => {
+      view = d && d.travel ? d.travel : null;
+      render();
+    }).catch(() => {});
+  }
+
+  function choose(role) {
+    fetch('/travel/role', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ character: me(), role }) })
+      .then(r => r.json().then(d => ({ ok: r.ok, d })))
+      .then(({ ok, d }) => {
+        if (ok && d.travel) { view = d.travel; msg = ''; }
+        else msg = d && d.code === 'taken' ? _t('trv.taken', null, 'Somebody else is already the guide.') : (d && d.error) || '…';
+        render();
+      }).catch(() => { msg = '…'; render(); });
+  }
+
+  window._onTravel = function (ev) {
+    if (ev && ev.what === 'start') _showToast('🧭 ' + _t('trv.toast.start', null, 'On the road: pick your role on the march'), 7000);
+    if (ev && ev.what === 'pace' && ev.pace) _showToast('🧭 ' + _t('trv.pace.' + ev.pace, null, ev.pace), 5000);
+    if (ev && ev.what === 'lost') _showToast('🧭 ' + _t('trv.lost', null, 'You are lost'), 7000);
+    if (ev && ev.what === 'found') _showToast('🧭 ' + _t('trv.found', null, 'You have found the way again'), 6000);
+    load();
+  };
+
+  const open = () => { modal.classList.add('open'); load(); };
+  const close = () => modal.classList.remove('open');
+  ['ln-travel', 'ph-travel-opt'].forEach(id => { const b = document.getElementById(id); if (b) b.addEventListener('click', open); });
+  document.getElementById('trv-close').addEventListener('click', close);
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   load();

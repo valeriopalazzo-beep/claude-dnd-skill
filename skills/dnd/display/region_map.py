@@ -41,7 +41,12 @@ rovine, cripta, bosco are understood). Roads: road, trail, river, sea.
 
 `--campaign NAME` (before the command) works on a campaign other than the
 active one. `travel` does not move the calendar: it prints the calendar.py
-command for the days it took, because what happens on the road is the DM's call.
+command for the days it took, because what happens on the road is the DM's call
+(and the days at the party's pace, when travel.py keeps one).
+
+A party that got lost (travel.py) and knows it is drawn as a question mark off
+the roads, with no distances on the players' screens; `travel` refuses until it
+is found, and `here` puts it somewhere and ends it.
 """
 from __future__ import annotations
 
@@ -111,7 +116,7 @@ def data_path(campaign: str = "") -> str:
 
 def empty() -> dict:
     return {"title": "", "legend": "", "day_px": 100, "unit": "days", "hour_px": 110, "party": "",
-            "places": [], "roads": [], "file": ""}
+            "places": [], "roads": [], "file": "", "lost": None}
 
 
 def load(path: str) -> dict:
@@ -389,6 +394,7 @@ def set_here(data: dict, name: str) -> dict:
     place = find_place(data, name)
     place["status"] = "visited"
     data["party"] = place["name"]
+    data["lost"] = None                      # the DM put the party somewhere: it is not lost any more
     return place
 
 
@@ -397,6 +403,9 @@ def travel(data: dict, name: str) -> tuple:
     dest = find_place(data, name)
     if not data.get("party"):
         raise RegionError("the map does not know where the party is — use `here PLACE` first")
+    if data.get("lost"):
+        raise RegionError("the party is lost (travel.py) — it finds the way first (travel.py navigate / found), "
+                          "or use `here` to put it somewhere")
     if _key(dest["name"]) == _key(data["party"]):
         raise RegionError(f"the party is already at {dest['name']}")
     reach = distances(data, data["party"]).get(_key(dest["name"]))
@@ -411,8 +420,11 @@ def travel(data: dict, name: str) -> tuple:
 
 
 def public_view(data: dict) -> dict:
-    """What a player's screen needs: places with their spot on the picture and the days from the party."""
-    reach = distances(data, data["party"]) if data.get("party") else {}
+    """What a player's screen needs: places with their spot on the picture and the days from the party.
+
+    A party that knows it is lost (travel.py) is nowhere on it: no "you are here", no distances."""
+    lost = bool((data.get("lost") or {}).get("known"))
+    reach = distances(data, data["party"]) if data.get("party") and not lost else {}
     tf = _transform(data)
     places = []
     for p in data["places"]:
@@ -422,9 +434,9 @@ def public_view(data: dict) -> dict:
                        "px": round(X / W * 100, 2), "py": round(Y / H * 100, 2),
                        "days": None if d is None else fmt_days(d[0]),
                        "dist": None if d is None else fmt_dist(data, d[0]),
-                       "here": _key(p["name"]) == _key(data.get("party", ""))})
+                       "here": not lost and _key(p["name"]) == _key(data.get("party", ""))})
     return {"title": data.get("title", ""), "legend": data.get("legend", ""), "file": data.get("file", ""),
-            "party": data.get("party", ""), "unit": unit(data), "places": places}
+            "party": "" if lost else data.get("party", ""), "unit": unit(data), "places": places, "lost": lost}
 
 
 # ─── The drawing ──────────────────────────────────────────────────────────────
@@ -575,11 +587,12 @@ def render(data: dict) -> str:
     by_key = {_key(p["name"]): p for p in data["places"]}
     tf = _transform(data)
     labels = _layout(data)
+    lost_at = _lost_spot(data, by_key, tf)
     busy = [spot[3] for spot in labels.values()]
     for p in data["places"]:
         X, Y = _xy(p, tf)
         busy.append((X - 30, Y - 32, X + 30, Y + 20))
-        if _key(p["name"]) == _key(data.get("party", "")):       # the ring and the flag
+        if _key(p["name"]) == _key(data.get("party", "")) and not lost_at:       # the ring and the flag
             s = 1.25 if p["kind"] in ("city", "castle") else 1.0
             busy.append((X - 42 * s, Y - 54 * s, X + 58 * s, Y + 36 * s))
     font = "'IM Fell English', 'Palatino Linotype', Georgia, 'Times New Roman', serif"
@@ -649,13 +662,20 @@ def render(data: dict) -> str:
                  f'font-size="{25 if big else 21}" {slant}fill="{C["ink"]}" '
                  f'stroke="{C["bg"]}" stroke-width="5" paint-order="stroke" stroke-linejoin="round">'
                  f'{escape(p["name"])}{" ?" if rumor else ""}</text>')
-        if _key(p["name"]) == party:
+        if _key(p["name"]) == party and not lost_at:
             o.append(f'<circle cx="{X:.1f}" cy="{Y - 6 * scale:.1f}" r="{38 * scale:.0f}" fill="none" stroke="{C["party"]}" '
                      f'stroke-width="3" stroke-dasharray="7 6"/>'
                      f'<g transform="translate({X + 30 * scale:.1f} {Y - 32 * scale:.1f})">'
                      f'<path d="M0 14 V-18" stroke="{C["ink"]}" stroke-width="2.6" stroke-linecap="round"/>'
                      f'<path d="M1 -18 L24 -11 L1 -4 Z" fill="{C["party"]}" stroke="{C["ink"]}" stroke-width="1.4" '
                      f'stroke-linejoin="round"/></g>')
+
+    if lost_at:                              # lost (and they know it): a question mark off the roads
+        lx, ly = lost_at
+        o.append(f'<circle cx="{lx:.1f}" cy="{ly:.1f}" r="40" fill="none" stroke="{C["party"]}" stroke-width="3" '
+                 f'stroke-dasharray="3 7"/>'
+                 f'<text x="{lx:.1f}" y="{ly + 17:.1f}" text-anchor="middle" font-size="52" fill="{C["party"]}" '
+                 f'stroke="{C["bg"]}" stroke-width="5" paint-order="stroke">?</text>')
 
     title = escape(data.get("title", "") or "")
     if title:
@@ -676,6 +696,22 @@ def render(data: dict) -> str:
     return "".join(o)
 
 
+def _lost_spot(data: dict, by_key: dict, tf: tuple):
+    """Where a party that knows it is lost is drawn: off the roads, a little way from the place it left."""
+    lost = data.get("lost") or {}
+    if not lost.get("known"):
+        return None
+    near = by_key.get(_key(lost.get("near") or lost.get("from") or data.get("party", "")))
+    if near:
+        X, Y = _xy(near, tf)
+    else:
+        X, Y = W / 2, H / 2
+    seed = int(hashlib.sha256((near or {}).get("name", "?").encode("utf-8")).hexdigest()[:6], 16)
+    angle = (seed % 360) * math.pi / 180
+    x, y = X + 120 * math.cos(angle), Y + 120 * math.sin(angle)
+    return (min(max(x, PAD_X), W - PAD_X), min(max(y, PAD_TOP), H - PAD_BOTTOM))
+
+
 def write_image(data: dict, campaign: str = "") -> str:
     """Render to <campaign>/media/region-<hash>.svg and return the file name."""
     import media
@@ -691,6 +727,21 @@ def write_image(data: dict, campaign: str = "") -> str:
         except OSError:
             pass
     return name
+
+
+def _at_pace(data: dict, days: float, campaign: str = "") -> str:
+    """The same road at the pace the party keeps (travel.py): a normal day is 36 km, fast 48, slow 24 (PHB p. 182)."""
+    try:
+        import travel
+        t = travel.load(travel.data_path(campaign))
+    except Exception:
+        return ""
+    if not t.get("on") or t.get("pace") == "normal":
+        return ""
+    factor = travel.PACES["normal"]["km_day"] / travel.PACES[t["pace"]]["km_day"]
+    d = days * factor
+    return (f" ({fmt_hours(d)} hours at the {t['pace']} pace)" if unit(data) == "hours"
+            else f" ({fmt_days(d)} days at the {t['pace']} pace)")
 
 
 def _announce(data: dict, story: bool) -> None:
@@ -801,7 +852,7 @@ def main(argv: list | None = None) -> int:
             hours = max(1, int(round(days * HOURS_PER_DAY)))
             took = (f'{fmt_hours(days)} hours of travel', f'{hours} hours') if unit(data) == "hours" else \
                    (f'{fmt_days(days)} days of travel', f'{fmt_days(days).replace("½", ".5")} days')
-            message = (" → ".join(route) + f': {took[0]}. '
+            message = (" → ".join(route) + f': {took[0]}{_at_pace(data, days, args.campaign)}. '
                        f'The calendar has NOT moved — when the journey is played: '
                        f'calendar.py -c <campaign> advance {took[1]}')
         elif args.cmd == "mark":

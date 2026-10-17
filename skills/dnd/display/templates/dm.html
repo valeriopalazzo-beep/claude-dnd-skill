@@ -112,6 +112,7 @@
   <section id="s-secrets"><h2 data-t="dms.secrets">Secret dates</h2><div></div></section>
   <section id="s-supplies"><h2 data-t="dms.supplies">Supplies</h2><div></div></section>
   <section id="s-downtime"><h2 data-t="dms.downtime">Downtime</h2><div></div></section>
+  <section id="s-travel"><h2 data-t="dms.travel">On the road</h2><div></div></section>
   <section id="s-traps"><h2 data-t="dms.traps">Traps</h2><div></div></section>
   <section id="s-wander"><h2 data-t="dms.wander">Random encounters</h2><div></div></section>
   <section id="s-missed"><h2 data-t="missed.menu">While you were away</h2><div></div></section>
@@ -213,6 +214,17 @@
       const c = (dt.choices || {})[n];
       return `<tr><td>${esc(n)}</td><td>${c ? esc(_t('dt.act.' + c.activity, null, c.activity)) + (c.detail ? ' — ' + esc(c.detail) : '') : `<span class="muted">${esc(_t('dt.waiting', null, '…'))}</span>`}</td></tr>`;
     }).join('') + '</table>' : empty('dms.none');
+
+    // On the road (travel.py): the pace, who does what, the watch, and whether the party is lost (secret).
+    const tr = d.travel;
+    body('s-travel').innerHTML = tr ? `<p><b>${esc(_t('trv.pace.' + tr.pace, null, tr.pace))}</b>${tr.to ? ' · ' + esc(tr.to) : ''}${tr.terrain ? ' · ' + esc(tr.terrain) : ''}`
+      + (tr.watch ? `<br><small class="muted">${esc(tr.watch.by ? _t('trv.watch', { n: tr.watch.best, name: tr.watch.by }, '') : _t('trv.nowatch', null, ''))}</small>` : '') + '</p>'
+      + (tr.lost_detail ? `<p><span class="tag warn">${esc(_t('dms.travel.lost', null, 'LOST'))}</span> ${esc(tr.lost_detail.from || '')}`
+        + (tr.lost_detail.known ? '' : ` <small class="muted">(${esc(_t('dms.travel.unknown', null, ''))})</small>`)
+        + `<br><small class="muted">${esc(_t('dms.travel.retry', { n: tr.lost_detail.retry_hours }, ''))}</small></p>` : '')
+      + '<table>' + tr.players.map(n => `<tr><td>${esc(n)}</td><td>${tr.roles[n] ? esc(_t('trv.role.' + tr.roles[n], null, tr.roles[n]))
+        : `<span class="muted">${esc(_t('trv.norole', null, '—'))}</span>`}${tr.watch && tr.watch.lookouts[n] != null ? ` <span class="muted">· ${esc(tr.watch.lookouts[n])}</span>` : ''}</td></tr>`).join('') + '</table>'
+      : empty('dms.none');
 
     // Traps (trap.py): where they are, their DCs, who has noticed or found them. The armed ones first.
     const trapOrder = ['armed', 'noticed', 'found', 'sprung', 'disarmed'];

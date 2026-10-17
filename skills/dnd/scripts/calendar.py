@@ -599,6 +599,7 @@ def cmd_advance(campaign: str, amount: int, unit: str) -> None:
     _spend_supplies(campaign, total_hours, _abs_day(cal) - before)
     _keep_stronghold(campaign, _abs_day(cal) - before)
     _wander(campaign, total_hours, _format_date(cal))
+    _travel(campaign, cal)
 
 
 def cmd_rest(campaign: str, rest_type: str) -> None:
@@ -617,6 +618,7 @@ def cmd_rest(campaign: str, rest_type: str) -> None:
     _spend_supplies(campaign, 1 if rest_type == "short" else 8, _abs_day(cal) - before)
     _keep_stronghold(campaign, _abs_day(cal) - before)
     _wander(campaign, 1 if rest_type == "short" else 8, _format_date(cal))
+    _travel(campaign, cal)
 
 
 def _spend_supplies(campaign: str, hours: float, days_crossed: int) -> None:
@@ -635,6 +637,19 @@ def _wander(campaign: str, hours: float, when: str = "") -> None:
         import wander
         for line in wander.tick(campaign, hours, when):
             print(("  ⚔ " if line.startswith("ENCOUNTER") else "  Wander: ") + line)
+    except Exception:
+        pass   # a courtesy: the time has moved anyway
+
+
+def _travel(campaign: str, cal: dict) -> None:
+    """A lost party (display/travel.py): say when its guide may try again to find the way."""
+    try:
+        import paths
+        if str(paths.display_dir()) not in sys.path:
+            sys.path.insert(0, str(paths.display_dir()))
+        import travel
+        for line in travel.tick(campaign, _abs_day(cal) * 24 + int(cal.get("hour", 8))):
+            print("  🧭 Travel: " + line)
     except Exception:
         pass   # a courtesy: the time has moved anyway
 

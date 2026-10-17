@@ -528,6 +528,8 @@ _DM_ENDPOINTS = {
     "supplies_changed",
     # Downtime: downtime.py opens and closes it; choosing is the players'.
     "downtime_changed",
+    # A journey: travel.py sets the pace and finds the way; the roles on the road are the players'.
+    "travel_changed",
     # The party's common fund: treasury.py changes it; putting in and taking out is the players'.
     "treasury_changed",
     # The party's stronghold: stronghold.py and the calendar change it, everyone reads it.
@@ -4026,6 +4028,99 @@ def downtime_choose():
     return jsonify({"downtime": view}), 200
 
 
+# ─── On the road (travel.py) ─────────────────────────────────────────────────
+# The DM sets out with travel.py and keeps the pace; each player picks their
+# character's role on the road (guide, lookout, mapper, forager) on their own
+# screen. Kept in <campaign>/travel.json; when everybody has a role the DM gets
+# a [[MARCH: …]] line. Whether the party is lost is the DM's secret until
+# travel.py reveal.
+import travel as _travel
+
+_travel_lock = threading.Lock()
+
+
+def _travel_file() -> Optional[str]:
+    camp = re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]
+    if not camp:
+        return None
+    try:
+        return str(_find_campaign(camp) / "travel.json")
+    except Exception:
+        return None
+
+
+def _travel_passives(data: dict) -> dict:
+    out = {}
+    for n in data.get("players") or []:
+        nums = _dm_sheet_numbers(n)
+        if nums.get("passive"):
+            out[n] = nums["passive"]["perception"]
+    return out
+
+
+def _travel_view(data: dict, dm: Optional[bool] = None, me: str = "") -> Optional[dict]:
+    me = me or (g.character if getattr(g, "role", None) == "player" else str(request.args.get("character") or "")[:50])
+    if dm is None:
+        dm = getattr(g, "role", None) != "player" and not me
+    return _travel.public_view(data, me or "", dm=dm, passives=_travel_passives(data))
+
+
+@app.route("/travel", methods=["GET"])
+def travel_get():
+    if not _token_ok():
+        return "Forbidden", 403
+    path = _travel_file()
+    if not path:
+        return jsonify({"travel": None}), 200
+    with _travel_lock:
+        try:
+            data = _travel.load(path)
+        except _travel.TravelError:
+            return jsonify({"travel": None}), 200
+    return jsonify({"travel": _travel_view(data)}), 200
+
+
+@app.route("/travel", methods=["POST"])
+def travel_changed():
+    """travel.py changed the journey: tell every screen."""
+    data = request.get_json(silent=True) or {}
+    event = data.get("event") if isinstance(data.get("event"), dict) else {}
+    what = event.get("what") if event.get("what") in ("start", "stop", "pace", "role", "lost", "found") else "changed"
+    _broadcast({"travel_event": {"what": what, "pace": event.get("pace") if event.get("pace") in _travel.PACES else None}})
+    return "", 204
+
+
+@app.route("/travel/role", methods=["POST"])
+def travel_role():
+    """A player's role on the road: {"character", "role"}. It can be changed while the party travels."""
+    if not _token_ok():
+        return "Forbidden", 403
+    if not _rate_ok(request.remote_addr):
+        return "Too Many Requests", 429
+    body = request.get_json(silent=True) or {}
+    character = _acting_character(str(body.get("character", ""))[:50].strip())
+    path = _travel_file()
+    if not path:
+        return jsonify({"error": "no campaign", "code": "off"}), 409
+    ready = None
+    with _travel_lock:
+        try:
+            data = _travel.load(path)
+            name, everyone = _travel.set_role(data, character, str(body.get("role", ""))[:20])
+        except _travel.TravelError as e:
+            code = "off" if "not on the road" in str(e) else "taken" if "already the guide" in str(e) else "role"
+            return jsonify({"error": str(e), "code": code}), 409
+        if everyone and not data.get("told"):
+            data["told"] = True
+            ready = _travel.ready_line(data)
+        _travel.save(path, data)
+        view = _travel_view(data, me=name)
+    if ready:
+        _travel.notes_add(ready)
+    _broadcast({"travel_event": {"what": "role", "character": name}})
+    return jsonify({"travel": view}), 200
+
+
 # ─── The DM's screen (/dm-screen) ────────────────────────────────────────────
 # A page for the DM alone: the foes' hit points, the party's passive scores
 # and save DCs, every clock and faction (secret ones too), the secret dates,
@@ -4172,6 +4267,12 @@ def dm_screen_data():
         if isinstance(t, dict) and t.get("name"):
             traps.append({k: t.get(k) for k in ("name", "where", "at", "status", "spot", "investigate", "disarm", "dispel",
                                                  "magic", "noticed_by", "found_by", "trigger")})
+    travel = None
+    if folder and (folder / "travel.json").is_file():     # the journey: pace, roles, watch, lost (secret)
+        try:
+            travel = _travel_view(_travel.load(str(folder / "travel.json")), dm=True)
+        except Exception:
+            travel = None
     wander = None
     if folder and (folder / "wander.json").is_file():     # random encounters (wander.py): the zone and its table
         try:
@@ -4181,6 +4282,7 @@ def dm_screen_data():
             wander = None
     return jsonify({
         "traps": traps,
+        "travel": travel,
         "wander": wander,
         "missed": missed,
         "campaign": camp, "world": {k: world.get(k) for k in ("date", "time", "weather") if world.get(k)},

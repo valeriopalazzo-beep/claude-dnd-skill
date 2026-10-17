@@ -19,7 +19,8 @@ What the players bought from an open shop (shop.py) is printed first, one
 that was solved, or ran out of attempts (puzzle.py), is a `[[PUZZLE …]]` line.
 
 When every player has chosen a downtime activity (downtime.py) the DM gets a
-`[[DOWNTIME: …]]` line.
+`[[DOWNTIME: …]]` line. When everybody on a journey has picked a role on the
+road (travel.py), a `[[MARCH: …]]` line.
 
 A player's turn in a chase (chase.py) is a `[[CHASE: …]]` line: already
 applied, with whose turn it is now.
@@ -146,6 +147,13 @@ except Exception:
 try:
     from downtime import drain_notes as drain_downtime
     for line in drain_downtime():
+        print(line)
+except Exception:
+    pass
+
+try:
+    from travel import drain_notes as drain_travel
+    for line in drain_travel():
         print(line)
 except Exception:
     pass

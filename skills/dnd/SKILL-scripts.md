@@ -826,6 +826,33 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/supplies.py push
 
 ---
 
+## On the Road — `display/travel.py`
+
+A journey played hour by hour: the pace (PHB 2014 p. 182), the roles on the march chosen from the phones (pp. 182-183) and getting lost (DMG 2014 p. 111). Kept in `<campaign>/travel.json`; every screen has an **On the road** panel while it is on, the DM's screen a section with the secret part.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/display/travel.py start --pace normal --to "Cripta di Vessar" --terrain foresta
+python3 ${CLAUDE_SKILL_DIR}/display/travel.py pace fast             # veloce | normale | lento too
+python3 ${CLAUDE_SKILL_DIR}/display/travel.py role "Lyra" guide     # players choose on the phone; the DM may set one too
+python3 ${CLAUDE_SKILL_DIR}/display/travel.py watch                 # passive Perception of those keeping watch
+python3 ${CLAUDE_SKILL_DIR}/display/travel.py navigate              # the guide's Survival check, DC from the terrain
+python3 ${CLAUDE_SKILL_DIR}/display/travel.py navigate --terrain montagna --map
+python3 ${CLAUDE_SKILL_DIR}/display/travel.py navigate --dc 12 --total 9   # already rolled (no display, behind the screen)
+python3 ${CLAUDE_SKILL_DIR}/display/travel.py reveal                # the players realise they are lost
+python3 ${CLAUDE_SKILL_DIR}/display/travel.py found --at "Carbonaia" # back on the map, there
+python3 ${CLAUDE_SKILL_DIR}/display/travel.py forage --dc limitate  # 10 abundant, 15 limited, 20 scarce
+python3 ${CLAUDE_SKILL_DIR}/display/travel.py show
+python3 ${CLAUDE_SKILL_DIR}/display/travel.py stop
+```
+
+- **Pace:** fast 6 km/h, 48 km a day, −5 to passive Perception, no foraging; normal 4.5 km/h, 36 km; slow 3 km/h, 24 km, the party can move stealthily. `region_map.py travel` adds the days at the pace kept.
+- **Roles:** guide (one), lookout, mapper (no check), forager. Lookouts and whoever picked nothing keep watch; guides, mappers and foragers do not (PHB p. 183). When everybody has a role you get `[[MARCH: …]]` from `check_input.py` / `autorun_wait.py`. A player taps their role again to let it go.
+- **Navigating:** DC 5 grassland, prairie, fields; 10 arctic, desert, hills, open sea with clear skies (`sea-clear`); 15 forest, jungle, swamp, mountain, open sea under clouds (`sea-overcast`). +5 at a slow pace, −5 at a fast one; `--map` for advantage; the sheet's exhaustion gives disadvantage. Roll only off the roads. The roll goes to the guide's phone and the script waits for it (`--timeout`, default 180 s).
+- **Lost:** a failed check marks the party lost near the place it left, a secret on the DM's screen. `reveal` tells the table (a line in the story) and turns the party's flag on the region map into a question mark with no distances; `region_map.py travel` refuses until they are found. After 1d6 hours `calendar.py advance` prints `🧭 Travel: … may try again`; `navigate` before then needs `--force`. A success puts them back where they were; `found --at PLACE` (or `region_map.py here`) puts them somewhere else.
+- **Foraging:** each forager's Wisdom (Survival); a success finds (1d6 + WIS) × 0.5 kg of food and (1d6 + WIS) × 4 l of water — that many person-days of rations and of water, added to `supplies.json` when the party keeps one.
+
+---
+
 ## Traps — `scripts/trap.py`
 
 Traps kept in `<campaign>/traps.json`, with the rules done for you (SRD 5.1 *Traps*, DMG 2014 pp. 120-123).

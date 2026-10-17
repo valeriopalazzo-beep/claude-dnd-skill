@@ -743,6 +743,12 @@ Food, water and light are counted, not waved away, when the story is about the j
 
 ---
 
+## On the road
+
+When the journey itself is the adventure (played hour by hour, not summed up in a sentence), run it with `display/travel.py` (PHB 2014 pp. 181-183, DMG 2014 p. 111). `start --pace normal --to "<where>" --terrain <terrain>` when they set out: every phone opens an **On the road** panel and each player picks their character's role — guide, lookout, mapper or forager (one guide only). Whoever guides, maps or forages is busy: only the others keep watch, and `travel.py watch` gives you their best passive Perception (−5 at a fast pace) to set against a hidden threat. `pace fast|normal|slow` when they change it — fast covers 48 km a day, normal 36, slow 24; slow lets them move stealthily, fast forbids foraging; `region_map.py travel` prints the days at the pace they keep. When they leave the roads, `travel.py navigate` asks the guide's phone for Wisdom (Survival) at the terrain's DC (+5 slow, −5 fast; `--map` for an accurate map or the sun and stars). On a failure they are **lost and do not know it**: describe the wrong direction, then `travel.py reveal` when they realise it — their region map shows a question mark and no distances. After 1d6 hours of searching (`calendar.py advance` says when) the guide tries again with `navigate`; `found --at "<place>"` when you put them back on the map yourself. `forage --dc 10|15|20` asks each forager's phone and adds what they find to the supplies. `stop` when they arrive. Syntax: `SKILL-scripts.md` → *On the Road*.
+
+---
+
 ## Traps
 
 Set a trap before the party reaches it with `scripts/trap.py add` — a sample trap from the SRD (`--preset poison-darts`, `hidden-pit`, `collapsing-roof`…, `trap.py presets` lists them) or your own numbers (`trap.py rate --level N` gives the SRD's DCs, attack bonuses and damage by severity) — so its trigger, DCs and effect are fixed before anyone rolls. Then the script does the rules (SRD *Traps*, DMG pp. 120-123):
