@@ -72,6 +72,9 @@ class CountTests(unittest.TestCase):
         self.assertEqual([(s["count"], s["alone"]) for s in ammo.stacks(GEAR, "bolt")], [(20, False), (20, True)])
         self.assertEqual((ammo.count(GEAR, "arrow"), ammo.count(GEAR, "bullet"), ammo.count(GEAR, "needle")), (23, 10, 5))
         self.assertIsNone(ammo.count("# Nessuno\n\n## Equipment & Inventory\n- Spada\n", "arrow"))
+        self.assertEqual(ammo.stacks("# Senza equipaggiamento\n\n## Attacks\n", "arrow"), [])
+        no_gear = "# X\n\n## Attacks\n| Name | Attack Bonus | Damage | Type | Notes |\n|--|--|--|--|--|\n| Arco lungo | +6 | 1d8 | p | |\n"
+        self.assertEqual(attacks.read_attacks(no_gear)[0]["ammo"], {"kind": "arrow", "left": None})
 
     def test_the_weapon_says_what_it_shoots(self):
         for name, kind in (("Arco corto", "arrow"), ("Arco lungo", "arrow"), ("Longbow", "arrow"), ("Balestra pesante", "bolt"),

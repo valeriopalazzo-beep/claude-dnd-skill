@@ -99,7 +99,11 @@ def stacks(text: str, kind: str) -> list:
     "qty": bool, "alone": bool, "magic": bool}] — "num" is where the count sits in the text."""
     word = _word_re(kind)
     out = []
-    for s, e, _sec, name, qty in inventory._items(text):
+    try:
+        items = inventory._items(text)
+    except inventory.InventoryError:          # no equipment section on this sheet: nothing to count
+        return []
+    for s, e, _sec, name, qty in items:
         line = text[s:e]
         m = word.search(line)
         if not m:
