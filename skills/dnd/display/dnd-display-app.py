@@ -551,6 +551,8 @@ _DM_ENDPOINTS = {
     "vehicles_changed",
     # Rumors: rumors.py writes and hands them out; the players see what they heard.
     "rumors_changed",
+    # Wild Shape and Polymorph: shapes.py puts a character in a beast's body.
+    "shapes_changed",
     # The campaign book: campaign_book.py makes it, everyone may download it.
     "book_changed",
     # A puzzle: the DM sets it, hints and closes it; trying it is the players'.
@@ -4716,7 +4718,8 @@ def _attack_sheet(character: str):
     except OSError as e:
         return None, (jsonify({"error": str(e)}), 500)
     name = (_live_player(character) or {}).get("name") or character
-    return name, rows
+    beast = _form_attacks(name)                  # in a beast's body: its bite and claws, not the sword (shapes.py)
+    return name, (beast if beast is not None else rows)
 
 
 @app.route("/attacks", methods=["GET"])
@@ -5023,6 +5026,10 @@ def rest_finish(character):
             if err:
                 return err
         _rest_to_display(character, new_text, second_wind=True, long_rest=kind == "long")
+        try:
+            _shapes.rested(_active_campaign(), name)          # Wild Shape uses back on a short or long rest
+        except Exception:
+            pass
     over = None
     with _rest_lock:
         rest = _rest_now()
@@ -5103,6 +5110,105 @@ def vehicles_changed():
     event = data.get("event")
     if isinstance(event, dict) and event.get("name") and event.get("what") in ("new", "board", "leave", "hit", "sunk", "repair"):
         payload["vehicle_event"] = {"name": str(event["name"])[:50], "what": event["what"]}
+    _broadcast(payload)
+    return "", 204
+
+
+# ─── Wild Shape and Polymorph (shapes.py) ────────────────────────────────────
+# A character in a beast's body: shapes.py keeps the form in
+# <campaign>/shapes.json and this server copies it onto the player as "form"
+# for the cards. While the form lasts, an HP push for that character is damage
+# (or healing) to the form: the character's own hit points stay as they were,
+# and when the form drops to 0 the damage left over comes off them (PHB 2014
+# p. 67). The Attacks panel rolls the form's attacks.
+import shapes as _shapes
+
+
+def _shapes_file() -> Optional[str]:
+    camp = re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]
+    if not camp:
+        return None
+    try:
+        return str(_find_campaign(camp) / "shapes.json")
+    except Exception:
+        return None
+
+
+def _forms_onto_players() -> None:
+    """Copy every form onto its player. Call with _stats_lock held."""
+    path = _shapes_file()
+    try:
+        data = _shapes.load(path) if path else _shapes.blank()
+    except Exception:
+        return
+    for p in _current_stats.get("players", []):
+        f = _shapes.form_of(data, p.get("name", ""))
+        if f or p.get("form"):
+            p["form"] = _shapes.public_form(f)
+
+
+def _form_takes(p: dict, hp_before: dict) -> Optional[dict]:
+    """An HP push for a character in another shape: the change goes to the form. Call with _stats_lock held.
+
+    Returns {"line": for the DM, "conc": a concentration hit or None, "event": for the screens}, or None."""
+    path = _shapes_file()
+    after = p.get("hp") if isinstance(p.get("hp"), dict) else {}
+    if "current" not in (hp_before or {}) or "current" not in after:
+        return None
+    try:
+        delta = int(hp_before.get("current", 0)) - int(after.get("current", 0))
+    except (TypeError, ValueError):
+        return None
+    if not path or not delta:
+        return None
+    data = _shapes.load(path)
+    f = _shapes.form_of(data, p.get("name", ""))
+    if not f:
+        p["form"] = None
+        return None
+    p["hp"]["current"] = int(hp_before.get("current", 0))          # their own hit points wait under the form
+    out = {"line": "", "conc": None, "event": {"what": "hp", "name": p.get("name", "")}}
+    if delta < 0:
+        _shapes.heal(f, -delta)
+    else:
+        r = _shapes.hit(f, delta)
+        if p.get("concentration"):                                   # the form keeps the concentration, not the damage
+            out["conc"] = {"name": p.get("name", ""), "spell": str(p["concentration"]), "damage": delta, "down": False}
+        if r["ended"]:
+            data["forms"].remove(f)
+            cur = max(0, int(hp_before.get("current", 0)) - r["excess"])
+            p["hp"]["current"] = cur
+            out["line"] = (f"[[SHAPE: {p.get('name')} is back in their own shape — the {f['creature']} dropped to 0"
+                           + (f" and {r['excess']} damage carried over: {cur} HP" if r["excess"] else ", no damage carried over")
+                           + ".]]")
+            out["event"] = {"what": "ended", "name": p.get("name", "")}
+    _shapes.save(path, data)
+    p["form"] = _shapes.public_form(_shapes.form_of(data, p.get("name", "")))
+    return out
+
+
+def _form_attacks(character: str) -> Optional[list]:
+    path = _shapes_file()
+    try:
+        f = _shapes.form_of(_shapes.load(path), character) if path else None
+    except Exception:
+        return None
+    return list(f.get("attacks") or []) if f else None
+
+
+@app.route("/shapes", methods=["POST"])
+def shapes_changed():
+    """shapes.py changed a form: put it on the players and tell every screen."""
+    data = request.get_json(silent=True) or {}
+    with _stats_lock:
+        _forms_onto_players()
+        snapshot = dict(_current_stats)
+    _persist_stats()
+    payload = {"stats": snapshot}
+    event = data.get("event")
+    if isinstance(event, dict) and event.get("name") and event.get("what") in ("start", "ended", "hp"):
+        payload["shape_event"] = {"what": event["what"], "name": str(event["name"])[:80],
+                                  "creature": str(event.get("creature") or "")[:60]}
     _broadcast(payload)
     return "", 204
 
@@ -5394,6 +5500,7 @@ def stats():
     _effect_expire_events: list[dict] = []
     ignored_players: list[str] = []
     conc_hits: list[dict] = []      # damage taken while concentrating (see _concentration_hit)
+    shape_news: list[dict] = []     # damage taken by a character in another shape (see _form_takes)
     with _stats_lock:
         if "players" in data:
             # replace_players=true wipes the list first — used on campaign load
@@ -5539,6 +5646,13 @@ def stats():
                             match[key].update(val)
                         else:
                             match[key] = val
+                    if hp_before is not None and match.get("form") and "form" not in incoming:
+                        news = _form_takes(match, hp_before)
+                        if news:
+                            shape_news.append(news)
+                            if news["conc"]:
+                                conc_hits.append(news["conc"])
+                            hp_before = dict(match.get("hp") or {})     # the form took it: nothing more to count below
                     _death_saves_follow_hp(match)
                     if hp_before is not None:
                         hit = _concentration_hit(match, hp_before)
@@ -5742,6 +5856,10 @@ def stats():
     # Concentration: a save on the player's screen, or the end of it at 0 HP.
     for hit in conc_hits:
         _concentration_follow(hit)
+    for news in shape_news:
+        if news["line"]:
+            _shapes.notes_add(news["line"])
+        _broadcast({"shape_event": news["event"]})
 
     # Update expected player count for staged-input auto-trigger
     global _expected_count

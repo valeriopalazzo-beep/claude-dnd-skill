@@ -633,6 +633,7 @@ def cmd_advance(campaign: str, amount: int, unit: str) -> None:
     _wander(campaign, total_hours, _format_date(cal))
     _travel(campaign, cal)
     _afflictions(campaign, before_h, _abs_hour(cal))
+    _shapes(campaign, cal)
 
 
 def cmd_rest(campaign: str, rest_type: str) -> None:
@@ -656,6 +657,7 @@ def cmd_rest(campaign: str, rest_type: str) -> None:
     _wander(campaign, 1 if rest_type == "short" else 8, _format_date(cal))
     _travel(campaign, cal)
     _afflictions(campaign, before_h, _abs_hour(cal))
+    _shapes(campaign, cal)
 
 
 def _exposure_note(extreme: str, hours: int) -> None:
@@ -715,6 +717,19 @@ def _travel(campaign: str, cal: dict) -> None:
         import travel
         for line in travel.tick(campaign, _abs_day(cal) * 24 + int(cal.get("hour", 8))):
             print("  🧭 Travel: " + line)
+    except Exception:
+        pass   # a courtesy: the time has moved anyway
+
+
+def _shapes(campaign: str, cal: dict) -> None:
+    """Wild Shape and Polymorph (display/shapes.py): a form whose hours are over ends."""
+    try:
+        import paths
+        if str(paths.display_dir()) not in sys.path:
+            sys.path.insert(0, str(paths.display_dir()))
+        import shapes
+        for line in shapes.tick(campaign, _abs_hour(cal)):
+            print("  🐾 Shapes: " + line)
     except Exception:
         pass   # a courtesy: the time has moved anyway
 

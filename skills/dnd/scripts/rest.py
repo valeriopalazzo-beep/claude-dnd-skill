@@ -314,6 +314,18 @@ def _push(name: str, text: str, second_wind: bool = False) -> None:
     inventory._push(["--json", json.dumps({"players": [player]}, ensure_ascii=False)])
 
 
+def _wild_shape_back(campaign: str, name: str) -> None:
+    """A short or long rest brings the druid's Wild Shape uses back (display/shapes.py)."""
+    try:
+        if str(paths.display_dir()) not in sys.path:
+            sys.path.insert(0, str(paths.display_dir()))
+        import shapes
+        if shapes.rested(campaign, name):
+            print(f"  {name}: Wild Shape uses back")
+    except Exception:
+        pass
+
+
 def _print_status(rest: dict | None) -> None:
     if not rest:
         print("No rest is open.")
@@ -402,6 +414,8 @@ def main(argv: list | None = None) -> int:
         inventory._write(path, text)
         if on_display:
             _push(name, text, second_wind=args.cmd in ("short", "long"))
+        if args.cmd in ("short", "long"):
+            _wild_shape_back(camp, name)
     except (RestError, spellbook.SpellError, inventory.InventoryError) as e:
         print(f"rest: {e}. Nothing was changed.", file=sys.stderr)
         return 1

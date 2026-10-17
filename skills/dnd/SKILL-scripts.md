@@ -597,6 +597,26 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/attacks.py -c $CAMP roll "Ajeje" "martello" 
 - **From the panel** the server writes the line in the story (`⚔ Lyra → Goblin 1 · Stocco: 19 per colpire (d20 14 +5) · 6 danni (perforante, 1d8+3: 3)`) and stages the player's action, ready, in the same language (`⚔ Stocco → Goblin 1: 19 per colpire (d20 14 +5) · 6 danni (…)` — *do not roll again*; see SKILL.md → *Attacks from the phone*). The panel's target list is the initiative order minus the party.
 - **Ammunition.** A row whose name is a bow, a crossbow, a sling or a blowgun (or whose notes say *Munizioni* / *Ammunition* and name one) spends one piece of its kind with every roll, from the panel and from `roll` alike, and the line ends with what is left (`· frecce rimaste: 18`). With none left the roll is refused; with no number on the sheet it is rolled and nothing is spent.
 
+## Wild Shape and Polymorph — `display/shapes.py`
+
+A character in a creature's body (PHB 2014 pp. 66-67 for Wild Shape; Polymorph p. 266, Animal Shapes p. 212, Shapechange p. 274, True Polymorph p. 283). The form comes from the SRD, in the campaign's language: AC, hit points, speed, attacks and traits. Kept in `<campaign>/shapes.json`.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/display/shapes.py wild "Rovo" "lupo"                    # [--moon] [--free]
+python3 ${CLAUDE_SKILL_DIR}/display/shapes.py spell "Lyra" "orso bruno" --spell polymorph --by "Vardamir"   # [--cr N]
+python3 ${CLAUDE_SKILL_DIR}/display/shapes.py spell "Rovo" "tigre" --spell animal-shapes   # shapechange | true-polymorph
+python3 ${CLAUDE_SKILL_DIR}/display/shapes.py hit "Rovo" 9          # heal "Rovo" 4
+python3 ${CLAUDE_SKILL_DIR}/display/shapes.py end "Rovo"            # bonus action, the spell ends, concentration broken
+python3 ${CLAUDE_SKILL_DIR}/display/shapes.py rest "Rovo"           # Wild Shape uses back by hand
+python3 ${CLAUDE_SKILL_DIR}/display/shapes.py list | show "Rovo"
+```
+
+- **Wild Shape** reads the druid level and the circle from the sheet's `**Class:**` (`Druido (Circolo della Luna)`, or `--moon`): 2nd level CR 1/4, no flying or swimming speed; 4th CR 1/2, no flying; 8th CR 1; the Circle of the Moon CR 1 from the 2nd level and level ÷ 3 from the 6th (the flying and swimming limits still apply). Two uses, back after a short or long rest (`rest.py` and the Rest panel do it by themselves; unlimited at 20th); it lasts half the druid level in hours.
+- **Spells:** `polymorph` and `true-polymorph` take a form of CR up to the target's level (`--cr` when the sheet has none), beasts only for Polymorph; `animal-shapes` a beast of CR 4 or less, Large or smaller, for 24 hours; `shapechange` any creature but constructs and undead. `--by` names the caster whose concentration holds it — when it breaks, `end`.
+- **Hit points.** While the form lasts **any HP push for that character is damage (or healing) to the form**: `combat.py`/`push_stats.py --hp` as usual, and the display keeps the character's own hit points under it. When the form drops to 0 the character is back and the damage left over comes off their own (not unconscious unless that brings them to 0); `check_input.py` gives you `[[SHAPE: … is back in their own shape …]]`. Damage to a concentrating character in a form still asks the concentration save. `hit`/`heal` do the same from the command line.
+- **The table:** the player's card shows the form and its hit points (`🐾 Lupo 9/11`), every screen gets a notice when someone changes shape or comes back, and the **Attacks panel rolls the form's attacks** (the bite, not the sword). When the form's hours are over, `calendar.py advance` ends it and prints `🐾 Shapes: …`.
+- What the form keeps is the rule's, not the script's: Wild Shape keeps INT, WIS and CHA, skills and save proficiencies, cannot cast spells but keeps concentration; Polymorph replaces the mental scores too and allows no speech or spells. Say it when it matters.
+
 ## Ammunition — `scripts/ammo.py`
 
 Arrows, bolts, sling bullets and blowgun needles counted on the sheet (PHB 2014 p. 146): one piece per attack, half of what was spent found again after the battle with a minute of searching.

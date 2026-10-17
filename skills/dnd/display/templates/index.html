@@ -1900,6 +1900,8 @@
   .sb-comp-chip i{ font-style:normal; font-variant-numeric:tabular-nums; opacity:.85; }
   .sb-comp-chip.hurt{ border-color:rgba(220,150,50,.7); }
   .sb-comp-chip.down{ border-color:rgba(220,80,80,.8); opacity:.75; }
+  .sb-form{ display:flex; margin-top:6px; }
+  .sb-comp-chip.sb-form-chip{ cursor:default; border-color:rgba(120,190,110,.75); }
   :root[data-skin="lanterna"] .sb-companions{ gap:6px; margin-top:8px; }
   :root[data-skin="lanterna"] .sb-comp-chip{ font-family:'Alegreya Sans',sans-serif; font-size:14.5px; padding:3px 11px;
     background:var(--ln-surface-2, rgba(255,255,255,.05)); border-color:var(--ln-line-strong, rgba(255,255,255,.25)); }
@@ -9469,6 +9471,7 @@ function updateStats(stats) {
   }
   // Lanterna skin: refresh its menu badges / "me" card from the merged data.
   if (typeof window._onCompanionCards === 'function') window._onCompanionCards();
+  if (typeof window._onFormCards === 'function') window._onFormCards(stats);
   if (typeof window._lnAfterStats === 'function') window._lnAfterStats(stats);
   if (typeof window._onDeathSaves === 'function') window._onDeathSaves();
 }
@@ -11628,6 +11631,7 @@ function connect() {
     if ((payload.companions || payload.companion_event) && typeof window._onCompanions === 'function') window._onCompanions(payload.companions, payload.companion_event);
     if ((payload.vehicles || payload.vehicle_event) && typeof window._onVehicles === 'function') window._onVehicles(payload.vehicles, payload.vehicle_event);
     if ((payload.rumors || payload.rumor_event) && typeof window._onRumors === 'function') window._onRumors(payload.rumors, payload.rumor_event);
+    if (payload.shape_event && typeof window._onShapeEvent === 'function') window._onShapeEvent(payload.shape_event);
     if ((payload.bestiary || payload.bestiary_event) && typeof window._onBestiary === 'function') window._onBestiary(payload.bestiary, payload.bestiary_event);
     if ((payload.people || payload.people_event) && typeof window._onPeople === 'function') window._onPeople(payload.people, payload.people_event);
     if ((payload.split || payload.split_event) && typeof window._onSplit === 'function') window._onSplit(payload.split, payload.split_event);
@@ -12873,6 +12877,43 @@ function _personRows(p) {
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   fetch('/people').then(r => r.ok ? r.json() : []).then(d => window._onPeople(d)).catch(() => {});
+})();
+
+// ── Wild Shape and Polymorph (shapes.py) ──────────────────────────────
+// _formChip says what a player's card shows while they are in another shape.
+function _formChip(form) {
+  if (!form || !form.hp) return null;
+  const cur = form.hp.current || 0, max = form.hp.max || 1;
+  return { text: '🐾 ' + form.creature, hp: cur + '/' + max, state: cur * 2 <= max ? 'hurt' : '' };
+}
+// ── end form chip ──
+
+(function _initForms() {
+  window._onFormCards = function (stats) {
+    // The merged players (a push may carry only some of them); a form that ended arrives as null.
+    const players = typeof _playerData === 'object' && _playerData ? _playerData : {};
+    document.querySelectorAll('.sb-player[data-player-name]').forEach(card => {
+      card.querySelectorAll('.sb-form').forEach(n => n.remove());
+      const p = players[card.dataset.playerName];
+      const c = _formChip(p && p.form);
+      if (!c) return;
+      const row = document.createElement('div');
+      row.className = 'sb-form';
+      const chip = document.createElement('span');
+      chip.className = 'sb-comp-chip sb-form-chip' + (c.state ? ' ' + c.state : '');
+      chip.title = _t('shape.form', { creature: p.form.creature }, 'In the shape of ' + p.form.creature)
+        + (p.form.ac ? ' · ' + _t('stat.ac', null, 'AC') + ' ' + p.form.ac : '') + (p.form.speed ? ' · ' + p.form.speed : '');
+      chip.append(document.createTextNode(c.text), Object.assign(document.createElement('i'), { textContent: c.hp }));
+      row.appendChild(chip);
+      card.appendChild(row);
+    });
+  };
+  window._onShapeEvent = function (ev) {
+    if (!ev || !ev.name || ev.what === 'hp') return;
+    _showToast('🐾 ' + (ev.what === 'start'
+      ? _t('shape.start', { name: ev.name, creature: ev.creature }, ev.name + ' becomes ' + ev.creature)
+      : _t('shape.ended', { name: ev.name }, ev.name + ' is back in their own shape')), 5000);
+  };
 })();
 
 // ── Rumors (rumors.py) ────────────────────────────────────────────────

@@ -168,6 +168,13 @@ except Exception:
     pass
 
 try:
+    from shapes import drain_notes as drain_shapes
+    for line in drain_shapes():
+        print(line)
+except Exception:
+    pass
+
+try:
     from treasury import drain_notes as drain_treasury
     for line in drain_treasury():
         print(line)
