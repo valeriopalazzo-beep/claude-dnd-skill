@@ -5826,7 +5826,8 @@ def stats():
     if "autorun_threshold" in data:
         global _autorun_threshold
         val = data["autorun_threshold"]
-        _autorun_threshold = int(val) if val is not None else None
+        # 0 (push_stats.py --autorun-threshold 0) means "back to the player count", as documented
+        _autorun_threshold = int(val) if val else None
         _broadcast({"autorun_threshold": _autorun_threshold})
         if not any(k in data for k in ("players", "turn_order", "world_time", "factions",
                                         "replace_players", "sheet")):
