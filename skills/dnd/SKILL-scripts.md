@@ -475,11 +475,13 @@ python3 ${CLAUDE_SKILL_DIR}/display/vote.py open "Chi entra per primo?" --option
 python3 ${CLAUDE_SKILL_DIR}/display/vote.py open "Accettate l'offerta?" --option Sì --option No --only "Ajeje, Lyra" --secret
 python3 ${CLAUDE_SKILL_DIR}/display/vote.py show     # the count so far
 python3 ${CLAUDE_SKILL_DIR}/display/vote.py close    # end it now, print the result
+python3 ${CLAUDE_SKILL_DIR}/display/vote.py clear    # take it off every screen, open or ended
 ```
 
 - 2 to 8 answers. Without `--group` / `--only` every character at the table votes. A new `open` replaces the vote on the screens.
 - Each voter answers on their own screen (the table / DM screen can vote for a player without a phone) and can change the answer while the vote is open. The count grows on every screen, or shows only at the end with `--secret`.
 - When everybody has voted the vote ends: a line in the story (`🗳 Destra o sinistra? — Destra 3 · Sinistra 1`, for the voters only when they are a part of the table) and `[[VOTE: …]]` for you from `check_input.py` / `autorun_wait.py`. A vote you `close` prints its result at once and is not reported again.
+- An ended vote stays in the players' menu with its result until the next one. When it is done with, `clear` takes it away; `push_stats.py --clear` (at every load) does it too, so last session's vote never greets the table.
 
 ---
 

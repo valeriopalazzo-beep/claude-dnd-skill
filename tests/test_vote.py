@@ -147,6 +147,26 @@ class ServerTests(unittest.TestCase):
         self.assertIn("vote_set", self.mod._DM_ENDPOINTS)
         self.assertNotIn("vote_cast", self.mod._DM_ENDPOINTS)
 
+    def test_the_dm_takes_the_vote_off_the_screens(self):
+        self.open_vote()
+        self.cast("Ajeje", 1)
+        self.client.post("/vote", json={"close": True})
+        r = self.client.post("/vote", json={"clear": True})
+        self.assertEqual((r.status_code, r.get_json()["vote"]), (200, None))
+        self.assertEqual(self.client.get("/vote").get_json()["vote"], None)
+        self.assertEqual(self.sent[-1], {"vote_event": {"cleared": True}})
+        self.open_vote()                                         # an open one goes too
+        m, tmp = self.mod, tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, tmp, True)
+        saved = (m.LOG_FILE, m.STATS_FILE)
+        self.addCleanup(lambda: (setattr(m, "LOG_FILE", saved[0]), setattr(m, "STATS_FILE", saved[1])))
+        m.LOG_FILE, m.STATS_FILE = os.path.join(tmp, "log.json"), os.path.join(tmp, "stats.json")
+        with m._text_log_lock:
+            log = list(m._text_log)
+        self.addCleanup(lambda: m._text_log.extend(log))
+        self.client.post("/clear")
+        self.assertEqual(self.client.get("/vote").get_json()["vote"], None, "a new story starts with no vote")
+
     def test_a_secret_vote_hides_the_count_from_the_players(self):
         self.open_vote(secret=True)
         self.cast("Ajeje", 1)

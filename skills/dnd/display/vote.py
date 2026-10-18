@@ -14,6 +14,7 @@ story and reaches the DM with the next check_input.py / autorun_wait.py as
     vote.py open "Accettate l'offerta?" --option Sì --option No --only "Ajeje, Lyra" --secret
     vote.py show       # the count so far
     vote.py close      # end it now and print the result
+    vote.py clear      # take the vote, open or ended, off every screen (push_stats.py --clear does it too)
 
 Without --group / --only every character at the table votes.
 """
@@ -168,6 +169,7 @@ def main(argv: list | None = None) -> int:
     p.add_argument("--secret", action="store_true", help="show the count only when the vote is over")
     sub.add_parser("show", help="the count so far")
     sub.add_parser("close", help="end the vote now and print the result")
+    sub.add_parser("clear", help="take the vote, open or ended, off every screen")
     args = ap.parse_args(argv)
 
     if args.cmd == "open":
@@ -190,6 +192,9 @@ def main(argv: list | None = None) -> int:
     elif args.cmd == "close":
         status, body = _request("/vote", {"close": True})
         what = "the vote was not closed"
+    elif args.cmd == "clear":
+        status, body = _request("/vote", {"clear": True})
+        what = "the vote was not cleared"
     else:
         status, body = _request("/vote")
         what = "could not read the vote"
@@ -198,6 +203,9 @@ def main(argv: list | None = None) -> int:
         print("vote: " + ("the display is not running" if status == 0 else f"HTTP {status}{': ' + why if why else ''}")
               + f" — {what}.", file=sys.stderr)
         return 1
+    if args.cmd == "clear":
+        print("vote: cleared — no vote on the screens any more")
+        return 0
     _print(body.get("vote"))
     if args.cmd == "open":
         print("→ on the voters' phones; the result reaches you as a [[VOTE: …]] line")

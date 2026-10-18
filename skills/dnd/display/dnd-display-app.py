@@ -3989,6 +3989,17 @@ def _persist_vote() -> None:
 _load_vote()
 
 
+def _clear_vote() -> None:
+    """No vote any more: the panel and the menu entry go away on every screen."""
+    global _vote
+    with _vote_lock:
+        had = _vote is not None
+        _vote = None
+        _persist_vote()
+    if had:
+        _broadcast({"vote_event": {"cleared": True}})
+
+
 def _vote_now() -> Optional[dict]:
     """The vote of the campaign being played, open or just ended (call with _vote_lock held)."""
     if _vote is None or _vote.get("campaign", "") != _active_campaign():
@@ -4042,11 +4053,15 @@ def vote_get():
 @app.route("/vote", methods=["POST"])
 def vote_set():
     """Open a vote — {"question", "options": [...], "voters": [...] (default: the party),
-    "group": label, "secret": bool} — or {"close": true} to end the open one."""
+    "group": label, "secret": bool} — {"close": true} to end the open one, or
+    {"clear": true} to take the vote, open or ended, off every screen."""
     global _vote
     if not _token_ok():
         return "Forbidden", 403
     data = request.get_json(silent=True) or {}
+    if data.get("clear"):
+        _clear_vote()
+        return jsonify({"vote": None}), 200
     if data.get("close"):
         with _vote_lock:
             vote = _vote_now()
@@ -6330,6 +6345,7 @@ def clear():
             os.remove(path)
         except FileNotFoundError:
             pass
+    _clear_vote()                      # last session's vote does not belong to the new story
     _broadcast({"clear": True})
     return "", 204
 
