@@ -492,7 +492,7 @@ _PUBLIC_ENDPOINTS = {"ping", "serve_icon", "favicon", "login", "login_options", 
 # Only the DM may call these (the narration feed, stats, dice requests, queue
 # plumbing, device approval, wiping the log).
 _DM_ENDPOINTS = {
-    "chunk", "image", "stats", "clear", "health", "tts_voice",
+    "chunk", "image", "map_clear", "stats", "clear", "health", "tts_voice",
     "dice_request", "dice_request_status", "dice_request_cancel",
     "region_changed",   # region_map.py redrew the region map
     "device_approve", "device_deny",
@@ -2333,6 +2333,32 @@ def media_file(name):
     if not d or not _MEDIA_NAME_RE.match(name):
         return "Not found", 404
     return send_from_directory(d, name, max_age=86400)
+
+
+def _clear_map() -> None:
+    """The battle maps sent so far leave the Map panel (they stay in the story).
+
+    A line of the log, so a screen that loads later, or the replay of the
+    session tail, puts the maps away at the same point."""
+    log_entry: dict = {"map_clear": True}
+    if _active_campaign():
+        log_entry["_camp"] = _active_campaign()
+    with _text_log_lock:
+        _text_log.append(log_entry)
+    with _tail_lock:
+        _tail_buffer.append(log_entry)
+    _persist_log()
+    _persist_tail()
+    _broadcast({"map_clear": True})
+
+
+@app.route("/map-clear", methods=["POST"])
+def map_clear():
+    """map_render.py --clear: no battle map in the Map panel until the next one."""
+    if not _token_ok():
+        return "Forbidden", 403
+    _clear_map()
+    return "", 204
 
 
 @app.route("/image", methods=["POST"])
@@ -5513,6 +5539,7 @@ def stats():
         return "", 204
 
     _effect_expire_events: list[dict] = []
+    fight_over = False              # --turn-clear: the battle map leaves the Map panel
     ignored_players: list[str] = []
     conc_hits: list[dict] = []      # damage taken while concentrating (see _concentration_hit)
     shape_news: list[dict] = []     # damage taken by a character in another shape (see _form_takes)
@@ -5694,6 +5721,7 @@ def stats():
             if isinstance(new_to, dict) and isinstance(prev_to, dict) and "order" not in new_to:
                 new_to = {**prev_to, **new_to}
             _current_stats["turn_order"] = new_to
+            fight_over = new_to is None and bool(prev_to)
             # Decrement round-based effects and conditions for the actor whose
             # turn just started. Only when the pointer really moved: a re-send
             # of the same turn (a creature joins, the list is pushed again) is
@@ -5865,6 +5893,8 @@ def stats():
 
     _persist_stats()
     _broadcast({"stats": current})
+    if fight_over:
+        _clear_map()
     # Broadcast any round-based effect expiries after the stats update
     for evt in _effect_expire_events:
         _broadcast({"effect_expired": evt})

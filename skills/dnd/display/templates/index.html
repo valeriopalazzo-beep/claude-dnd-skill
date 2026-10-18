@@ -11733,6 +11733,10 @@ function connect() {
       if (_splitWanted(payload)) { const si = _splitInfo(payload); _deferBlock(() => { _flushForBlock(); _splitDraw(si); }, false); }
       renderImageBlock(payload.image);
     }
+    if (payload.map_clear) _deferBlock(() => {          // the fight is over: no battle map in the Map panel
+      textContent.querySelectorAll('.image-block.kind-map').forEach(el => el.classList.add('map-retired'));
+      if (typeof window._lnMapCleared === 'function') window._lnMapCleared();
+    }, false);
     if (payload.handout) renderHandoutBlock(payload.handout);
     if (payload.handout_removed) _handoutRemoved(payload.handout_removed);
     if (payload.text &&!payload.inspiration_award && !payload.milestone_award && !payload.milestone_spend && !payload.xp_award) {
@@ -16221,9 +16225,14 @@ function _initDicePad() {
 
   // ── Mappa: the newest map image from the story, always one click away ──
   function latestMap() {
-    const all = [...document.querySelectorAll('#text-content .image-block.kind-map')];
+    const all = [...document.querySelectorAll('#text-content .image-block.kind-map:not(.map-retired)')];
     return all.filter(b => !b.classList.contains('superseded')).pop() || all.pop() || null;
   }
+  window._lnMapCleared = () => {
+    if (!on) return;
+    $id('ln-badge-map').hidden = true;
+    if (view === 'mappa') renderMap();
+  };
   function renderMap() {
     const host = $id('ln-map');
     const block = latestMap();

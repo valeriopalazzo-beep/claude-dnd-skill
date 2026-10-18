@@ -107,6 +107,7 @@ whom; the Attacks panel reads the last map to put the cover in the roll.
 Usage:
     python3 map_render.py << 'DNDEND'  ...map...  DNDEND      # render + show
     python3 map_render.py --file map.txt --no-send             # render only
+    python3 map_render.py --clear                              # no battle map in the Map panel any more
     python3 map_render.py --art off < map.txt                  # plain vector map
     python3 map_render.py --symbols                            # print the key
 """
@@ -1637,9 +1638,19 @@ def main() -> int:
     p.add_argument("--art", choices=("auto", "paint", "tiles", "off"),
                    help="terrain art from the image backend (default: map_art in images.json, else auto)")
     p.add_argument("--symbols", action="store_true", help="print the terrain/token key and exit")
+    p.add_argument("--clear", action="store_true",
+                   help="take the battle map out of the players' Map panel (push_stats.py --turn-clear does it too)")
     p.add_argument("--cover", nargs=2, metavar=("FROM", "TO"),
                    help="the cover TO has against an attack from FROM, on the last map sent (or --file); names or letters")
     args = p.parse_args()
+
+    if args.clear:
+        import send
+        if not send._post(f"{send.BASE_URL}/map-clear", b"{}", send._read_token()):
+            print("map_render: the display is not running — nothing was cleared", file=sys.stderr)
+            return 1
+        print("map_render: the Map panel is empty until the next map")
+        return 0
 
     if args.symbols:
         key = __doc__.split("Terrain", 1)[1].split("Usage:", 1)[0]

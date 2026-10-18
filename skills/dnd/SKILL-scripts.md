@@ -1276,6 +1276,8 @@ Kinds: `fire` `magic` `cold` `poison` `acid` `lightning` `dark` `light` `blood` 
 
 Sizes in feet (`20ft`, or a bare number), metres (`6m`) or squares (`4q`); the `scale:` line sets the size of a square (5 ft = 1,5 m when it says nothing). Directions `N NE E SE S SW W NW` (Italian `O`, `NO`, `SO` too); shapes and kinds have Italian names as well (`sfera cilindro cono linea cubo`, `fuoco freddo fulmine veleno acido magia buio luce fumo`). For a cone, line or cube the origin square is the caster's: the area starts at its side (or corner, on a diagonal). The squares whose centre falls inside are tinted and the shape is outlined; the legend says which tokens are caught (`Palla di fuoco: g, h`) and the script prints, for you, `map_render: area — Palla di fuoco [sphere 20ft, 13 squares]: Goblin (foe), Hobgoblin (foe)`. **That list is who makes the save** — apply the spell to exactly those creatures, and say it.
 
+When the fight is over the map leaves the players' Map panel by itself: `push_stats.py --turn-clear` puts every map sent so far away (they stay in the story). For a map shown outside a fight, `map_render.py --clear` does the same when the party leaves the place.
+
 Re-sending a map with the same title (or `--name <id>`) marks the older copy in the feed as superseded. `--caption TEXT` overrides the caption, `--no-send` only saves, `--out file.svg` writes a plain map elsewhere.
 
 **Fog of war** — for a place the party is exploring, add `fog: on` to the header and write the **whole** map, rooms not yet entered and creatures not yet seen included:
