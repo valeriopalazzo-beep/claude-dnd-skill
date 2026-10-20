@@ -200,6 +200,19 @@ class WhoRunsTests(unittest.TestCase):
         with self.assertRaises(chase.ChaseError):
             chase.from_spec("Ladro:veloce")
 
+    def test_a_list_of_creatures_with_several_keys(self):
+        # the comma between the keys of one creature is not the comma between two runners
+        old = chase._party
+        chase._party = lambda: []
+        try:
+            runners = chase.resolve("Nello:speed=9,con=1, Donna anziana:speed=6, Thug:2, Ladro:stealth=6,dex=3")
+        finally:
+            chase._party = old
+        self.assertEqual([r["name"] for r in runners], ["Nello", "Donna anziana", "Thug 1", "Thug 2", "Ladro"])
+        self.assertEqual((runners[0]["speed"], runners[0]["con"]), (9.0, 1))
+        self.assertEqual(runners[1]["speed"], 6.0)
+        self.assertEqual((runners[4]["stealth"], runners[4]["dex"]), (6, 3))
+
 
 class ServerTests(unittest.TestCase):
     @classmethod

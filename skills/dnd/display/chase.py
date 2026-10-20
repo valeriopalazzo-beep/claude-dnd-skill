@@ -509,7 +509,13 @@ def resolve(names: str, campaign: str = "") -> list:
     out = []
     party = {_key(n) for n in _party()}
     import inventory
-    for spec in [s.strip() for s in (names or "").split(",") if s.strip()]:
+    specs = []
+    for part in [s.strip() for s in (names or "").split(",") if s.strip()]:
+        if specs and ":" in specs[-1] and ":" not in part and "=" in part:
+            specs[-1] += "," + part           # 'Ladro:speed=9,con=1': the keys belong to the creature before
+        else:
+            specs.append(part)
+    for spec in specs:
         bare = spec.partition(":")[0].strip()
         if ":" not in spec:
             try:
