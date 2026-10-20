@@ -1032,6 +1032,8 @@
   "chase.dashSave": "No free dash left: a DC 10 Constitution save, or a level of exhaustion",
   "chase.stop": "Give up",
   "chase.stopSub": "You stop running",
+  "chase.stopSure": "Sure? Tap again",
+  "chase.stopSureSub": "You stop running for good",
   "chase.wait": "{name}'s turn",
   "chase.started": "A chase!",
   "chase.yourTurn": "Your turn in the chase",

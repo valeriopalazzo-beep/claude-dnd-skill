@@ -1172,6 +1172,8 @@
   "chase.dashSave": "Niente più scatti gratuiti: TS Costituzione CD 10, o un livello di indebolimento",
   "chase.stop": "Rinuncio",
   "chase.stopSub": "Smetti di correre",
+  "chase.stopSure": "Sicuro? Tocca di nuovo",
+  "chase.stopSureSub": "Smetti di correre per sempre",
   "chase.wait": "Tocca a {name}",
   "chase.started": "Un inseguimento!",
   "chase.yourTurn": "Tocca a te nell'inseguimento",

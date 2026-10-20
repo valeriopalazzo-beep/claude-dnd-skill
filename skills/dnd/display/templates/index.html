@@ -1806,6 +1806,7 @@
   .chase-acts button b{ display:block; font-size:18px; }
   .chase-acts button small{ display:block; margin-top:2px; font-size:14px; color:var(--ln-text-muted, #cdbfa6); }
   .chase-acts button.main{ border-color:var(--ln-accent, #f2b544); }
+  .chase-acts button.sure{ border-color:#d9534f; background:rgba(217,83,79,.18); }
   .chase-acts button:disabled{ opacity:.4; cursor:default; }
   .chase-cx{ padding:11px 14px; border-radius:10px; background:rgba(226,87,76,.14); border:1px solid rgba(226,87,76,.5); font-size:16px; }
   .chase-log{ list-style:none; margin:0; padding:0; font-size:14.5px; color:var(--ln-text-muted, #cdbfa6); }
@@ -14391,7 +14392,7 @@ function _chasePlan(chase, me) {
   const body = $('chase-body');
   const qp = new URLSearchParams(location.search);
   const me = String(window._LOGIN_CHAR || qp.get('char') || qp.get('character') || '').trim();
-  let chase = null, busy = false, lastTurn = '';
+  let chase = null, busy = false, lastTurn = '', stopArmed = false, stopTimer = null;
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
   const num = n => String(n).replace('.', window._LANG && window._LANG.startsWith('it') ? ',' : '.');
   const isRunner = () => !!chase && (chase.runners || []).some(r => r.name.toLowerCase() === me.toLowerCase());
@@ -14463,13 +14464,24 @@ function _chasePlan(chase, me) {
          ['dash', '', _t('chase.dash', { m: num(plan.dash) }, 'Dash ' + plan.dash + ' m'),
           plan.dashSave ? _t('chase.dashSave', null, 'No free dash left: a DC 10 Constitution save, or a level of exhaustion')
                         : _t('chase.dashFree', { n: plan.freeLeft }, plan.freeLeft + ' free dashes left')],
-         ['stop', '', _t('chase.stop', null, 'Give up the chase'), _t('chase.stopSub', null, 'You stop running')]].forEach(([a, cls, title, sub]) => {
+         stopArmed
+           ? ['stop', 'sure', _t('chase.stopSure', null, 'Sure? Tap again'), _t('chase.stopSureSub', null, 'You stop running for good')]
+           : ['stop', '', _t('chase.stop', null, 'Give up the chase'), _t('chase.stopSub', null, 'You stop running')]].forEach(([a, cls, title, sub]) => {
           const b = el('button', cls);
           b.type = 'button';
           b.disabled = busy;
           b.appendChild(el('b', '', title));
           b.appendChild(el('small', '', sub));
-          b.addEventListener('click', () => act(a));
+          b.addEventListener('click', () => {
+            if (a === 'stop' && !stopArmed) {      // giving up cannot be undone: a second tap confirms it
+              stopArmed = true; render();
+              clearTimeout(stopTimer);
+              stopTimer = setTimeout(() => { stopArmed = false; render(); }, 4000);
+              return;
+            }
+            stopArmed = false; clearTimeout(stopTimer);
+            act(a);
+          });
           acts.appendChild(b);
         });
         box.appendChild(acts);
