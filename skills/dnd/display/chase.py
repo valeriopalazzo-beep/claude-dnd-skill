@@ -173,10 +173,15 @@ def _say(state: dict, key: str, text: str, **values) -> dict:
 
 # ─── A turn ──────────────────────────────────────────────────────────────────
 
-def _caught(state: dict) -> list:
+def _caught(state: dict, who: dict) -> list:
+    """After the DM moved `who`: the pairs it is part of, where a pursuer now reaches a quarry."""
     events = []
     for q in active(state, "quarry"):
+        if not q.get("acted"):                # nobody is caught before their first turn
+            continue
         for p in active(state, "pursuer"):
+            if who not in (p, q):
+                continue
             if p["pos"] >= q["pos"] - REACH_M:
                 q["status"] = "caught"
                 p["pos"] = q["pos"]
@@ -268,7 +273,17 @@ def act(state: dict, name: str, action: str, rng: random.Random | None = None) -
         events.append(_say(state, "stop", f"{r['name']} gives up the chase", who=r["name"]))
     else:
         step = speed_now(r) * (2 if action == "dash" else 1)
-        r["pos"] = round(r["pos"] + step, 1)
+        reached = None
+        if r["side"] == "pursuer":            # a pursuer stops at the first quarry it reaches
+            ahead = sorted((q for q in active(state, "quarry") if q["pos"] >= r["pos"]), key=lambda q: q["pos"])
+            if ahead and r["pos"] + step >= ahead[0]["pos"] - REACH_M:
+                reached = ahead[0]
+        if reached is None:
+            r["pos"] = round(r["pos"] + step, 1)
+        elif reached.get("acted"):
+            r["pos"] = reached["pos"]
+        else:
+            r["pos"] = round(max(r["pos"], reached["pos"] - REACH_M), 1)
         if action == "dash":
             r["dashes"] += 1
             if r["dashes"] > r["free"]:
@@ -285,7 +300,16 @@ def act(state: dict, name: str, action: str, rng: random.Random | None = None) -
         if r["exhaustion"] >= EXHAUSTION_OUT:
             r["status"] = "out"
             events.append(_say(state, "out", f"{r['name']} collapses, exhausted, and drops out", who=r["name"]))
-        events += _caught(state)
+        if reached is not None and r["status"] == "in":
+            if reached.get("acted"):
+                reached["status"] = "caught"
+                events.append(_say(state, "caught", f"{r['name']} catches {reached['name']}",
+                                   who=r["name"], quarry=reached["name"]))
+            else:
+                events.append(_say(state, "heels", f"{r['name']} is on {reached['name']}'s heels, who has not run yet",
+                                   who=r["name"], quarry=reached["name"]))
+    if r["side"] == "quarry":
+        r["acted"] = True
     if r["status"] == "in":
         events += _complication(state, r, rng)
     events += _maybe_over(state)
@@ -322,7 +346,7 @@ def adjust(state: dict, name: str, metres: float) -> dict:
         raise ChaseError("adjust by -60 to +60 metres")
     r["pos"] = round(max(0.0, r["pos"] + metres), 1)
     ev = _say(state, "adjust", f"{r['name']} {'+' if metres >= 0 else ''}{metres:g} m", who=r["name"], m=f"{metres:+g}")
-    _caught(state)
+    _caught(state, r)
     _maybe_over(state)
     return ev
 
@@ -608,6 +632,11 @@ def main(argv: list | None = None) -> int:
     for ev in out.get("events") or []:
         print(ev)
     print(describe(out.get("chase")))
+    if args.cmd == "start":
+        fast = [p["name"] for p in body["pursuers"] if p["speed"] * 2 >= args.gap - REACH_M]
+        if fast:
+            print(f"⚠ {', '.join(fast)} can cover the {args.gap:g} m lead in one dash: whoever has not run yet "
+                  "only has a pursuer on their heels, but the chase will be short — a bigger --gap gives it room.")
     return 0
 
 

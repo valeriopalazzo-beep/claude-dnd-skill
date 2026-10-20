@@ -112,6 +112,35 @@ class RuleTests(unittest.TestCase):
         self.assertEqual(chase.find(st, "Ladro")["status"], "caught")
         self.assertTrue(st["over"])
 
+    def test_no_one_is_caught_before_their_first_turn(self):
+        # session 3 of "Il tentativo del trio": the sentinel went first and dashed past four runners
+        # who had not moved yet, and all four were caught — the players never got their turn.
+        sentinel = chase.runner("Sentinella", "", speed=7.5, dex=0)
+        quarry = [chase.runner(n, "", speed=9, dex=-1, pc=n in ("Berta", "Finocchio")) for n in ("Berta", "Nello", "Ragazzo", "Finocchio")]
+        st = chase.start(quarry, [sentinel], 9, "urban", Dice([2, 2, 2, 2, 20]))   # the sentinel first
+        self.assertEqual(chase.current(st)["name"], "Sentinella")
+        ev = chase.act(st, "Sentinella", "dash", Dice([20]))
+        self.assertEqual([e["key"] for e in ev], ["dash", "heels"])
+        self.assertEqual([r["status"] for r in quarry], ["in"] * 4, "nobody is caught before running")
+        self.assertEqual(sentinel["pos"], 7.5, "it stops on the heels of the first one it reaches")
+        self.assertIn(chase.current(st)["name"], ("Berta", "Nello", "Ragazzo", "Finocchio"))
+        for r in list(st["runners"])[1:]:                          # every quarry gets its turn
+            self.assertEqual(chase.current(st)["name"], r["name"])
+            chase.act(st, r["name"], "move", Dice([20]))
+        self.assertEqual(st["round"], 2)
+
+    def test_a_pursuer_catches_one_runner_and_stops_there(self):
+        hound = chase.runner("Segugio", "", speed=12, dex=0)
+        a, b = chase.runner("A", "", speed=6, dex=5), chase.runner("B", "", speed=6, dex=4)
+        st = chase.start([a, b], [hound], 3, "wild", Dice([20, 20, 1]))
+        chase.act(st, "A", "move", Dice([20]))                     # A at 9
+        chase.act(st, "B", "move", Dice([20]))                     # B at 9
+        ev = chase.act(st, "Segugio", "dash", Dice([20]))          # 24 m would pass them both
+        self.assertEqual([e["key"] for e in ev][:2], ["dash", "caught"])
+        self.assertEqual([a["status"], b["status"]], ["caught", "in"], "one catch per move")
+        self.assertEqual(hound["pos"], 9)
+        self.assertEqual(chase.current(st)["name"], "B", "B still runs")
+
     def test_escape_at_the_end_of_the_round(self):
         st = new_chase(gap=30)
         chase.act(st, "Ladro", "dash", Dice([20]))

@@ -1205,6 +1205,7 @@
   "chase.ev.out": "{who} crolla sfinito ed esce dall'inseguimento",
   "chase.ev.stop": "{who} rinuncia all'inseguimento",
   "chase.ev.caught": "{who} raggiunge {quarry}!",
+  "chase.ev.heels": "{who} è alle calcagna di {quarry}, che non ha ancora corso",
   "chase.ev.complication": "Complicazione per {who}",
   "chase.ev.escape.ask": "{who} può provare a seminarli: Furtività contro {dc}",
   "chase.ev.escaped": "{who} li semina (Furtività {roll} contro {dc})",

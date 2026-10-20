@@ -1065,6 +1065,7 @@
   "chase.ev.out": "{who} collapses, exhausted, and drops out",
   "chase.ev.stop": "{who} gives up the chase",
   "chase.ev.caught": "{who} catches {quarry}!",
+  "chase.ev.heels": "{who} is on {quarry}'s heels: {quarry} has not run yet",
   "chase.ev.complication": "A complication for {who}",
   "chase.ev.escape.ask": "{who} may try to slip away: Stealth against {dc}",
   "chase.ev.escaped": "{who} slips away (Stealth {roll} against {dc})",
