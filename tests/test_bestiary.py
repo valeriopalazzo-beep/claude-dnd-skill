@@ -89,6 +89,27 @@ class NotebookTests(unittest.TestCase):
         with self.assertRaises(bs.BestiaryError):
             bs.learn(custom, stats=["ac"], record=None)
 
+    def test_a_creature_outside_the_srd_gets_its_numbers_by_hand(self):
+        pages = []
+        entry, _ = bs.meet(pages, "La Custode", custom=True)
+        new = bs.learn(entry, values=["ac=15", "HP = 52"])
+        self.assertEqual((new, entry["known"]), (["ac: 15", "hp: 52"], {"ac": "15", "hp": "52"}))
+        self.assertEqual(bs.learn(entry, values=["ac=15"]), [])
+        for bad in ("weight=3", "ac", "ac="):
+            with self.assertRaises(bs.BestiaryError):
+                bs.learn(entry, values=[bad])
+
+    def test_a_custom_page_takes_the_srd_block_it_is_played_with(self):
+        pages = []
+        entry, _ = bs.meet(pages, "Divoratore", custom=True, kind="non morto")
+        entry["facts"].append("Puzza di cripta")
+        again, fresh = bs.meet(pages, "ghoul", alias="Divoratore", record=GHOUL, count=2)
+        self.assertIs(again, entry)
+        self.assertEqual((fresh, entry["srd_name"], entry["met"], entry["facts"]),
+                         (False, "Ghoul", 3, ["Puzza di cripta"]))
+        bs.learn(entry, stats=["ac"], record=GHOUL)
+        self.assertEqual(entry["known"]["ac"], 12)
+
     def test_defeats_are_counted(self):
         pages = []
         entry, _ = bs.meet(pages, "ghoul", record=GHOUL, count=2)

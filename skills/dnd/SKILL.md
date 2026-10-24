@@ -711,7 +711,7 @@ Each faction's view of the party is a score from -10 to +10, kept with the campa
 
 ## Bestiary
 
-The players have a Bestiary panel that fills up with what their characters learn. Open a page with `display/bestiary.py meet "<creature>"` the first time a kind of creature appears, and add to it as things are found out in play — `learn "<creature>" "note"`, `--resist` / `--immune` / `--weak`, `--stat ac|hp|…` for a real number the party has earned, `defeat` after the fight. It records what the characters know, so never write there what they have not seen. Syntax: `SKILL-scripts.md` → *Bestiary*.
+The players have a Bestiary panel that fills up with what their characters learn. Open a page with `display/bestiary.py meet "<creature>"` the first time a kind of creature appears, and add to it as things are found out in play — `learn "<creature>" "note"`, `--resist` / `--immune` / `--weak`, `--stat ac|hp|…` for a real number the party has earned, `defeat` after the fight. It records what the characters know, so never write there what they have not seen. **Every kind of creature the party fights gets a page**, in the same turn the fight starts — not only the first one of the campaign. A creature of the story played with an SRD stand-in is met as `meet "<SRD creature>" --as "<its name>"`, never as `--custom`, so its numbers can be revealed; one from the Monster Manual notes or of your own takes them with `learn --set ac=… --set hp=…`. Syntax: `SKILL-scripts.md` → *Bestiary*.
 
 ---
 

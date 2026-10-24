@@ -10,6 +10,8 @@ characters have seen with their own eyes. Text only, no pictures.
     bestiary.py learn "ghoul" "Il suo tocco paralizza chi non è un elfo"
     bestiary.py learn "ghoul" --immune veleno --weak radiante --resist "armi non magiche"
     bestiary.py learn "ghoul" --stat ac --stat hp    # they have fought enough to judge: ac hp speed cr type all
+    bestiary.py learn "La Custode" --set ac=15 --set hp=52    # numbers by hand, for a creature not in the SRD
+    bestiary.py meet "animated armor" --as "Automa-sentinella"  # a custom page gets the SRD block it is played with
     bestiary.py defeat "ghoul" 3
     bestiary.py rename "ghoul" "Ghoul delle cripte"
     bestiary.py forget "ghoul"
@@ -147,6 +149,9 @@ def meet(creatures: list, query: str, alias: str = "", count: int = 1, record: d
         entry = next((c for c in creatures if record and c.get("index") == record.get("index")), None)
     if entry:
         entry["met"] = int(entry.get("met", 0)) + count
+        if record and not entry.get("index"):
+            # a page written as custom gets the SRD block it is played with
+            entry["index"], entry["srd_name"] = record.get("index", ""), record.get("name", "")
         return entry, False
     if record is None and not custom:
         raise BestiaryError(f"no SRD monster called {query!r}; add --custom for a creature of your own, "
@@ -164,9 +169,20 @@ def meet(creatures: list, query: str, alias: str = "", count: int = 1, record: d
 
 def learn(entry: dict, fact: str = "", resist: list | None = None, immune: list | None = None,
           weak: list | None = None, stats: list | None = None, record: dict | None = None,
-          lang: str = "en") -> list:
-    """Add what the party found out. Returns the list of what was new."""
+          lang: str = "en", values: list | None = None) -> list:
+    """Add what the party found out. Returns the list of what was new.
+
+    `values` are "key=value" numbers written by hand, for a creature the SRD
+    does not have (the Monster Manual notes, one of the DM's own)."""
     new = []
+    for item in values or []:
+        key, sep, value = item.partition("=")
+        key, value = key.strip().lower(), _clean(value, 60)
+        if not sep or key not in STATS or not value:
+            raise BestiaryError(f"--set is key=value with key one of {', '.join(STATS)} — not {item!r}")
+        if entry["known"].get(key) != value:
+            entry["known"][key] = value
+            new.append(f"{key}: {value}")
     fact = _clean(fact, 240)
     if fact and _key(fact) not in [_key(f) for f in entry["facts"]]:
         if len(entry["facts"]) >= MAX_FACTS:
@@ -190,7 +206,9 @@ def learn(entry: dict, fact: str = "", resist: list | None = None, immune: list 
             raise BestiaryError(f"--stat is one of {', '.join(STATS)}, all — not {s!r}")
     if wanted:
         if record is None:
-            raise BestiaryError(f"{entry['name']} is not an SRD creature: write its numbers as notes instead")
+            raise BestiaryError(f"{entry['name']} is not an SRD creature: give its numbers with --set "
+                                "(ac=15), or tie it to the SRD block it is played with: "
+                                "meet \"<SRD creature>\" --as \"<its name>\"")
         real = srd_stats(record, lang)
         for s in dict.fromkeys(wanted):
             if real.get(s) not in ("", None) and entry["known"].get(s) != real[s]:
@@ -256,6 +274,8 @@ def main(argv: list | None = None) -> int:
     for flag in DEFENCES:
         p.add_argument("--" + flag, action="append", default=[])
     p.add_argument("--stat", action="append", default=[], help="reveal a real number: ac hp speed cr type all")
+    p.add_argument("--set", dest="values", action="append", default=[],
+                   help="a number written by hand, key=value (ac hp speed cr type): for a creature not in the SRD")
     p = sub.add_parser("defeat", help="the party kills or routs some")
     p.add_argument("name")
     p.add_argument("n", type=int, nargs="?", default=1)
@@ -291,10 +311,11 @@ def main(argv: list | None = None) -> int:
             print(("+ " if fresh else "") + describe(entry))
         elif args.cmd == "learn":
             entry = find(creatures, args.name)
-            if not (args.fact or args.resist or args.immune or args.weak or args.stat):
-                raise BestiaryError("learn what? give a note, --resist/--immune/--weak, or --stat")
+            if not (args.fact or args.resist or args.immune or args.weak or args.stat or args.values):
+                raise BestiaryError("learn what? give a note, --resist/--immune/--weak, --stat or --set")
             record = srd_record(entry["srd_name"], ruleset) if entry.get("srd_name") else None
-            new = learn(entry, args.fact, args.resist, args.immune, args.weak, args.stat, record, lang)
+            new = learn(entry, args.fact, args.resist, args.immune, args.weak, args.stat, record, lang,
+                        args.values)
             event = {"name": entry["name"], "new": False} if new else None
             print(describe(entry))
             print("  (nothing new — the party knew that already)" if not new else

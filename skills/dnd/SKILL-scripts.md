@@ -1447,6 +1447,8 @@ python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py meet "La Custode" --custom --typ
 python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py learn "ghoul" "Il suo tocco paralizza chi non è un elfo"
 python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py learn "ghoul" --immune veleno --weak radiante --resist "armi non magiche"
 python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py learn "ghoul" --stat ac --stat hp     # ac hp speed cr type all
+python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py learn "La Custode" --set ac=15 --set hp=52   # not in the SRD: numbers by hand
+python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py meet "animated armor" --as "Automa-sentinella"  # a custom page gets its stand-in SRD block
 python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py defeat "ghoul" 3
 python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py rename "ghoul" "Ghoul delle cripte"
 python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py forget "ghoul"
@@ -1456,6 +1458,7 @@ python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py show "ghoul"
 
 - `meet` finds the creature in the SRD (Italian names understood) and writes its name in the campaign's language (`language:` flag, or `--lang it` before the subcommand). `--as` is the name the party gives it; the entry still knows which SRD creature it is. `--custom` is for a creature of your own.
 - `learn` adds a note in your words, what it resists / is immune to / is vulnerable to as the characters saw it, and — with `--stat` — the real numbers from the SRD. What the party already knew is not added twice.
+- **A creature played with an SRD stand-in** (a brass automaton run as *animated armor*): meet it as `meet "<SRD creature>" --as "<its name>"`, so `--stat` has its block. A page already opened with `--custom` takes the block the same way — the next `meet "<SRD creature>" --as "<its name>"` ties it on, notes kept. A creature from the Monster Manual notes or one of your own has no SRD block: write its numbers with `learn --set ac=15 --set hp=52` (keys `ac hp speed cr type`).
 - An entry can be named by any part of its name that means one entry only. A wrong name changes nothing.
 - Stored in `<campaign>/bestiary.json`; `--campaign NAME` (before the subcommand) works on another campaign.
 
