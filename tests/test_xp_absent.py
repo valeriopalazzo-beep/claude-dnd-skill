@@ -62,16 +62,17 @@ class AbsentAwardTests(unittest.TestCase):
         return xp._read_char_state(self.base / "c" / "characters" / f"{name}.md")[0]
 
     def test_absent_pc_gets_the_same_award_as_the_table(self):
-        # 3 goblins: 50 × 3 × 2 = 300 adjusted, split between the 2 present.
+        # 3 goblins: 50 × 3 = 150 raw (the ×2 multiplier only rates the
+        # difficulty, DMG p. 82), split between the 2 present.
         self._award("Aldric,Mira", absent="Thorne", monsters="goblin:1/4:3")
-        self.assertEqual(self._xp("aldric"), 1150)
-        self.assertEqual(self._xp("mira"), 1150)
-        self.assertEqual(self._xp("thorne"), 1150)
+        self.assertEqual(self._xp("aldric"), 1075)
+        self.assertEqual(self._xp("mira"), 1075)
+        self.assertEqual(self._xp("thorne"), 1075)
 
     def test_absent_pc_does_not_dilute_the_split(self):
         self._award("Aldric,Mira,Thorne", absent="thorne", monsters="goblin:1/4:3")
-        self.assertEqual(self._xp("aldric"), 1150)
-        self.assertEqual(self._xp("thorne"), 1150)
+        self.assertEqual(self._xp("aldric"), 1075)
+        self.assertEqual(self._xp("thorne"), 1075)
 
     def test_absent_pc_is_not_pushed_to_the_sidebar(self):
         self._award("Aldric,Mira", absent="Thorne", difficulty="medium")
@@ -79,7 +80,7 @@ class AbsentAwardTests(unittest.TestCase):
 
     def test_without_absent_nothing_changes(self):
         self._award("Aldric,Mira,Thorne", monsters="goblin:1/4:3")
-        self.assertEqual(self._xp("aldric"), 1100)
+        self.assertEqual(self._xp("aldric"), 1050)
         self.assertEqual(sorted(self.pushed), ["Aldric", "Mira", "Thorne"])
 
     def test_an_award_with_nobody_present_is_refused(self):

@@ -273,15 +273,16 @@ def cmd_calc(args: argparse.Namespace) -> None:
             sys.exit(1)
         raw_xp, mult, adj_xp = _calc_monster_xp(monsters)
         total_count = sum(c for _, _, c in monsters)
-        per_player  = adj_xp // players
-        diff        = _classify_difficulty(per_player, level)
+        # DMG 2014 p. 82: the multiplier only rates the difficulty; the award is the raw XP
+        per_player  = raw_xp // players
+        diff        = _classify_difficulty(adj_xp // players, level)
 
         print(f"\n  Combat encounter — CR-based calculation")
         for name, cr, count in monsters:
             print(f"    {count}× {name} (CR {cr}): {CR_XP[cr] * count:,} XP")
         print(f"\n  Raw XP:       {raw_xp:,}")
         print(f"  Multiplier:   ×{mult}  ({total_count} monsters)")
-        print(f"  Adjusted XP:  {adj_xp:,}")
+        print(f"  Adjusted XP:  {adj_xp:,}  (difficulty only, not awarded)")
         print(f"  Difficulty:   {diff.upper()}  (Level {level} party of {players})")
         print(f"  Per player:   {per_player:,} XP")
         print(f"  Total:        {per_player * players:,} XP")
@@ -445,13 +446,15 @@ def cmd_award(args: argparse.Namespace) -> None:
             sys.exit(1)
         raw_xp, mult, adj_xp = _calc_monster_xp(monsters)
         total_count = sum(c for _, _, c in monsters)
-        per_player  = adj_xp // players
-        diff        = _classify_difficulty(per_player, avg_level)
+        # DMG 2014 p. 82: the multiplier only rates the difficulty; the award is the raw XP
+        per_player  = raw_xp // players
+        diff        = _classify_difficulty(adj_xp // players, avg_level)
 
         print(f"\n  Combat — CR-based  [{total_count} monsters, ×{mult} multiplier]")
         for name, cr, count in monsters:
             print(f"    {count}× {name} (CR {cr}): {CR_XP[cr] * count:,} XP")
-        print(f"  Raw {raw_xp:,} × {mult} = Adjusted {adj_xp:,} | Difficulty: {diff.upper()}")
+        print(f"  Raw {raw_xp:,} × {mult} = Adjusted {adj_xp:,} | Difficulty: {diff.upper()} "
+              f"| awarded: the raw {raw_xp:,}")
         print(f"  Per player: {per_player:,} XP")
 
     else:
