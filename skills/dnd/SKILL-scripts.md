@@ -808,6 +808,7 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP setup --moon "Vela:29" 
 
 # Time advancement
 python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP advance 8 hours
+python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP advance 30 minutes   # minutes add up; the hour turns at 60
 python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP advance 2 days
 python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP rest short   # +1 hour
 python3 ${CLAUDE_SKILL_DIR}/scripts/calendar.py -c $CAMP rest long    # +8 hours

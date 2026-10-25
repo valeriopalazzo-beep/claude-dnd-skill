@@ -29,6 +29,7 @@ Usage:
 
     # Advance time
     python3 calendar.py -c <campaign> advance 8 hours
+    python3 calendar.py -c <campaign> advance 30 minutes   # adds up: the hour turns at 60
     python3 calendar.py -c <campaign> advance 2 days
     python3 calendar.py -c <campaign> advance 1 week
 
@@ -206,7 +207,9 @@ def _format_date(cal: dict) -> str:
             tod = label
             break
 
-    return f"{day_str}, {day} {_month_name(cal, month)} {year} — {tod} (hour {hour})"
+    minute = cal.get("minute", 0)
+    clock = f"hour {hour}" + (f":{minute:02d}" if minute else "")
+    return f"{day_str}, {day} {_month_name(cal, month)} {year} — {tod} ({clock})"
 
 
 def _tod_key(hour: int) -> str:
@@ -619,8 +622,16 @@ def cmd_advance(campaign: str, amount: int, unit: str) -> None:
     before = _abs_day(cal)
     before_h = _abs_hour(cal)
 
-    hours = {"hour": 1, "hours": 1, "day": 24, "days": 24, "week": 168, "weeks": 168}.get(unit, 1)
-    total_hours = amount * hours
+    if unit in ("minute", "minutes"):
+        # The calendar keeps whole hours; minutes add up and turn the hour at 60,
+        # and only a turned hour runs supplies, encounters and the rest.
+        if amount < 0:
+            raise CalendarError("time only goes forward")
+        minutes = int(cal.get("minute", 0)) + amount
+        total_hours, cal["minute"] = divmod(minutes, 60)
+    else:
+        hours = {"hour": 1, "hours": 1, "day": 24, "days": 24, "week": 168, "weeks": 168}.get(unit, 1)
+        total_hours = amount * hours
     _advance_hours(cal, total_hours)
 
     label = f"+{amount} {unit}"
@@ -792,6 +803,7 @@ def cmd_set(campaign: str, date_str: str, time_str: str) -> None:
 
     if time_str:
         cal["hour"] = HOURS_PER_TIME.get(time_str.lower(), cal.get("hour", 8))
+        cal.pop("minute", None)
 
     print(f"  Date set: {_format_date(cal)}")
     _after_change(campaign, cal, before)
@@ -804,6 +816,7 @@ def cmd_time(campaign: str, time_str: str) -> None:
         sys.exit(1)
     before_h = _abs_hour(cal)
     cal["hour"] = HOURS_PER_TIME.get(time_str.lower(), cal.get("hour", 8))
+    cal.pop("minute", None)
     print(f"  Time set: {_format_date(cal)}")
     _after_change(campaign, cal)
     _afflictions(campaign, before_h, _abs_hour(cal))     # later the same day: a dawn may have come
@@ -939,7 +952,7 @@ def main(argv=None) -> None:
     adv = sub.add_parser("advance", help="Advance time by amount")
     adv.add_argument("amount", type=int)
     adv.add_argument("unit",
-                     choices=["hour","hours","day","days","week","weeks"])
+                     choices=["minute","minutes","hour","hours","day","days","week","weeks"])
 
     rst = sub.add_parser("rest", help="Advance time for a short or long rest")
     rst.add_argument("type", choices=["short","long"])
