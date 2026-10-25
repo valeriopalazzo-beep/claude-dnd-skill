@@ -958,12 +958,12 @@ Manage the dynamic campaign arc. The `advance`/`revise`/`new` subcommands are ac
   2. Read `## DM Notes`, `## World State`, `## Faction Moves`, and any `## Continuity Archive` entries to understand what the world looks like post-resolution.
   3. Derive the new arc from **the consequences** of what just resolved. Ask: *what problem did solving the last arc create? What power vacuum formed? What did the party's victory cost that now has to be reckoned with? What was ignored because the last arc demanded all attention?*
   4. Generate a new full arc (theme, resolution, acts 1–3, 6 beats) using the same format as the initial arc. The new theme must be meaningfully different from the previous one — same world, new lens.
-  5. Archive the completed arc: move the current `acts` block, `theme`, and `resolution` into a new `## Arc History` section in state.md under `arc_N` (numbered), with a one-line summary of how it resolved.
+  5. Archive the completed arc: append the current `acts` block, `theme`, `resolution` and `revision_log` to `<campaign>/arc-history.md` under `## Arc N — <title>` (create the file with a `# Arc history — <campaign>` heading), followed by a short paragraph on how it resolved. In `state.md → ## Arc History` add **one line** only: `Arc N — «<title>» (sessions A–B): <how it resolved, one sentence> — full text in arc-history.md`. `state.md` is read at every load and every resume; a closed arc is read only when someone asks about it.
   6. Write the new arc to `## Campaign Arc`, incrementing `arc_number`. Set `current_act: 1`, `current_beat: "1a"`, `outstanding_beats` to all 6 beat ids.
   7. Append to `revision_log`: `"<date>: Arc N complete. New arc N+1 generated. [one-line premise of the new arc]"`
   8. Deliver a one-paragraph summary of the new arc's premise and how it differs from the previous one.
 
-- **`/dm:dnd arc view`** — show full arc: theme, resolution, all acts and beats with completion status (current / complete / pending). If `## Arc History` exists, show a one-line summary of each completed arc above the current one.
+- **`/dm:dnd arc view`** — show full arc: theme, resolution, all acts and beats with completion status (current / complete / pending). If `## Arc History` exists, show its one-line summary of each completed arc above the current one; read `arc-history.md` only when a closed arc's detail is asked for.
 - **`/dm:dnd arc revise`** — open revision flow for when the story has taken a major unexpected turn OR when the auto-trigger from /dm:dnd end's pre-emption check fires (most common case):
   1. Show all outstanding beats with their current `what_changes` and `world_pressure`.
   2. Ask: *"What's changed in the story that the arc doesn't reflect?"* — or, when auto-triggered by pre-emption, name the pre-empted beat directly: *"Beat 2b's pressure delivered but the consequence didn't land. Picking a revision path…"*

@@ -151,7 +151,7 @@ revision_log: []
 ```
 
 ## Arc History
-*(populated by /dnd arc new when a completed arc is succeeded by a new one — one entry per completed arc)*
+*(populated by /dnd arc new when a completed arc is succeeded by a new one — one line per completed arc; the full arc goes to arc-history.md)*
 *(leave empty until the first arc completes)*
 
 ## Session Flags

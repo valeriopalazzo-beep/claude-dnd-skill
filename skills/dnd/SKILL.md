@@ -215,6 +215,7 @@ inside the plugin (so it survives updates/uninstalls):
   state.md / world.md / npcs.md / session-log.md / characters/<name>.md
   prep.md            ← the next session's prep (eight steps, DM only); prep-archive.md keeps the old ones
   checkpoint.md      ← tonight's notes from a mid-session checkpoint (see *Long sessions*); deleted at /dm:dnd end
+  arc-history.md     ← completed arcs in full (state.md keeps one line each); read only on demand
   media/             ← generated portraits/scenes + rendered maps (index.json records prompts)
 <DATA root>/characters/
   <name>.md          ← global roster: latest known state of every PC across all campaigns
