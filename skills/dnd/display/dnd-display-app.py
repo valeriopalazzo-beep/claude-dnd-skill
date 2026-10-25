@@ -5718,8 +5718,12 @@ def stats():
         if "turn_order" in data:
             new_to = data["turn_order"]
             prev_to = _current_stats.get("turn_order")
+            gone = new_to.pop("remove", None) if isinstance(new_to, dict) else None
             if isinstance(new_to, dict) and isinstance(prev_to, dict) and "order" not in new_to:
                 new_to = {**prev_to, **new_to}
+            if gone and isinstance(new_to, dict):        # --turn-remove: a creature killed
+                new_to = json.loads(json.dumps(new_to))
+                _turn_drop(new_to, gone if isinstance(gone, list) else [gone])
             _current_stats["turn_order"] = new_to
             fight_over = new_to is None and bool(prev_to)
             # Decrement round-based effects and conditions for the actor whose
@@ -5800,6 +5804,8 @@ def stats():
         # quests replaces entirely ([] clears)
         if "quests" in data:
             _current_stats["quests"] = data["quests"]
+
+        _drop_dead_from_turns()
 
         current = dict(_current_stats)
 
@@ -5952,6 +5958,31 @@ def _apply_death_save(p: dict, action: str) -> None:
     p["death_saves"] = ds
 
 
+def _turn_drop(to: dict, names: list) -> list:
+    """Take these names out of a turn order (and its initiative numbers); the ones removed.
+
+    The pointer is left alone: when the one who died was acting, the DM moves
+    it on with --turn-current, which also ticks the next one's effects.
+    """
+    order = to.get("order") if isinstance(to, dict) else None
+    if not isinstance(order, list):
+        return []
+    keys = {str(n).strip().lower() for n in names if str(n).strip()}
+    gone = [n for n in order if str(n).lower() in keys]
+    if gone:
+        to["order"] = [n for n in order if str(n).lower() not in keys]
+        if isinstance(to.get("init"), dict):
+            to["init"] = {k: v for k, v in to["init"].items() if str(k).lower() not in keys}
+    return gone
+
+
+def _drop_dead_from_turns() -> list:
+    """A dead character takes no more turns: out of the order (caller holds _stats_lock)."""
+    dead = [p.get("name", "") for p in _current_stats.get("players", [])
+            if isinstance(p.get("death_saves"), dict) and p["death_saves"].get("dead")]
+    return _turn_drop(_current_stats.get("turn_order"), dead) if dead else []
+
+
 def _death_saves_follow_hp(p: dict) -> None:
     """Dropping to 0 HP starts the track; any healing ends it (the dead stay dead)."""
     hp = p.get("hp") if isinstance(p.get("hp"), dict) else {}
@@ -6016,6 +6047,7 @@ def death_save_roll():
         result = {"character": p["name"], "roll": roll, "outcome": outcome,
                   "successes": after.get("successes", 0), "failures": after.get("failures", 0)}
         line = f"☠ {p['name']}: d20 = {roll} · {tally}"
+        _drop_dead_from_turns()
         current = dict(_current_stats)
 
     entry = {"text": line, "dice": True}

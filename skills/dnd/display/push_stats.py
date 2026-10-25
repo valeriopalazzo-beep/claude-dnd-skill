@@ -69,6 +69,9 @@ Usage:
     # Combat ended — clear turn order:
     python3 push_stats.py --turn-clear
 
+    # A creature died: out of the order (tracker.py does it at 0 HP)
+    python3 push_stats.py --turn-remove "Goblin 1"
+
     # Clear all text + stats (use on /dnd load — token-aware, works in LAN mode):
     python3 push_stats.py --clear
 """
@@ -221,6 +224,9 @@ def main() -> None:
                         help="Advance the turn pointer to this combatant name")
     parser.add_argument("--turn-round", metavar="N", type=int,
                         help="Set the current round number")
+    parser.add_argument("--turn-remove", metavar="NAME", action="append",
+                        help="Take a creature that died out of the turn order (repeatable); "
+                             "the pointer stays — move it on with --turn-current")
     parser.add_argument("--turn-clear", action="store_true",
                         help="Clear the turn order (combat ended)")
     parser.add_argument("--replace-players", action="store_true",
@@ -380,6 +386,11 @@ def main() -> None:
 
     if args.turn_round and not args.turn_current:
         payload["turn_order"] = {"round": args.turn_round}
+
+    if args.turn_remove:
+        payload.setdefault("turn_order", {})
+        if isinstance(payload["turn_order"], dict):
+            payload["turn_order"]["remove"] = args.turn_remove
 
     if args.turn_clear:
         payload["turn_order"] = None

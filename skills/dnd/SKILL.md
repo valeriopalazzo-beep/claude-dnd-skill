@@ -463,6 +463,8 @@ f. send.py [--stat-*] ← send complete narration + ALL stat changes — NEVER s
    Use --effect-start / --effect-end flags when effects begin or end this turn (syncs display)
    A condition with a set length goes in as --stat-condition-add "NAME:COND:3r" — never count its rounds yourself
 g. push_stats.py --turn-current  ← advance turn pointer (still separate — not a narration)
+   A creature that dies leaves the order: tracker.py hp/hit at 0 HP does it, else push_stats.py --turn-remove "<name>"
+   (a PC dead on three failed death saves leaves by itself; a dying PC stays — they still roll)
 ```
 Step (f) is the most commonly missed. Every narration block must be sent.
 Step (g) uses `push_stats.py --turn-current` directly because it has no narration to bundle with.

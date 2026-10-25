@@ -355,6 +355,9 @@ python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --turn-current "Flerb"
 # New round:
 python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --turn-current "Goblin 1" --turn-round 2
 
+# A creature died (tracker.py hp / hit at 0 HP does it by itself; a dead PC leaves by itself too):
+python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --turn-remove "Goblin 2"
+
 # Combat ended:
 python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --turn-clear
 
@@ -413,7 +416,7 @@ If `check_input.py` returns output, prepend it to the player's terminal input wh
 - Timed effect starts → `--effect-start "NAME:SPELL:DURATION[:conc]"` bundled with narration send
 - Timed effect ends → `--effect-end "NAME:SPELL"` bundled with narration send
 - Faction standing changes → `--factions '[...]'` (full replace)
-- Combat start → `--turn-order`; each turn → `--turn-current`; end → `--turn-clear`. Push `--turn-current` the moment a turn starts, not after narrating it: it is what buzzes that player's phone ("your turn") and warns the next one.
+- Combat start → `--turn-order`; each turn → `--turn-current`; a creature dies → it leaves the order (`tracker.py hp`/`hit` at 0 HP, or `--turn-remove "<name>"`; a PC dead on three failed death saves leaves by itself — a dying PC at 0 HP stays, it still rolls); end → `--turn-clear`. Push `--turn-current` the moment a turn starts, not after narrating it: it is what buzzes that player's phone ("your turn") and warns the next one.
 - Level up → push updated full stats
 - Long rest → restore HP, hit dice, spell slots, second wind; `calendar.py rest long` moves the clock
 - Any rest or time advance → `calendar.py advance / rest / time` — it updates the display's clock and calendar itself

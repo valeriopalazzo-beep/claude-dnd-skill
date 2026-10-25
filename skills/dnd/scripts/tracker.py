@@ -27,6 +27,7 @@ Usage:
     # Hit points of monsters and NPCs (PCs live on their sheets and the display) — shown on the DM's screen
     python3 tracker.py -c $CAMPAIGN hp <entity> <current> [--max N] [--ac N]
 
+    # (at 0 HP, from hp or hit, the creature leaves the display's turn order: it takes no more turns)
     # Damage to a monster or an NPC: takes it off the HP above (when known) and, when it is concentrating,
     # rolls the CON save — DC 10 or half the damage — and breaks it on a failure (at 0 HP it just ends)
     python3 tracker.py -c $CAMPAIGN hit <entity> <damage> [--con +3] [--adv|--dis] [--down]
@@ -210,6 +211,15 @@ def _push_death_save(entity_name: str, action: str) -> None:
             [sys.executable, PUSH_STATS, "--player", entity_name, "--death-save", action],
             capture_output=True, timeout=3,
         )
+    except Exception:
+        pass
+
+
+def _push_turn_remove(entity_name: str) -> None:
+    """A creature at 0 HP takes no more turns: out of the display's turn order. Silent when it is not running."""
+    try:
+        subprocess.run([sys.executable, PUSH_STATS, "--turn-remove", entity_name],
+                       capture_output=True, timeout=3)
     except Exception:
         pass
 
@@ -454,6 +464,9 @@ def cmd_hp(campaign: str, entity_name: str, current: int, maximum=None, ac=None)
     for line in morale_after_damage(campaign, state, ent):
         print("  " + line)
     _save(campaign, state)
+    if ent["hp"] == 0:
+        _push_turn_remove(entity_name)
+        print(f"  ☠ {entity_name}: out of the turn order")
     return ent
 
 
@@ -471,6 +484,9 @@ def cmd_hit(campaign: str, entity_name: str, damage: int, con: int = 0, adv: str
         for line in morale_after_damage(campaign, state, ent):
             print("  " + line)
         _save(campaign, state)
+        if ent["hp"] == 0:
+            _push_turn_remove(entity_name)
+            print(f"  ☠ {entity_name}: out of the turn order")
     spell = ent.get("concentration")
     if not spell:
         print(f"  {entity_name}: not concentrating — nothing to roll")
