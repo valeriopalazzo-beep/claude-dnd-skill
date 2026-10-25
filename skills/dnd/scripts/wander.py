@@ -297,11 +297,13 @@ def pass_hours(data: dict, campaign: str, hours: float, rng: random.Random | Non
     return results
 
 
-def format_hit(hit: dict) -> str:
+def format_hit(hit: dict, remind: bool = True) -> str:
     if hit.get("miss"):
         return f"check in {hit['zone']}: d20 {hit['d20']} — nothing"
     head = f"ENCOUNTER in {hit['zone']}" + (f" (d20 {hit['d20']})" if hit.get("d20") else "") + f", table {hit['roll']}: {hit['text']}"
-    return head + (f" — {hit['rating']}" if hit.get("rating") else "")
+    return (head + (f" — {hit['rating']}" if hit.get("rating") else "")
+            + (" — not a fight yet: show the party the signs at a distance and ask what they do"
+               " (only hidden creatures that beat the watch's passive Perception surprise them)" if remind else ""))
 
 
 def tick(campaign: str, hours: float, at: str = "") -> list:
@@ -427,7 +429,7 @@ def main(argv: list | None = None) -> int:
             print(f"{zone['name']} removed")
         elif args.cmd == "history":
             for h in reversed(data["history"][-20:]):
-                print(f"{time.strftime('%d/%m %H:%M', time.localtime(h.get('t', 0)))}  {format_hit(h)}")
+                print(f"{time.strftime('%d/%m %H:%M', time.localtime(h.get('t', 0)))}  {format_hit(h, remind=False)}")
             if not data["history"]:
                 print("no encounters yet")
             return 0

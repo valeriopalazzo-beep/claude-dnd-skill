@@ -131,6 +131,7 @@ class CommandTests(Campaign):
         self.assertEqual(len(data["history"]), len(real))
         line = wander.format_hit(real[0])
         self.assertTrue(line.startswith("ENCOUNTER in Bosco (d20 "), line)
+        self.assertIn("not a fight yet", line)              # the party hears of it before it strikes
 
     def test_monsters_are_rated_for_the_party(self):
         self.run_w("zone", "Bosco", "--places", "Carbonaia", stdin=TABLE)

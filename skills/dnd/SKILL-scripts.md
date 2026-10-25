@@ -144,7 +144,7 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/wander.py history
 - Rows: `range | what happens | monsters`. The ranges must cover the die exactly (`--die d12+d8` 2-20 by default — the middle rows come up most; `d20`, `d100`, `d8` work too). Dice in the text are rolled when the row comes up; the same expression in the monsters column is the same roll ("2d4 lupi" and `wolf:2d4` are the same wolves).
 - The monsters column is encounter.py's `--monsters` with dice allowed in the counts (SRD names, Italian too). The line rates the group for the PCs present and gives the `encounter.py rate --monsters` string; a creature from the Monster Manual notes is fine in the text — leave the column empty.
 - The zone is the one whose `--places` include where the region map puts the party (`region_map.py here / travel`); a place belongs to one zone. `--every` hours between checks (DMG: every hour where it is busy, 4-8 hours, `--every 12` for one by day and one at night), `--on` the d20 threshold (18).
-- `calendar.py advance` and `rest` print `⚔ ENCOUNTER in …` lines (and how many checks were quiet). They are for you: decide how it begins, who notices first (passive Perception, stealth), and whether it is a fight at all.
+- `calendar.py advance` and `rest` print `⚔ ENCOUNTER in …` lines (and how many checks were quiet). They are for you, and the line says it: the party hears of it first — signs at a distance, then their choice (SKILL.md → *On the road, a fight never comes out of nowhere*); only an ambush by hidden creatures that beats the watch (`travel.py watch`) starts with surprise.
 
 ---
 
