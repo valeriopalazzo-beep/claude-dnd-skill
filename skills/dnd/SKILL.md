@@ -259,6 +259,10 @@ Each separate tool call costs a full reading of the conversation, so build the t
 - **Separate calls only when a result decides the next step:** an attack roll before its damage, a saving throw before its effect, a player's die before the outcome. That order belongs to the rules and is never shortened.
 - **Cut long outputs at the source** (`head`, `sed -n`, `grep -m`, `| tail`): a 20 KB file printed once stays in the conversation for the rest of the night.
 
+## Defects found during play
+
+Do not fix the skill during a session. Reading code, editing, running tests and committing inside a game make the conversation grow fast and keep the table waiting. When a script misbehaves, work around it for tonight: do the step by hand, apply the rule from the book, tell the table if they will notice. Then add the defect to `~/.claude/dnd/difetti.md`: date, campaign, what happened, how you worked around it. After `/dm:dnd end`, say in one line how many are written there and offer to fix them in a new conversation. Fix one at once only when the game cannot go on without it, and ask the DM first.
+
 ---
 
 ## Active DM Mode

@@ -537,6 +537,7 @@ If `graph.json` doesn't exist yet for this campaign, skip the sweep entirely (no
    ```
 3. **Post-kill tail re-verification:** run `verify_tail.sh` once more after the kill. If it now reports unhealthy (file got truncated by a final write race), restore from the canonical version written in step 1g.
 4. **Checkpoint file:** with everything saved, delete `<campaign>/checkpoint.md` if a checkpoint wrote one tonight — it belongs to this session only.
+5. **Defects:** if `~/.claude/dnd/difetti.md` has entries from tonight (SKILL.md → *Defects found during play*), say how many in one line and offer to fix them in a new conversation.
 
 ---
 
