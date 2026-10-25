@@ -12,8 +12,8 @@ tools: Read, Write, Edit, Glob, Bash, AskUserQuestion
 > substituted to its real absolute path (you can see it resolved just above/throughout).
 > **Every helper script and bundled file is invoked through that path.**
 >
-> The two reference files you load next — `SKILL-scripts.md` and `SKILL-commands.md` —
-> are read via the Read tool, which returns them **verbatim**: the literal text
+> The two reference files — `SKILL-scripts.md` and `SKILL-commands.md`, read one section
+> at a time (see *Reference modules* at the end) — are read via the Read tool, which returns them **verbatim**: the literal text
 > `${CLAUDE_SKILL_DIR}` will appear in them *un-expanded*. Whenever you run a command
 > from those files (or anywhere), **replace `${CLAUDE_SKILL_DIR}` with the absolute path
 > shown in this file before executing.** A Bash command still containing the literal
@@ -197,8 +197,8 @@ skill, or a dev clone).
 ```
 ${CLAUDE_SKILL_DIR}/                 ← the skill dir (plugin: <plugin>/skills/dnd/)
   SKILL.md           ← core DM rules (this file)
-  SKILL-scripts.md   ← all Python script syntax (load at session start)
-  SKILL-commands.md  ← all /dm:dnd command procedures (load at session start)
+  SKILL-scripts.md   ← all Python script syntax (read by section, see *Reference modules*)
+  SKILL-commands.md  ← all /dm:dnd command procedures (read by section, see *Reference modules*)
   scripts/           ← dice.py, combat.py, character.py, tracker.py, calendar.py, lookup.py, inventory.py, encumbrance.py, loot.py, encounter.py, backup.py
   data/              ← bundled 5e SRD dataset (dnd5e_srd.json — no download needed; sync via /dm:dnd data sync)
   templates/         ← blank character-sheet.md, state.md, world.md, npcs.md, session-log.md, prep.md
@@ -236,7 +236,7 @@ Resolve `~` to the user's home directory. Scripts locate both roots via
 **Script-first rule:** Before reaching for the LLM for any calculation, check whether a script handles it:
 `dice.py` · `combat.py` · `ability-scores.py` · `character.py` · `tracker.py` · `calendar.py` · `lookup.py` · `push_stats.py`
 
-Full script syntax: Read `${CLAUDE_SKILL_DIR}/SKILL-scripts.md`
+Full script syntax: `${CLAUDE_SKILL_DIR}/SKILL-scripts.md`, one section at a time (see *Reference modules*)
 
 ---
 
@@ -839,4 +839,4 @@ The tutor block always goes **last** in the Bash send sequence.
 
 **Scripting and rolls:** Run scripts, rolls, and simple expansions immediately — no confirmation prompts. Only pause for genuinely consequential operations (e.g. deleting campaign data).
 
-**Reference modules:** For full script syntax, Read `${CLAUDE_SKILL_DIR}/SKILL-scripts.md`. For full command procedures, Read `${CLAUDE_SKILL_DIR}/SKILL-commands.md`. Load both at `/dm:dnd load`.
+**Reference modules:** script syntax is in `${CLAUDE_SKILL_DIR}/SKILL-scripts.md`, command procedures in `${CLAUDE_SKILL_DIR}/SKILL-commands.md` — together almost 300 KB, so they are read **by section, never whole**. At `/dm:dnd load` list the headings of both (`grep -n '^## \|^### ' <file>`) and read in full the procedure being run (the `load` section). From then on, **before the first use of a script in a session read its whole section** (Read with offset and limit, from its heading to the next `## `), and before running a command (`save`, `end`, `combat start`, `rest`…) read its whole procedure. A section once read stays valid for the session: read it again only after a compaction or when in doubt. Never run a script, or a command, from memory of a section not read this session — the notes under each syntax block (what is already applied, what must be called with `< /dev/null`, what to do next) matter as much as the flags.
