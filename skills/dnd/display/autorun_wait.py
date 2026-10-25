@@ -14,6 +14,11 @@ for everybody (rest.py). When the wait ends, the news check_input.py would
 print is printed too (rests, spells cast from a phone, the common fund,
 downtime), since in autorun mode check_input.py is not run every turn, and
 after the players' actions a `[[QUESTS — still open: …]]` line (quests.py).
+
+A wait that a newer one replaces (or that `--stop` ends) leaves without taking
+anything: what is queued, and every note, stays for the next wait. `--stop` is
+for a checkpoint (`/dm:dnd checkpoint`): the conversation is about to be
+cleared, and nothing a player sends meanwhile may go to a wait nobody reads.
 """
 import os
 import sys
@@ -64,6 +69,17 @@ my_session = secrets.token_hex(8)
 with open(SESSION_FILE, "w", encoding="utf-8") as f:
     f.write(my_session)
 
+if "--stop" in sys.argv[1:]:
+    # End the running wait and wait for nothing: its loop sees a foreign id and leaves.
+    time.sleep(0.6)
+    try:
+        if open(SESSION_FILE, encoding="utf-8").read().strip() == my_session:
+            os.unlink(SESSION_FILE)
+    except Exception:
+        pass
+    subprocess.run([sys.executable, PUSH, "--autorun-waiting", "false"], capture_output=True)
+    sys.exit(0)
+
 # Resolve autorun interval from the active campaign's state.md (default 60s)
 interval = 60
 try:
@@ -81,7 +97,15 @@ subprocess.run([sys.executable, PUSH, "--autorun-waiting", "true", "--autorun-cy
 
 # Poll loop — exit when queue appears, a secret note arrives, session changes, or 9 minutes pass
 content = ""
+superseded = False
 for _ in range(1800):  # 0.3s * 1800 = 9 min
+    try:
+        if open(SESSION_FILE, encoding="utf-8").read().strip() != my_session:
+            superseded = True
+            break
+    except Exception:
+        superseded = True
+        break
     if os.path.exists(QFILE):
         try:
             content = open(QFILE, encoding="utf-8").read()
@@ -99,12 +123,12 @@ for _ in range(1800):  # 0.3s * 1800 = 9 min
         break
     if _rest and _rest.over_pending():        # everybody finished resting: the DM moves the clock on
         break
-    try:
-        if open(SESSION_FILE, encoding="utf-8").read().strip() != my_session:
-            break
-    except Exception:
-        break
     time.sleep(0.3)
+
+# Replaced by a newer wait, or stopped: everything stays for whoever waits next,
+# and the waiting light is theirs to keep on.
+if superseded:
+    sys.exit(0)
 
 # Clean up our session file if it's still ours
 try:
