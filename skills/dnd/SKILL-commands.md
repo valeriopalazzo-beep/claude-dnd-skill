@@ -97,15 +97,11 @@ The display question is skipped, because `/dm:dnd load` asks it. The graph and c
    Write the answer to `state.md → ## Session Flags` as `absent: <comma-separated PC names>`, or `absent: none` when everyone is there. This **replaces** any previous value — absence is decided fresh at every load, never carried over. Absent PCs are **benched** for the whole session (see SKILL.md → *Absent players*): left off the sidebar, never in a scene or a roll call, not counted for encounter balance — but they still receive every XP award.
 
    - (Defaults if the player dismisses: no display, no autorun, `roll_mode: players` — or the existing saved value — and everyone present.)
-   - **Session tail replay:** before clearing the display, check if the campaign's `session_tail.json` exists. The campaign-side path is the authoritative one — `~/.claude/dnd/campaigns/<name>/session_tail.json`. **Do NOT read** the legacy/fallback at `${CLAUDE_SKILL_DIR}/display/session_tail.json`; that file may exist from older sessions or other campaigns and will mislead the replay. If the campaign-side file does not exist, skip replay (display starts blank). If it does, read it. After `--clear` and full stats push (step 4 below), replay the tail by sending each entry via the appropriate `send.py` flag. Entry type → flag mapping:
-     - `player` key present → `send.py --player <name>` with text via stdin
-     - `npc` key present → `send.py --npc <name>` with text via stdin
-     - `dice` key present → `send.py --dice` with text via stdin
-     - `xp_award` key present → `send.py --xp-award '<json of the xp_award sub-dict>'`
-     - `inspiration_award` key present → `send.py --inspiration-award '<name>'`
-     - `image` key present → `send.py --image '<file>' --image-kind <kind> --image-caption '<caption>' --image-subject '<subject>'` (the file already exists in `media/` — nothing is regenerated). Must run **after** `push_stats.py --set-campaign`, since the display serves media from the active campaign only.
-     - none of the above (plain DM narration) → `send.py` with text via stdin
-     - an `only` list on any of them (a scene played with the party split) → add `--only "<the names, comma-separated>"`, so it goes back to the same players only
+   - **Session tail replay:** the campaign-side `~/.claude/dnd/campaigns/<name>/session_tail.json` is the authoritative tail. **Do NOT read** the legacy/fallback at `${CLAUDE_SKILL_DIR}/display/session_tail.json`; that file may exist from older sessions or other campaigns and will mislead the replay. After `--clear` and the full stats push (step 4 below), and **after** `push_stats.py --set-campaign` (images are served from the active campaign's media only), replay it in one call:
+     ```bash
+     python3 ${CLAUDE_SKILL_DIR}/display/replay_tail.py <name>
+     ```
+     It sends every entry the way it was first shown — narration, player/NPC lines, dice, awards, images (the file already in `media/`, nothing regenerated), handouts again by id, a split party's pieces to the same players only — and skips battle-map clears. Replayed pieces give no second Inspiration and play no sound effects. With no tail file it says so and the display starts blank. Do not map entries to `send.py` flags by hand: an `image` entry is a dict, not a file name.
      This restores the last scene to the display before the recap. The tail is written continuously by `dnd-display-app.py` — it always contains the last session's final exchanges regardless of how the session ended.
    - Clear previous transcript: `python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --clear`
 

@@ -2169,6 +2169,9 @@ def chunk():
     is_milestone_award = bool(data.get("milestone_award"))
     is_milestone_spend = bool(data.get("milestone_spend"))
     is_xp_award    = bool(data.get("xp_award"))
+    # replay_tail.py at load: show it again, but it already happened — no
+    # second Inspiration, no sound effects, no scene change.
+    is_replay      = bool(data.get("replay"))
 
     # ── Milestone award/spend (stack-based reward, distinct from binary Inspiration) ──
     if is_milestone_award or is_milestone_spend:
@@ -2219,7 +2222,7 @@ def chunk():
         with _stats_lock:
             players = _current_stats.setdefault("players", [])
             match = next((p for p in players if p.get("name", "").lower() == name.lower()), None)
-            if match:
+            if match and not is_replay:
                 match["inspiration"] = True
                 stats_snapshot = dict(_current_stats)
         if stats_snapshot is not None:
@@ -2260,7 +2263,7 @@ def chunk():
         payload["dice"] = True
     elif is_tutor:
         payload["tutor"] = True
-    else:
+    elif not is_replay:
         # Scene detection only on DM narration
         scene = _detect_scene(cleaned)
         if scene:
