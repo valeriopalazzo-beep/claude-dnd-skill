@@ -137,6 +137,7 @@
   "queue.readyDone": "✓ Ready",
   "queue.skip": "Skip",
   "queue.skip.title": "Skip this character's turn",
+  "queue.skipped": "skips their turn",
   "queue.remove": "Remove",
   "queue.badgeReady": "{n} ready",
   "queue.badgeStaged": "{n} staged",

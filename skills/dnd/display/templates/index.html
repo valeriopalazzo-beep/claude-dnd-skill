@@ -11222,7 +11222,7 @@ async function _skipTurn(char) {
     await fetch('/player-input/skip', {
       method: 'POST',
       headers: _authHeaders(),
-      body: JSON.stringify({ character: char }),
+      body: JSON.stringify({ character: char, lang: window._LANG || 'en' }),
     });
   } catch (_) { /* silently ignore */ }
 }

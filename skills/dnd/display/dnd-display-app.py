@@ -7244,7 +7244,8 @@ def skip_input():
     """Skip a character's turn — stages a 'skips their turn' entry marked ready.
 
     Counts toward the auto-trigger threshold and fires auto-trigger if threshold met.
-    Body: {"character": "Mira"}
+    Body: {"character": "Mira", "lang": "it"} — the entry reads in that language
+    (else the campaign's), so the queue says "salta il turno" at an Italian table.
     """
     if not _token_ok():
         return "Forbidden", 403
@@ -7263,9 +7264,11 @@ def skip_input():
     if not _char_ok(character, known):
         return "Forbidden", 403
 
+    lang = _spell_lang(data.get("lang", ""))           # the table's language, as the queue shows it
+    text = _sheet_print.Strings(I18N_DIR, lang).t("queue.skipped", "skips their turn")
     with _staged_lock:
         _staged[character] = {
-            "text":      "skips their turn",
+            "text":      text,
             "ready":     True,
             "timestamp": _time.time(),
         }
