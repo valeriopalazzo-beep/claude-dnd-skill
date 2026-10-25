@@ -3237,7 +3237,7 @@
     color: #f4e2a8;
   }
   #dice-pad .dp-mod { min-width: 38px; padding: 10px 8px; }
-  #dice-pad #dp-mod-val {
+  #dice-pad #dp-mod-val, #dice-pad #dp-count-val {
     color: #f4e2a8;
     font: 600 16px/1 ui-monospace, monospace;
     min-width: 36px;
@@ -4193,7 +4193,7 @@
   :root[data-skin="editorial"] #dice-pad .dp-die.active,
   :root[data-skin="editorial"] #dice-pad .dp-adv.active{
     background:var(--e-accent); border-color:var(--e-accent); color:var(--e-dice-text); }
-  :root[data-skin="editorial"] #dice-pad #dp-mod-val{ font-family:'Syne',sans-serif; color:var(--e-on-strong); }
+  :root[data-skin="editorial"] #dice-pad #dp-mod-val, :root[data-skin="editorial"] #dice-pad #dp-count-val{ font-family:'Syne',sans-serif; color:var(--e-on-strong); }
   :root[data-skin="editorial"] #dp-hint{ font-family:'Syne',sans-serif; color:var(--e-on-strong); opacity:.6; letter-spacing:.08em; }
   :root[data-skin="editorial"] #dice-pad #dp-label,
   :root[data-skin="editorial"] #dice-pad #dp-name{
@@ -5277,7 +5277,7 @@
   :root[data-skin="lanterna"] body.ln-on #dice-pad .dp-adv{ flex:1 1 0; }
   :root[data-skin="lanterna"] body.ln-on #dice-pad .dp-mod{ min-width:48px; font-size:22px; }
   :root[data-skin="lanterna"] body.ln-on #dice-pad .dp-die.active, :root[data-skin="lanterna"] body.ln-on #dice-pad .dp-adv.active{ background:var(--ln-accent); border-color:var(--ln-accent); color:var(--ln-on-accent); }
-  :root[data-skin="lanterna"] body.ln-on #dice-pad #dp-mod-val{ min-width:56px; text-align:center; font-family:'Alegreya Sans',sans-serif; font-weight:800; font-size:22px; color:var(--ln-text); }
+  :root[data-skin="lanterna"] body.ln-on #dice-pad #dp-mod-val, :root[data-skin="lanterna"] body.ln-on #dice-pad #dp-count-val{ min-width:56px; text-align:center; font-family:'Alegreya Sans',sans-serif; font-weight:800; font-size:22px; color:var(--ln-text); }
   :root[data-skin="lanterna"] body.ln-on #dp-hint{ font-family:'Alegreya Sans',sans-serif; font-weight:600; font-size:14px; letter-spacing:0; color:var(--ln-text-faint); opacity:1; }
   :root[data-skin="lanterna"] body.ln-on #dice-pad #dp-name, :root[data-skin="lanterna"] body.ln-on #dice-pad #dp-label{ flex:1; min-width:0; font-family:'Alegreya Sans',sans-serif; font-weight:600; font-size:17px;
     background:var(--ln-surface-2); color:var(--ln-text); border:1.5px solid var(--ln-line-strong); border-radius:10px; padding:11px 12px; }
@@ -5403,7 +5403,7 @@
     font-family:'Alegreya Sans',sans-serif; font-weight:800; font-size:17px; letter-spacing:.02em;
     background:var(--ln-surface-2); color:var(--ln-text); border:1.5px solid var(--ln-line-strong); border-radius:10px; }
   :root[data-skin="lanterna"] body.input-only #dice-pad .dp-die.active, :root[data-skin="lanterna"] body.input-only #dice-pad .dp-adv.active{ background:var(--ln-accent); border-color:var(--ln-accent); color:var(--ln-on-accent); }
-  :root[data-skin="lanterna"] body.input-only #dice-pad #dp-mod-val{ font-family:'Alegreya Sans',sans-serif; font-weight:800; color:var(--ln-text); }
+  :root[data-skin="lanterna"] body.input-only #dice-pad #dp-mod-val, :root[data-skin="lanterna"] body.input-only #dice-pad #dp-count-val{ font-family:'Alegreya Sans',sans-serif; font-weight:800; color:var(--ln-text); }
   :root[data-skin="lanterna"] body.input-only #dp-hint{ font-family:'Alegreya Sans',sans-serif; color:var(--ln-text-faint); opacity:1; letter-spacing:0; }
   :root[data-skin="lanterna"] body.input-only #dice-pad #dp-name, :root[data-skin="lanterna"] body.input-only #dice-pad #dp-label{ font-family:'Alegreya Sans',sans-serif; font-size:17px;
     background:var(--ln-surface-2); color:var(--ln-text); border:1.5px solid var(--ln-line-strong); border-radius:10px; }
@@ -5702,7 +5702,12 @@
         <button class="dp-die" data-spec="1d10">d10</button>
         <button class="dp-die" data-spec="1d12">d12</button>
         <button class="dp-die" data-spec="1d100">d100</button>
-        <button class="dp-die" data-spec="2d6">2d6</button>
+      </div>
+      <div class="dp-row">
+        <button class="dp-mod" data-count-delta="-1" aria-label="fewer dice" data-i18n-aria="dp.countDec">−</button>
+        <span style="opacity:.7" data-i18n="dp.count">Dice</span>
+        <span id="dp-count-val">1</span>
+        <button class="dp-mod" data-count-delta="1" aria-label="more dice" data-i18n-aria="dp.countInc">+</button>
       </div>
       <div class="dp-row">
         <button class="dp-adv active" data-adv="normal"  title="Roll one d20" data-i18n="dp.straight" data-i18n-title="dp.straight.title">Straight</button>
@@ -15765,6 +15770,7 @@ function _initDicePad() {
   const reel    = document.getElementById('dp-reel');
   const rollBtn = document.getElementById('dp-roll');
   const modVal  = document.getElementById('dp-mod-val');
+  const countVal = document.getElementById('dp-count-val');
   const nameEl  = document.getElementById('dp-name');
   const labelEl = document.getElementById('dp-label');
   const boundEl = document.getElementById('dp-bound');
@@ -15793,6 +15799,16 @@ function _initDicePad() {
   let spec = '1d20';
   let adv  = 'normal';
   let mod  = 0;
+  // How many of the chosen die: the die buttons pick the faces, the − / +
+  // next to "Dice" the count, so 3d6 or 8d6 is d6 with 3 or 8 (1–20).
+  let die   = '1d20';
+  let count = 1;
+  function _setSpec() {
+    spec = count + 'd' + die.split('d')[1];
+    if (countVal) countVal.textContent = String(count);
+    if (!reel.classList.contains('spinning')) reel.textContent = count > 1 ? spec : spec.replace('1d', 'd');
+    _syncAdvAvailability();
+  }
   // Currently-active DM request, if any. Echoed back on the roll POST so the
   // server can match the response to the pending request and release any
   // blocking --wait call on the DM side.
@@ -15819,9 +15835,8 @@ function _initDicePad() {
     btn.addEventListener('click', () => {
       document.querySelectorAll('#dp-die-row .dp-die').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      spec = btn.dataset.spec;
-      if (!reel.classList.contains('spinning')) reel.textContent = spec.replace('1d', 'd');
-      _syncAdvAvailability();
+      die = btn.dataset.spec;
+      _setSpec();
     });
   });
   _syncAdvAvailability();
@@ -15832,10 +15847,16 @@ function _initDicePad() {
       adv = btn.dataset.adv;
     });
   });
-  document.querySelectorAll('.dp-mod').forEach(btn => {
+  document.querySelectorAll('.dp-mod[data-delta]').forEach(btn => {
     btn.addEventListener('click', () => {
       mod = Math.max(-30, Math.min(30, mod + Number(btn.dataset.delta)));
       modVal.textContent = (mod >= 0 ? '+' : '') + mod;
+    });
+  });
+  document.querySelectorAll('.dp-mod[data-count-delta]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      count = Math.max(1, Math.min(20, count + Number(btn.dataset.countDelta)));
+      _setSpec();
     });
   });
 
@@ -15912,6 +15933,8 @@ function _initDicePad() {
     const line = document.getElementById('dp-result-line');
     line.innerHTML = `${result.spec}${result.modifier ? (result.modifier > 0 ? '+' : '') + result.modifier : ''}` +
                      ` &nbsp;→&nbsp; <span class="total">${result.total}</span>` +
+                     (!result.both && Array.isArray(result.rolls) && result.rolls.length > 1
+                       ? ` &nbsp;<span style="opacity:.7">(${result.rolls.join(' + ')})</span>` : '') +
                      (result.both ? ` &nbsp;<span style="opacity:.7">(${result.both.join(' / ')} ${result.advantage})</span>` : '');
     if (navigator.vibrate) navigator.vibrate(30);
     rollBtn.classList.remove('pulse');
@@ -15926,7 +15949,7 @@ function _initDicePad() {
     // is released only by the next dice_request arriving for this character
     // (which unlocks + re-pre-fills inside _applyDiceRequest).
     if (_activeRequestId) {
-      _setLocked(true, spec, adv);          // keep die / adv selections frozen
+      _setLocked(true, die, adv);           // keep die / adv selections frozen
       rollBtn.disabled = true;              // and disable Roll itself
       rollBtn.classList.add('rolled');
       if (boundEl) {
@@ -15983,19 +16006,18 @@ function _initDicePad() {
     // disabled buttons ignore .click(), so unlock before pre-filling.
     if (_locked) _setLocked(false);
 
-    // Spec → click the matching die button. A spec with no button of its own
-    // (3d6, 4d8, 8d6…) is rolled as asked, with no button lit; only a spec
-    // that is not dice at all falls back to d20.
+    // Spec → the matching die button lit and the dice count set: 4d6 is d6
+    // with 4 shown next to "Dice", rolled in one go and every die shown. A
+    // die with no button of its own (d2, d3…) is rolled as asked, with no
+    // button lit; only a spec that is not dice at all falls back to d20.
     let reqSpec = (req.spec || '1d20').toLowerCase().replace(/\s+/g, '');
     if (!/^\d{1,2}d\d{1,3}$/.test(reqSpec)) reqSpec = '1d20';
-    const dieBtn  = document.querySelector(`.dp-die[data-spec="${reqSpec}"]`);
-    if (dieBtn) dieBtn.click();
-    else {
-      document.querySelectorAll('#dp-die-row .dp-die').forEach(b => b.classList.remove('active'));
-      spec = reqSpec;
-      if (!reel.classList.contains('spinning')) reel.textContent = spec;
-      _syncAdvAvailability();
-    }
+    const [reqCount, reqFaces] = reqSpec.split('d').map(Number);
+    count = Math.max(1, Math.min(20, reqCount || 1));
+    die   = '1d' + reqFaces;
+    const dieBtn  = document.querySelector(`.dp-die[data-spec="${die}"]`);
+    document.querySelectorAll('#dp-die-row .dp-die').forEach(b => b.classList.toggle('active', b === dieBtn));
+    _setSpec();
 
     // Adv/dis (only meaningful on 1d20; _syncAdvAvailability gates the rest).
     const advBtn = document.querySelector(`.dp-adv[data-adv="${req.advantage || 'normal'}"]`);
@@ -16022,7 +16044,7 @@ function _initDicePad() {
     if (navigator.vibrate) navigator.vibrate([20, 60, 20]);
 
     // Lock everything except the prescribed die + adv button + Roll.
-    _setLocked(true, reqSpec, (req.advantage || 'normal'));
+    _setLocked(true, die, (req.advantage || 'normal'));
 
     // Pull the player to the Roll tab so they don't miss the request. If they
     // were already on Roll, this is a no-op; if they were on Move, the tab
