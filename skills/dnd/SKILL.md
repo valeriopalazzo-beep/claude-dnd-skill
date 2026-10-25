@@ -199,7 +199,7 @@ ${CLAUDE_SKILL_DIR}/                 ← the skill dir (plugin: <plugin>/skills/
   SKILL.md           ← core DM rules (this file)
   SKILL-scripts.md   ← all Python script syntax (read by section, see *Reference modules*)
   SKILL-commands.md  ← all /dm:dnd command procedures (read by section, see *Reference modules*)
-  scripts/           ← dice.py, combat.py, character.py, tracker.py, calendar.py, lookup.py, inventory.py, encumbrance.py, loot.py, encounter.py, backup.py
+  scripts/           ← dice.py, combat.py, character.py, tracker.py, calendar.py, lookup.py, inventory.py, encumbrance.py, loot.py, encounter.py, backup.py, context_size.py
   data/              ← bundled 5e SRD dataset (dnd5e_srd.json — no download needed; sync via /dm:dnd data sync)
   templates/         ← blank character-sheet.md, state.md, world.md, npcs.md, session-log.md, prep.md
   display/           ← Flask SSE display companion (dnd-display-app.py, send.py, push_stats.py, wrapper.py, tts.py, map_render.py, map_art.py, image_gen.py)
@@ -214,6 +214,7 @@ inside the plugin (so it survives updates/uninstalls):
 <DATA root>/campaigns/<name>/
   state.md / world.md / npcs.md / session-log.md / characters/<name>.md
   prep.md            ← the next session's prep (eight steps, DM only); prep-archive.md keeps the old ones
+  checkpoint.md      ← tonight's notes from a mid-session checkpoint (see *Long sessions*); deleted at /dm:dnd end
   media/             ← generated portraits/scenes + rendered maps (index.json records prompts)
 <DATA root>/characters/
   <name>.md          ← global roster: latest known state of every PC across all campaigns
@@ -237,6 +238,17 @@ Resolve `~` to the user's home directory. Scripts locate both roots via
 `dice.py` · `combat.py` · `ability-scores.py` · `character.py` · `tracker.py` · `calendar.py` · `lookup.py` · `push_stats.py`
 
 Full script syntax: `${CLAUDE_SKILL_DIR}/SKILL-scripts.md`, one section at a time (see *Reference modules*)
+
+---
+
+## Long sessions — checkpoint and resume
+
+Every tool call reads the whole conversation again. What a session costs is **the conversation's length × the number of calls**: a session that has grown to 600k tokens pays four times as much for the same turn as one at 150k. Narration is a small part of it. The rules, the dice and the length of the narration stay exactly as they are; the conversation is kept short instead.
+
+- **At every natural break** (a fight over, a rest, the party reaching a new place, a scene closing) run `python3 ${CLAUDE_SKILL_DIR}/scripts/context_size.py` in the same Bash as that turn's other commands. When it prints `checkpoint due` (over 300k tokens) and nothing waits for an answer, run `/dm:dnd checkpoint` (`SKILL-commands.md`). Never in the middle of a fight, with a roll called, or with a vote, chase, puzzle or group check open.
+- **The checkpoint writes everything down first.** The save puts tonight in `session-log.md` and `state.md`; `checkpoint.md` keeps what only the conversation held (the last words narrated, NPC voices and promises, rulings, plans said aloud, effects no script tracks). Then the DM types `/clear` and `/dm:dnd resume <campaign>`, and the game goes on from the same line. What the players send meanwhile waits in the queue.
+- **Never `/compact` instead.** A compaction decides on its own what to forget; the checkpoint writes what the game needs, in files the skill already reads.
+- The DM can ask for a checkpoint at any time; the same conditions apply.
 
 ---
 
@@ -324,6 +336,7 @@ AUTORUN=$(python3 ${CLAUDE_SKILL_DIR}/display/autorun_wait.py)
 echo "$AUTORUN"
 ```
 
+- A newer wait replaces a running one without losing anything: the old wait leaves and takes nothing. `autorun_wait.py --stop` ends the running wait without starting another (used by `/dm:dnd checkpoint`).
 - If `AUTORUN` is non-empty: treat it as the player action for the next turn. Process immediately — no DM message needed. The content has already been sanitised by dnd-display-app.py before being written to the queue.
 - If `AUTORUN` is empty (timeout after 9 min): **silently restart the wait** — do not print anything, do not wait for a DM message. Just run the same Bash block again immediately. This keeps the loop alive indefinitely until a player submits or the DM intervenes.
 - If the DM sends a message mid-wait: the Bash is interrupted. **Before processing the DM's message, run `check_input.py` once.** If it returns content, that is queued player input that arrived during the gap — treat it as part of this turn alongside the DM's message (or as the primary action if the DM message is administrative). If it returns empty, proceed with the DM's message as the turn input. After resolving the DM's turn, restart the wait if `autorun: true` is still in state.md.
@@ -845,4 +858,4 @@ The tutor block always goes **last** in the Bash send sequence.
 
 **Scripting and rolls:** Run scripts, rolls, and simple expansions immediately — no confirmation prompts. Only pause for genuinely consequential operations (e.g. deleting campaign data).
 
-**Reference modules:** script syntax is in `${CLAUDE_SKILL_DIR}/SKILL-scripts.md`, command procedures in `${CLAUDE_SKILL_DIR}/SKILL-commands.md` — together almost 300 KB, so they are read **by section, never whole**. At `/dm:dnd load` list the headings of both (`grep -n '^## \|^### ' <file>`) and read in full the procedure being run (the `load` section). From then on, **before the first use of a script in a session read its whole section** (Read with offset and limit, from its heading to the next `## `), and before running a command (`save`, `end`, `combat start`, `rest`…) read its whole procedure. A section once read stays valid for the session: read it again only after a compaction or when in doubt. Never run a script, or a command, from memory of a section not read this session — the notes under each syntax block (what is already applied, what must be called with `< /dev/null`, what to do next) matter as much as the flags.
+**Reference modules:** script syntax is in `${CLAUDE_SKILL_DIR}/SKILL-scripts.md`, command procedures in `${CLAUDE_SKILL_DIR}/SKILL-commands.md` — together almost 300 KB, so they are read **by section, never whole**. At `/dm:dnd load` list the headings of both (`grep -n '^## \|^### ' <file>`) and read in full the procedure being run (the `load` section). From then on, **before the first use of a script in a session read its whole section** (Read with offset and limit, from its heading to the next `## `), and before running a command (`save`, `end`, `combat start`, `rest`…) read its whole procedure. A section once read stays valid for the session: read it again after a compaction, after a `/dm:dnd resume` (the conversation was cleared) or when in doubt. Never run a script, or a command, from memory of a section not read this session — the notes under each syntax block (what is already applied, what must be called with `< /dev/null`, what to do next) matter as much as the flags.

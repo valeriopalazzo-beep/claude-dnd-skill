@@ -408,6 +408,8 @@ Campaign "<name>" created from <source title>.
 ## `/dm:dnd save`
 Write session events to session-log.md (Recap, Key Events and Decisions as the players lived them — the campaign book prints those sections; what only the DM knows goes in Open Threads), update state.md (location, active quests, party HP/resources, recent events), update any characters/*.md that changed. Mirror each updated character to global roster (`~/.claude/dnd/characters/<name>.md`).
 
+**After a checkpoint:** if tonight's session-log entry already exists, marked *(in corso…)*, the first part of the session is written there and in `checkpoint.md`, and no longer in the conversation. Extend that entry with what happened since, keep what it says, and drop the mark at the end of the session. Use both files for everything that looks back on the whole night: the recap, the calibration, the arc check, the absent players' cards.
+
 **Absent players:** if `## Session Flags → absent:` names anyone, open this session's session-log entry with `Absent: <names> — <one-line in-fiction reason>` and add the same line to `## Recent Events`, so the next load can write them back in. Absent PCs' sheets change only by the XP they were awarded — never touch their HP, slots, inventory or conditions.
 
 **Inspiration tracking:** On every save, record each PC's Inspiration state in `state.md → ## Current Situation → Party status`. Use explicit text: `Inspiration ✓` if held, omit or `No Inspiration` if not. Inspiration persists across sessions and is NOT cleared by long rests. Example: `Mara: HP 24/24. Inspiration ✓. Theo: HP 24/24.`
@@ -534,6 +536,59 @@ If `graph.json` doesn't exist yet for this campaign, skip the sweep entirely (no
    rm -f ${CLAUDE_SKILL_DIR}/display/app.pid
    ```
 3. **Post-kill tail re-verification:** run `verify_tail.sh` once more after the kill. If it now reports unhealthy (file got truncated by a final write race), restore from the canonical version written in step 1g.
+4. **Checkpoint file:** with everything saved, delete `<campaign>/checkpoint.md` if a checkpoint wrote one tonight — it belongs to this session only.
+
+---
+
+## `/dm:dnd checkpoint`
+Save in the middle of a session so the DM can clear the conversation and go on with a short one (SKILL.md → *Long sessions*). Run it at a natural break when `context_size.py` says `checkpoint due`, or when the DM asks for it. **Never** with something waiting for an answer: a fight in the turn order, a roll called and not yet back, a vote, a chase, a puzzle or a group check open. Finish that first.
+
+1. **Tell the table and stop the wait — one Bash, the first of the checkpoint** (display running):
+   ```bash
+   python3 ${CLAUDE_SKILL_DIR}/display/send.py << 'DNDEND'
+   (Pausa di un paio di minuti: salvo la partita. Potete scrivere cosa fate, lo leggo appena riprendo.)
+   DNDEND
+   python3 ${CLAUDE_SKILL_DIR}/display/autorun_wait.py --stop
+   ```
+   (In the table's language.) `--stop` ends a wait still running, so that nothing a player sends while the conversation is cleared goes to a wait nobody reads: it stays in the queue for the wait after the resume.
+2. **Run `/dm:dnd save`** in full, with two differences:
+   - tonight's session-log entry is written as far as the game has got, and its heading carries `*(in corso — fino a <the in-world moment>)*`. If an earlier checkpoint tonight already wrote it, extend it with what happened since;
+   - the relationship sweep is done as in the continuity micro-save (SKILL.md → *Active DM Mode*): add to the graph what is certain, and keep the doubtful ones in `checkpoint.md` for the question at the end of the session.
+3. **Write `<campaign>/checkpoint.md`**, overwriting any earlier one. It holds what is in the conversation and nowhere else, so that the resumed DM plays on as if nothing happened:
+   ```markdown
+   # Checkpoint — session <N>, <date and time>
+
+   ## Where we are
+   <the last thing narrated, close to its words, and what the table is facing now: the open question, who has spoken and who has not>
+
+   ## Tonight so far
+   <every scene of tonight in order, two or three lines each: what the players tried, how it was ruled, what it cost>
+
+   ## Kept in the head
+   - NPCs met tonight: how each spoke (voice, words they use), what they promised, asked or hid
+   - Players' plans and intentions said aloud, jokes and moments the table loved
+   - Rulings made tonight (how a rule was applied, a DC set for a recurring check) and promises made out of game
+   - Effects still running that no script tracks, with how long they have left
+   - Prep secrets revealed tonight, and the ones close to coming out
+   - Graph candidates to propose at the end (the doubtful ones from step 2)
+   ```
+   Write it in the campaign's language. Leave a heading out when it has nothing under it.
+4. **Backup:** `python3 ${CLAUDE_SKILL_DIR}/scripts/backup.py save --campaign <campaign-name> --label checkpoint`.
+5. **Tell the DM**, in the terminal, in one line: *"Salvato. Scrivi `/clear` e poi `/dm:dnd resume <campaign-name>`."* Do not start the autorun wait again.
+
+---
+
+## `/dm:dnd resume [campaign-name]`
+Go on with tonight's session after a checkpoint and a `/clear`. It is **not** a load: the display is up and the players are where they were, so ask nothing, clear nothing, show no *Previously on…* card and play no strong start.
+
+1. **Campaign:** the one named, else the one in `$(python3 ${CLAUDE_SKILL_DIR}/scripts/paths.py runtime-dir)/active-campaign.json`. If `checkpoint.md` is missing, there is nothing to resume: say so and offer `/dm:dnd load`. If it is more than twelve hours old, ask the DM whether tonight's session is still going before using it (`/dm:dnd end` deletes it, so an old one means a session that was never ended).
+2. **Read**, in as few calls as possible:
+   - `checkpoint.md` first, then `state.md` whole (*DM Style Notes*, *Pinned Facts* and *Session Flags* as at load: `absent`, `roll_mode`, `autorun` are tonight's, never asked again), all `characters/*.md`, `prep.md`, `world.md`, `npcs.md` (index), and tonight's *(in corso)* entry of `session-log.md`;
+   - the last ten entries of `<campaign>/session_tail.json`: the exact words the players last read;
+   - the campaign graph's `scene-context` for where the party is (load step 7), and the headings of `SKILL-scripts.md` and `SKILL-commands.md`;
+   - whether the display answers (`curl -sk -m 3 <scheme>://localhost:5001/ping`). If it does not, start it again as at load, in tonight's mode, and push the party (load step 6) — a restarted display is empty.
+   The *Reference modules* rule starts over: every script section and command procedure is read again before its first use after the resume.
+3. **Back to the table:** `send.py` one line in the table's language (*"Si riprende!"*). Tell the DM in one line where the game stands. Then, if `autorun: true`, start the autorun wait — it takes at once whatever the players sent during the pause; otherwise run `check_input.py` once and go on from the DM's next message.
 
 ---
 

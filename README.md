@@ -191,6 +191,8 @@ Once loaded, type naturally — no `/dm:dnd` prefix needed. The DM interprets ev
 | `/dm:dnd load <name>` | Load an existing campaign and enter DM mode |
 | `/dm:dnd save` | Write session events to log, update state and character files |
 | `/dm:dnd end` | Save session, append recap, prepare the next session, stop display companion |
+| `/dm:dnd checkpoint` | Save mid-session so the conversation can be cleared (`/clear`) and kept short — the players wait in the queue |
+| `/dm:dnd resume [campaign]` | Go on after a checkpoint and a `/clear`, from the same line, without asking or clearing anything |
 | `/dm:dnd prep` | Prepare the next session with the lazy DM's eight steps (strong start, scenes, ten secrets, locations, NPCs, monsters, rewards) in `prep.md`, reviewed at load |
 | `/dm:dnd abandon` | Exit without saving — discards all unsaved changes from this session |
 | `/dm:dnd list` | List all campaigns with last session date and count |
