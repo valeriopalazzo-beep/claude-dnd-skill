@@ -218,6 +218,27 @@ def campaign_language(name: str = "") -> str:
     return m.group(1).lower() if m else "en"
 
 
+def campaign_flag_first(argv: list) -> list:
+    """Move `-c NAME` / `--campaign NAME` (or `=NAME`) to the front of argv.
+
+    Scripts with sub-commands declare -c on the top parser, so argparse only
+    takes it before the sub-command: `tracker.py hp Goblin 3 -c camp` failed.
+    With the flag moved first, it works wherever it is written."""
+    head, rest, i = [], [], 0
+    while i < len(argv):
+        a = argv[i]
+        if a in ("-c", "--campaign") and i + 1 < len(argv):
+            head += [a, argv[i + 1]]
+            i += 2
+            continue
+        if a.startswith("--campaign="):
+            head.append(a)
+        else:
+            rest.append(a)
+        i += 1
+    return head + rest
+
+
 def srd_path(ruleset=None):
     """Return path to the SRD JSON for the given ruleset.
 

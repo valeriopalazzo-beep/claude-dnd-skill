@@ -989,7 +989,8 @@ def main(argv=None) -> None:
     sub.add_parser("events", help="List upcoming calendar events")
     sub.add_parser("push", help="Send the clock and the calendar to the display again")
 
-    args = p.parse_args(argv)
+    import paths
+    args = p.parse_args(paths.campaign_flag_first(sys.argv[1:] if argv is None else list(argv)))
 
     try:
         if   args.cmd == "init":    cmd_init(args.campaign, args)

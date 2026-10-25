@@ -996,7 +996,8 @@ def main() -> None:
     clr.add_argument("--all", action="store_true",
                      help="Also clear death saves (not just conditions/concentration)")
 
-    args = p.parse_args()
+    import paths
+    args = p.parse_args(paths.campaign_flag_first(sys.argv[1:]))
 
     if args.cmd == "effect":
         cmd_effect(args.campaign, args.action, args.entity,
