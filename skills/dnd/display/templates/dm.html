@@ -110,6 +110,7 @@
   <section id="s-clocks"><h2 data-t="dms.clocks">Clocks</h2><div></div></section>
   <section id="s-factions"><h2 data-t="dms.factions">Factions</h2><div></div></section>
   <section id="s-secrets"><h2 data-t="dms.secrets">Secret dates</h2><div></div></section>
+  <section id="s-notes"><h2 data-t="dms.notes">Secret notes</h2><div></div></section>
   <section id="s-supplies"><h2 data-t="dms.supplies">Supplies</h2><div></div></section>
   <section id="s-downtime"><h2 data-t="dms.downtime">Downtime</h2><div></div></section>
   <section id="s-travel"><h2 data-t="dms.travel">On the road</h2><div></div></section>
@@ -206,6 +207,14 @@
     const secretsList = d.secrets || [];
     body('s-secrets').innerHTML = secretsList.length ? secretsList.map(e => `<div class="roll"><b style="font-size:16px">${esc(e.what)}</b> <span class="muted">${esc(e.when)}</span>${e.note ? `<br><small class="muted">${esc(e.note)}</small>` : ''}</div>`).join('')
       : empty('dms.none');
+
+    // Secret notes (whisper.py), newest first: what the DM wrote and what came back.
+    const notes = (d.notes || []).slice().reverse();
+    body('s-notes').innerHTML = notes.length ? notes.map(n => {
+      const who = n.from === 'dm' ? 'DM → ' + n.to : n.from + ' → DM';
+      const when = n.ts ? new Date(n.ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+      return `<div class="roll"><b>${esc(who)}</b> <span class="muted">${esc(when)}</span><br>${esc(n.text || '')}</div>`;
+    }).join('') : empty('dms.none');
 
     const sup = d.supplies;
     body('s-supplies').innerHTML = sup ? `<p>${esc(_t('sup.days', { n: sup.days_left ?? '—' }, ''))} · ${esc(sup.march ? _t('sup.march', null, 'on the march') : _t('sup.still', null, 'not marching'))}</p>

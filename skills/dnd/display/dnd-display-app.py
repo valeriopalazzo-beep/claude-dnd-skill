@@ -4539,7 +4539,11 @@ def dm_screen_data():
             rumors = _rumors.dm_view(_rumors.load(str(folder / "rumors.json")))
         except Exception:
             rumors = None
+    with _whispers_lock:                                     # secret notes, both ways: the last ones to reread
+        notes = [{k: e.get(k) for k in ("from", "to", "text", "ts")}
+                 for e in _whispers if e.get("campaign", "") == camp][-20:]
     return jsonify({
+        "notes": notes,
         "rumors": rumors,
         "traps": traps,
         "afflictions": afflictions,
