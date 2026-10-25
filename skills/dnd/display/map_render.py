@@ -1125,35 +1125,19 @@ def srd_senses(name: str):
 
 def mm_notes_dir():
     """The DM's own Monster Manual notes (~/.claude/dnd/riferimenti/mm), when they exist on this PC."""
-    import paths
-    d = paths._root() / "riferimenti" / "mm"
-    return d if (d / "INDICE.md").is_file() else None
+    import mm_notes
+    return mm_notes.notes_dir()
 
 
 def mm_senses(name: str):
     """(senses text, creature) from the Monster Manual notes, for a creature the SRD lacks; None when not there.
 
     The notes are personal and never part of this repository: this only reads them where they are."""
-    d = mm_notes_dir()
-    if d is None:
-        return None
-    rows = {}
-    for line in (d / "INDICE.md").read_text(encoding="utf-8", errors="replace").splitlines():
-        cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        link = re.search(r"\(([^)]+\.md)\)", line)
-        if len(cells) >= 2 and link:
-            for n in cells[:2]:
-                rows.setdefault(_book_key(n), (cells[0], link.group(1)))
+    import mm_notes
     for cand in _book_candidates(name):
-        hit = rows.get(_book_key(cand))
-        if not hit:
-            continue
-        try:
-            text = (d / hit[1]).read_text(encoding="utf-8", errors="replace")
-        except OSError:
-            return None
-        m = re.search(r"\*\*Sensi\*\*\s*(.*?)(?:·|\*\*Linguaggi|$)", text, re.M)
-        return (m.group(1).strip() if m else None), hit[0]
+        hit = mm_notes.page(cand)
+        if hit:
+            return mm_notes.senses(hit["text"]), hit["it"]
     return None
 
 

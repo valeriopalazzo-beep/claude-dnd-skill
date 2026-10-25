@@ -18,7 +18,8 @@ characters have seen with their own eyes. Text only, no pictures.
     bestiary.py list
     bestiary.py show "ghoul"
 
-`meet` looks the creature up in the SRD (Italian names are understood) so that
+`meet` looks the creature up in the SRD (Italian names are understood), then in
+the DM's Monster Manual notes when this PC has them (riferimenti/mm), so that
 `--stat` can later reveal its real numbers; the entry shows none of them until
 you reveal them. The name is written in the campaign's language (`language:`
 flag, or --lang). A creature can be named by any part of its name that means
@@ -121,8 +122,23 @@ def srd_record(query: str, ruleset: str = "2014") -> dict | None:
     return best[0] if best and lookup._score(query, best[0]) >= 2 else None
 
 
+def book_record(query: str, ruleset: str = "2014") -> dict | None:
+    """The SRD monster a name means, else the DM's Monster Manual notes (Goblin Boss, Yeti…), or None."""
+    record = srd_record(query, ruleset)
+    if record is not None:
+        return record
+    import mm_notes
+    hit = mm_notes.page(query)
+    if hit is None:
+        return None
+    return {"index": "mm:" + hit["slug"], "name": hit["en"], "_i18n": {"it": {"name": hit["it"]}},
+            "_mm_stats": mm_notes.stats(hit["text"])}
+
+
 def srd_stats(record: dict, lang: str = "en") -> dict:
     """The numbers `learn --stat` can reveal, worded for the table's language."""
+    if "_mm_stats" in record:          # Monster Manual notes: already in the notes' words
+        return dict(record["_mm_stats"])
     import lookup
     loc = (lookup._localize(record, lang) if lang != "en" else None) or record
     cr = record.get("cr", "")
@@ -154,8 +170,8 @@ def meet(creatures: list, query: str, alias: str = "", count: int = 1, record: d
             entry["index"], entry["srd_name"] = record.get("index", ""), record.get("name", "")
         return entry, False
     if record is None and not custom:
-        raise BestiaryError(f"no SRD monster called {query!r}; add --custom for a creature of your own, "
-                            "or check the name with lookup.py monster")
+        raise BestiaryError(f"no SRD monster (nor Monster Manual note) called {query!r}; add --custom for a "
+                            "creature of your own, or check the name with lookup.py monster")
     name = _clean(alias or (_local_name(record, lang) if record else query), 60)
     if not name:
         raise BestiaryError("a creature needs a name")
@@ -233,7 +249,8 @@ def public_view(creatures: list) -> list:
 
 
 def describe(entry: dict) -> str:
-    lines = [f"{entry['name']}" + (f"  (SRD: {entry['srd_name']})" if entry.get("srd_name") else "  (custom)")
+    book = "Monster Manual" if str(entry.get("index", "")).startswith("mm:") else "SRD"
+    lines = [f"{entry['name']}" + (f"  ({book}: {entry['srd_name']})" if entry.get("srd_name") else "  (custom)")
              + f" — met {entry.get('met', 0)}, defeated {entry.get('defeated', 0)}"]
     known = entry.get("known") or {}
     if known:
@@ -305,7 +322,7 @@ def main(argv: list | None = None) -> int:
             print(describe(find(creatures, args.name)))
             return 0
         if args.cmd == "meet":
-            record = None if args.custom else srd_record(args.name, ruleset)
+            record = None if args.custom else book_record(args.name, ruleset)
             entry, fresh = meet(creatures, args.name, args.alias, args.count, record, lang, args.custom, args.type)
             event = {"name": entry["name"], "new": fresh} if fresh else None
             print(("+ " if fresh else "") + describe(entry))
@@ -313,7 +330,7 @@ def main(argv: list | None = None) -> int:
             entry = find(creatures, args.name)
             if not (args.fact or args.resist or args.immune or args.weak or args.stat or args.values):
                 raise BestiaryError("learn what? give a note, --resist/--immune/--weak, --stat or --set")
-            record = srd_record(entry["srd_name"], ruleset) if entry.get("srd_name") else None
+            record = book_record(entry["srd_name"], ruleset) if entry.get("srd_name") else None
             new = learn(entry, args.fact, args.resist, args.immune, args.weak, args.stat, record, lang,
                         args.values)
             event = {"name": entry["name"], "new": False} if new else None

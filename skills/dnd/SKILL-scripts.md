@@ -1449,7 +1449,8 @@ The party's own notebook of the creatures it has met: it starts empty and holds 
 ```bash
 python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py meet "ghoul"                          # first sight, or met again
 python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py meet "ghoul" --count 3 --as "Divoratore di tombe"
-python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py meet "La Custode" --custom --type "non morto"   # not in the SRD
+python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py meet "Goblin Capo"   # not in the SRD but in the Monster Manual notes: found there, --stat works
+python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py meet "La Custode" --custom --type "non morto"   # in no book
 python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py learn "ghoul" "Il suo tocco paralizza chi non è un elfo"
 python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py learn "ghoul" --immune veleno --weak radiante --resist "armi non magiche"
 python3 ${CLAUDE_SKILL_DIR}/display/bestiary.py learn "ghoul" --stat ac --stat hp     # ac hp speed cr type all
