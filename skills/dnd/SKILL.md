@@ -250,6 +250,15 @@ Every tool call reads the whole conversation again. What a session costs is **th
 - **Never `/compact` instead.** A compaction decides on its own what to forget; the checkpoint writes what the game needs, in files the skill already reads.
 - The DM can ask for a checkpoint at any time; the same conditions apply.
 
+## One call where one is enough
+
+Each separate tool call costs a full reading of the conversation, so build the turn in as few calls as the dice allow, with the same scripts, the same rolls and the same checks:
+
+- **Before narrating**, gather everything the turn needs in **one** Bash: the sheet lines, the bestiary entry, the PHB/DMG pages, `lookup.py`, the tracker. Think ahead about what the answer will need instead of looking it up one grep at a time.
+- **After narrating**, send everything in **one** Bash: `send.py` (narration, dice, NPCs), `whisper.py`, `push_stats.py`, quests, calendar. The autorun wait stays its own call, the last one, and a map render stays its own background call.
+- **Separate calls only when a result decides the next step:** an attack roll before its damage, a saving throw before its effect, a player's die before the outcome. That order belongs to the rules and is never shortened.
+- **Cut long outputs at the source** (`head`, `sed -n`, `grep -m`, `| tail`): a 20 KB file printed once stays in the conversation for the rest of the night.
+
 ---
 
 ## Active DM Mode
