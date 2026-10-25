@@ -16070,7 +16070,9 @@ function _initDicePad() {
     if (advBtn && !advBtn.hasAttribute('disabled')) advBtn.click();
 
     // Modifier — jump straight to the requested value rather than +/- ticking.
-    mod = Math.max(-30, Math.min(30, Number(req.modifier) || 0));
+    // A group roll may give each character their own bonus (req.modifiers).
+    const ownMod = (req.modifiers && typeof req.modifiers === 'object') ? req.modifiers[me] : undefined;
+    mod = Math.max(-30, Math.min(30, Number(ownMod != null ? ownMod : req.modifier) || 0));
     modVal.textContent = (mod >= 0 ? '+' : '') + mod;
 
     // Label / DC line.

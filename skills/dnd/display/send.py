@@ -145,6 +145,20 @@ def _read_optional_stdin() -> str:
     return b"".join(chunks).decode("utf-8", errors="replace").replace("\r\n", "\n")
 
 
+def _parse_modifier(text: str) -> tuple:
+    """--modifier → (bonus for everyone, {character: own bonus}). Raises ValueError."""
+    base, own = 0, {}
+    for part in [p.strip() for p in str(text).split(",") if p.strip()]:
+        if ":" in part:
+            who, val = part.rsplit(":", 1)
+            if not who.strip():
+                raise ValueError(part)
+            own[who.strip()] = int(val)
+        else:
+            base = int(part)
+    return base, own
+
+
 def _read_token() -> str:
     try:
         return open(TOKEN_FILE, encoding="utf-8").read().strip()
@@ -549,8 +563,13 @@ def main() -> None:
         help='Target character for --dice-request. Use "any" or omit to target every phone.')
     parser.add_argument("--spec", metavar="NdM", default="1d20",
         help='Dice spec for --dice-request (default 1d20). Examples: 1d20, 2d6, 1d100.')
-    parser.add_argument("--modifier", type=int, default=0, metavar="N",
-        help='Modifier to apply on the phone (default 0). May be negative.')
+    parser.add_argument("--modifier", default="0", metavar="N",
+        help='Modifier to apply on the phone (default 0). May be negative. For a group roll '
+             'with different bonuses: "Berta:5,Finocchio:+3" (each character their own; '
+             'a bare number in the list is the bonus of anyone not named).')
+    parser.add_argument("--cancel-dice-request", nargs="?", const="all", metavar="ID",
+        help='Close a dice request still waiting (the id printed by --dice-request), or every '
+             'open one with no id: the "Waiting on…" banner goes away on every screen.')
     parser.add_argument("--advantage", choices=["normal", "advantage", "disadvantage"],
         default="normal",
         help='For 1d20 only: normal | advantage | disadvantage (default normal).')
@@ -646,14 +665,40 @@ def main() -> None:
     # reading piped stdin under the isatty() gate lets bundled narration flow
     # through to the text-send block while bare award calls don't block.
     # ── Dice request (DM → phones) — broadcast + optional blocking wait ──────
+    if args.cancel_dice_request:
+        rid = "" if args.cancel_dice_request == "all" else args.cancel_dice_request.strip()
+        _token = _read_token()
+        headers = {"X-DND-Token": _token} if _token else {}
+        try:
+            req = urllib.request.Request(f"{DICE_REQ_URL}/{rid}" if rid else DICE_REQ_URL,
+                                         headers=headers, method="DELETE")
+            resp = urllib.request.urlopen(req, timeout=TIMEOUT, context=_SSL_CTX)
+            body = resp.read().decode("utf-8") or "{}"
+        except Exception as e:
+            print(f"send.py: cancel failed: {e}", file=sys.stderr)
+            sys.exit(1)
+        gone = [rid] if rid else (json.loads(body).get("cancelled") or [])
+        print(f"send.py: cancelled {len(gone)} dice request(s)" + (f": {', '.join(gone)}" if gone else ""))
+        return
+
     if args.dice_request:
         # Comma-split character list so the DM can address multiple players at once,
         # e.g. --character "Piper,Mira,Aldric"  → all three must roll before --wait returns.
         chars = [c.strip() for c in (args.character or "any").split(",") if c.strip()] or ["any"]
+        try:
+            _mod_base, _mod_own = _parse_modifier(args.modifier)
+        except ValueError:
+            print(f'send.py: --modifier is a number or "Name:N,Name:N" — not {args.modifier!r}', file=sys.stderr)
+            sys.exit(1)
+        _strangers = [n for n in _mod_own if n.lower() not in {c.lower() for c in chars}]
+        if _strangers:
+            print(f"send.py: --modifier names {', '.join(_strangers)}, who is not in --character", file=sys.stderr)
+            sys.exit(1)
         body = {
             "characters": chars,
             "spec": args.spec,
-            "modifier": args.modifier,
+            "modifier": _mod_base,
+            "modifiers": _mod_own,
             "advantage": args.advantage,
         }
         if args.label: body["label"] = args.label

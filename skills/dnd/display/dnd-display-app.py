@@ -6633,6 +6633,7 @@ def dice_request():
 
     Body: {"character": "Piper" | "any",
            "spec": "1d20", "modifier": 5,
+           "modifiers": {"Piper": 5, "Mira": 2}  (optional: each character's own bonus),
            "advantage": "normal" | "advantage" | "disadvantage",
            "label": "Stealth check"  (optional),
            "dc": 15  (optional, informational)}
@@ -6666,8 +6667,14 @@ def dice_request():
         adv = "normal"
     modifier = max(-100, min(100, modifier))
     dc_val   = int(dc) if isinstance(dc, (int, float)) else None
+    modifiers = {}
+    for who, val in (data.get("modifiers") or {}).items() if isinstance(data.get("modifiers"), dict) else ():
+        try:
+            modifiers[str(who).strip().lower()] = max(-100, min(100, int(val)))
+        except (TypeError, ValueError):
+            return jsonify({"error": f"bad modifier for {who}"}), 400
 
-    request_id, trackable = _open_dice_request(chars, spec, modifier, adv, label, dc_val)
+    request_id, trackable = _open_dice_request(chars, spec, modifier, adv, label, dc_val, modifiers)
     return jsonify({
         "request_id": request_id,
         "pending": sorted(trackable),
@@ -6675,8 +6682,13 @@ def dice_request():
     }), 200
 
 
-def _open_dice_request(chars: list, spec: str, modifier: int, adv: str, label: str, dc_val) -> tuple:
-    """Put a roll on the named players' screens; (request_id, the characters it waits for)."""
+def _open_dice_request(chars: list, spec: str, modifier: int, adv: str, label: str, dc_val,
+                       modifiers: Optional[dict] = None) -> tuple:
+    """Put a roll on the named players' screens; (request_id, the characters it waits for).
+
+    `modifiers` ({lowercased name: bonus}) gives each character their own bonus
+    in a group roll; anyone not in it uses `modifier`."""
+    modifiers = modifiers or {}
     import time
     request_id = secrets.token_hex(6)
 
@@ -6686,7 +6698,8 @@ def _open_dice_request(chars: list, spec: str, modifier: int, adv: str, label: s
         with _dice_pending_lock:
             _dice_pending[request_id] = {
                 "chars": set(trackable),
-                "meta": {"spec": spec, "modifier": modifier, "advantage": adv, "label": label, "dc": dc_val},
+                "meta": {"spec": spec, "modifier": modifier, "modifiers": modifiers, "advantage": adv,
+                         "label": label, "dc": dc_val},
                 "started_at": time.time(),
             }
             _dice_results[request_id] = {"label": label, "dc": dc_val, "results": []}
@@ -6704,6 +6717,7 @@ def _open_dice_request(chars: list, spec: str, modifier: int, adv: str, label: s
             "onscreen_targets": onscreen_targets,
             "spec": spec,
             "modifier": modifier,
+            "modifiers": modifiers,
             "advantage": adv,
             "label": label,
             "dc": dc_val,
@@ -6789,7 +6803,8 @@ def dice_request_help(request_id):
     adv = _helped_advantage(meta.get("advantage", "normal"))
     _broadcast({"dice_request": {"request_id": request_id, "characters": [name], "character": name,
                                  "onscreen_targets": [] if _phone_present(name) else [name], "spec": meta.get("spec", "1d20"),
-                                 "modifier": meta.get("modifier", 0), "advantage": adv,
+                                 "modifier": (meta.get("modifiers") or {}).get(name.lower(), meta.get("modifier", 0)),
+                                 "advantage": adv,
                                  "label": (label + " — " if label else "") + f"🤝 {helper}", "dc": meta.get("dc")}})
     line = {"text": f"🤝 {helper} → {name}" + (f" — {label}" if label else ""), "dice": True, "help": {"helper": helper, "target": name}}
     camp = _active_campaign()
@@ -6810,6 +6825,20 @@ def dice_request_cancel(request_id):
         _dice_pending.pop(request_id, None)
     _broadcast({"dice_pending": _dice_pending_snapshot(), "dice_request_cancelled": request_id})
     return "", 204
+
+
+@app.route("/dice-request", methods=["DELETE"])
+def dice_request_cancel_all():
+    """Cancel every pending dice request (send.py --cancel-dice-request): {"cancelled": [ids]}."""
+    if not _token_ok():
+        return "Forbidden", 403
+    with _dice_pending_lock:
+        gone = list(_dice_pending)
+        _dice_pending.clear()
+    for rid in gone:
+        _broadcast({"dice_request_cancelled": rid})
+    _broadcast({"dice_pending": _dice_pending_snapshot()})
+    return jsonify({"cancelled": gone}), 200
 
 
 # ─── Initiative from the players' phones ─────────────────────────────────────
@@ -7676,6 +7705,7 @@ def stream():
             "onscreen_targets": [c for c in chars if c.lower() != "any" and not _phone_present(c)],
             "spec": meta.get("spec", "1d20"),
             "modifier": meta.get("modifier", 0),
+            "modifiers": meta.get("modifiers") or {},
             "advantage": meta.get("advantage", "normal"),
             "label": meta.get("label", ""),
             "dc": meta.get("dc"),
