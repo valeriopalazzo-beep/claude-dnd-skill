@@ -406,7 +406,13 @@ def _check_auto_trigger() -> None:
             return
         everybody_ready = "Everybody" in _staged and _staged["Everybody"]["ready"]
         all_ready       = all(v["ready"] for v in _staged.values())
-        threshold       = _autorun_threshold if _autorun_threshold is not None else _expected_count
+        # In combat only one player acts at a time: waiting for the whole party
+        # would hold the active player's message forever. An explicit
+        # --autorun-threshold still wins.
+        if _autorun_threshold is not None:
+            threshold = _autorun_threshold
+        else:
+            threshold = 1 if _in_combat() else _expected_count
         enough          = len(_staged) >= threshold or everybody_ready
         if not (all_ready and enough):
             return
@@ -5835,6 +5841,7 @@ def stats():
         # 0 (push_stats.py --autorun-threshold 0) means "back to the player count", as documented
         _autorun_threshold = int(val) if val else None
         _broadcast({"autorun_threshold": _autorun_threshold})
+        _check_auto_trigger()   # a lower threshold releases what was already waiting
         if not any(k in data for k in ("players", "turn_order", "world_time", "factions",
                                         "replace_players", "sheet")):
             return "", 204
@@ -5918,6 +5925,7 @@ def stats():
     with _stats_lock:
         players = _current_stats.get("players", [])
     _expected_count = max(1, len(players))
+    _check_auto_trigger()   # the party or the fight changed: maybe enough are ready now
 
     if ignored_players:
         return jsonify({"ignored_players": ignored_players}), 200

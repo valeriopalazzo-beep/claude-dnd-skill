@@ -380,6 +380,9 @@ python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --autorun-waiting false   # hi
 # N-player threshold — auto-fire when N players (not all) are ready:
 python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --autorun-threshold 2   # fire when 2 ready
 python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --autorun-threshold 0   # reset to player count
+# While the initiative tracker runs (--turn-order), threshold 0 means 1: the active
+# player's message goes through without waiting for the others. Changing the
+# threshold or starting the fight also releases messages already waiting.
 ```
 
 **Player input queue — `display/check_input.py`:**
