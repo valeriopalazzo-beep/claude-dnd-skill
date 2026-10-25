@@ -8,6 +8,7 @@ party found out about them and what they said.
     people.py meet "Padre Oderico" --role "prete di Vallombra" --where "Cappella della Luce Vigile" \
                    --look "vecchio, tonaca rattoppata, una lanterna spenta al collo"
     people.py meet "L'Incappucciato" --role "adepto della Confraternita" --attitude hostile
+    people.py meet "Åsa" --role "madre di Ketil" --status prisoner
     people.py card "oderico"                                   # show his card on every screen again
     people.py learn "oderico" "Compagno di seminario di Isolda Fenn"
     people.py said "oderico" "A me risponde. A me ha sempre risposto."
@@ -265,6 +266,7 @@ def main(argv: list | None = None) -> int:
     p.add_argument("--attitude", default="", help=", ".join(ATTITUDES))
     p.add_argument("--faction", default="")
     p.add_argument("--look", default="", help="what they look like, in one line: it goes on the card every screen shows")
+    p.add_argument("--status", default="", help=", ".join(STATUSES) + " (a prisoner met in a cage, a body found dead)")
     for cmd, arg, what in (("learn", "fact", "the party finds something out about them"),
                            ("said", "words", "something they told the party"),
                            ("seen", "place", "where the party last saw them")):
@@ -317,6 +319,8 @@ def main(argv: list | None = None) -> int:
             if not fresh:
                 change(page, args.attitude or None, None, role=args.role or None, faction=args.faction or None,
                        look=args.look or None)
+            if args.status:
+                change(page, None, args.status)
             event = {"name": page["name"], "new": True, "card": card(page)} if fresh else None
             if fresh and not page.get("look"):
                 print("  (no --look: the card says who they are but not what they look like — people.py set --look)")

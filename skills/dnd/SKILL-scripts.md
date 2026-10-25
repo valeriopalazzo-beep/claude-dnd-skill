@@ -1480,6 +1480,7 @@ The party's own notebook of the people it has met: who someone is, where they me
 python3 ${CLAUDE_SKILL_DIR}/display/people.py meet "Padre Oderico" --role "prete di Vallombra" --where "Cappella della Luce Vigile" --look "vecchio, tonaca rattoppata, una lanterna spenta al collo"
 python3 ${CLAUDE_SKILL_DIR}/display/people.py card "oderico"            # his card on every screen again
 python3 ${CLAUDE_SKILL_DIR}/display/people.py meet "L'Incappucciato" --role "adepto della Confraternita" --attitude hostile
+python3 ${CLAUDE_SKILL_DIR}/display/people.py meet "Åsa" --role "madre di Ketil" --status prisoner   # met in a cage: status at once
 python3 ${CLAUDE_SKILL_DIR}/display/people.py learn "oderico" "Compagno di seminario di Isolda Fenn"
 python3 ${CLAUDE_SKILL_DIR}/display/people.py said "oderico" "A me risponde. A me ha sempre risposto."
 python3 ${CLAUDE_SKILL_DIR}/display/people.py seen "oderico" "Cimitero della Collina"     # where the party last saw them
