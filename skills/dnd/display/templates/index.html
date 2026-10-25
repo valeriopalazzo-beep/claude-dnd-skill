@@ -1321,6 +1321,15 @@
   .shop-buy{ flex:none; min-width:96px; padding:10px 12px; border-radius:10px; border:0; cursor:pointer;
     background:var(--ln-accent, #f2b544); color:var(--ln-on-accent, #1a1206); font:inherit; font-weight:800; font-size:15px; }
   .shop-buy.armed{ background:var(--ln-good, #7fdc8a); }
+  .shop-item{ flex-wrap:wrap; }
+  .shop-item-main{ flex:1 1 160px; }      /* a narrow phone puts − n + and Buy on a line of their own */
+  .shop-act{ flex:none; display:flex; align-items:center; gap:8px; margin-left:auto; }
+  .shop-qty{ display:flex; align-items:center; border:1px solid var(--ln-line, rgba(255,255,255,.18)); border-radius:10px; }
+  .shop-qty button{ width:36px; height:38px; border:0; background:none; cursor:pointer; color:inherit; font:inherit; font-size:20px; font-weight:800;
+    touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+  .shop-qty button:disabled{ opacity:.3; cursor:default; }
+  .shop-qty span{ min-width:28px; text-align:center; font-size:17px; font-weight:800; }
+  .shop-price small{ display:block; font-size:12.5px; font-weight:500; text-align:right; color:var(--ln-text-muted, #b9ab92); }
   .shop-buy:disabled{ opacity:.38; cursor:default; }
   .shop-item.soldout .shop-item-main, .shop-item.soldout .shop-price{ opacity:.5; }
 
@@ -15627,6 +15636,11 @@ function _shopIsFor(shop, me) {
   const modal = document.getElementById('shop-modal');
   if (!modal) return;
   let shop = null, purse = null, fund = null, payFund = false, armed = '', armTimer = null, busy = false;
+  // How many of each item the player is about to buy (− / + on the row): ten
+  // rations in one purchase instead of ten taps. Back to 1 once bought.
+  const qtys = {};
+  const qtyMax = item => Math.max(1, Math.min(99, item.stock == null ? 99 : item.stock));
+  const qtyOf = item => Math.min(qtys[item.id] || 1, qtyMax(item));
 
   const coinText = coins => _coinsLocal(_shopCoinText(coins));
   const priceText = cp => coinText({ gp: Math.floor(cp / 100), sp: Math.floor(cp % 100 / 10), cp: cp % 10 });
@@ -15668,18 +15682,48 @@ function _shopIsFor(shop, me) {
         s.textContent = out ? _t('shop.soldout', null, 'Sold out') : _t('shop.left', { n: item.stock }, item.stock + ' left');
         main.appendChild(s);
       }
+      const qty = me ? qtyOf(item) : 1;
       const price = document.createElement('span');
       price.className = 'shop-price';
-      price.textContent = priceText(item.price_cp);
+      price.textContent = priceText(item.price_cp * qty);
+      if (qty > 1) {
+        const each = document.createElement('small');
+        each.textContent = _t('shop.each', { price: priceText(item.price_cp) }, priceText(item.price_cp) + ' each');
+        price.appendChild(each);
+      }
       row.append(main, price);
       if (me) {
+        const act = document.createElement('div');
+        act.className = 'shop-act';
+        if (!out && qtyMax(item) > 1) {
+          const step = document.createElement('div');
+          step.className = 'shop-qty';
+          const mk = (sign, delta, label) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.textContent = sign;
+            b.setAttribute('aria-label', label);
+            b.disabled = busy || (delta < 0 ? qty <= 1 : qty >= qtyMax(item));
+            b.addEventListener('click', () => {
+              qtys[item.id] = Math.max(1, Math.min(qtyMax(item), qty + delta));
+              if (armed === item.id) { armed = ''; clearTimeout(armTimer); }
+              render();
+            });
+            return b;
+          };
+          const n = document.createElement('span');
+          n.textContent = String(qty);
+          step.append(mk('−', -1, _t('shop.qty.less', null, 'fewer')), n, mk('+', 1, _t('shop.qty.more', null, 'more')));
+          act.appendChild(step);
+        }
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'shop-buy' + (armed === item.id ? ' armed' : '');
         btn.textContent = armed === item.id ? _t('shop.confirm', null, 'Confirm') : _t('shop.buy', null, 'Buy');
-        btn.disabled = busy || out || !wallet || wallet.cp < item.price_cp;
+        btn.disabled = busy || out || !wallet || wallet.cp < item.price_cp * qty;
         btn.addEventListener('click', () => buy(item));
-        row.appendChild(btn);
+        act.appendChild(btn);
+        row.appendChild(act);
       }
       list.appendChild(row);
     });
@@ -15711,9 +15755,10 @@ function _shopIsFor(shop, me) {
       return;
     }
     armed = ''; clearTimeout(armTimer);
+    const qty = qtyOf(item);
     busy = true; render();
     const headers = Object.assign({ 'Content-Type': 'application/json', 'X-DND-Device': _deviceId }, _authHeaders());
-    fetch('/shop/buy', { method: 'POST', headers, body: JSON.stringify({ character: me, item: item.id, qty: 1, pay: payFund ? 'fund' : 'me' }) })
+    fetch('/shop/buy', { method: 'POST', headers, body: JSON.stringify({ character: me, item: item.id, qty, pay: payFund ? 'fund' : 'me' }) })
       .then(r => r.json().then(d => ({ ok: r.ok, d })))
       .then(({ ok, d }) => {
         if (d.shop) shop = d.shop;
@@ -15721,7 +15766,8 @@ function _shopIsFor(shop, me) {
           purse = d.purse;
           if (d.fund) fund = { coins: d.fund.coins, cp: d.fund.cp };
           if (navigator.vibrate) navigator.vibrate(30);
-          _showToast(_t('shop.bought', { item: d.bought, price: priceText(item.price_cp) }, 'Bought ' + d.bought));
+          delete qtys[item.id];
+          _showToast(_t('shop.bought', { item: d.bought, price: priceText(item.price_cp * qty) }, 'Bought ' + d.bought));
         } else {
           const key = { funds: 'shop.err.funds', fund: 'tre.err.fund', stock: 'shop.err.stock', closed: 'shop.err.closed' }[d.code] || 'shop.err.generic';
           _showToast(_t(key, null, d.error || 'Could not buy'));
