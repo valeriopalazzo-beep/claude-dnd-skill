@@ -710,6 +710,14 @@ def _login_failed(ip: str, char_key: str) -> None:
         _login_fails_char.setdefault(char_key, []).append(now)
 
 
+def _device_gate(device_id: str, ip: str) -> str:
+    """_device_ok for the player routes, but the DM (token or this PC) has no phone to approve:
+    without this, a DM call to /player-input/ready or /unstage got 403."""
+    if getattr(g, "role", None) == "dm":
+        return "approved"
+    return _device_ok(device_id, ip)
+
+
 def _acting_character(requested: str) -> str:
     """The character this request may act as.
 
@@ -7217,7 +7225,7 @@ def stage_input():
         return "Too Many Requests", 429
 
     device_id = request.headers.get("X-DND-Device", "")
-    status    = _device_ok(device_id, request.remote_addr)
+    status    = _device_gate(device_id, request.remote_addr)
     if status == "denied":
         return "Forbidden", 403
     if status == "pending":
@@ -7267,7 +7275,7 @@ def ready_input():
         return "Too Many Requests", 429
 
     device_id = request.headers.get("X-DND-Device", "")
-    status    = _device_ok(device_id, request.remote_addr)
+    status    = _device_gate(device_id, request.remote_addr)
     if status == "denied":
         return "Forbidden", 403
     if status == "pending":
@@ -7301,7 +7309,7 @@ def unstage_input():
         return "Forbidden", 403
 
     device_id = request.headers.get("X-DND-Device", "")
-    if _device_ok(device_id, request.remote_addr) != "approved":
+    if _device_gate(device_id, request.remote_addr) != "approved":
         return "Forbidden", 403
 
     data      = request.get_json(force=True, silent=True) or {}
@@ -7327,7 +7335,7 @@ def skip_input():
         return "Forbidden", 403
 
     device_id = request.headers.get("X-DND-Device", "")
-    if _device_ok(device_id, request.remote_addr) != "approved":
+    if _device_gate(device_id, request.remote_addr) != "approved":
         return "Forbidden", 403
 
     data      = request.get_json(force=True, silent=True) or {}
