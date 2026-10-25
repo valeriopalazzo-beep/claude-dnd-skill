@@ -104,6 +104,46 @@ if _SCHEME == "https":
 else:
     _SSL_CTX = None
 
+_STDIN_GRACE = 3.0   # seconds to wait for an optional body before giving up
+
+
+def _read_optional_stdin() -> str:
+    """Read a body that may or may not be piped in.
+
+    isatty() is not enough: a harness can leave stdin as an open pipe that
+    never writes nor closes, and a plain read() then blocks until the caller
+    times out (seen with a bare --inspiration-award). Wait a few seconds for
+    the first bytes; if none come, carry on with no body. Once data starts,
+    read to EOF as before.
+    """
+    if sys.stdin is None or sys.stdin.isatty():
+        return ""
+    import threading
+    chunks: list = []
+    started, done = threading.Event(), threading.Event()
+
+    def _pump():
+        try:
+            while True:
+                b = os.read(sys.stdin.fileno(), 65536)   # raw fd: no buffer lock at exit
+                if not b:
+                    break
+                chunks.append(b)
+                started.set()
+        except (OSError, ValueError):
+            pass
+        finally:
+            started.set()
+            done.set()
+
+    threading.Thread(target=_pump, daemon=True).start()
+    if not started.wait(_STDIN_GRACE):
+        print(f"send.py: nothing on stdin after {_STDIN_GRACE:.0f}s — sending without a body "
+              "(add < /dev/null to skip the wait)", file=sys.stderr)
+        return ""
+    done.wait()
+    return b"".join(chunks).decode("utf-8", errors="replace").replace("\r\n", "\n")
+
 
 def _read_token() -> str:
     try:
@@ -600,7 +640,7 @@ def main() -> None:
     #      Always read stdin — script will abort below if the body is empty.
     #   2. Everything else (plain narration, stat-only, award-only, award+body):
     #      body OPTIONAL. Read stdin when piped (heredoc/pipe), skip when an
-    #      interactive TTY to avoid blocking on an unattended call.
+    #      interactive TTY or when an open pipe stays silent (_read_optional_stdin).
     #
     # Award flags (--inspiration-*/--xp-*/--milestone-*) fall into category 2:
     # reading piped stdin under the isatty() gate lets bundled narration flow
@@ -689,7 +729,7 @@ def main() -> None:
     if _has_content_flag:
         text = sys.stdin.read()
     else:
-        text = "" if sys.stdin.isatty() else sys.stdin.read()
+        text = _read_optional_stdin()
     token = _read_token()
 
     # ── Inspiration award/spend ──────────────────────────────────────────────
