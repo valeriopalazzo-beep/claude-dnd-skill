@@ -9,8 +9,8 @@ broadcast, input-queue poll, /queue/consumed POST) using python I/O only.
 Prints the queued player action(s) to stdout, or nothing on timeout (9 min).
 A secret note from a player (whisper.py) also ends the wait: it is printed as a
 `[[SECRET NOTE from <Char> — …]]` line, before any queued action. So do a
-solved puzzle, the end of a vote, a turn in a chase and a rest that is over
-for everybody (rest.py). When the wait ends, the news check_input.py would
+solved puzzle, the end of a vote, a turn in a chase, a rest that is over
+for everybody (rest.py) and a death save rolled on a phone (death_saves.py). When the wait ends, the news check_input.py would
 print is printed too (rests, spells cast from a phone, the common fund,
 downtime), since in autorun mode check_input.py is not run every turn, and
 after the players' actions a `[[QUESTS — still open: …]]` line (quests.py).
@@ -52,6 +52,10 @@ try:
     import rest as _rest
 except Exception:
     _rest = None
+try:
+    import death_saves as _death
+except Exception:
+    _death = None
 PUSH = os.path.join(DISPLAY_DIR, "push_stats.py")
 
 try:
@@ -123,6 +127,8 @@ for _ in range(1800):  # 0.3s * 1800 = 9 min
         break
     if _rest and _rest.over_pending():        # everybody finished resting: the DM moves the clock on
         break
+    if _death and _death.notes_pending():     # a dying character rolled on the phone: the DM narrates it
+        break
     time.sleep(0.3)
 
 # Replaced by a newer wait, or stopped: everything stays for whoever waits next,
@@ -162,6 +168,7 @@ notes += _puzzle.drain_news() if _puzzle else []
 notes += _vote.drain_notes() if _vote else []
 notes += _chase.drain_notes() if _chase else []
 notes += _rest.drain_notes() if _rest else []
+notes += _death.drain_notes() if _death else []
 # The rest of what check_input.py reports: already applied, information for the DM.
 for _mod, _fn in (("spellbook", "drain_casts"), ("treasury", "drain_notes"), ("downtime", "drain_notes"),
                   ("travel", "drain_notes"), ("afflictions", "drain_notes")):

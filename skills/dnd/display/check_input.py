@@ -140,6 +140,13 @@ except Exception:
     pass
 
 try:
+    from death_saves import drain_notes as drain_death_saves
+    for line in drain_death_saves():
+        print(line)
+except Exception:
+    pass
+
+try:
     from rest import drain_notes
     for line in drain_notes():
         print(line)

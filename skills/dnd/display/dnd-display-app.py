@@ -6013,6 +6013,9 @@ def _pips(n: int, mark: str) -> str:
     return mark * n + "○" * (3 - n)
 
 
+import death_saves as _death_notes   # a phone's death save wakes the DM's autorun wait
+
+
 @app.route("/death-save/roll", methods=["POST"])
 def death_save_roll():
     """A dying character's death saving throw, rolled here.
@@ -6078,6 +6081,7 @@ def death_save_roll():
     _broadcast({"text": line, "dice": True})
     _broadcast({"stats": current})
     _broadcast({"death_save": result})
+    _death_notes.notes_add(result)
     return jsonify(result), 200
 
 
