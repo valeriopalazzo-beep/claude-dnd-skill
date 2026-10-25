@@ -56,8 +56,16 @@ if not isinstance(data, list):
 if not data:
     print(f"verify_tail.sh: {path} — EMPTY LIST")
     sys.exit(1)
-if not all(isinstance(e, dict) and ("text" in e or "player" in e or "npc" in e or "dice" in e or "image" in e) for e in data):
-    print(f"verify_tail.sh: {path} — entries not in expected shape")
+# Every shape the display writes: narration and typed text carry "text";
+# images, handouts and battle-map clears do not.
+KNOWN = ("text", "player", "npc", "dice", "image", "handout", "map_clear",
+         "xp_award", "inspiration_award", "milestone_award", "milestone_spend")
+odd = [i for i, e in enumerate(data) if not (isinstance(e, dict) and any(k in e for k in KNOWN))]
+if odd:
+    print(f"verify_tail.sh: {path} — entries not in expected shape (index {', '.join(map(str, odd[:5]))})")
+    sys.exit(1)
+if not any(e.get("text") for e in data):
+    print(f"verify_tail.sh: {path} — NO TEXT ENTRIES (nothing to replay)")
     sys.exit(1)
 print(f"verify_tail.sh: {path} — HEALTHY ({len(data)} entries)")
 sys.exit(0)
