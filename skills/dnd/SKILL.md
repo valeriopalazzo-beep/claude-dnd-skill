@@ -336,7 +336,7 @@ Do NOT run the autorun wait when: combat is resolving individual turns, a dice r
 
 Roll handling is chosen at game start and stored as `roll_mode` in `state.md → ## Session Flags` (default **players**). Read it at every `/dm:dnd load` and honor it all session:
 
-- **`roll_mode: players` (default) — players roll their own PCs.** For *any* PC d20 (attack, skill/ability check, save, death save), **call for the roll by name and STOP — wait for the player's result before resolving.** Do **not** roll it for them. ⚠ **Never fall back to `dice.py` or an `[auto]` result for a PC** just because the physical-dice phone server isn't running — if no roll comes back, ask the player for the number out loud. You roll **only** NPC/monster dice. (This is a hard constraint: silently auto-rolling a PC is the #1 thing players notice and dislike.)
+- **`roll_mode: players` (default) — players roll their own PCs.** For **every die a PC rolls** — any d20 (attack, skill/ability check, save, death save) and every other die: damage, a healing spell, Hit Dice, Sneak Attack, the d4 of *bless* or *guidance*, a Bardic Inspiration die — **call for the roll by name and STOP — wait for the player's result before resolving.** Do **not** roll it for them, not even inside a monster's turn (a save against its breath, a PC's reaction attack). Several dice are one request with the whole spec (`--spec 4d6`): the phone lights the die, sets the count and shows every die it threw. ⚠ **Never fall back to `dice.py` or an `[auto]` result for a PC** just because the physical-dice phone server isn't running — if no roll comes back, ask the player for the number out loud. You roll **only** NPC/monster dice. (This is a hard constraint: silently auto-rolling a PC is the #1 thing players notice and dislike.)
   - **Prescribe the roll through the display when it's running** (`_display_running = true`): call
     `python3 ${CLAUDE_SKILL_DIR}/display/send.py --dice-request --character "<PC>" --spec 1dN [--modifier ±M] [--advantage advantage|disadvantage] [--label "<check>"] [--dc N] --wait`.
     The roll routes to that PC's **phone** if one is bound, or **auto-opens the on-screen Dice drawer** on the shared screen when no phone is bound (or the display's *Roll on screen* setting is on) — the same roller either way. `--wait` blocks until the player rolls and then prints one line per character on stdout — `Ajeje: 17 (1d20+3: [14] +3) — Stealth — DC 15: success`, with *natural 20* / *natural 1* when it is one — for you to resolve; no need to look in the log. On timeout it prints the rolls that did arrive, names the missing ones and exits non-zero — ask those out loud. Several characters at once: `--character "A,B"`. When the display is **not** running, just call for the roll verbally and wait. Never roll the PC yourself under `players`.
@@ -454,7 +454,7 @@ DNDEND
 0. Start of a PC's turn: tell the player what they have this turn (Rules enforcement → Tell the player)
    Check the declared action against the rules: action / bonus action / movement / reaction, range, cover, conditions
 a. send.py --player  ← player action (or describe NPC intent inline)
-b. Roll all dice (combat.py attack / dice.py)
+b. Roll the monsters' dice (combat.py attack / dice.py); a PC's dice come from the player (send.py --dice-request)
 c. send.py --dice    ← ALL roll results with context
 d. tracker.py        ← conditions, concentration, death saves if applicable
    tracker.py effect tick <actor>  ← decrement round effects; prints any expiry warnings
@@ -467,6 +467,8 @@ g. push_stats.py --turn-current  ← advance turn pointer (still separate — no
 Step (f) is the most commonly missed. Every narration block must be sent.
 Step (g) uses `push_stats.py --turn-current` directly because it has no narration to bundle with.
 `tracker.py effect tick` is the headless fallback — it fires regardless of whether the display is running.
+
+**Monsters and NPCs: one turn per reply.** Never play several enemy turns in a row in one message. For each creature, in initiative order: push `--turn-current` to it, then narrate **only its turn** — its movement, action and bonus action — and stop wherever a PC can react: when it leaves a PC's reach (opportunity attack), before an attack on a PC who has a reaction that would change it (*shield*, Uncanny Dodge, Protection, Parry, a readied action), after damage that a reaction answers (*hellish rebuke*). Ask that player and wait. A save it forces on a PC is the player's roll (`send.py --dice-request`). The reply ends with that creature's turn and a line naming who comes next (`Tocca a Goblin 2 — qualcuno reagisce?`): **wait for the table before playing the next creature, even when it is another monster** — any message from a player goes on (a reaction, «ok», «avanti»). Creatures you put in the order as one entry (a pack rolled together) still act one at a time inside that turn, each with its own stop.
 
 ---
 
