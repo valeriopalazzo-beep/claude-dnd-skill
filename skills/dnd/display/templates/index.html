@@ -11232,12 +11232,19 @@ async function _unstageAction(char) {
 
 // ── Skip a character's turn ───────────────────────────────────────
 async function _skipTurn(char) {
+  // Text still in the box for this character: skipping would throw it away.
+  const typed = (_selectedChar === char && _inputText.value.trim());
+  if (typed && !confirm(_t('queue.skip.confirm'))) return;
+  const send = force => fetch('/player-input/skip', {
+    method: 'POST',
+    headers: _authHeaders(),
+    body: JSON.stringify({ character: char, lang: window._LANG || 'en', force: !!force }),
+  });
   try {
-    await fetch('/player-input/skip', {
-      method: 'POST',
-      headers: _authHeaders(),
-      body: JSON.stringify({ character: char, lang: window._LANG || 'en' }),
-    });
+    let r = await send(typed);
+    // The server refuses to replace an action already staged: ask, then force.
+    if (r.status === 409 && confirm(_t('queue.skip.confirm'))) r = await send(true);
+    if (r.ok && typed) _inputText.value = '';
   } catch (_) { /* silently ignore */ }
 }
 

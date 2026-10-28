@@ -138,6 +138,7 @@
   "queue.skip": "Skip",
   "queue.skip.title": "Skip this character's turn",
   "queue.skipped": "skips their turn",
+  "queue.skip.confirm": "You have already written an action for this character: skipping the turn deletes it. Skip anyway?",
   "queue.remove": "Remove",
   "queue.badgeReady": "{n} ready",
   "queue.badgeStaged": "{n} staged",

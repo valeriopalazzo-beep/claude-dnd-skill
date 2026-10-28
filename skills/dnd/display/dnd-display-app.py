@@ -7355,8 +7355,14 @@ def skip_input():
     lang = _spell_lang(data.get("lang", ""))           # the table's language, as the queue shows it
     text = _sheet_print.Strings(I18N_DIR, lang).t("queue.skipped", "skips their turn")
     with _staged_lock:
+        # A tap on "skip" next to "stage"/"ready" must not wipe what the player
+        # already wrote: without "force" it is refused, and the phone asks first.
+        prev = _staged.get(character)
+        if prev and not prev.get("skip") and str(prev.get("text", "")).strip()                 and not data.get("force"):
+            return jsonify({"error": "staged", "text": prev.get("text", "")}), 409
         _staged[character] = {
             "text":      text,
+            "skip":      True,
             "ready":     True,
             "timestamp": _time.time(),
         }

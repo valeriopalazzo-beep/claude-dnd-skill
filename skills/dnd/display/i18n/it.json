@@ -138,6 +138,7 @@
   "queue.skip": "Salta",
   "queue.skip.title": "Salta il turno di questo personaggio",
   "queue.skipped": "salta il turno",
+  "queue.skip.confirm": "Hai già scritto un'azione per questo personaggio: saltare il turno la cancella. Saltare lo stesso?",
   "queue.remove": "Rimuovi",
   "queue.badgeReady": "{n} pronti",
   "queue.badgeStaged": "{n} in coda",

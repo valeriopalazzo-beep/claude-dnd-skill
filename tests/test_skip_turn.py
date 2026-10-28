@@ -62,6 +62,21 @@ class SkipTurnTests(unittest.TestCase):
         self.assertEqual(self.skip(lang="en")["text"], "skips their turn")
         self.assertEqual(self.skip(lang="xx")["text"], "skips their turn")
 
+    def test_skip_does_not_wipe_a_staged_action(self):
+        # Aerendyl's lost answer (s8): "skip" next to "ready" replaced his text.
+        with self.mod._staged_lock:
+            self.mod._staged["Lyra"] = {"text": "Rispondo ai corvi.", "ready": False, "timestamp": 0}
+        r = self.client.post("/player-input/skip", json={"character": "Lyra", "lang": "it"})
+        self.assertEqual(r.status_code, 409)
+        with self.mod._staged_lock:
+            self.assertEqual(self.mod._staged["Lyra"]["text"], "Rispondo ai corvi.")
+        # Confirmed on the phone: forced through.
+        self.assertEqual(self.skip(lang="it", force=True)["text"], "salta il turno")
+
+    def test_skip_again_replaces_a_skip(self):
+        self.skip(lang="it")
+        self.assertEqual(self.skip(lang="en")["text"], "skips their turn")
+
 
 if __name__ == "__main__":
     unittest.main()
