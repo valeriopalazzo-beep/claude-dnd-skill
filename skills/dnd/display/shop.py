@@ -139,7 +139,7 @@ def _request(path: str, body: dict | None = None):
     scheme = "http"
     if os.path.exists(scheme_file):
         scheme = open(scheme_file, encoding="utf-8").read().strip() or "http"
-    url = f"{scheme}://localhost:5001{path}"
+    url = f"{scheme}://127.0.0.1:5001{path}"
     headers = {"Content-Type": "application/json"}
     try:
         token = open(TOKEN_FILE, encoding="utf-8").read().strip()

@@ -63,7 +63,7 @@ def _base_url() -> str:
     scheme = "http"
     if os.path.exists(scheme_file):
         scheme = open(scheme_file, encoding="utf-8").read().strip() or "http"
-    return f"{scheme}://localhost:5001"
+    return f"{scheme}://127.0.0.1:5001"
 
 
 def _request(path: str, body: dict | None = None, method: str | None = None):
