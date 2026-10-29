@@ -15944,6 +15944,10 @@ function _initDicePad() {
   rollBtn.addEventListener('click', async () => {
     const character = (nameEl.value || '').trim() || 'Player';
     const label     = (labelEl.value || '').trim();
+    // The request this roll answers. The next request can arrive while the
+    // die is still spinning (send.py --wait sends it the moment this result
+    // lands): what follows must not lock or clear that new one.
+    const reqId     = _activeRequestId;
     rollBtn.disabled = true;
     document.getElementById('dp-result-line').textContent = '';
 
@@ -15960,17 +15964,21 @@ function _initDicePad() {
         headers: _authHeaders(),
         body: JSON.stringify({
           character, spec, modifier: mod, advantage: adv, label,
-          request_id: _activeRequestId || undefined,
+          request_id: reqId || undefined,
         }),
       });
       if (res.ok) result = await res.json();
     } catch (_) { /* network error — fall through */ }
 
     await spinPromise;
+    // A new request came in while the die was spinning: it has already set
+    // the pad up (die, modifier, Roll lit) — leave it so.
+    const superseded = _activeRequestId !== reqId;
     if (!result) {
       reel.classList.remove('spinning');
       reel.textContent = '!';
       document.getElementById('dp-result-line').textContent = _t('dp.rollFailed');
+      if (superseded) return;
       rollBtn.disabled = false;
       rollBtn.classList.remove('pulse');
       if (_locked) _setLocked(false);
@@ -15990,6 +15998,7 @@ function _initDicePad() {
                        ? ` &nbsp;<span style="opacity:.7">(${result.rolls.join(' + ')})</span>` : '') +
                      (result.both ? ` &nbsp;<span style="opacity:.7">(${result.both.join(' / ')} ${result.advantage})</span>` : '');
     if (navigator.vibrate) navigator.vibrate(30);
+    if (superseded) return;
     rollBtn.classList.remove('pulse');
     if (boundEl) {
       // Clear the inline request line once the roll has been resolved.
@@ -16001,7 +16010,7 @@ function _initDicePad() {
     // afterwards so the player can't fire another unsolicited roll. The lock
     // is released only by the next dice_request arriving for this character
     // (which unlocks + re-pre-fills inside _applyDiceRequest).
-    if (_activeRequestId) {
+    if (reqId) {
       _setLocked(true, die, adv);           // keep die / adv selections frozen
       rollBtn.disabled = true;              // and disable Roll itself
       rollBtn.classList.add('rolled');
