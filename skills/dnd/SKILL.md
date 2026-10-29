@@ -725,11 +725,11 @@ Award XP at the **end of the scene** when the outcome is clear — not mid-comba
 
 **After running `xp.py award`, immediately send an XP award block to the display:**
 ```bash
-python3 ${CLAUDE_SKILL_DIR}/display/send.py --xp-award '{"names":["Max of Thraxx","Ethros the 19th"],"xp":250,"reason":"Watcher turned — double agent secured","total":"3250 / 6500"}'
+python3 ${CLAUDE_SKILL_DIR}/display/send.py --xp-award '{"names":["Max of Thraxx","Ethros the 19th"],"xp":250,"reason":"Watcher turned — double agent secured","total":"3250 / 6500"}' < /dev/null
 ```
 This fires a green-bordered block in the companion feed showing each character's name, XP gained, the reason, and their new running total. Players see it in the companion immediately — no separate announcement needed in narration.
 
-**Inspiration:** award via `send.py --inspiration-award NAME`. This fires a gold glow block in the feed AND sets the sidebar badge. Spend via `send.py --inspiration-spend NAME`.
+**Inspiration:** award via `send.py --inspiration-award NAME < /dev/null` (with no narration in the same call, `< /dev/null` spares the 3 s wait for stdin). This fires a gold glow block in the feed AND sets the sidebar badge. Spend via `send.py --inspiration-spend NAME < /dev/null`.
 
 ---
 
