@@ -882,6 +882,7 @@ def cmd_status(campaign: str, filter_name: str = "") -> None:
 def cmd_clear(campaign: str, clear_all: bool = False) -> None:
     state = _load(campaign)
     for ent in state.values():
+        had_conditions = bool(ent.get("conditions"))
         ent["conditions"] = []
         ent["condition_timers"] = {}
         ent["concentration"] = None
@@ -891,7 +892,10 @@ def cmd_clear(campaign: str, clear_all: bool = False) -> None:
         if ent.get("legendary"):               # actions back; Legendary Resistance waits for a new day
             ent["legendary"]["left"] = ent["legendary"].get("actions", 0)
             ent["legendary"]["lair_last"] = ""
-        _push_conditions(ent["name"], [])
+        # Push only what had something to clear: a long campaign keeps dozens
+        # of old foes here, and one push_stats call each took minutes.
+        if had_conditions:
+            _push_conditions(ent["name"], [])
         if clear_all:
             ent["death_saves"] = {"successes": 0, "failures": 0, "stable": False}
     _save(campaign, state)
