@@ -252,6 +252,15 @@ def public_view(quests: list) -> list:
     return out
 
 
+def marked_line(quest: dict, row: dict) -> str:
+    """The closing line of done/undo: which step changed, and whether any is left open."""
+    line = f"{'✓ ticked' if row.get('done') else '○ unticked'}: {quest['name']} — {row['text']}"
+    rows = quest.get("objectives") or []
+    if row.get("done") and quest.get("status") in OPEN and all(o.get("done") for o in rows):
+        line += " (no step left open: resolve it, or add the next one)"
+    return line
+
+
 def describe(quest: dict) -> str:
     lines = [f"{quest['name']} [{quest.get('status', 'active')}]"]
     lines += [f"  {f}: {quest[f]}" for f in FIELDS if quest.get(f)]
@@ -389,9 +398,9 @@ def main(argv: list | None = None) -> int:
             print(describe(quest) + ("" if fresh else "\n  (nothing new — it was there already)"))
         elif args.cmd in ("done", "undo"):
             quest = find(quests, args.name)
-            mark(quest, args.text, args.cmd == "done")
+            row = mark(quest, args.text, args.cmd == "done")
             event = {"name": quest["name"], "what": "updated"}
-            print(describe(quest))
+            print(describe(quest) + "\n" + marked_line(quest, row))
         elif args.cmd == "drop":
             quest = find(quests, args.name)
             print("- " + drop(quest, args.objective, args.clue))
