@@ -193,6 +193,87 @@ class MapArtTests(unittest.TestCase):
                           "changed terrain needs new art")
         self.assertEqual(self.calls, ["paint"])
 
+    def test_a_send_superseded_while_it_waited_paints_nothing(self):
+        kinds = self.mr.kind_grid(self.mr.parse(ART_MAP))
+        cfg = dict(self.cfg, backend="local")
+        with self.assertRaises(self.ma.Superseded):
+            self.ma.get_art(kinds, "", self.d, cfg, "paint", wanted=lambda: False)
+        self.assertEqual(self.calls, [], "a newer map went out: the GPU is not spent on this one")
+        with self.assertRaises(self.ma.Superseded):
+            self.ma.get_art(kinds, "", self.d, self.cfg, "tiles", wanted=lambda: False)
+        self.assertEqual(self.calls, [])
+
+    def test_art_painted_while_this_send_waited_is_reused(self):
+        # The DM re-sends a map (tokens moved) while the first send is being
+        # painted: the second waits for the GPU, then finds that painting.
+        import contextlib
+        kinds = self.mr.kind_grid(self.mr.parse(ART_MAP))
+        cfg = dict(self.cfg, backend="local")
+        real = self.ma.image_gen.local_gpu_lock
+        self.addCleanup(setattr, self.ma.image_gen, "local_gpu_lock", real)
+
+        @contextlib.contextmanager
+        def the_first_send_paints_meanwhile(**_kw):
+            self.ma.image_gen.local_gpu_lock = real
+            self.ma.get_art(kinds, "", self.d, cfg, "paint")
+            yield
+        self.ma.image_gen.local_gpu_lock = the_first_send_paints_meanwhile
+        art = self.ma.get_art(kinds, "", self.d, cfg, "paint", wanted=lambda: True)
+        self.assertEqual(art.mode, "paint")
+        self.assertEqual(self.calls, ["paint"], "the same terrain is painted once")
+
+    def test_a_shared_gpu_turn_lets_its_own_paint_call_through(self):
+        ig = self.ma.image_gen
+        lock = self.d / "gpu.lock"
+        with ig.local_gpu_lock(timeout=0.6, path=lock, share=True):
+            with ig.local_gpu_lock(timeout=0.6, path=lock):
+                pass
+        self.assertEqual(ig._lock_shared, {})
+        with ig.local_gpu_lock(timeout=0.6, path=lock):
+            with self.assertRaises(ig.ImageError, msg="without share it still waits its turn"):
+                with ig.local_gpu_lock(timeout=0.6, path=lock):
+                    pass
+
+    def test_only_the_latest_send_shows_its_art(self):
+        first = self.mr.claim_latest(self.d)
+        self.assertTrue(self.mr.still_latest(self.d, first))
+        second = self.mr.claim_latest(self.d)
+        self.assertNotEqual(first, second)
+        self.assertFalse(self.mr.still_latest(self.d, first), "its tokens are old: it must not cover the newer map")
+        self.assertTrue(self.mr.still_latest(self.d, second))
+        self.assertTrue(self.mr.still_latest(self.d / "missing", "x"), "when it cannot be told, the map is shown")
+
+    def test_a_painted_map_overtaken_by_a_newer_send_is_not_posted(self):
+        # Seen on 2026-10-25: the painted copy of an older send arrived after
+        # the newer plain map, with old positions and fewer tokens.
+        import io
+        from unittest import mock
+        import media
+        posted = []
+        cfg = dict(self.cfg, backend="local", map_art="paint")
+
+        def paint_while_the_dm_sends_again(kinds, desc, seed, c):
+            self.mr.claim_latest(self.d)          # the next send claims while this one paints
+            return self.ma.layout_png([["floor"]], cell=2)
+
+        def run():
+            with mock.patch.object(media, "media_dir", return_value=self.d), \
+                    mock.patch.object(media, "post_image", side_effect=lambda f, **k: posted.append(f) or True), \
+                    mock.patch.object(self.ma.image_gen, "load_config", return_value=cfg), \
+                    mock.patch.object(sys, "argv", ["map_render.py"]), \
+                    mock.patch.object(sys, "stdin", io.StringIO(ART_MAP)), \
+                    mock.patch.object(sys, "stdout", io.StringIO()), \
+                    mock.patch.object(sys, "stderr", io.StringIO()) as err:
+                self.assertEqual(self.mr.main(), 0)
+                return err.getvalue()
+        self.ma.paint = paint_while_the_dm_sends_again
+        log = run()
+        self.assertEqual(len(posted), 1, "only the plain map went out")
+        self.assertIn("a newer map was sent", log)
+        run()                                      # the newer send: the art is cached now
+        self.assertEqual(len(posted), 2)
+        self.assertIn("data:image/png;base64,", (self.d / posted[1]).read_text(encoding="utf-8"))
+
     def test_paint_cache_is_per_local_model(self):
         kinds = self.mr.kind_grid(self.mr.parse(ART_MAP))
         cfg = dict(self.cfg, backend="local")

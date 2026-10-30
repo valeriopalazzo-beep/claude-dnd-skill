@@ -117,8 +117,10 @@ import argparse
 import hashlib
 import os
 import re
+import secrets
 import sys
 from dataclasses import dataclass, field
+from pathlib import Path
 from xml.sax.saxutils import escape
 
 for _stream in (sys.stdin, sys.stdout, sys.stderr):
@@ -1384,6 +1386,30 @@ def last_map(campaign: str = ""):
         return None
 
 
+# Which send is the latest. Painting takes a minute and the DM keeps playing:
+# a send whose art comes back after a newer map went out must not show its
+# old token positions over the newer map.
+LATEST_SEND = "last-battle-map.send"
+
+
+def claim_latest(d) -> str:
+    """Mark this send as the latest one in media folder `d`; returns its ticket."""
+    ticket = secrets.token_hex(8)
+    try:
+        (Path(d) / LATEST_SEND).write_text(ticket, encoding="utf-8")
+    except OSError:
+        pass
+    return ticket
+
+
+def still_latest(d, ticket: str) -> bool:
+    """No map was sent after the one holding `ticket` (True when that cannot be told)."""
+    try:
+        return (Path(d) / LATEST_SEND).read_text(encoding="utf-8").strip() == ticket
+    except OSError:
+        return True
+
+
 def _draw_fog(spec: MapSpec, fog) -> list:
     """Dark over what was never seen, a veil over what is remembered; one rect per run of squares."""
     visible, explored = fog
@@ -1715,6 +1741,8 @@ def main() -> int:
         (d / LAST_MAP).write_text(text, encoding="utf-8")      # where everyone stands, for the cover of the attacks
     except OSError:
         pass
+    ticket = "" if args.no_send else claim_latest(d)
+    wanted = (lambda: still_latest(d, ticket)) if ticket else None
     if fog is not None:
         size = (len(spec.rows[0]), len(spec.rows))
         before = set() if spec.fog_reset else load_explored(d, map_id, *size)
@@ -1748,7 +1776,10 @@ def main() -> int:
         if not args.no_send:
             save_and_show(svg)
         try:
-            art = map_art.get_art(kinds, spec.art, d, cfg, mode, log=log)
+            art = map_art.get_art(kinds, spec.art, d, cfg, mode, log=log, wanted=wanted)
+        except map_art.Superseded:
+            log("a newer map was sent while this one waited for its art — that one is shown, nothing painted here")
+            return 0
         except map_art.ImageError as e:
             log(f"map art unavailable ({e}) — keeping the plain map")
             if args.no_send:
@@ -1757,9 +1788,13 @@ def main() -> int:
     elif art.missing:
         # Some textures failed last time: retry them; what exists is kept.
         try:
-            art = map_art.get_art(kinds, spec.art, d, cfg, mode, log=log)
+            art = map_art.get_art(kinds, spec.art, d, cfg, mode, log=log, wanted=wanted)
         except map_art.ImageError:
             pass
+    if wanted is not None and not wanted():
+        # Its tokens are old: the newer send shows the painted map itself (the art is cached for it).
+        log("a newer map was sent while this one was being painted — not shown, the newer one stands")
+        return 0
     save_and_show(render_svg(spec, art, fog=fog, lang=lang))
     return 0
 

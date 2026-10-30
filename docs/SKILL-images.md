@@ -19,7 +19,7 @@ The DM writes the layout as a text grid; `display/map_render.py` places grid, co
 
 **Effects.** Events on the field — an explosion, a portal, spreading fire, a poison cloud — are extra legend lines such as `@ 9,8 r1 fire | Esplosione`. They are tinted over the map without changing the terrain, so the cached painting is reused and the updated map appears instantly.
 
-`map_denoise` (paint only): lower keeps the layout more faithfully, higher gives the model more freedom. Art is cached per terrain in `<campaign>/media/` (`mapart-*`, `maptex-*`), so moving tokens never regenerates it. The first time a place is shown, the plain map appears at once and the painted one replaces it. If the backend fails, the plain map stays.
+`map_denoise` (paint only): lower keeps the layout more faithfully, higher gives the model more freedom. Art is cached per terrain in `<campaign>/media/` (`mapart-*`, `maptex-*`), so moving tokens never regenerates it. The first time a place is shown, the plain map appears at once and the painted one replaces it — unless a newer map was sent meanwhile: then only the newest send shows its painted copy, so old token positions never come back over a newer map. If the backend fails, the plain map stays.
 
 ## Generated pictures — pick a backend
 

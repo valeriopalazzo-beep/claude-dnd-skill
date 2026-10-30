@@ -23,6 +23,7 @@ stdlib only.
 from __future__ import annotations
 
 import base64
+import contextlib
 import datetime as _dt
 import hashlib
 import json
@@ -69,6 +70,10 @@ _TEXTURE_SUBJECT = {
 MAP_NEGATIVE = ("text, letters, numbers, grid, watermark, signature, logo, frame, "
                 "people, characters, perspective, isometric, blurry, lowres")
 _GEMINI_RATIOS = ("1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9")
+
+
+class Superseded(ImageError):
+    """The map this art was for is no longer the latest one sent: nothing was generated."""
 
 
 @dataclass
@@ -202,13 +207,20 @@ def _read(path: Path) -> tuple:
 
 
 def get_art(kinds: list, art_desc: str, d: Path, cfg: dict, mode: str,
-            generate: bool = True, log: Callable[[str], None] = lambda _m: None) -> Optional[Art]:
+            generate: bool = True, log: Callable[[str], None] = lambda _m: None,
+            wanted: Optional[Callable[[], bool]] = None) -> Optional[Art]:
     """Cached art for this terrain, generating what is missing when `generate`.
 
     With generate=False: None when nothing is cached yet; for tiles, whatever
     textures exist, with the rest listed in `missing`. With tiles, a texture
     that fails is left out (that terrain stays vector) and stays in `missing`;
     raises ImageError only when nothing at all could be made.
+
+    paint on the local backend waits for its turn at the GPU first: a map sent
+    again while the first send was being painted finds that painting in the
+    cache instead of painting the same terrain twice. `wanted` is asked once
+    the turn has come; False (a newer map was sent meanwhile) raises Superseded
+    without painting.
     """
     desc = describe(kinds, art_desc)
     style, backend = cfg["style"], cfg["backend"]
@@ -224,10 +236,17 @@ def get_art(kinds: list, art_desc: str, d: Path, cfg: dict, mode: str,
             return Art("paint", image=_read(hit))
         if not generate:
             return None
-        seed = random.randint(1, 2**31 - 1)
-        data = paint(kinds, desc, seed, cfg)
-        path = _store(d, stem, data, {"kind": "map-art", "subject": desc, "prompt": desc,
-                                      "seed": seed, "backend": backend})
+        turn = image_gen.local_gpu_lock(share=True) if backend == "local" else contextlib.nullcontext()
+        with turn:
+            hit = _cached(d, stem)
+            if hit:      # painted by another send while this one waited
+                return Art("paint", image=_read(hit))
+            if wanted is not None and not wanted():
+                raise Superseded("a newer map was sent meanwhile")
+            seed = random.randint(1, 2**31 - 1)
+            data = paint(kinds, desc, seed, cfg)
+            path = _store(d, stem, data, {"kind": "map-art", "subject": desc, "prompt": desc,
+                                          "seed": seed, "backend": backend})
         return Art("paint", image=_read(path))
 
     needed = [k for k in TEXTURED if any(k in row for row in kinds)]
@@ -242,6 +261,8 @@ def get_art(kinds: list, art_desc: str, d: Path, cfg: dict, mode: str,
     art.missing = [k for k, _ in missing]
     if not generate:
         return art if art.textures or not needed else None
+    if missing and wanted is not None and not wanted():
+        raise Superseded("a newer map was sent meanwhile")
     errors = []
     for k, stem in missing:
         failed = d / f"{stem}-failed"      # no extension: never served, never a cache hit

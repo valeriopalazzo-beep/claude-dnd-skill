@@ -245,17 +245,29 @@ def gen_pollinations(prompt: str, kind: str, seed: int, cfg: dict) -> bytes:
 
 
 LOCAL_LOCK = Path(tempfile.gettempdir()) / "claude-dnd-local-image.lock"
+_lock_shared = {}   # path → how deep this process holds it with share=True
 
 
 @contextlib.contextmanager
-def local_gpu_lock(timeout: float = 900, path: Path = LOCAL_LOCK):
+def local_gpu_lock(timeout: float = 900, path: Path = LOCAL_LOCK, share: bool = False):
     """One request at a time to the local server, across processes.
 
     The DM starts images and map art as separate background calls. Queued in
     Forge they mostly wait their turn, but a txt2img that arrived while an
     SDXL img2img was running had its connection dropped twice (GTX 1660,
     2026-09-30). Waiting here costs nothing: the GPU does one image at a time anyway.
+
+    share=True: calls this process makes inside the block go straight through
+    (map_art holds the turn while it looks at its cache, then paints).
     """
+    key = str(path)
+    if _lock_shared.get(key):
+        _lock_shared[key] += 1
+        try:
+            yield
+        finally:
+            _lock_shared[key] -= 1
+        return
     path.touch(exist_ok=True)
     f = open(path, "rb+")
     locked = False
@@ -275,9 +287,12 @@ def local_gpu_lock(timeout: float = 900, path: Path = LOCAL_LOCK):
                 if time.time() > deadline:
                     raise ImageError(f"local: the GPU has been busy for over {int(timeout)} s")
                 time.sleep(0.5)
+        if share:
+            _lock_shared[key] = 1
         yield
     finally:
         if locked:
+            _lock_shared.pop(key, None)
             try:
                 if os.name == "nt":
                     import msvcrt
