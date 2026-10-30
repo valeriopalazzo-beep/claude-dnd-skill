@@ -2082,6 +2082,12 @@
      on it — title, back/close, "nothing yet", weekday names — cannot take the theme's ink: Lanterna's light
      theme makes --ln-text dark, and it vanished. */
   #handout-head, #region-head, #clock-head, #beast-head, #comp-head, #puzzle-head, #cal-head{ color:#ECE4D2; }
+  /* "Mark all as read" over a list with New marks (bestiary, people, documents); on the dark backdrop too */
+  .mark-all-read{ display:block; margin:0 0 10px auto; padding:8px 15px; border-radius:999px; cursor:pointer;
+    font:inherit; font-size:15px; font-weight:700; color:#ECE4D2; background:rgba(0,0,0,.35);
+    border:1px solid var(--ln-accent, #f2b544); }
+  .mark-all-read::before{ content:'✓ '; color:var(--ln-accent, #f2b544); }
+  .mark-all-read[hidden]{ display:none; }
   #handout-modal .handout-empty, #clock-modal .clock-empty, #beast-modal .beast-empty, #comp-modal .comp-empty,
   #cal-grid .cal-dow{ color:#b9ab92; }
 
@@ -5754,6 +5760,7 @@
       <h2 id="handout-heading" data-i18n="handout.title">Documents</h2>
       <button id="handout-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
     </div>
+    <button id="handout-allread" class="mark-all-read" type="button" data-i18n="read.all" hidden>Mark all as read</button>
     <div id="handout-list"></div>
     <div id="handout-reader"></div>
   </div>
@@ -5900,6 +5907,7 @@
       <h2 id="beast-title" data-i18n="beast.title">Bestiary</h2>
       <button id="beast-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
     </div>
+    <button id="beast-allread" class="mark-all-read" type="button" data-i18n="read.all" hidden>Mark all as read</button>
     <div id="beast-list"></div>
     <div id="beast-page"></div>
   </div>
@@ -5913,6 +5921,7 @@
       <h2 id="people-title" data-i18n="people.title">People met</h2>
       <button id="people-close" type="button" title="Close" aria-label="Close" data-i18n-title="srd.close" data-i18n-aria="srd.close">✕</button>
     </div>
+    <button id="people-allread" class="mark-all-read" type="button" data-i18n="read.all" hidden>Mark all as read</button>
     <input id="people-filter" type="search" autocomplete="off" placeholder="Find a name…" aria-label="Find a name" data-i18n-placeholder="people.filter" data-i18n-aria="people.filter" hidden>
     <div id="people-list"></div>
     <div id="people-page"></div>
@@ -7907,9 +7916,10 @@ function _handoutBadges() {
   if (count) count.textContent = fresh ? '● ' + _handouts.length : String(_handouts.length);
 }
 
-function _handoutMarkSeen(id) {
-  if (_handoutSeen.has(id)) return;
-  _handoutSeen.add(id);
+function _handoutMarkSeen(...ids) {
+  ids = ids.filter(id => !_handoutSeen.has(id));
+  if (!ids.length) return;
+  ids.forEach(id => _handoutSeen.add(id));
   try { localStorage.setItem('dnd-handouts-seen', JSON.stringify([..._handoutSeen].slice(-400))); } catch (_) {}
   _handoutBadges();
 }
@@ -7924,6 +7934,7 @@ function _handoutOpen(id) {
   list.textContent = '';
   reader.textContent = '';
   back.hidden = !doc || _handouts.length < 2;
+  document.getElementById('handout-allread').hidden = !!doc || _handouts.every(h => _handoutSeen.has(h.id));
   if (doc) {
     head.textContent = doc.title;
     reader.appendChild(_handoutPaper(doc));
@@ -8005,6 +8016,10 @@ function _handoutRemoved(id) {
   const close = () => modal.classList.remove('open');
   document.getElementById('handout-close').addEventListener('click', close);
   document.getElementById('handout-back').addEventListener('click', () => _handoutOpen(''));
+  document.getElementById('handout-allread').addEventListener('click', () => {
+    _handoutMarkSeen(..._handouts.map(h => h.id));
+    _handoutOpen('');
+  });
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && modal.classList.contains('open') && !document.querySelector('#image-lightbox.open')) close();
@@ -12670,14 +12685,15 @@ function _beastRows(c) {
   const page = document.getElementById('beast-page');
   const back = document.getElementById('beast-back');
   const title = document.getElementById('beast-title');
+  const allRead = document.getElementById('beast-allread');
   let beasts = [], openId = '', fresh = new Set();
   let seen = {};
   try { seen = JSON.parse(localStorage.getItem('dnd-bestiary-seen') || '{}') || {}; } catch (_) {}
 
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
   const isNew = c => seen[c.id] !== _beastRows(c).count + ':' + c.met + ':' + c.defeated;
-  function remember(c) {
-    seen[c.id] = _beastRows(c).count + ':' + c.met + ':' + c.defeated;
+  function remember(...pages) {
+    pages.forEach(c => { seen[c.id] = _beastRows(c).count + ':' + c.met + ':' + c.defeated; });
     try { localStorage.setItem('dnd-bestiary-seen', JSON.stringify(seen)); } catch (_) {}
   }
   function triggers() {
@@ -12718,6 +12734,7 @@ function _beastRows(c) {
     const c = openId ? beasts.find(b => b.id === openId) : null;
     back.hidden = !c;
     list.hidden = !!c;
+    allRead.hidden = !!c || !beasts.some(isNew);
     list.textContent = '';
     page.textContent = '';
     if (c) {
@@ -12754,6 +12771,7 @@ function _beastRows(c) {
   const close = () => modal.classList.remove('open');
   ['ln-beast', 'ph-beast-opt'].forEach(id => { const e = document.getElementById(id); if (e) e.addEventListener('click', open); });
   back.addEventListener('click', () => { openId = ''; render(); });
+  allRead.addEventListener('click', () => { remember(...beasts); render(); triggers(); });
   document.getElementById('beast-close').addEventListener('click', close);
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
@@ -12783,14 +12801,15 @@ function _personRows(p) {
   const back = document.getElementById('people-back');
   const title = document.getElementById('people-title');
   const filter = document.getElementById('people-filter');
+  const allRead = document.getElementById('people-allread');
   let people = [], openId = '';
   let seen = {};
   try { seen = JSON.parse(localStorage.getItem('dnd-people-seen') || '{}') || {}; } catch (_) {}
 
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
   const isNew = p => seen[p.id] !== _personRows(p).sig;
-  function remember(p) {
-    seen[p.id] = _personRows(p).sig;
+  function remember(...pages) {
+    pages.forEach(p => { seen[p.id] = _personRows(p).sig; });
     try { localStorage.setItem('dnd-people-seen', JSON.stringify(seen)); } catch (_) {}
   }
   function triggers() {
@@ -12835,6 +12854,7 @@ function _personRows(p) {
     back.hidden = !p;
     list.hidden = !!p;
     filter.hidden = !!p || people.length < 9;
+    allRead.hidden = !!p || !people.some(isNew);
     list.textContent = '';
     page.textContent = '';
     if (p) {
@@ -12898,6 +12918,7 @@ function _personRows(p) {
   const close = () => modal.classList.remove('open');
   ['ln-people', 'ph-people-opt'].forEach(id => { const e = document.getElementById(id); if (e) e.addEventListener('click', open); });
   back.addEventListener('click', () => { openId = ''; render(); });
+  allRead.addEventListener('click', () => { remember(...people); render(); triggers(); });
   filter.addEventListener('input', render);
   document.getElementById('people-close').addEventListener('click', close);
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
