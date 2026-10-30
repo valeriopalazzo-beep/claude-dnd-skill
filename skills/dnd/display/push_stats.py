@@ -36,6 +36,7 @@ Usage:
     # Death saves (the track starts by itself at 0 HP and ends with any healing):
     python3 push_stats.py --player Flerb --death-save failure   # hit while down (crit = two failures)
     python3 push_stats.py --player Flerb --death-save stable    # start | success | failure | crit | stable | reset
+    python3 push_stats.py --player Flerb --death-save call      # outside a fight: the next roll on their phone
     python3 push_stats.py --player Flerb --conditions-remove "Poisoned"
 
     # Concentration:
@@ -186,10 +187,10 @@ def main() -> None:
                         help="Add one condition without replacing others (requires --player); "
                              "'Poisoned:3r' / ':10m' / ':1h' ends by itself")
     parser.add_argument("--death-save", metavar="ACTION",
-                        choices=["start", "success", "failure", "crit", "stable", "reset"],
+                        choices=["start", "success", "failure", "crit", "stable", "reset", "call"],
                         help="Death-save track of a PC at 0 HP (requires --player): failure / crit for damage "
                              "taken while down, stable for Spare the Dying or a Medicine check, success, "
-                             "start, reset")
+                             "start, reset, call (outside a fight: offer the dying player their next roll)")
     parser.add_argument("--conditions-remove", metavar="CONDITION",
                         help="Remove one condition by name, case-insensitive (requires --player)")
     parser.add_argument("--concentrate", metavar="SPELL",

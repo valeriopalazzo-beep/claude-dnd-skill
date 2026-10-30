@@ -323,6 +323,7 @@ python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --player Flerb --death-save fa
 python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --player Flerb --death-save crit      # critical hit: two failures
 python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --player Flerb --death-save stable    # Spare the Dying, Medicine DC 10
 python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --player Flerb --death-save reset     # also: start, success
+python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --player Flerb --death-save call      # outside a fight: offer the next roll
 
 # Concentration:
 python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py --player Flerb --concentrate "Bless"
@@ -413,7 +414,7 @@ If `check_input.py` returns output, prepend it to the player's terminal input wh
 - Condition gained → `--player NAME --conditions-add "Name"`; removed → `--conditions-remove "Name"`
 - Condition with a set length ("until the end of its next turn", "for 1 minute") → add it as `"Name:1r"` / `"Name:10r"` / `"Name:10m"` / `"Name:1h"`. The pill shows what is left; rounds go down each time the tracker reaches that character (`--turn-current`), minutes and hours run on the clock, and at zero the display removes the condition and announces it. A save that ends it early is still yours: `--conditions-remove`. Sending the same turn twice does not count twice
 - Concentration started → `--player NAME --concentrate "Spell"`; ended → `--concentrate ""`
-- PC at 0 HP → just push the HP: the death-save track appears on their card and their phone gets the roll on their turn. Hit while down → `--death-save failure` (`crit` on a critical hit); stabilised → `--death-save stable`; healed → push the HP, the track goes away. See SKILL.md → *Death saving throws*
+- PC at 0 HP → just push the HP: the death-save track appears on their card and their phone gets the roll on their turn (outside a fight: one roll when they drop, then one each time you push `--death-save call`). Hit while down → `--death-save failure` (`crit` on a critical hit); stabilised → `--death-save stable` at once, in the call that reports the check, not later with the narration; healed → push the HP, the track goes away. See SKILL.md → *Death saving throws*
 - Item picked up → `scripts/inventory.py add NAME "Item"`; dropped/used → `inventory.py remove NAME "Item"` (they update the sheet file and the display together; the bare `push_stats.py --inventory-add/--inventory-remove` changes the display only)
 - Coins gained or spent → `scripts/inventory.py gain / pay / buy / sell / split`
 - Timed effect starts → `--effect-start "NAME:SPELL:DURATION[:conc]"` bundled with narration send

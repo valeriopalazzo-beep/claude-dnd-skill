@@ -5952,8 +5952,11 @@ def stats():
 # The player rolls from their phone on their turn (the DM's screen can roll
 # for them); the DM adds a failure for damage taken while down. Three
 # successes: stable. Three failures: dead. A natural 20: back up with 1 HP.
+# Outside a fight there are no turns: dropping to 0 offers one roll, and each
+# one after that waits for the DM to call it ("call"), so a dying player cannot
+# keep rolling while the DM is still writing that someone stabilised them.
 
-_DEATH_SAVE_ACTIONS = ("start", "success", "failure", "crit", "stable", "reset")
+_DEATH_SAVE_ACTIONS = ("start", "success", "failure", "crit", "stable", "reset", "call")
 
 
 def _apply_death_save(p: dict, action: str) -> None:
@@ -5965,11 +5968,16 @@ def _apply_death_save(p: dict, action: str) -> None:
         p.pop("death_saves", None)
         return
     ds = p.get("death_saves")
+    if action == "call" and not isinstance(ds, dict):
+        return                                           # nobody dying: nothing to call
     if action == "start" or not isinstance(ds, dict) or ds.get("dead"):
         if action != "start" and isinstance(ds, dict) and ds.get("dead"):
             return                                       # the dead make no more saves
-        ds = {"successes": 0, "failures": 0, "stable": False, "dead": False}
-    if action == "success":
+        ds = {"successes": 0, "failures": 0, "stable": False, "dead": False,
+              "called": action == "start"}
+    if action == "call":
+        ds["called"] = not ds.get("stable") and not ds.get("dead")
+    elif action == "success":
         ds["successes"] = min(3, int(ds.get("successes", 0)) + 1)
     elif action in ("failure", "crit"):                  # damage while down; a critical hit counts twice
         ds["failures"] = min(3, int(ds.get("failures", 0)) + (2 if action == "crit" else 1))
@@ -5977,7 +5985,7 @@ def _apply_death_save(p: dict, action: str) -> None:
     if ds["failures"] >= 3:
         ds.update(dead=True, stable=False)
     elif action == "stable" or ds["successes"] >= 3:
-        ds.update(stable=True, successes=0, failures=0)  # the count starts over if they are hurt again
+        ds.update(stable=True, successes=0, failures=0, called=False)  # the count starts over if they are hurt again
     p["death_saves"] = ds
 
 
@@ -6048,7 +6056,10 @@ def death_save_roll():
         if not isinstance(ds, dict) or ds.get("stable") or ds.get("dead"):
             return jsonify({"error": "not dying"}), 409
         turn = _current_stats.get("turn_order")
-        if isinstance(turn, dict) and turn.get("current"):
+        in_fight = isinstance(turn, dict) and bool(turn.get("current"))
+        if not in_fight and not ds.get("called"):
+            return jsonify({"error": "not called"}), 409
+        if in_fight:
             if str(turn["current"]).lower() != p["name"].lower():
                 return jsonify({"error": "not your turn"}), 409
             stamp = f"{turn.get('round', 1)}:{p['name'].lower()}"
@@ -6063,6 +6074,7 @@ def death_save_roll():
         else:
             _apply_death_save(p, "crit" if roll == 1 else "success" if roll >= 10 else "failure")
             after = p["death_saves"]
+            after["called"] = False                      # outside a fight the next one waits for the DM
             outcome = ("dead" if after["dead"] else "stable" if after["stable"]
                        else "fail2" if roll == 1 else "success" if roll >= 10 else "failure")
             # A stabilised track is wiped, so the line shows the three that got there.

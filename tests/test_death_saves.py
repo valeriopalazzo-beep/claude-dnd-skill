@@ -122,6 +122,7 @@ class ServerTests(unittest.TestCase):
         self.hp("Aldric", 0)
         code, res = self.roll("aldric", 10)
         self.assertEqual((code, res["outcome"], res["roll"], res["successes"], res["failures"]), (200, "success", 10, 1, 0))
+        self.step("Aldric", "call")
         code, res = self.roll("Aldric", 9)
         self.assertEqual((res["outcome"], res["successes"], res["failures"]), ("failure", 1, 1))
         self.assertEqual(self.sent[-1], {"death_save": res})
@@ -133,6 +134,7 @@ class ServerTests(unittest.TestCase):
         self.hp("Aldric", 0)
         _, res = self.roll("Aldric", 1)
         self.assertEqual((res["outcome"], res["failures"]), ("fail2", 2))
+        self.step("Aldric", "call")
         _, res = self.roll("Aldric", 20)
         self.assertEqual(res["outcome"], "up")
         self.assertEqual(self.player()["hp"]["current"], 1)
@@ -141,16 +143,19 @@ class ServerTests(unittest.TestCase):
 
     def test_the_third_mark_ends_it_either_way(self):
         self.hp("Aldric", 0)
-        self.roll("Aldric", 15)
-        self.roll("Aldric", 15)
+        for d20 in (15, 15):
+            self.roll("Aldric", d20)
+            self.step("Aldric", "call")
         _, res = self.roll("Aldric", 11)
         self.assertEqual(res["outcome"], "stable")
         self.assertEqual(self.track(), (0, 0, True, False))
         self.assertEqual(self.sent[-3]["text"], "☠ Aldric: d20 = 11 · ✓✓✓ ○○○ ⚕")
+        self.step("Aldric", "call")
         self.assertEqual(self.roll("Aldric", 15)[0], 409)      # stable: nothing to roll
 
         self.hp("Mira", 0)
         self.roll("Mira", 2)
+        self.step("Mira", "call")
         self.roll("Mira", 1)
         self.assertEqual(self.track("Mira"), (0, 3, False, True))
         self.assertEqual(self.sent[-3]["text"], "☠ Mira: d20 = 1 · ○○○ ✗✗✗ ☠")
@@ -170,6 +175,31 @@ class ServerTests(unittest.TestCase):
         self.post({"turn_order": {"current": "Aldric"}})
         self.assertEqual(self.roll("Aldric", 15)[0], 200)
         self.assertEqual(self.track(), (2, 0, False, False))
+
+    def test_outside_a_fight_each_roll_waits_for_the_dm_to_call_it(self):
+        self.hp("Aldric", 0)                                  # dropping to 0 offers the first one
+        self.assertEqual(self.roll("Aldric", 15)[0], 200)
+        code, err = self.roll("Aldric", 15)
+        self.assertEqual((code, err["error"]), (409, "not called"))
+        self.step("Aldric", "call")
+        self.assertEqual(self.roll("Aldric", 15)[0], 200)
+        self.assertEqual(self.track(), (2, 0, False, False))
+        self.step("Aldric", "call")                           # called, then a friend stabilises him first
+        self.step("Aldric", "stable")
+        self.assertEqual(self.roll("Aldric", 15)[0], 409)
+        self.step("Aldric", "failure")                        # hurt again: the call does not carry over
+        self.assertEqual(self.roll("Aldric", 15)[1]["error"], "not called")
+        self.step("Mira", "call")                             # on her feet: no track appears
+        self.assertIsNone(self.track("Mira"))
+
+    def test_a_fight_that_ends_leaves_no_free_rolls(self):
+        self.hp("Aldric", 0)
+        self.post({"turn_order": {"order": ORDER, "current": "Aldric", "round": 4}})
+        self.assertEqual(self.roll("Aldric", 14)[0], 200)
+        self.post({"turn_order": {"order": [], "current": ""}})   # the fight is over
+        self.assertEqual(self.roll("Aldric", 17)[1]["error"], "not called")
+        self.step("Aldric", "stable")                         # the DM's push lands before any extra roll
+        self.assertEqual(self.track(), (0, 0, True, False))
 
     def test_only_the_dying_roll_and_only_for_themselves(self):
         self.assertEqual(self.roll("Aldric", 15)[0], 409)       # on their feet
@@ -198,9 +228,10 @@ class CommandTests(unittest.TestCase):
             stat_hp = stat_temp_hp = stat_slot_use = stat_slot_restore = stat_condition_add = None
             stat_condition_remove = stat_concentrate = stat_inventory_add = stat_inventory_remove = None
             effect_start = effect_end = None
-            stat_death_save = ["Aldric:failure", "Mira Ombra:CRIT", "Lio:dance", ":stable"]
+            stat_death_save = ["Aldric:failure", "Mira Ombra:CRIT", "Lio:dance", ":stable", "Hernio:call"]
         self.assertEqual(send._build_stats_payload(Args)["players"],
-                         [{"name": "Aldric", "_death_save": "failure"}, {"name": "Mira Ombra", "_death_save": "crit"}])
+                         [{"name": "Aldric", "_death_save": "failure"}, {"name": "Mira Ombra", "_death_save": "crit"},
+                          {"name": "Hernio", "_death_save": "call"}])
 
     def test_the_tracker_mirrors_its_steps_on_the_display(self):
         tmp = tempfile.TemporaryDirectory()
@@ -253,10 +284,12 @@ class PageTests(unittest.TestCase):
     def test_a_character_on_their_feet_has_no_track(self):
         self.assertIsNone(self.state({"name": "Aldric"}, "Aldric", None)[0])
 
-    def test_outside_a_fight_the_dying_player_may_roll_any_time(self):
-        d, two, capped = self.state(self.dying(), "aldric", None)
+    def test_outside_a_fight_the_dying_player_rolls_when_called(self):
+        d, two, capped = self.state(self.dying(called=True), "aldric", None)
         self.assertEqual((d["successes"], d["failures"], d["mine"], d["canRoll"]), (1, 2, True, True))
         self.assertEqual((two, capped), ("xx○", "xxx"))
+        self.assertFalse(self.state(self.dying(), "aldric", None)[0]["canRoll"])
+        self.assertFalse(self.state(self.dying(called=False), "", None)[0]["canRoll"])
 
     def test_in_a_fight_only_on_their_turn_and_only_once(self):
         self.assertFalse(self.state(self.dying(), "Aldric", self.turn("Goblin"))[0]["canRoll"])

@@ -9692,8 +9692,8 @@ function _initRows(state, me) {
 // ── Death saving throws ───────────────────────────────────────────────
 // A character at 0 HP has a death_saves track in the stats. _deathState only
 // decides: what the track says and whether THIS screen may roll now — the
-// dying player on their own turn (any time outside a fight), or the table
-// screen for them. The roll itself is made by the server.
+// dying player on their own turn (outside a fight, when the DM has called the
+// roll), or the table screen for them. The roll itself is made by the server.
 function _deathState(p, me, turn) {
   const ds = p && p.death_saves;
   if (!ds) return null;
@@ -9705,7 +9705,7 @@ function _deathState(p, me, turn) {
   return {
     name: p.name, successes: ds.successes || 0, failures: ds.failures || 0, stable: !!ds.stable, dead: !!ds.dead,
     mine: !!me && same(p.name, me),
-    canRoll: dying && (!me || same(p.name, me)) && (!inFight || (myTurn && !rolled)),
+    canRoll: dying && (!me || same(p.name, me)) && (inFight ? (myTurn && !rolled) : !!ds.called),
   };
 }
 function _deathPips(n, mark) {
