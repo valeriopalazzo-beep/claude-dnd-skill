@@ -176,7 +176,7 @@ def _sanitize(raw: str) -> str | None:
             return None
 
         action = _SHELL_CHARS.sub("", action)
-        action = _PRINTABLE.sub("", action)[:500].strip()
+        action = _PRINTABLE.sub("", action)[:2000].strip()   # MAX_INPUT_CHARS of the display
 
         if not action:
             return None

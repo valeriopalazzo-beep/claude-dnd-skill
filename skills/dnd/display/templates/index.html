@@ -5687,7 +5687,7 @@
     <div id="char-tabs" data-tab-section="move">
       <button class="char-tab active" data-char="Everybody" data-i18n="input.everybody">Everybody</button>
     </div>
-    <textarea id="player-input-text" rows="2" placeholder="Enter action or dialogue…" data-i18n-placeholder="input.placeholder" maxlength="500"
+    <textarea id="player-input-text" rows="2" placeholder="Enter action or dialogue…" data-i18n-placeholder="input.placeholder" maxlength="2000"
               data-tab-section="move"></textarea>
     <div id="input-footer" data-tab-section="move">
       <button id="mic-btn" class="mic-btn" type="button" hidden title="Speak" aria-label="Speak" data-i18n-title="mic.speak" data-i18n-aria="mic.speak">🎤</button>
@@ -5795,7 +5795,7 @@
     <p id="whisper-hint" data-i18n="whisper.hint">Only you and the DM read these.</p>
     <div id="whisper-thread"></div>
     <form id="whisper-form">
-      <textarea id="whisper-text" rows="2" maxlength="500" placeholder="Write to the DM in secret…" data-i18n-placeholder="whisper.placeholder"></textarea>
+      <textarea id="whisper-text" rows="2" maxlength="2000" placeholder="Write to the DM in secret…" data-i18n-placeholder="whisper.placeholder"></textarea>
       <button id="whisper-mic" class="mic-btn" type="button" hidden title="Speak" aria-label="Speak" data-i18n-title="mic.speak" data-i18n-aria="mic.speak">🎤</button>
       <button id="whisper-send" type="submit" data-i18n="whisper.send">Send</button>
     </form>
@@ -14145,7 +14145,7 @@ function _micMerge(before, heard, max) {
       rec.continuous = false;
       rec.maxAlternatives = 1;
       base = box.value;
-      const max = parseInt(box.getAttribute('maxlength') || '500', 10);
+      const max = parseInt(box.getAttribute('maxlength') || '2000', 10);
       rec.onstart = () => {
         btn.classList.add('listening');
         btn.title = _t('mic.stop', null, 'Stop');

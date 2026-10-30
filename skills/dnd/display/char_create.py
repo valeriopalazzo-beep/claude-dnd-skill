@@ -49,7 +49,7 @@ import accounts as _accounts  # noqa: E402
 
 MODEL = os.environ.get("DND_CREATE_MODEL", "sonnet")
 CLAUDE_TIMEOUT = 150            # seconds for one reply
-MAX_MSG_LEN = 800               # characters per player message
+MAX_MSG_LEN = 2000              # characters per player message
 MAX_TURNS = 80                  # player messages per conversation
 CONV_TTL = 7 * 86400            # an unfinished conversation is kept a week
 LIMITS = {                      # per rolling 24 h

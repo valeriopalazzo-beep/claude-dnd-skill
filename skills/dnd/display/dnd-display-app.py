@@ -226,12 +226,15 @@ _SHELL_CHARS  = re.compile(r'[$`\\;|&><()\[\]{}!]')
 # inside the name; trim 1-2 char names to a separate branch.
 _CHAR_NAME_RE = re.compile(r"^\w[\w '\-]{0,48}\w$|^\w{1,2}$", re.UNICODE)
 
+# Longest message a player can send (actions, whispers): room for a whole plan or speech.
+MAX_INPUT_CHARS = 2000
+
 
 def _sanitize_input(text: str) -> str:
     """Strip control chars and shell metacharacters from player input text."""
     text = _SHELL_CHARS.sub("", text)
     text = _PRINTABLE.sub("", text)
-    return text[:500].strip()
+    return text[:MAX_INPUT_CHARS].strip()
 
 
 def _char_ok(name: str, known: set) -> bool:
@@ -6503,7 +6506,7 @@ def player_input():
     import time
     data = request.get_json(force=True, silent=True) or {}
     character = _acting_character(str(data.get("character", "Party"))[:50])
-    text = str(data.get("text", ""))[:500]
+    text = str(data.get("text", ""))[:MAX_INPUT_CHARS]
     hold = bool(data.get("hold", False))
 
     # Strip shell metacharacters — input is player dialogue/action, not commands
