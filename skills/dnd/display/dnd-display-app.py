@@ -3230,6 +3230,7 @@ def quests_changed():
     snapshot = _adopt_campaign_quests()
     if snapshot is not None:
         payload["stats"] = snapshot
+        payload["people"] = _public_people()     # the People panel files people under their quests' names
     event = data.get("event")
     if isinstance(event, dict) and event.get("name") and event.get("what") in ("new", "updated", "resolved", "failed"):
         payload["quest_event"] = {"name": str(event["name"])[:80], "what": event["what"]}
@@ -3338,8 +3339,18 @@ def _public_people() -> list:
     camp = re.sub(r"[^A-Za-z0-9_-]", "", _active_campaign())[:50]
     if not camp:
         return []
+    d = _find_campaign(camp)
+    # The panel files people by place (the region map's places) and by quest.
     try:
-        return _people.public_view(_people.load(str(_find_campaign(camp) / "people.json")))
+        places = [p.get("name", "") for p in _region.load(str(d / "region.json")).get("places") or [] if isinstance(p, dict)]
+    except Exception:
+        places = []
+    try:
+        quests = _quests.load(str(d / "quests.json"))
+    except Exception:
+        quests = []
+    try:
+        return _people.public_view(_people.load(str(d / "people.json")), places, quests)
     except Exception:
         return []
 

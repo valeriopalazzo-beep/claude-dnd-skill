@@ -1488,6 +1488,9 @@ python3 ${CLAUDE_SKILL_DIR}/display/people.py learn "oderico" "Compagno di semin
 python3 ${CLAUDE_SKILL_DIR}/display/people.py said "oderico" "A me risponde. A me ha sempre risposto."
 python3 ${CLAUDE_SKILL_DIR}/display/people.py seen "oderico" "Cimitero della Collina"     # where the party last saw them
 python3 ${CLAUDE_SKILL_DIR}/display/people.py set "oderico" --attitude friendly --faction "Chiesa di Morwen" --status missing
+python3 ${CLAUDE_SKILL_DIR}/display/people.py meet "Gigi" --where "Il Mantice Rotto" --place "Ferrovalle" --quest "cantiere"
+python3 ${CLAUDE_SKILL_DIR}/display/people.py set "gigi" --place "Ferrovalle"               # the heading the panel files them under
+python3 ${CLAUDE_SKILL_DIR}/display/people.py link "oderico" "rogo della strega"           # a quest they are part of; unlink takes it away
 python3 ${CLAUDE_SKILL_DIR}/display/people.py rename "incappucciato" "Nando"              # the party learns the name
 python3 ${CLAUDE_SKILL_DIR}/display/people.py drop "oderico" --fact "seminario"           # or --said
 python3 ${CLAUDE_SKILL_DIR}/display/people.py forget "nando"
@@ -1497,6 +1500,7 @@ python3 ${CLAUDE_SKILL_DIR}/display/people.py show "oderico"
 
 - `meet` opens a page; `meet` again with `--where` records where they were seen this time (the first place stays as where the party met them).
 - **Attitude** (towards the party): `ally`, `friendly`, `neutral`, `wary`, `hostile`, or `""` for unknown. **Status:** `alive` (default), `dead`, `prisoner`, `missing`, `gone`. Italian words are understood (amico, ostile, morto, prigioniero, scomparso…).
+- **Filed by place or by quest.** The panel groups people under a heading (the players switch: by place, by quest, A–Z). The place is `--place` — the town, region or dungeon, not the room: "Ferrovalle", not "Il Mantice Rotto" — else the region map's place named in `--where`, else `--where` as written. Give `--place` whenever `--where` is a street, an inn or a room inside a town. Quests are the `quests.py` quests they are linked to (`--quest` on `meet`, repeatable; `link`/`unlink`), named by any part of the quest's name; a person can be in several.
 - A person can be named by any part of the name that means one page only. A wrong name changes nothing; what is already written is not added twice.
 - Stored in `<campaign>/people.json`; `--campaign NAME` (before the subcommand) works on another campaign.
 

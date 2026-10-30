@@ -1597,6 +1597,25 @@
   #people-page{ padding:16px 18px; border-radius:12px; font-size:16.5px; line-height:1.45;
     background:var(--ln-surface, #1d1813); border:1px solid var(--ln-line, rgba(255,255,255,.14)); }
   #people-page:empty{ display:none; }
+  /* Filed by place or by quest (_peopleGroups): a heading per group, tapped open */
+  #people-by{ display:flex; gap:6px; margin:0 0 10px; }
+  #people-by[hidden]{ display:none; }
+  #people-by button{ flex:1; min-width:0; padding:8px 6px; border-radius:999px; cursor:pointer; font:inherit; font-size:14.5px;
+    font-weight:700; color:#ECE4D2; background:rgba(0,0,0,.35); border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  #people-by button.on{ color:var(--ln-on-accent, #1a140c); background:var(--ln-accent, #f2b544); border-color:transparent; }
+  .people-group{ display:flex; align-items:center; gap:10px; width:100%; margin-top:4px; padding:12px 14px; text-align:left;
+    cursor:pointer; border-radius:12px; font:inherit; font-size:19px; font-weight:800; line-height:1.2; color:#ECE4D2;
+    background:rgba(0,0,0,.45); border:1px solid var(--ln-line-strong, rgba(255,255,255,.25)); }
+  .people-group::before{ content:'▸'; flex:none; color:var(--ln-accent, #f2b544); transition:transform .15s; }
+  .people-group.open::before{ transform:rotate(90deg); }
+  .people-group span{ flex:1; min-width:0; }
+  .people-group small{ display:block; font-size:13px; font-weight:600; color:#b9ab92; }
+  .people-group b{ flex:none; min-width:28px; padding:1px 8px; border-radius:999px; text-align:center; font-size:13px;
+    background:rgba(255,255,255,.12); }
+  .people-group em{ flex:none; font-style:normal; padding:2px 9px; border-radius:999px; font-size:12px; font-weight:800;
+    background:var(--ln-accent, #f2b544); color:var(--ln-on-accent, #1a140c); }
+  .people-group-list{ display:flex; flex-direction:column; gap:8px; margin:0 0 6px 8px; padding-left:10px;
+    border-left:2px solid var(--ln-accent, #f2b544); }
   #people-page .people-role{ margin:0 0 10px; font-size:16px; font-weight:700; color:var(--ln-accent, #f2b544); }
   #people-page dl{ display:grid; grid-template-columns:auto 1fr; gap:4px 14px; margin:0 0 10px; }
   #people-page dt{ font-weight:700; color:var(--ln-text-muted, #cdbfa6); }
@@ -5923,6 +5942,11 @@
     </div>
     <button id="people-allread" class="mark-all-read" type="button" data-i18n="read.all" hidden>Mark all as read</button>
     <input id="people-filter" type="search" autocomplete="off" placeholder="Find a name…" aria-label="Find a name" data-i18n-placeholder="people.filter" data-i18n-aria="people.filter" hidden>
+    <div id="people-by" role="group" aria-label="Group by" data-i18n-aria="people.by" hidden>
+      <button type="button" data-by="place" data-i18n="people.by.place">By place</button>
+      <button type="button" data-by="quest" data-i18n="people.by.quest">By quest</button>
+      <button type="button" data-by="name" data-i18n="people.by.name">A–Z</button>
+    </div>
     <div id="people-list"></div>
     <div id="people-page"></div>
   </div>
@@ -12793,6 +12817,37 @@ function _personRows(p) {
 }
 // ── end people rows ──
 
+// The headings of the People panel. by: 'place' | 'quest' | 'name' → [{key, label, status, people}].
+// place: the group people.py gives each page, the place of the latest meeting first; quest: open
+// quests first, a person under every quest they are part of. Who has neither goes last (key '').
+function _peopleGroups(people, by) {
+  people = people || [];
+  if (by === 'name') return [{ key: '', label: '', status: '', people: people.slice() }];
+  const groups = new Map();
+  const add = (key, label, status, p) => {
+    if (!groups.has(key)) groups.set(key, { key, label, status: status || '', people: [], ts: 0 });
+    const g = groups.get(key);
+    g.people.push(p);
+    g.ts = Math.max(g.ts, p.ts || 0);
+  };
+  people.forEach(p => {
+    if (by === 'quest') {
+      const qs = (p.quests || []).filter(q => q && q.name);
+      if (!qs.length) add('', '', '', p);
+      qs.forEach(q => add(q.name.toLowerCase(), q.name, q.status, p));
+    } else {
+      const label = String(p.group || '').trim();
+      add(label.toLowerCase(), label, '', p);
+    }
+  });
+  const open = s => (s === 'active' || s === 'threat') ? 1 : 0;
+  return [...groups.values()].sort((a, b) => (a.key === '') - (b.key === '')
+    || (by === 'quest' ? open(b.status) - open(a.status) : 0)
+    || b.ts - a.ts || a.label.localeCompare(b.label))
+    .map(({ key, label, status, people }) => ({ key, label, status, people }));
+}
+// ── end people groups ──
+
 (function _initPeople() {
   const modal = document.getElementById('people-modal');
   if (!modal) return;
@@ -12802,9 +12857,12 @@ function _personRows(p) {
   const title = document.getElementById('people-title');
   const filter = document.getElementById('people-filter');
   const allRead = document.getElementById('people-allread');
+  const byBar = document.getElementById('people-by');
   let people = [], openId = '';
-  let seen = {};
+  let seen = {}, by = 'place', unfolded = new Set();
   try { seen = JSON.parse(localStorage.getItem('dnd-people-seen') || '{}') || {}; } catch (_) {}
+  try { by = ['place', 'quest', 'name'].includes(localStorage.getItem('dnd-people-by')) ? localStorage.getItem('dnd-people-by') : 'place'; } catch (_) {}
+  try { unfolded = new Set(JSON.parse(localStorage.getItem('dnd-people-open') || '[]')); } catch (_) {}
 
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
   const isNew = p => seen[p.id] !== _personRows(p).sig;
@@ -12855,6 +12913,8 @@ function _personRows(p) {
     list.hidden = !!p;
     filter.hidden = !!p || people.length < 9;
     allRead.hidden = !!p || !people.some(isNew);
+    byBar.hidden = !!p || people.length < 2;
+    byBar.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.by === by));
     list.textContent = '';
     page.textContent = '';
     if (p) {
@@ -12869,16 +12929,41 @@ function _personRows(p) {
     const want = filter.hidden ? '' : filter.value.trim().toLowerCase();
     const shown = people.filter(x => !want || (x.name + ' ' + x.role + ' ' + x.faction).toLowerCase().includes(want));
     if (!shown.length) { list.appendChild(el('p', 'people-empty', _t('people.noMatch', null, 'Nobody by that name.'))); return; }
-    shown.forEach(x => {
-      const item = el('button', 'people-item st-' + (x.status || 'alive'));
-      item.type = 'button';
+    const item = x => {
+      const btn = el('button', 'people-item st-' + (x.status || 'alive'));
+      btn.type = 'button';
       const text = el('span');
       text.appendChild(el('b', '', x.name));
       text.appendChild(el('small', '', [x.role, x.status && x.status !== 'alive' ? word('st', x.status) : (x.seen || x.where)].filter(Boolean).join(' · ')));
-      item.appendChild(text);
-      if (isNew(x)) item.appendChild(el('em', '', _t('people.new', null, 'New')));
-      item.addEventListener('click', () => { openId = x.id; render(); });
-      list.appendChild(item);
+      btn.appendChild(text);
+      if (isNew(x)) btn.appendChild(el('em', '', _t('people.new', null, 'New')));
+      btn.addEventListener('click', () => { openId = x.id; render(); });
+      return btn;
+    };
+    const groups = _peopleGroups(shown, by);
+    if (by === 'name') { groups[0].people.forEach(x => list.appendChild(item(x))); return; }
+    groups.forEach(g => {
+      const key = by + '|' + g.key;
+      const isOpen = !!want || groups.length === 1 || unfolded.has(key);
+      const head = el('button', 'people-group' + (isOpen ? ' open' : ''));
+      head.type = 'button';
+      head.setAttribute('aria-expanded', String(isOpen));
+      const label = el('span', '', g.label || (by === 'quest' ? _t('people.noQuest', null, 'In no quest')
+                                                              : _t('people.noPlace', null, 'Somewhere else')));
+      if (g.status) label.appendChild(el('small', '', _t('quest.status.' + g.status, null, g.status)));
+      head.appendChild(label);
+      head.appendChild(el('b', '', String(g.people.length)));
+      if (g.people.some(isNew)) head.appendChild(el('em', '', _t('people.new', null, 'New')));
+      head.addEventListener('click', () => {
+        if (unfolded.has(key)) unfolded.delete(key); else unfolded.add(key);
+        try { localStorage.setItem('dnd-people-open', JSON.stringify([...unfolded].slice(-200))); } catch (_) {}
+        render();
+      });
+      list.appendChild(head);
+      if (!isOpen) return;
+      const box = el('div', 'people-group-list');
+      g.people.forEach(x => box.appendChild(item(x)));
+      list.appendChild(box);
     });
   }
 
@@ -12919,6 +13004,11 @@ function _personRows(p) {
   ['ln-people', 'ph-people-opt'].forEach(id => { const e = document.getElementById(id); if (e) e.addEventListener('click', open); });
   back.addEventListener('click', () => { openId = ''; render(); });
   allRead.addEventListener('click', () => { remember(...people); render(); triggers(); });
+  byBar.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    by = b.dataset.by;
+    try { localStorage.setItem('dnd-people-by', by); } catch (_) {}
+    render();
+  }));
   filter.addEventListener('input', render);
   document.getElementById('people-close').addEventListener('click', close);
   modal.addEventListener('click', e => { if (e.target === modal) close(); });

@@ -95,8 +95,43 @@ class NotebookTests(unittest.TestCase):
         page["attitude"], page["status"] = "strana", "boh"                    # a file edited by hand
         view = pp.public_view(rows)
         self.assertEqual([p["name"] for p in view], ["Ada Brenn", "Oderico"])
-        self.assertEqual(set(view[0]), {"id", "name", "role", "where", "seen", "faction", "look", "attitude", "status", "facts", "said"})
+        self.assertEqual(set(view[0]), {"id", "name", "role", "where", "seen", "faction", "look", "attitude", "status", "facts", "said",
+                                        "place", "group", "ts", "quests"})
         self.assertEqual((view[0]["attitude"], view[0]["status"], view[0]["said"]), ("", "alive", ["Vi ho dato Tomas."]))
+
+    def test_each_page_is_filed_under_a_place(self):
+        places = ["Ferrovalle", "Kaldrheim", "La torre di Dentesecco", "Corvo Basso"]
+        rows = []
+        pp.meet(rows, "Gigi", where="Il Mantice Rotto", place="ferrovalle")
+        pp.meet(rows, "Orm", where="Porta del Corvo, Kaldrheim")
+        pp.meet(rows, "Sigrid", where="Torre di Dentesecco")
+        page, _ = pp.meet(rows, "Skrag", where="Abeti Neri (solo sentito nominare)")
+        page["seen"] = "La torre di Dentesecco"
+        pp.meet(rows, "Rosa", where="Il cunicolo dei tubi")
+        pp.meet(rows, "Teresa")
+        got = {p["name"]: p["group"] for p in pp.public_view(rows, places)}
+        self.assertEqual(got, {"Gigi": "Ferrovalle",                       # --place, spelled as on the map
+                               "Orm": "Kaldrheim",                         # the map's place named in where they met
+                               "Sigrid": "La torre di Dentesecco",         # the article does not count
+                               "Skrag": "La torre di Dentesecco",          # else where they were last seen
+                               "Rosa": "Il cunicolo dei tubi",             # else where they met, as written
+                               "Teresa": ""})
+
+    def test_a_page_lists_the_quests_it_belongs_to(self):
+        quests = [{"id": "q1", "name": "Il rogo della strega", "status": "resolved"},
+                  {"id": "q2", "name": "La corona di cenere", "status": "active"}]
+        rows = []
+        page, _ = pp.meet(rows, "Corradi")
+        self.assertTrue(pp.link(page, quests[0]))
+        self.assertTrue(pp.link(page, quests[1]))
+        self.assertFalse(pp.link(page, quests[1]), "linked once")
+        page["quests"].append("gone")                                      # a quest removed since
+        view = pp.public_view(rows, (), quests)
+        self.assertEqual(view[0]["quests"], [{"name": "Il rogo della strega", "status": "resolved"},
+                                             {"name": "La corona di cenere", "status": "active"}])
+        self.assertTrue(pp.unlink(page, quests[0]))
+        self.assertFalse(pp.unlink(page, quests[0]))
+        self.assertIn("quests: La corona di cenere", pp.describe(page, quests))
 
 
 class CardTests(unittest.TestCase):
@@ -205,6 +240,27 @@ class CommandTests(unittest.TestCase):
         self.assertEqual(self.run_pp("drop", "nando", "--said", "sangue")[0], 0)
         self.assertEqual(self.run_pp("forget", "nando")[0], 0)
         self.assertEqual(self.saved(), [])
+
+    def test_place_and_quests_from_the_command_line(self):
+        (self.root / "campaigns" / "prova" / "quests.json").write_text(json.dumps({"quests": [
+            {"id": "q1", "name": "Lavoro al cantiere della Gilda", "status": "resolved"},
+            {"id": "q2", "name": "L'altro capo della catena", "status": "active"}]}), encoding="utf-8")
+        code, out = self.run_pp("meet", "Gigi", "--where", "Il Mantice Rotto", "--place", "Ferrovalle", "--quest", "cantiere")
+        self.assertEqual(code, 0, out)
+        self.assertIn("filed under: Ferrovalle", out)
+        self.assertIn("quests: Lavoro al cantiere della Gilda", out)
+        self.assertEqual(self.run_pp("link", "gigi", "catena")[0], 0)
+        self.assertEqual(self.saved()[0]["quests"], ["q1", "q2"])
+        self.assertEqual(self.run_pp("unlink", "gigi", "cantiere")[0], 0)
+        self.assertEqual(self.run_pp("set", "gigi", "--place", "Kaldrheim")[0], 0)
+        self.assertEqual((self.saved()[0]["place"], self.saved()[0]["quests"]), ("Kaldrheim", ["q2"]))
+        before = self.saved()
+        for argv in (("link", "gigi", "catena"), ("unlink", "gigi", "cantiere"), ("link", "gigi", "nessuna"),
+                     ("meet", "Nuovo", "--quest", "nessuna")):
+            code, out = self.run_pp(*argv)
+            self.assertEqual(code, 1, argv)
+            self.assertIn("Nothing was changed", out)
+        self.assertEqual(self.saved(), before)
 
     def test_a_mistake_changes_nothing(self):
         self.run_pp("meet", "Oderico")
@@ -322,6 +378,74 @@ class CardPageTests(unittest.TestCase):
         for path in sorted((DISPLAY / "i18n").glob("*.json")):
             data = json.loads(path.read_text(encoding="utf-8"))
             for key in ("people.cardNew", "people.cardAgain", "people.cardWhere", "people.cardOk"):
+                with self.subTest(lang=path.stem, key=key):
+                    self.assertTrue(data.get(key))
+
+
+class GroupTests(unittest.TestCase):
+    """Fifty names in one list told the table nothing: the panel files them by place or by quest."""
+
+    def test_the_server_files_people_by_the_maps_places_and_the_quests(self):
+        spec = importlib.util.spec_from_file_location("dnd_display_app_people_groups", str(DISPLAY / "dnd-display-app.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        mod._token_ok = lambda: True
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        camp = pathlib.Path(tmp.name)
+        rows = []
+        page, _ = pp.meet(rows, "Orm", where="Porta del Corvo, Kaldrheim")
+        page["quests"] = ["q1"]
+        pp.save(str(camp / "people.json"), rows)
+        (camp / "region.json").write_text(json.dumps({"places": [{"name": "Kaldrheim"}, {"name": "Ferrovalle"}]}), encoding="utf-8")
+        (camp / "quests.json").write_text(json.dumps({"quests": [{"id": "q1", "name": "Il Dente", "status": "active"}]}),
+                                          encoding="utf-8")
+        sent = []
+        mod._active_campaign, mod._find_campaign, mod._broadcast = (lambda: "prova"), (lambda n: camp), sent.append
+        got = mod.app.test_client().get("/people").get_json()[0]
+        self.assertEqual((got["group"], got["quests"]), ("Kaldrheim", [{"name": "Il Dente", "status": "active"}]))
+        mod._adopt_campaign_quests = lambda: {"quests": []}
+        self.assertEqual(mod.app.test_client().post("/quests", json={}).status_code, 204)
+        self.assertEqual(sent[-1]["people"][0]["name"], "Orm", "a quest that changes refreshes the names under it")
+
+    def test_the_panel_groups(self):
+        if NODE is None:
+            raise unittest.SkipTest("node not available")
+        m = re.search(r"(function _peopleGroups\(people, by\).*?)\n// ── end people groups ──", HTML.read_text(encoding="utf-8"), re.S)
+        self.assertTrue(m, "the people groups block is no longer where this test slices it")
+        people = [
+            {"name": "Gigi", "group": "Ferrovalle", "ts": 1, "quests": [{"name": "Cantiere", "status": "resolved"}]},
+            {"name": "Orm", "group": "Kaldrheim", "ts": 5, "quests": [{"name": "Il Dente", "status": "active"},
+                                                                    {"name": "Cantiere", "status": "resolved"}]},
+            {"name": "Rosa", "group": "", "ts": 9, "quests": []},
+            {"name": "Teresa", "group": "ferrovalle", "ts": 3},
+        ]
+        script = m.group(1) + "\nconst P = %s;\nconsole.log(JSON.stringify(['place', 'quest', 'name'].map(by => _peopleGroups(P, by)" \
+                              ".map(g => [g.label, g.status, g.people.map(p => p.name)]))));\n" % json.dumps(people)
+        with tempfile.NamedTemporaryFile("w", suffix=".mjs", delete=False, encoding="utf-8") as f:
+            f.write(script)
+            path = f.name
+        try:
+            r = subprocess.run([NODE, path], capture_output=True, text=True, encoding="utf-8", timeout=30)
+            self.assertEqual(r.returncode, 0, r.stderr[:500])
+            place, quest, name = json.loads(r.stdout.strip().splitlines()[-1])
+        finally:
+            pathlib.Path(path).unlink(missing_ok=True)
+        self.assertEqual(place, [["Kaldrheim", "", ["Orm"]],                # the latest meeting first
+                                 ["Ferrovalle", "", ["Gigi", "Teresa"]],    # one heading whatever the case
+                                 ["", "", ["Rosa"]]])                       # nowhere: last
+        self.assertEqual(quest, [["Il Dente", "active", ["Orm"]],           # open quests first
+                                 ["Cantiere", "resolved", ["Gigi", "Orm"]],  # under every quest they are part of
+                                 ["", "", ["Rosa", "Teresa"]]])
+        self.assertEqual(name, [["", "", ["Gigi", "Orm", "Rosa", "Teresa"]]])
+
+    def test_the_switch_is_on_the_page_in_every_language(self):
+        src = HTML.read_text(encoding="utf-8")
+        for needle in ('id="people-by"', 'data-by="place"', 'data-by="quest"', 'data-by="name"', "_peopleGroups(shown, by)"):
+            self.assertIn(needle, src)
+        for path in sorted((DISPLAY / "i18n").glob("*.json")):
+            data = json.loads(path.read_text(encoding="utf-8"))
+            for key in ("people.by", "people.by.place", "people.by.quest", "people.by.name", "people.noPlace", "people.noQuest"):
                 with self.subTest(lang=path.stem, key=key):
                     self.assertTrue(data.get(key))
 
