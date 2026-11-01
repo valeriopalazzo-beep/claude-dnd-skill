@@ -6541,6 +6541,12 @@ def player_input():
     return "", 204
 
 
+# Dice rolled one at a time from a phone, kept until the last of the spec is in:
+# (character lower, request id, spec, modifier) -> [rolls so far].
+_dice_partial: dict = {}
+_dice_partial_lock = threading.Lock()
+
+
 @app.route("/player-input/dice", methods=["POST"])
 def player_dice():
     """Server-side dice roll submitted from a player's phone.
@@ -6583,7 +6589,30 @@ def player_dice():
     def _roll_once() -> list[int]:
         return [secrets.randbelow(n_sides) + 1 for _ in range(n_dice)]
 
-    if adv in ("advantage", "disadvantage") and spec == "1d20":
+    # One die at a time (the player chose it on the phone): each tap rolls one
+    # die here and keeps it; the roll is written and reported only when the
+    # last die of the spec is in, exactly as if they had been thrown together.
+    one_die = bool(data.get("one_die")) and n_dice > 1
+    if one_die:
+        key = (character.lower(), req_id, spec, modifier)
+        with _dice_partial_lock:
+            for k in [k for k in _dice_partial if k[0] == key[0] and k != key]:
+                _dice_partial.pop(k, None)          # a different roll started: drop the old one
+            got_rolls = _dice_partial.setdefault(key, [])
+            got_rolls.append(secrets.randbelow(n_sides) + 1)
+            so_far = list(got_rolls)
+            if len(so_far) >= n_dice:
+                _dice_partial.pop(key, None)
+        if len(so_far) < n_dice:
+            return jsonify({"partial": True, "character": character, "spec": spec,
+                            "last": so_far[-1], "rolls": so_far, "of": n_dice,
+                            "request_id": req_id or None}), 200
+
+    if one_die:
+        rolls = so_far
+        kept  = rolls
+        both  = None
+    elif adv in ("advantage", "disadvantage") and spec == "1d20":
         r1, r2 = _roll_once(), _roll_once()
         chosen = max(r1[0], r2[0]) if adv == "advantage" else min(r1[0], r2[0])
         rolls  = [chosen]

@@ -3221,7 +3221,7 @@
     justify-content: center;
   }
   #dice-pad .dp-die,
-  #dice-pad .dp-adv,
+  #dice-pad .dp-adv, #dice-pad .dp-mode,
   #dice-pad .dp-mod,
   #dice-pad #dp-roll {
     background: rgba(20,16,8,0.7);
@@ -3243,14 +3243,14 @@
     transition: transform 80ms ease, background 120ms ease;
   }
   #dice-pad .dp-die:active,
-  #dice-pad .dp-adv:active,
+  #dice-pad .dp-adv:active, #dice-pad .dp-mode:active,
   #dice-pad .dp-mod:active,
   #dice-pad #dp-roll:active {
     transform: scale(0.94);
     background: rgba(180,140,60,0.32);
   }
   #dice-pad .dp-die[disabled],
-  #dice-pad .dp-adv[disabled],
+  #dice-pad .dp-adv[disabled], #dice-pad .dp-mode[disabled],
   #dice-pad .dp-mod[disabled] {
     opacity: 0.25;
     pointer-events: none;
@@ -3265,7 +3265,7 @@
     margin-top: -4px;
   }
   #dice-pad .dp-die.active,
-  #dice-pad .dp-adv.active {
+  #dice-pad .dp-adv.active, #dice-pad .dp-mode.active {
     background: rgba(180,140,60,0.25);
     border-color: rgba(220,180,90,0.8);
     color: #f4e2a8;
@@ -4219,13 +4219,13 @@
   :root[data-skin="editorial"] body.input-only #dice-pad{
     border-top:1px solid var(--e-hair-strong); background:color-mix(in srgb, var(--e-strong), #000 10%); }
   :root[data-skin="editorial"] #dice-pad .dp-die,
-  :root[data-skin="editorial"] #dice-pad .dp-adv,
+  :root[data-skin="editorial"] #dice-pad .dp-adv, :root[data-skin="editorial"] #dice-pad .dp-mode,
   :root[data-skin="editorial"] #dice-pad .dp-mod{
     background:color-mix(in srgb, var(--e-strong), #000 22%); color:var(--e-on-strong);
     border:1px solid var(--e-hair-strong); border-radius:3px;
     font-family:'Syne',sans-serif; font-weight:700; }
   :root[data-skin="editorial"] #dice-pad .dp-die.active,
-  :root[data-skin="editorial"] #dice-pad .dp-adv.active{
+  :root[data-skin="editorial"] #dice-pad .dp-adv.active, :root[data-skin="editorial"] #dice-pad .dp-mode.active {
     background:var(--e-accent); border-color:var(--e-accent); color:var(--e-dice-text); }
   :root[data-skin="editorial"] #dice-pad #dp-mod-val, :root[data-skin="editorial"] #dice-pad #dp-count-val{ font-family:'Syne',sans-serif; color:var(--e-on-strong); }
   :root[data-skin="editorial"] #dp-hint{ font-family:'Syne',sans-serif; color:var(--e-on-strong); opacity:.6; letter-spacing:.08em; }
@@ -5304,13 +5304,13 @@
   /* Tira i dadi — the live #dice-pad */
   :root[data-skin="lanterna"] body.ln-on #dice-drawer #dice-pad{ display:flex !important; flex-direction:column; gap:12px; padding:0; border:0; background:transparent; }
   :root[data-skin="lanterna"] body.ln-on #dice-pad .dp-row{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:0; }
-  :root[data-skin="lanterna"] body.ln-on #dice-pad .dp-die, :root[data-skin="lanterna"] body.ln-on #dice-pad .dp-adv, :root[data-skin="lanterna"] body.ln-on #dice-pad .dp-mod{
+  :root[data-skin="lanterna"] body.ln-on #dice-pad .dp-die, :root[data-skin="lanterna"] body.ln-on #dice-pad .dp-adv, :root[data-skin="lanterna"] body.ln-on #dice-pad .dp-mode, :root[data-skin="lanterna"] body.ln-on #dice-pad .dp-mod {
     font-family:'Alegreya Sans',sans-serif; font-weight:800; font-size:17px; letter-spacing:.02em; text-transform:none;
     background:var(--ln-surface-2); color:var(--ln-text); border:1.5px solid var(--ln-line-strong); border-radius:10px; min-height:46px; padding:8px 10px; }
   :root[data-skin="lanterna"] body.ln-on #dice-pad .dp-die{ flex:1 1 calc(25% - 8px); }
-  :root[data-skin="lanterna"] body.ln-on #dice-pad .dp-adv{ flex:1 1 0; }
+  :root[data-skin="lanterna"] body.ln-on #dice-pad .dp-adv, :root[data-skin="lanterna"] body.ln-on #dice-pad .dp-mode { flex:1 1 0; }
   :root[data-skin="lanterna"] body.ln-on #dice-pad .dp-mod{ min-width:48px; font-size:22px; }
-  :root[data-skin="lanterna"] body.ln-on #dice-pad .dp-die.active, :root[data-skin="lanterna"] body.ln-on #dice-pad .dp-adv.active{ background:var(--ln-accent); border-color:var(--ln-accent); color:var(--ln-on-accent); }
+  :root[data-skin="lanterna"] body.ln-on #dice-pad .dp-die.active, :root[data-skin="lanterna"] body.ln-on #dice-pad .dp-adv.active, :root[data-skin="lanterna"] body.ln-on #dice-pad .dp-mode.active { background:var(--ln-accent); border-color:var(--ln-accent); color:var(--ln-on-accent); }
   :root[data-skin="lanterna"] body.ln-on #dice-pad #dp-mod-val, :root[data-skin="lanterna"] body.ln-on #dice-pad #dp-count-val{ min-width:56px; text-align:center; font-family:'Alegreya Sans',sans-serif; font-weight:800; font-size:22px; color:var(--ln-text); }
   :root[data-skin="lanterna"] body.ln-on #dp-hint{ font-family:'Alegreya Sans',sans-serif; font-weight:600; font-size:14px; letter-spacing:0; color:var(--ln-text-faint); opacity:1; }
   :root[data-skin="lanterna"] body.ln-on #dice-pad #dp-name, :root[data-skin="lanterna"] body.ln-on #dice-pad #dp-label{ flex:1; min-width:0; font-family:'Alegreya Sans',sans-serif; font-weight:600; font-size:17px;
@@ -5433,10 +5433,10 @@
   :root[data-skin="lanterna"] body.input-only .dp-tab{ font-family:'Alegreya Sans',sans-serif; font-weight:800; font-size:16px; letter-spacing:.06em; color:var(--ln-text-muted); border-bottom:3px solid transparent; }
   :root[data-skin="lanterna"] body.input-only .dp-tab.active{ color:var(--ln-text); background:transparent; border-bottom-color:var(--ln-accent); }
   :root[data-skin="lanterna"] body.input-only #dice-pad{ background:transparent; border-top:0; }
-  :root[data-skin="lanterna"] body.input-only #dice-pad .dp-die, :root[data-skin="lanterna"] body.input-only #dice-pad .dp-adv, :root[data-skin="lanterna"] body.input-only #dice-pad .dp-mod{
+  :root[data-skin="lanterna"] body.input-only #dice-pad .dp-die, :root[data-skin="lanterna"] body.input-only #dice-pad .dp-adv, :root[data-skin="lanterna"] body.input-only #dice-pad .dp-mode, :root[data-skin="lanterna"] body.input-only #dice-pad .dp-mod {
     font-family:'Alegreya Sans',sans-serif; font-weight:800; font-size:17px; letter-spacing:.02em;
     background:var(--ln-surface-2); color:var(--ln-text); border:1.5px solid var(--ln-line-strong); border-radius:10px; }
-  :root[data-skin="lanterna"] body.input-only #dice-pad .dp-die.active, :root[data-skin="lanterna"] body.input-only #dice-pad .dp-adv.active{ background:var(--ln-accent); border-color:var(--ln-accent); color:var(--ln-on-accent); }
+  :root[data-skin="lanterna"] body.input-only #dice-pad .dp-die.active, :root[data-skin="lanterna"] body.input-only #dice-pad .dp-adv.active, :root[data-skin="lanterna"] body.input-only #dice-pad .dp-mode.active { background:var(--ln-accent); border-color:var(--ln-accent); color:var(--ln-on-accent); }
   :root[data-skin="lanterna"] body.input-only #dice-pad #dp-mod-val, :root[data-skin="lanterna"] body.input-only #dice-pad #dp-count-val{ font-family:'Alegreya Sans',sans-serif; font-weight:800; color:var(--ln-text); }
   :root[data-skin="lanterna"] body.input-only #dp-hint{ font-family:'Alegreya Sans',sans-serif; color:var(--ln-text-faint); opacity:1; letter-spacing:0; }
   :root[data-skin="lanterna"] body.input-only #dice-pad #dp-name, :root[data-skin="lanterna"] body.input-only #dice-pad #dp-label{ font-family:'Alegreya Sans',sans-serif; font-size:17px;
@@ -5742,6 +5742,10 @@
         <span style="opacity:.7" data-i18n="dp.count">Dice</span>
         <span id="dp-count-val">1</span>
         <button class="dp-mod" data-count-delta="1" aria-label="more dice" data-i18n-aria="dp.countInc">+</button>
+      </div>
+      <div class="dp-row" id="dp-mode-row" style="display:none">
+        <button class="dp-mode active" data-mode="all" data-i18n="dp.modeAll">All at once</button>
+        <button class="dp-mode"        data-mode="one" data-i18n="dp.modeOne">One at a time</button>
       </div>
       <div class="dp-row">
         <button class="dp-adv active" data-adv="normal"  title="Roll one d20" data-i18n="dp.straight" data-i18n-title="dp.straight.title">Straight</button>
@@ -15967,11 +15971,34 @@ function _initDicePad() {
   // next to "Dice" the count, so 3d6 or 8d6 is d6 with 3 or 8 (1–20).
   let die   = '1d20';
   let count = 1;
+  // With more than one die the player chooses: all at once (one tap) or one
+  // at a time (one tap per die, each rolled by the server as it is tapped;
+  // the total goes to the story and the DM only after the last one). The
+  // choice is remembered on this phone.
+  let rollMode = 'all';
+  try { if (localStorage.getItem('dnd.dp.rollMode') === 'one') rollMode = 'one'; } catch (_) {}
+  let _partial = null;            // {key, rolls:[…], of:N} while rolling one at a time
+  function _partialKey() { return [_activeRequestId, spec, mod].join('|'); }
+  function _rollBtnLabel() {
+    if (count > 1 && rollMode === 'one') {
+      const done = (_partial && _partial.key === _partialKey()) ? _partial.rolls.length : 0;
+      rollBtn.textContent = _t('dp.rollDieN', { n: done + 1, of: count });
+    } else {
+      rollBtn.textContent = _t('dp.roll');
+    }
+  }
+  function _syncModeRow() {
+    const row = document.getElementById('dp-mode-row');
+    if (row) row.style.display = count > 1 ? '' : 'none';
+    document.querySelectorAll('.dp-mode').forEach(b => b.classList.toggle('active', b.dataset.mode === rollMode));
+    _rollBtnLabel();
+  }
   function _setSpec() {
     spec = count + 'd' + die.split('d')[1];
     if (countVal) countVal.textContent = String(count);
     if (!reel.classList.contains('spinning')) reel.textContent = count > 1 ? spec : spec.replace('1d', 'd');
     _syncAdvAvailability();
+    _syncModeRow();
   }
   // Currently-active DM request, if any. Echoed back on the roll POST so the
   // server can match the response to the pending request and release any
@@ -16015,6 +16042,14 @@ function _initDicePad() {
     btn.addEventListener('click', () => {
       mod = Math.max(-30, Math.min(30, mod + Number(btn.dataset.delta)));
       modVal.textContent = (mod >= 0 ? '+' : '') + mod;
+    });
+  });
+  document.querySelectorAll('.dp-mode').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (_partial && _partial.rolls.length) return;   // halfway through: finish the dice already started
+      rollMode = btn.dataset.mode === 'one' ? 'one' : 'all';
+      try { localStorage.setItem('dnd.dp.rollMode', rollMode); } catch (_) {}
+      _syncModeRow();
     });
   });
   document.querySelectorAll('.dp-mod[data-count-delta]').forEach(btn => {
@@ -16064,6 +16099,8 @@ function _initDicePad() {
 
     const m = /^(\d+)d(\d+)$/.exec(spec);
     const faces = m ? Number(m[2]) : 20;
+    const oneByOne = count > 1 && rollMode === 'one';
+    if (oneByOne && !(_partial && _partial.key === _partialKey())) _partial = { key: _partialKey(), rolls: [], of: count };
 
     // Kick off spin animation immediately so the phone feels responsive,
     // then await the authoritative server roll.
@@ -16076,12 +16113,28 @@ function _initDicePad() {
         body: JSON.stringify({
           character, spec, modifier: mod, advantage: adv, label,
           request_id: reqId || undefined,
+          ...(oneByOne ? { one_die: true } : {}),
         }),
       });
       if (res.ok) result = await res.json();
     } catch (_) { /* network error — fall through */ }
 
     await spinPromise;
+    // One at a time, not the last die yet: show this die and wait for the next tap.
+    if (result && result.partial) {
+      if (_partial) _partial.rolls = result.rolls.slice();
+      lockTo(result.last);
+      document.getElementById('dp-result-line').innerHTML =
+        _esc(_t('dp.dieOfN', { n: result.rolls.length, of: result.of })) +
+        ` &nbsp;<span style="opacity:.7">(${result.rolls.join(' + ')})</span>`;
+      if (navigator.vibrate) navigator.vibrate(20);
+      if (_activeRequestId !== reqId) return;
+      rollBtn.disabled = false;
+      _rollBtnLabel();
+      return;
+    }
+    _partial = null;
+    _rollBtnLabel();
     // A new request came in while the die was spinning: it has already set
     // the pad up (die, modifier, Roll lit) — leave it so.
     const superseded = _activeRequestId !== reqId;
@@ -16174,6 +16227,7 @@ function _initDicePad() {
     if (!isAny && !targets.includes(me)) return;                  // not for this phone
 
     _activeRequestId = String(req.request_id || '');
+    _partial = null;
 
     // The pad is still locked to the previous prescribed roll's die/adv;
     // disabled buttons ignore .click(), so unlock before pre-filling.
@@ -16242,6 +16296,8 @@ function _initDicePad() {
   function _onDiceRequestCancelled(rid) {
     if (!rid || rid !== _activeRequestId) return;
     _activeRequestId = '';
+    _partial = null;
+    _rollBtnLabel();
     if (_locked) _setLocked(false);
     rollBtn.disabled = false;
     rollBtn.classList.remove('pulse', 'rolled');
