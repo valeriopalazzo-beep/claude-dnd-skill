@@ -144,8 +144,11 @@ class SaveAttackTests(unittest.TestCase):
         sheet = pathlib.Path.home() / ".claude" / "dnd" / "campaigns" / "il-tentativo-del-trio" / "characters" / "finocchio.md"
         if not sheet.is_file():
             raise unittest.SkipTest("no Finocchio on this machine")
-        breath = attacks.find(attacks.read_attacks(sheet.read_text(encoding="utf-8")), "soffio")
-        self.assertEqual((breath["bonus"], breath["save"]["dc"], breath["save"]["ability"]), (None, 12, "DEX"))
+        text = sheet.read_text(encoding="utf-8")
+        breath = attacks.find(attacks.read_attacks(text), "soffio")
+        # the DC grows with his level: take it from the sheet's own row, not a number written here
+        dc = int(re.search(r"^\|\s*Soffio acido\s*\|\s*CD\s*(\d+)", text, re.M | re.I).group(1))
+        self.assertEqual((breath["bonus"], breath["save"]["dc"], breath["save"]["ability"]), (None, dc, "DEX"))
 
 
 class CommandTests(unittest.TestCase):
