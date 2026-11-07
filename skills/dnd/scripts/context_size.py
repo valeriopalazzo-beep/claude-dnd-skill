@@ -12,8 +12,8 @@ CLAUDE_CODE_SESSION_ID under ~/.claude/projects (or CLAUDE_CONFIG_DIR), or the
 newest transcript when that variable is missing.
 
 Usage:
-    context_size.py [--limit 300000] [--transcript FILE]
-Prints one line, e.g.  `context: 412k tokens — checkpoint due (limit 300k)`.
+    context_size.py [--limit 200000] [--transcript FILE]
+Prints one line, e.g.  `context: 212k tokens — checkpoint due (limit 200k)`.
 Exit code 0 always; 2 only when no transcript is found.
 """
 import argparse
@@ -22,7 +22,7 @@ import os
 import pathlib
 import sys
 
-DEFAULT_LIMIT = 300_000
+DEFAULT_LIMIT = 200_000
 TAIL_BYTES = 4 * 1024 * 1024
 
 
@@ -62,7 +62,7 @@ def last_context(path):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--limit", type=int, default=DEFAULT_LIMIT,
-                    help="tokens above which a checkpoint is due (default 300000)")
+                    help="tokens above which a checkpoint is due (default 200000)")
     ap.add_argument("--transcript", help="transcript file (default: this session's)")
     a = ap.parse_args(argv)
     path = pathlib.Path(a.transcript) if a.transcript else find_transcript()

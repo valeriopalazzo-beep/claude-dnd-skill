@@ -50,6 +50,13 @@ class ContextSizeTests(unittest.TestCase):
         _, line = self.run_main("--transcript", str(p), "--limit", "300000")
         self.assertIn("fine", line)
 
+    def test_the_default_limit_is_200k(self):
+        self.assertEqual(cs.DEFAULT_LIMIT, 200_000)
+        _, line = self.run_main("--transcript", str(self.transcript([call(1, 205_000, 0)])))
+        self.assertIn("checkpoint due (limit 200k)", line)
+        _, line = self.run_main("--transcript", str(self.transcript([call(1, 195_000, 0)])))
+        self.assertIn("fine", line)
+
     def test_no_call_yet(self):
         p = self.transcript([{"type": "user", "message": {}}])
         self.assertIsNone(cs.last_context(p))
