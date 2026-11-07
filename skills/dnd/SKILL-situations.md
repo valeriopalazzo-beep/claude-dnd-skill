@@ -78,7 +78,7 @@ ${CLAUDE_SKILL_DIR}/                 ← the skill dir (plugin: <plugin>/skills/
   SKILL-situations.md ← the sections read only when their situation comes up (this file)
   SKILL-scripts.md   ← all Python script syntax (read by section, see *Reference modules*)
   SKILL-commands.md  ← all /dm:dnd command procedures (read by section, see *Reference modules*)
-  scripts/           ← dice.py, combat.py, character.py, tracker.py, calendar.py, lookup.py, inventory.py, encumbrance.py, loot.py, encounter.py, backup.py, context_size.py, quota.py, session_log.py
+  scripts/           ← dice.py, combat.py, character.py, tracker.py, calendar.py, lookup.py, inventory.py, encumbrance.py, loot.py, encounter.py, backup.py, context_size.py, quota.py, session_log.py, archive.py
   data/              ← bundled 5e SRD dataset (dnd5e_srd.json — no download needed; sync via /dm:dnd data sync)
   templates/         ← blank character-sheet.md, state.md, world.md, npcs.md, session-log.md, prep.md
   display/           ← Flask SSE display companion (dnd-display-app.py, send.py, push_stats.py, wrapper.py, tts.py, map_render.py, map_art.py, image_gen.py)
@@ -95,6 +95,7 @@ inside the plugin (so it survives updates/uninstalls):
   prep.md            ← the next session's prep (eight steps, DM only); prep-archive.md keeps the old ones
   checkpoint.md      ← tonight's notes from a mid-session checkpoint (see *Long sessions*); deleted at /dm:dnd end
   arc-history.md     ← completed arcs in full (state.md keeps one line each); read only on demand
+  state-archive.md   ← the cold half of state.md (archive.py); read by the piece, whole only in the prep
   media/             ← generated portraits/scenes + rendered maps (index.json records prompts)
 <DATA root>/characters/
   <name>.md          ← global roster: latest known state of every PC across all campaigns

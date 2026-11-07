@@ -195,6 +195,23 @@ Sixteen sections that only matter now and then live in `${CLAUDE_SKILL_DIR}/SKIL
 
 ---
 
+## The archive — reading less, forgetting nothing
+
+`state.md` keeps what is live — Current Situation, Pinned Facts, Live State Flags that still hold, DM Style Notes, Active Quests, the current arc chapter, Session Flags, Wish List, and the last two sessions of Recent Events and Faction Moves. What is history lives in `<campaign>/state-archive.md`, with the same headings: past faction moves (one entry per faction), older recent events (one per session), the continuity archive, closed arc chapters and old steering notes, flags that no longer hold. It is not read at load; it is read **by the piece**, and these re-reads are **mandatory** — reading less is allowed only because of them:
+
+1. **Before an event that touches the past, one targeted question** — in the same Bash as the turn's other lookups, before you narrate:
+   - a faction acts (a move, an envoy, an attack, a rumour about it): `python3 ${CLAUDE_SKILL_DIR}/scripts/archive.py -c <campaign> show "Faction Moves" "<faction>"`;
+   - a known NPC comes back on scene: `python3 ${CLAUDE_SKILL_DIR}/scripts/archive.py -c <campaign> grep "<name>"`, with their `npcs-full.md` entry;
+   - the party returns to a place it has been: `grep "<place>"`;
+   - a quest moves on: `grep "<quest>"` or its key NPC;
+   - a recap, or a claim about the past (yours or a player's): `grep` first, never from memory.
+2. **At the end of the night, in the prep**, the whole archive is read (`python3 ${CLAUDE_SKILL_DIR}/scripts/archive.py -c <campaign> all`). The ten secrets and clues of the next session are how far-off facts come back hot.
+3. **At every save**, what is no longer live moves down (`/dm:dnd save` → *Move the cold half down*), so state.md does not grow back.
+
+At `load` and `resume` run `python3 ${CLAUDE_SKILL_DIR}/scripts/archive.py -c <campaign> index` (a few lines): what is there, so you know when to ask. A campaign without `state-archive.md` keeps everything in state.md, as before. Syntax: `SKILL-scripts.md` → *State Archive*.
+
+---
+
 ## Active DM Mode
 
 Once a campaign is loaded, stay in DM mode. Interpret all player messages as in-game actions. No `/dm:dnd` prefix required.
@@ -211,7 +228,7 @@ Once a campaign is loaded, stay in DM mode. Interpret all player messages as in-
   - **First stop:** `state.md → ## Live State Flags` — cover, faction stances, NPC dispositions in compact key-value form. Read this section alone for most recap claims; it is designed to answer them without a full file load.
   - **If the claim isn't in Live State Flags:** read `state.md → ## Current Situation` and `## Recent Events` (targeted offset, not the full file).
   - **For a specific NPC's attitude or goals:** read only that NPC's entry in `npcs-full.md`, not the whole file.
-  - **For a specific past event:** read `state.md → ## Continuity Archive` first; escalate to `session-log.md` only if the archive bullet is insufficient.
+  - **For a specific past event:** `archive.py grep` (state-archive.md: continuity archive, old events, past faction moves) or `state.md → ## Continuity Archive` in a campaign without one; escalate to `session-log.md` only if the archive bullet is insufficient.
   - **For PC sheet facts:** read `characters/<PC>.md`.
   - **For predefined-story detail (imported campaigns):** re-read the current chapter's `source/<id>.md`, never a compacted recollection of it — a flattened summary of published boxed text or a stat block is exactly the kind of detail compaction corrupts. For a broader-arc question, read `arc.md`; for a location/quest, `world-nodes.md`.
 

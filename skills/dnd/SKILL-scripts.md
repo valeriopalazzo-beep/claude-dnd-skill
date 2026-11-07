@@ -1046,6 +1046,29 @@ Default files searched: state, log, archive, world, npcs
 
 ---
 
+## State Archive — `scripts/archive.py`
+
+The cold half of `state.md`, in `<campaign>/state-archive.md`: same `## ` headings, one `### ` entry per faction, session or chapter, newest first. When to ask it and the re-reads that are mandatory: SKILL.md → *The archive*.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/scripts/archive.py -c <name> index                                  # sections and entries, with sizes (load, resume)
+python3 ${CLAUDE_SKILL_DIR}/scripts/archive.py -c <name> show "Faction Moves" "Figli dell'Inverno"   # one entry (or a whole section without the second name)
+python3 ${CLAUDE_SKILL_DIR}/scripts/archive.py -c <name> grep Solmund "Corvo Basso"             # every archived line naming any term, with where it is
+python3 ${CLAUDE_SKILL_DIR}/scripts/archive.py -c <name> all                                    # the whole archive: the prep only
+python3 ${CLAUDE_SKILL_DIR}/scripts/archive.py -c <name> rotate [--keep-sessions 2] [--dry-run]  # at save
+python3 ${CLAUDE_SKILL_DIR}/scripts/archive.py -c <name> move "Live State Flags" --bullet "sabotatore"   # or --entry "<### heading>"
+python3 ${CLAUDE_SKILL_DIR}/scripts/archive.py -c <name> add "Campaign Arc" --entry "Steering notes s1-s11" << 'EOF'
+…text cut from state.md…
+EOF
+```
+
+- `rotate` moves what carries a session number older than the last N sessions: `## Faction Moves` bullets (`- **Sessione 7 — <faction>:** …`, filed under `### <faction>`; a trailing `(…)` after the name is dropped), `## Recent Events` bullets (filed under `### Sessione N`), and every `### ` entry of `## Continuity Archive`. Bullets without a session number stay. Each section of state.md keeps one line saying where its older entries went. Run twice, it moves nothing.
+- `move` and `add` are for what needs judgement: a flag that no longer holds, a closed arc chapter, old steering notes. Nothing is ever deleted; the archive is written before state.md, so a crash in between can duplicate a line, never lose one.
+- `show` matches a section or entry by its start (`"Gilda"` finds *Gilda degli Ingranaggi*), case-insensitive. `grep` skips headings and prints `[Section › Entry] line`.
+- Without `state-archive.md` the reads print a one-line note and nothing else.
+
+---
+
 ## Session Log Entry — `scripts/session_log.py`
 
 One entry of `session-log.md`, so a resume does not read the whole log again.
