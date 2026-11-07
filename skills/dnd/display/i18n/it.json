@@ -1322,5 +1322,8 @@
   "ail.toast.cured": "{name}: è passato tutto",
   "ail.toast.hit": "{name}: subisci danni",
   "ail.dc": "CD",
-  "dms.travel.retryNow": "la guida può riprovare ora"
+  "dms.travel.retryNow": "la guida può riprovare ora",
+  "quota.word": "quota",
+  "quota.title": "Limite d'uso del DM: {pct}% consumato, si azzera alle {time}",
+  "quota.titleNoReset": "Limite d'uso del DM: {pct}% consumato"
 }

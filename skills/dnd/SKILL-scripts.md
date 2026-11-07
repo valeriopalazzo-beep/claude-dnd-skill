@@ -1812,6 +1812,27 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/backup.py restore --campaign <name> 1 --yes 
 
 ---
 
+## Usage Limit — `scripts/quota.py`
+
+The real figure of the 5-hour usage limit, so the night never stops without warning. Claude Code passes it to the **status line** only (`rate_limits.five_hour.used_percentage` and `resets_at`, for subscribers); the status line saves it to `<runtime>/quota.json`, and this script and the display read it back.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/scripts/quota.py           # quota: 78% · reset 01:20 — warn (75%): …
+python3 ${CLAUDE_SKILL_DIR}/scripts/quota.py --json    # {"pct": 78.0, "resets_at": 1794046031, "level": "warn"} or {}
+```
+
+- `fine` below 75%, `warn` from 75% (about an hour left: aim to close the scene), `save now` from 90% (close the scene and `/dm:dnd save`). SKILL.md → *Long sessions* says when to run it.
+- `quota: unknown` when there is nothing to go on: no file, a window that has already reset, a file older than five hours without a reset time. Never a guess.
+- The display shows a quiet pill to everyone (`quota 78% · 01:20`), amber from 75%, red from 90%, and nothing without data. It rereads the file every 20 seconds.
+- **One-time setup — the status line must save the figure.** A status line written in shell adds one line:
+  ```bash
+  input=$(cat); echo "$input" | python3 ${CLAUDE_SKILL_DIR}/scripts/quota.py record
+  ```
+  A status line in another language writes `{"rate_limits": <the object it received>, "saved_at": <epoch seconds>}` to `<runtime>/quota.json` (`DND_RUNTIME_DIR`, else `<DND_CAMPAIGN_ROOT or ~/.claude/dnd>/.runtime`). The field names belong to Claude Code and may change: the reader accepts snake or camel case and a reset time in seconds, milliseconds or ISO.
+- The file is local to the DM's PC: it is never part of a campaign or of its backups.
+
+---
+
 ## Lazy Corpus — `scripts/corpus_check.py`
 
 Imported (structured) campaigns keep the full module text as a lazily-loaded reference layer instead of inlining it. Layout:

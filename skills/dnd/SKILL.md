@@ -199,7 +199,7 @@ ${CLAUDE_SKILL_DIR}/                 ← the skill dir (plugin: <plugin>/skills/
   SKILL.md           ← core DM rules (this file)
   SKILL-scripts.md   ← all Python script syntax (read by section, see *Reference modules*)
   SKILL-commands.md  ← all /dm:dnd command procedures (read by section, see *Reference modules*)
-  scripts/           ← dice.py, combat.py, character.py, tracker.py, calendar.py, lookup.py, inventory.py, encumbrance.py, loot.py, encounter.py, backup.py, context_size.py
+  scripts/           ← dice.py, combat.py, character.py, tracker.py, calendar.py, lookup.py, inventory.py, encumbrance.py, loot.py, encounter.py, backup.py, context_size.py, quota.py
   data/              ← bundled 5e SRD dataset (dnd5e_srd.json — no download needed; sync via /dm:dnd data sync)
   templates/         ← blank character-sheet.md, state.md, world.md, npcs.md, session-log.md, prep.md
   display/           ← Flask SSE display companion (dnd-display-app.py, send.py, push_stats.py, wrapper.py, tts.py, map_render.py, map_art.py, image_gen.py)
@@ -247,6 +247,7 @@ Full script syntax: `${CLAUDE_SKILL_DIR}/SKILL-scripts.md`, one section at a tim
 Every tool call reads the whole conversation again. What a session costs is **the conversation's length × the number of calls**: a session that has grown to 600k tokens pays four times as much for the same turn as one at 150k. Narration is a small part of it. The rules, the dice and the length of the narration stay exactly as they are; the conversation is kept short instead.
 
 - **At every natural break** (a fight over, a rest, the party reaching a new place, a scene closing) run `python3 ${CLAUDE_SKILL_DIR}/scripts/context_size.py` in the same Bash as that turn's other commands. When it prints `checkpoint due` (over 300k tokens) and nothing waits for an answer, run `/dm:dnd checkpoint` (`SKILL-commands.md`). Never in the middle of a fight, with a roll called, or with a vote, chase, puzzle or group check open.
+- **The usage limit comes first.** What stops a night is the 5-hour limit, not the conversation's size. In the same Bash as `context_size.py` run `python3 ${CLAUDE_SKILL_DIR}/scripts/quota.py`; the table sees the same figure on the display. When it prints `warn` (75%) tell the DM in one line that about an hour is left and steer the scene toward a close. When it prints `save now` (90%) close the scene and run `/dm:dnd save` at once — the save itself uses quota, and a limit reached halfway through it loses the night. `quota: unknown` means no figure (no subscription, a window just reset, a status line that does not save it): say nothing and never guess. Setup: `SKILL-scripts.md` → *Usage Limit*.
 - **The checkpoint writes everything down first.** The save puts tonight in `session-log.md` and `state.md`; `checkpoint.md` keeps what only the conversation held (the last words narrated, NPC voices and promises, rulings, plans said aloud, effects no script tracks). Then the DM types `/clear` and `/dm:dnd resume <campaign>`, and the game goes on from the same line. What the players send meanwhile waits in the queue.
 - **Never `/compact` instead.** A compaction decides on its own what to forget; the checkpoint writes what the game needs, in files the skill already reads.
 - The DM can ask for a checkpoint at any time; the same conditions apply.

@@ -1182,5 +1182,8 @@
   "ail.toast.cured": "{name} is over",
   "ail.toast.hit": "{name}: you take damage",
   "ail.dc": "DC",
-  "dms.travel.retryNow": "the guide may try again now"
+  "dms.travel.retryNow": "the guide may try again now",
+  "quota.word": "quota",
+  "quota.title": "DM usage limit: {pct}% used, resets at {time}",
+  "quota.titleNoReset": "DM usage limit: {pct}% used"
 }

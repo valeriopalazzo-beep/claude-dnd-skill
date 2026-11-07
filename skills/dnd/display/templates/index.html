@@ -1658,6 +1658,15 @@
   .split-mark::before, .split-mark::after{ content:''; flex:1; height:1px; background:currentColor; opacity:.45; }
   .split-mark.elsewhere{ font-weight:600; font-style:italic; letter-spacing:.02em; text-transform:none; opacity:.8; }
   #ln-split[hidden]{ display:none; }
+  /* Usage-limit badge (scripts/quota.py): quiet until 75%, then amber, red at 90% */
+  #ln-quota[hidden], #wc-quota:empty{ display:none; }
+  .ln-quota{ cursor:default; font-size:14px; padding:6px 12px; color:var(--ln-text-muted); }
+  .ln-quota.warn{ color:var(--ln-warn); border-color:var(--ln-warn); background:var(--ln-warn-bg); }
+  .ln-quota.save{ color:var(--ln-on-bad); border-color:var(--ln-bad); background:var(--ln-bad); }
+  .ln-quota .q-long{ display:inline; }
+  @media (max-width:760px){ .ln-quota .q-long{ display:none; } .ln-quota{ padding:5px 10px; font-size:13px; } }
+  #wc-quota{ margin-top:6px; font-family:'Cinzel',serif; font-size:8px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(180,140,60,0.55); }
+  #wc-quota.warn{ color:rgba(245,200,90,0.95); } #wc-quota.save{ color:rgba(240,110,90,0.95); }
 
   /* ══ Spellbook (spellbook.py) — a caster's spells and slots, cast from here ══ */
   #spell-modal{ display:none; position:fixed; inset:0; z-index:10530; background:rgba(8,6,4,.92);
@@ -5504,6 +5513,8 @@
   <div id="wc-sub"></div>
   <!-- Ruleset badge — '5e 2014' or '5e 2024'; populated from stats.ruleset -->
   <div id="ruleset-badge"></div>
+  <!-- Usage-limit badge for the classic skin; Lanterna shows #ln-quota -->
+  <div id="wc-quota"></div>
 </div>
 
 <!-- Audio toggle controls — SFX triggered by narration text -->
@@ -6294,6 +6305,7 @@
   <span class="ln-spacer"></span>
   <button id="ln-combat" class="ln-pill ln-combat" type="button" data-ln-go="personaggi" hidden><svg class="ln-i"><use href="#ln-i-swords"/></svg><span id="ln-combat-txt"></span></button>
   <button id="ln-split" class="ln-pill" type="button" hidden></button>
+  <span id="ln-quota" class="ln-pill ln-quota" role="status" hidden></span>
   <button id="ln-whisper" class="ln-icon-btn" type="button" title="Secret notes" aria-label="Secret notes" data-i18n-title="whisper.title" data-i18n-aria="whisper.title" hidden>🤫<span class="whisper-count" hidden></span></button>
   <div id="ln-clocks-slot"></div>
   <div id="ln-clock-slot"></div>
@@ -11669,6 +11681,7 @@ function connect() {
         }, 8000);
       }
     }
+    if (payload.quota !== undefined) _onQuota(payload.quota);
     if (payload.autorun_threshold !== undefined) {
       _autorunThreshold = payload.autorun_threshold;
       // Re-render staged queue so threshold counter updates immediately
@@ -13822,6 +13835,39 @@ function _splitElsewhere() {
   if (_domAudience === _SPLIT_ELSEWHERE) return;
   _domAudience = _SPLIT_ELSEWHERE;
   _splitLine(_t('split.elsewhere', null, '… meanwhile, elsewhere …'), 'elsewhere');
+}
+
+// The 5-hour usage limit (scripts/quota.py): the DM's status line saves it,
+// the server sends {pct, resets_at, level} or {} when there is no figure.
+function _onQuota(q) {
+  const pill = document.getElementById('ln-quota'), wc = document.getElementById('wc-quota');
+  const has = q && typeof q.pct === 'number';
+  const level = has ? (q.level || 'fine') : '';
+  let reset = '';
+  if (has && q.resets_at) {
+    const d = new Date(q.resets_at * 1000);
+    reset = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
+  const title = !has ? '' : reset ? _t('quota.title', { pct: q.pct, time: reset }, 'DM usage limit: ' + q.pct + '% used, resets at ' + reset)
+                                  : _t('quota.titleNoReset', { pct: q.pct }, 'DM usage limit: ' + q.pct + '% used');
+  if (pill) {
+    pill.hidden = !has;
+    pill.classList.toggle('warn', level === 'warn');
+    pill.classList.toggle('save', level === 'save');
+    pill.textContent = '';
+    if (has) {
+      const long = document.createElement('span');
+      long.className = 'q-long';
+      long.textContent = _t('quota.word', null, 'quota') + ' ';
+      pill.append(long, document.createTextNode(q.pct + '%' + (reset ? ' · ' + reset : '')));
+    }
+    pill.title = title;
+  }
+  if (wc) {
+    wc.className = level === 'fine' ? '' : level;
+    wc.textContent = has ? _t('quota.word', null, 'quota') + ' ' + q.pct + '%' + (reset ? ' · reset ' + reset : '') : '';
+    wc.title = title;
+  }
 }
 
 (function _initSplit() {

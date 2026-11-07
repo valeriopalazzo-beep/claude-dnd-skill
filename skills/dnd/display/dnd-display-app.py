@@ -3441,6 +3441,47 @@ def split_changed():
     return "", 204
 
 
+# ─── Usage limit (scripts/quota.py, ADR 0002) ──────────────────────────────
+# The DM's status line saves Claude Code's real 5-hour figure to
+# <runtime>/quota.json. A small watcher reads it and tells every screen, so the
+# table sees "quota 72% · reset 01:20" without asking. No data, no badge.
+import quota as _quota_lib
+
+_quota_now = None              # what the screens were last told ({} = nothing)
+_quota_lock = threading.Lock()
+
+
+def _quota_public():
+    q = _quota_lib.read()
+    return {"pct": int(q["pct"]), "resets_at": q["resets_at"], "level": q["level"]} if q else {}
+
+
+def _quota_tick() -> None:
+    global _quota_now
+    now = _quota_public()
+    with _quota_lock:
+        if now == _quota_now:
+            return
+        _quota_now = now
+    _broadcast({"quota": now})
+
+
+def _start_quota_watch(every: float = 20.0) -> None:
+    def loop():
+        while True:
+            try:
+                _quota_tick()
+            except Exception:
+                pass
+            _time.sleep(every)
+    threading.Thread(target=loop, daemon=True, name="quota-watch").start()
+
+
+@app.route("/quota", methods=["GET"])
+def quota_get():
+    return jsonify(_quota_public()), 200
+
+
 # ─── Spellbook (scripts/spellbook.py) ────────────────────────────────────────
 # A caster's spells and slots, read from the character sheet. A player opens
 # their own; casting from it marks the slot on the sheet and on the display at
@@ -7808,6 +7849,11 @@ def stream():
         for dev in list(_pending_devices.values()):
             q.put_nowait({"device_request": {"id": dev["id"], "ip": dev["ip"]}})
 
+    # The usage-limit badge, if the watcher has a figure.
+    with _quota_lock:
+        if _quota_now:
+            q.put_nowait({"quota": dict(_quota_now)})
+
     def generate():
         try:
             while True:
@@ -7972,5 +8018,6 @@ if __name__ == "__main__":
         except OSError as _exc:
             print(f"  Players' door on this PC not opened (port {_door_port}): {_exc}")
 
+    _start_quota_watch()
     app.run(host=host, port=_DISPLAY_PORT, threaded=True, debug=False, ssl_context=ssl_ctx,
             request_handler=_TimeoutRequestHandler)
