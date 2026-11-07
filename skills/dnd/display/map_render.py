@@ -1800,4 +1800,9 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    try:  # the rules for this situation are in SKILL-situations.md (ADR 0005)
+        sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "scripts"))
+        import situations; situations.remind('Images & Maps', None)
+    except Exception:
+        pass
     raise SystemExit(main())
