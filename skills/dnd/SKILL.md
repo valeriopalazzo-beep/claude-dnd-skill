@@ -199,7 +199,7 @@ ${CLAUDE_SKILL_DIR}/                 ← the skill dir (plugin: <plugin>/skills/
   SKILL.md           ← core DM rules (this file)
   SKILL-scripts.md   ← all Python script syntax (read by section, see *Reference modules*)
   SKILL-commands.md  ← all /dm:dnd command procedures (read by section, see *Reference modules*)
-  scripts/           ← dice.py, combat.py, character.py, tracker.py, calendar.py, lookup.py, inventory.py, encumbrance.py, loot.py, encounter.py, backup.py, context_size.py, quota.py
+  scripts/           ← dice.py, combat.py, character.py, tracker.py, calendar.py, lookup.py, inventory.py, encumbrance.py, loot.py, encounter.py, backup.py, context_size.py, quota.py, session_log.py
   data/              ← bundled 5e SRD dataset (dnd5e_srd.json — no download needed; sync via /dm:dnd data sync)
   templates/         ← blank character-sheet.md, state.md, world.md, npcs.md, session-log.md, prep.md
   display/           ← Flask SSE display companion (dnd-display-app.py, send.py, push_stats.py, wrapper.py, tts.py, map_render.py, map_art.py, image_gen.py)
@@ -259,6 +259,7 @@ Each separate tool call costs a full reading of the conversation, so build the t
 - **Before narrating**, gather everything the turn needs in **one** Bash: the sheet lines, the bestiary entry, the PHB/DMG pages, `lookup.py`, the tracker. Think ahead about what the answer will need instead of looking it up one grep at a time.
 - **After narrating**, send everything in **one** Bash: `send.py` (narration, dice, NPCs), `whisper.py`, `push_stats.py`, quests, calendar. With autorun on, the wait goes at the end of **that same** Bash, chained with `&&` (*Autorun / taxi mode* below): one call per wake-up instead of two. A map render stays its own background call.
 - **Separate calls only when a result decides the next step:** an attack roll before its damage, a saving throw before its effect, a player's die before the outcome. That order belongs to the rules and is never shortened.
+- **`state.md` is read whole once per conversation** — at `load` or at `resume` — and stays in context until the next `/clear`. Afterwards look up a single section (`grep -n '^## ' state.md`, then `sed -n` on that range) instead of reading the file again. Your own edits do not need a re-read: you know what you wrote.
 - **Cut long outputs at the source** (`head`, `sed -n`, `grep -m`, `| tail`): a 20 KB file printed once stays in the conversation for the rest of the night.
 
 ## Defects found during play

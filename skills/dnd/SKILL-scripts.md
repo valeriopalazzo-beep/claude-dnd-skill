@@ -1046,6 +1046,20 @@ Default files searched: state, log, archive, world, npcs
 
 ---
 
+## Session Log Entry — `scripts/session_log.py`
+
+One entry of `session-log.md`, so a resume does not read the whole log again.
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/scripts/session_log.py current  --campaign <name>   # tonight's entry: the "(in corso" one, else the newest
+python3 ${CLAUDE_SKILL_DIR}/scripts/session_log.py entry 12 --campaign <name>   # the entry of session 12
+python3 ${CLAUDE_SKILL_DIR}/scripts/session_log.py headings --campaign <name>   # the "## " headings only
+```
+
+Exit 2 when the log or the entry is missing. `--file PATH` reads another log (`session-log-archive.md`).
+
+---
+
 ## Session Recap — `scripts/session_recap.py`
 
 Deterministic state-diff between two character snapshots. Computes the mechanical change set (HP/temp/level/hit dice/death saves/conditions/concentration/exhaustion/inspiration/spell slots) from data so narration never recomputes it — recaps are the single thing an LLM is most likely to hallucinate. Reads `<campaign>/characters/*.md` and merges live `tracker.json` conditions/concentration. Zero LLM calls.
