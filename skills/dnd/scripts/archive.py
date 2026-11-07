@@ -39,8 +39,8 @@ HEADER = ("# Archive — the cold half of state.md\n"
           "*What no longer happens every turn but must not be forgotten. Read it by the piece with "
           "`scripts/archive.py` (show / grep) before an event that touches it, and whole in the prep. "
           "Newest first in every section.*\n")
-SESSION = re.compile(r"^-\s+\*\*(Sessione|Session)\s+(\d+)", re.I)
-FACTION = re.compile(r"^-\s+\*\*(?:Sessione|Session)\s+\d+[^—*]*?—\s*(.+?):?\*\*", re.I)
+SESSION = re.compile(r"^-\s+(?:\*\*)?(Sessione|Session)\s+(\d+)", re.I)
+FACTION = re.compile(r"^-\s+(?:\*\*)?(?:Sessione|Session)\s+\d+[^—*]*?—\s*([^:*]+?)\s*(?::\*\*|\*\*:?|:)", re.I)
 POINTER = "*Older entries: `state-archive.md` (`archive.py show -c <campaign> \"{}\"`).*"
 
 

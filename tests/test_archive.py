@@ -129,6 +129,17 @@ class ArchiveTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             ar.move(STATE, "", "Live State Flags", bullet="nessuno ha questo")
 
+    def test_bullets_without_bold_count_too(self):
+        plain = ("## Faction Moves\n- Sessione 4 — Corvi Grigi: la jarl aspetta.\n- Sessione 1 — Gilda: prende la Torre.\n\n"
+                 "## Recent Events\n- Sessione 4 (2026-10-30): la Rocca.\n\n- Sessione 2 (2026-10-03): la galleria.\n\n"
+                 "- Sessione 1 (2026-10-02): l'arrivo.\n")
+        state, archive, report = ar.rotate(plain, "", 2)
+        self.assertEqual(report, ["Faction Moves: 1 moved", "Recent Events: 2 moved"])
+        self.assertIn("la Rocca", state)
+        self.assertIn("### Gilda", archive)
+        self.assertIn("### Sessione 2", archive)
+        self.assertEqual(ar._faction_of("- **Sessione 13 (fine, 3 Ventaio 15:00) — Figli dell'Inverno (Solmund):** x"), "Figli dell'Inverno")
+
     def test_grep_and_index(self):
         _, archive, _ = self.rotated()
         hits = ar.grep(archive, ["torre"])
