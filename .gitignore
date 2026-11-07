@@ -4,6 +4,7 @@
 # Never commit them — they hold session state, auth tokens, and device
 # approvals specific to one host.
 **/display/app.log
+**/display/app.err.log
 **/display/app.pid
 **/display/stats.json
 **/display/text_log.json
