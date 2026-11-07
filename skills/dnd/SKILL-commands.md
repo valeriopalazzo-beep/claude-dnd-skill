@@ -586,7 +586,7 @@ Go on with tonight's session after a checkpoint and a `/clear`. It is **not** a 
    - whether the display answers (`curl -sk -m 3 <scheme>://localhost:5001/ping`). If it does not, start it again as at load, in tonight's mode, and push the party (load step 6) — a restarted display is empty.
    - **concentration still running** (`checkpoint.md` → effects): for every PC still concentrating, make sure the display knows it — `send.py --stat-concentrate "<PC>:<spell>"` (or `spellbook.py cast` when it is cast). A spell the display does not know about never gets its concentration save when that PC takes damage.
    The *Reference modules* rule starts over: every script section and command procedure is read again before its first use after the resume.
-3. **Back to the table:** `send.py` one line in the table's language (*"Si riprende!"*). Tell the DM in one line where the game stands. Then, if `autorun: true`, start the autorun wait — it takes at once whatever the players sent during the pause; otherwise run `check_input.py` once and go on from the DM's next message.
+3. **Back to the table:** `send.py` one line in the table's language (*"Si riprende!"*). Tell the DM in one line where the game stands. Then, if `autorun: true`, start the autorun wait in the same Bash as that `send.py` (`send.py … && autorun_wait.py`, SKILL.md → *Autorun / taxi mode*) — it takes at once whatever the players sent during the pause; otherwise run `check_input.py` once and go on from the DM's next message.
 
 ---
 

@@ -257,7 +257,7 @@ Every tool call reads the whole conversation again. What a session costs is **th
 Each separate tool call costs a full reading of the conversation, so build the turn in as few calls as the dice allow, with the same scripts, the same rolls and the same checks:
 
 - **Before narrating**, gather everything the turn needs in **one** Bash: the sheet lines, the bestiary entry, the PHB/DMG pages, `lookup.py`, the tracker. Think ahead about what the answer will need instead of looking it up one grep at a time.
-- **After narrating**, send everything in **one** Bash: `send.py` (narration, dice, NPCs), `whisper.py`, `push_stats.py`, quests, calendar. The autorun wait stays its own call, the last one, and a map render stays its own background call.
+- **After narrating**, send everything in **one** Bash: `send.py` (narration, dice, NPCs), `whisper.py`, `push_stats.py`, quests, calendar. With autorun on, the wait goes at the end of **that same** Bash, chained with `&&` (*Autorun / taxi mode* below): one call per wake-up instead of two. A map render stays its own background call.
 - **Separate calls only when a result decides the next step:** an attack roll before its damage, a saving throw before its effect, a player's die before the outcome. That order belongs to the rules and is never shortened.
 - **Cut long outputs at the source** (`head`, `sed -n`, `grep -m`, `| tail`): a 20 KB file printed once stays in the conversation for the rest of the night.
 
@@ -343,17 +343,29 @@ A line wrapped in double brackets — e.g. `[[Narration length for this turn: ai
 
 **Autorun / taxi mode** (`autorun: true` in `state.md → ## Session Flags`):
 
-When autorun is active, Claude drives the turn loop — no DM Enter required and no PTY wrapper needed. After completing each response, run this blocking wait as the very last Bash call of the response. The CLI shows the command text in the `⏺ Bash(...)` label — the comment on line 1 is what the DM sees while it blocks.
+When autorun is active, Claude drives the turn loop — no DM Enter required and no PTY wrapper needed. After completing each response, run this blocking wait as the very last Bash call of the response, in the foreground (timeout 600000). The CLI shows the command text in the `⏺ Bash(...)` label — the comment on line 1 is what the DM sees while it blocks.
+
+**Send and wait in one call.** The wait goes at the end of the Bash that sends the turn, chained with `&&`: `send.py`, `whisper.py`, `push_stats.py`, quests, calendar, then `autorun_wait.py`. Each separate call reads the whole conversation again, and a wake-up used to cost two (the send, then the wait). With `&&` a failed send stops the chain at once, its error is in the output and the wait never starts: fix it and send again. Keep the wait in the foreground — a background call costs an extra call for its "started" result and another when it ends.
 
 ```bash
 # Autorun wait — Ctrl+C to return to manual mode
-AUTORUN=$(python3 ${CLAUDE_SKILL_DIR}/display/autorun_wait.py)
-echo "$AUTORUN"
+python3 ${CLAUDE_SKILL_DIR}/display/send.py … \
+  && python3 ${CLAUDE_SKILL_DIR}/display/push_stats.py … \
+  && python3 ${CLAUDE_SKILL_DIR}/display/autorun_wait.py
 ```
 
+With nothing to send (right after `load`, `resume` or a DM message you only answered in the terminal) the block is the wait alone:
+
+```bash
+# Autorun wait — Ctrl+C to return to manual mode
+python3 ${CLAUDE_SKILL_DIR}/display/autorun_wait.py
+```
+
+Two exceptions keep the send on its own: when a result must be read before the next step (a `--dice-request … --wait`, a lookup), and when the response ends with something other than the wait (a map render goes in its own background Bash; the wait still comes last).
+
 - A newer wait replaces a running one without losing anything: the old wait leaves and takes nothing. `autorun_wait.py --stop` ends the running wait without starting another (used by `/dm:dnd checkpoint`).
-- If `AUTORUN` is non-empty: treat it as the player action for the next turn. Process immediately — no DM message needed. The content has already been sanitised by dnd-display-app.py before being written to the queue.
-- If `AUTORUN` is empty (timeout after 9 min): **silently restart the wait** — do not print anything, do not wait for a DM message. Just run the same Bash block again immediately. This keeps the loop alive indefinitely until a player submits or the DM intervenes.
+- If the wait prints something (`AUTORUN` below means that output): treat it as the player action for the next turn. Process immediately — no DM message needed. The content has already been sanitised by dnd-display-app.py before being written to the queue.
+- If it prints nothing (timeout after 9 min): **silently restart the wait** — do not print anything, do not wait for a DM message. Just run the wait alone again immediately (never the send a second time). This keeps the loop alive indefinitely until a player submits or the DM intervenes.
 - If the DM sends a message mid-wait: the Bash is interrupted. **Before processing the DM's message, run `check_input.py` once.** If it returns content, that is queued player input that arrived during the gap — treat it as part of this turn alongside the DM's message (or as the primary action if the DM message is administrative). If it returns empty, proceed with the DM's message as the turn input. After resolving the DM's turn, restart the wait if `autorun: true` is still in state.md.
 
 Autorun security model: device approval in dnd-display-app.py gates who can write to the queue. Content is validated (character allowlist, structural format, printable ASCII, shell metachar strip) before being written. The Bash loop reads the pre-sanitised file — it does not execute it.
