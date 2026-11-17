@@ -162,7 +162,10 @@ def meet(creatures: list, query: str, alias: str = "", count: int = 1, record: d
     try:
         entry = find(creatures, alias or query)
     except BestiaryError:
-        entry = next((c for c in creatures if record and c.get("index") == record.get("index")), None)
+        # a creature with a name of its own (--as) gets its own page, even when another
+        # creature played with the same SRD block already has one
+        entry = None if alias else next(
+            (c for c in creatures if record and c.get("index") == record.get("index")), None)
     if entry:
         entry["met"] = int(entry.get("met", 0)) + count
         if record and not entry.get("index"):

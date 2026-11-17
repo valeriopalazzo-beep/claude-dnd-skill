@@ -110,6 +110,15 @@ class NotebookTests(unittest.TestCase):
         bs.learn(entry, stats=["ac"], record=GHOUL)
         self.assertEqual(entry["known"]["ac"], 12)
 
+    def test_a_named_creature_gets_its_own_page_beside_its_srd_kin(self):
+        pages = []
+        first, _ = bs.meet(pages, "ghoul", alias="Re seduto", record=GHOUL)
+        second, fresh = bs.meet(pages, "ghoul", alias="Divoratore di tombe", record=GHOUL)
+        self.assertTrue(fresh)
+        self.assertIsNot(second, first)
+        self.assertEqual([p["name"] for p in pages], ["Re seduto", "Divoratore di tombe"])
+        self.assertEqual((first["met"], second["index"]), (1, GHOUL["index"]))
+
     def test_defeats_are_counted(self):
         pages = []
         entry, _ = bs.meet(pages, "ghoul", record=GHOUL, count=2)
