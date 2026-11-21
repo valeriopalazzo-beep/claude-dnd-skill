@@ -13,6 +13,11 @@ a thief's private aside.
     # …or see nothing at all:
     python3 whisper.py --to "Aldric" --no-teaser "Il mercante ti fa l'occhiolino."
 
+    # A long note, or one full of quotes, can come on stdin instead:
+    python3 whisper.py --to "Aldric" << 'DNDEND'
+    Dieci battiti. A ogni battito senti un colpo di martello…
+    DNDEND
+
     # Notes the players wrote to the DM and the DM has not read yet (prints, then clears):
     python3 whisper.py --inbox
 
@@ -174,7 +179,7 @@ def main() -> int:
                 pass
     ap = argparse.ArgumentParser(description="Secret notes between the DM and one player.")
     ap.add_argument("--to", metavar="NAME", help="character the note is for")
-    ap.add_argument("text", nargs="*", help="the note (with --to)")
+    ap.add_argument("text", nargs="*", help="the note (with --to); without it, read from stdin")
     ap.add_argument("--no-teaser", action="store_true",
                     help="the other screens show nothing (default: 'the DM passes a note to NAME')")
     ap.add_argument("--inbox", action="store_true",
@@ -190,8 +195,11 @@ def main() -> int:
     if args.list:
         return show_list(args.character.strip())
     text = " ".join(args.text).strip()
+    if args.to and not text and not sys.stdin.isatty():
+        # The note on stdin, like send.py: a heredoc or `< file` needs no quoting.
+        text = sys.stdin.read().strip()
     if not args.to or not text:
-        ap.error('give a recipient and a note: whisper.py --to "Name" "text"')
+        ap.error('give a recipient and a note: whisper.py --to "Name" "text" (or the text on stdin)')
     return send(args.to.strip(), text, teaser=not args.no_teaser)
 
 

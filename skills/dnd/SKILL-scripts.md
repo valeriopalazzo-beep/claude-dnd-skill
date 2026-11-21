@@ -1243,6 +1243,8 @@ A note only one player reads: it appears on that player's phone and nowhere else
 python3 ${CLAUDE_SKILL_DIR}/display/whisper.py --to "Aldric" "Dietro l'arazzo senti qualcuno respirare."
 # The others see nothing at all:
 python3 ${CLAUDE_SKILL_DIR}/display/whisper.py --to "Aldric" --no-teaser "Il mercante ti fa l'occhiolino."
+# A long note, or one full of quotes and apostrophes: on stdin, like send.py (safe in a `&&` chain)
+python3 ${CLAUDE_SKILL_DIR}/display/whisper.py --to "Aldric" < note.txt
 # Re-read the notes of this campaign (all, or one character's thread):
 python3 ${CLAUDE_SKILL_DIR}/display/whisper.py --list --character "Aldric"
 ```

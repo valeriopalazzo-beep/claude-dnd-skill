@@ -189,5 +189,38 @@ class WhisperWiringTests(unittest.TestCase):
                     self.assertTrue(data.get(key))
 
 
+class WhisperCliTest(unittest.TestCase):
+    """The note can come as an argument or on stdin (a heredoc in a `&&` chain)."""
+
+    def _run_main(self, argv, stdin_text):
+        import io as _io
+        spec = importlib.util.spec_from_file_location("whisper_cli", str(DISPLAY / "whisper.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        sent = []
+        mod.send = lambda to, text, teaser=True: sent.append((to, text, teaser)) or 0
+        old_argv, old_stdin = sys.argv, sys.stdin
+        sys.argv = ["whisper.py"] + argv
+        sys.stdin = _io.StringIO(stdin_text)
+        try:
+            rc = mod.main()
+        finally:
+            sys.argv, sys.stdin = old_argv, old_stdin
+        return rc, sent
+
+    def test_the_note_is_read_from_stdin_when_no_text_is_given(self):
+        rc, sent = self._run_main(["--to", "Aldric"], "L'anello batte.\nDieci volte.\n")
+        self.assertEqual(rc, 0)
+        self.assertEqual(sent, [("Aldric", "L'anello batte.\nDieci volte.", True)])
+
+    def test_text_given_as_argument_wins_over_stdin(self):
+        rc, sent = self._run_main(["--to", "Aldric", "--no-teaser", "Sotto", "l'arazzo"], "ignorato")
+        self.assertEqual(sent, [("Aldric", "Sotto l'arazzo", False)])
+
+    def test_an_empty_stdin_is_still_refused(self):
+        with self.assertRaises(SystemExit):
+            self._run_main(["--to", "Aldric"], "   \n")
+
+
 if __name__ == "__main__":
     unittest.main()
