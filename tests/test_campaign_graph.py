@@ -210,6 +210,27 @@ class GraphSubcommandTests(unittest.TestCase):
         self.assertIn("serves", out,
                       msg=f"expected serves-edge to be active at s3; got: {out}")
 
+    def test_a_word_of_the_name_finds_the_node_and_a_place_wins_for_place(self):
+        add = lambda typ, name: _run(["add-node", "--campaign", self.campaign,
+                                      "--type", typ, "--name", name], env_overrides=self.env)
+        add("faction", "Nani di Gelonero")
+        add("npc", "Brunhild")
+        _run(["add-edge", "--campaign", self.campaign, "--from", "Brunhild",
+              "--to", "Gelonero", "--type", "member_of", "--since", "1"], env_overrides=self.env)
+        self.assertEqual(self._graph_json()["edges"][0]["to"], "faction_nani_di_gelonero")
+        rc, out, err = _run(["scene-context", "--campaign", self.campaign, "--place", "Gelonero"],
+                            env_overrides=self.env)
+        self.assertEqual(rc, 0, msg=err)
+        self.assertIn("Brunhild", out)
+        # With a place of the same name, --place takes the place, not the faction.
+        add("place", "Forge di Gelonero")
+        rc, out, err = _run(["show", "--campaign", self.campaign, "--id", "Gelonero"], env_overrides=self.env)
+        self.assertNotEqual(rc, 0)
+        self.assertIn("several nodes", err)
+        rc, out, err = _run(["scene-context", "--campaign", self.campaign, "--place", "Gelonero"],
+                            env_overrides=self.env)
+        self.assertEqual(rc, 0, msg=err)
+
     def test_scene_context_uninitialized_exits_clean(self):
         """If graph.json doesn't exist, scene-context should exit 0 with a notice."""
         rc, out, err = _run(

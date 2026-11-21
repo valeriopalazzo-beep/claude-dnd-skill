@@ -164,6 +164,19 @@ def _resolve_node(data: dict, ref: str) -> Optional[str]:
     return None
 
 
+def _word_matches(data: dict, ref: str) -> list:
+    """Nodes whose name holds `ref` as a whole word ("Gelonero" in "Nani di Gelonero")."""
+    want = ref.lower().split()
+    if not want:
+        return []
+    hits = []
+    for n in data["nodes"]:
+        words = [w.strip(".,;:'\"()") for w in n.get("name", "").lower().split()]
+        if any(words[i:i + len(want)] == want for i in range(len(words))):
+            hits.append(n)
+    return hits
+
+
 def _resolve_or_die(data: dict, ref: str, label: str) -> str:
     try:
         node_id = _resolve_node(data, ref)
@@ -171,6 +184,19 @@ def _resolve_or_die(data: dict, ref: str, label: str) -> str:
         print(f"error: {e}", file=sys.stderr)
         sys.exit(1)
     if node_id is None:
+        # Only for what the DM types: a word of the name is enough when one node
+        # has it; for --place a place wins over a faction or an NPC of the same name.
+        hits = _word_matches(data, ref)
+        if label == "place" and len(hits) > 1:
+            places = [n for n in hits if n.get("type") == "place"]
+            if len(places) == 1:
+                hits = places
+        if len(hits) == 1:
+            return hits[0]["id"]
+        if hits:
+            ids = ", ".join(f"{n['id']} ({n.get('name', '')})" for n in hits)
+            print(f"error: {label} '{ref}' matches several nodes: {ids}. use id directly.", file=sys.stderr)
+            sys.exit(1)
         print(f"error: {label} '{ref}' not found (no id or name match).", file=sys.stderr)
         sys.exit(1)
     return node_id

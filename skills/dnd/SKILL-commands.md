@@ -996,6 +996,8 @@ For background reading on the design and the A/B replay study that motivated it,
 
 All subcommands invoke `python3 ${CLAUDE_SKILL_DIR}/scripts/campaign_graph.py <subcommand> --campaign <name> [args]`.
 
+A node is named by its id, its name, the start of its name, or a word of its name that only one node has (`Gelonero` finds `Nani di Gelonero`); for `--place` a place wins over a faction or an NPC with the same word. Several matches are refused with their ids.
+
 ### `/dm:dnd graph init [campaign-name]`
 First-time bootstrap. Read existing `npcs.md` / `world.md` / `state.md` for the campaign. Propose a node list (NPCs as `npc_*`, factions as `faction_*`, key locations as `place_*`) and a starter edge list (faction membership from npcs.md tables, NPC location from "Lives in / Based at" fields, faction relationships from world.md). Display the proposed list to the DM and **ask for approval** before writing — do not silently extract. After approval, run `add-node` and `add-edge` for each. Use `--since` matching state.md's current session count.
 
