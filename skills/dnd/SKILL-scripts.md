@@ -652,7 +652,7 @@ Short and long rests on the sheet, and on the players' own screens.
 python3 ${CLAUDE_SKILL_DIR}/scripts/rest.py open short                       # every character at the table rests
 python3 ${CLAUDE_SKILL_DIR}/scripts/rest.py open long --only "Lyra, Hernio"  # only these
 python3 ${CLAUDE_SKILL_DIR}/scripts/rest.py status                           # who has finished
-python3 ${CLAUDE_SKILL_DIR}/scripts/rest.py close                            # end it now
+python3 ${CLAUDE_SKILL_DIR}/scripts/rest.py close                            # end it now (prints who had not finished)
 python3 ${CLAUDE_SKILL_DIR}/scripts/rest.py -c $CAMP show "Ajeje"            # HP and Hit Dice
 python3 ${CLAUDE_SKILL_DIR}/scripts/rest.py -c $CAMP hd "Ajeje" --count 2    # spend Hit Dice, rolled here
 python3 ${CLAUDE_SKILL_DIR}/scripts/rest.py -c $CAMP short "Ajeje"           # the short rest is over for Ajeje

@@ -210,6 +210,42 @@ class CommandTests(unittest.TestCase):
         self.assertIn("Hit Dice 2 of 2", r.stdout)
 
 
+class CloseMessageTests(unittest.TestCase):
+    """`close` says what it closed, not "No rest is open" (read as a failure in play)."""
+
+    def _close(self, before):
+        calls = []
+
+        def fake(path, data=None):
+            calls.append(data)
+            if data is None:
+                return 200, {"rest": before}
+            return 200, {"rest": None}
+
+        out = io.StringIO()
+        orig = rest._request
+        rest._request = fake
+        try:
+            with contextlib.redirect_stdout(out):
+                rc = rest.main(["close"])
+        finally:
+            rest._request = orig
+        return rc, out.getvalue(), calls
+
+    def test_close_names_who_had_not_finished(self):
+        rc, out, calls = self._close({"kind": "short", "characters": ["Lio", "Ajeje"], "done": ["Lio"]})
+        self.assertEqual(rc, 0)
+        self.assertEqual(calls, [None, {"close": True}])
+        self.assertIn("Short rest closed", out)
+        self.assertIn("Not finished: Ajeje", out)
+        self.assertNotIn("No rest is open", out)
+
+    def test_closing_with_nothing_open_says_so(self):
+        rc, out, _ = self._close(None)
+        self.assertEqual(rc, 0)
+        self.assertIn("No rest was open", out)
+
+
 class AutorunTests(unittest.TestCase):
     def test_the_end_of_a_rest_wakes_the_autorun_wait(self):
         # A rest over for everybody used to leave the wait asleep until a player typed.

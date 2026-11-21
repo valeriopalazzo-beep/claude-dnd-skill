@@ -336,6 +336,19 @@ def _print_status(rest: dict | None) -> None:
         print(f"  {'✓' if name in done else '·'} {name}")
 
 
+def _print_closed(rest: dict | None) -> None:
+    """What `close` did: the rest it ended, and who had not finished it."""
+    if not rest:
+        print("No rest was open: nothing to close.")
+        return
+    done = set(rest.get("done") or [])
+    waiting = [n for n in rest.get("characters") or [] if n not in done]
+    line = f"{'Short' if rest.get('kind') == 'short' else 'Long'} rest closed on every screen."
+    if waiting:
+        line += " Not finished: " + ", ".join(waiting) + " (apply their rest yourself with `rest.py short|long`)."
+    print(line)
+
+
 def main(argv: list | None = None) -> int:
     ap = argparse.ArgumentParser(description="Short and long rests, on the sheet and on the players' screens.")
     ap.add_argument("--campaign", "-c", default="", help="campaign to work in (default: the active one)")
@@ -359,9 +372,14 @@ def main(argv: list | None = None) -> int:
             print(line)
         return 0
     if args.cmd in ("open", "close", "status"):
+        before = None
         if args.cmd == "status":
             status, body = _request("/rest")
         elif args.cmd == "close":
+            # Read who was still resting first: after the close the display has
+            # no rest at all, and "No rest is open" read like a failure.
+            st, prev = _request("/rest")
+            before = prev.get("rest") if st == 200 and isinstance(prev, dict) else None
             status, body = _request("/rest", {"close": True})
         else:
             only = [n.strip() for n in args.only.split(",") if n.strip()]
@@ -371,6 +389,9 @@ def main(argv: list | None = None) -> int:
             print("rest: " + ("the display is not running" if status == 0 else f"HTTP {status}{': ' + why if why else ''}")
                   + ". Nothing was changed.", file=sys.stderr)
             return 1
+        if args.cmd == "close":
+            _print_closed(before)
+            return 0
         _print_status(body.get("rest"))
         if args.cmd == "open":
             print("→ on the resting players' screens; their choices reach you as [[REST: …]] lines")
