@@ -210,6 +210,7 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/inventory.py split 137gp 4sp --among "Aldric
 - Coins: `pp gp ep sp cp` (Italian `mp mo me ma mr` are read too). `--price` is the price of **one**; `--qty N` buys or sells N.
 - Several of an item are written `Name ×N`; adding one more of an item already on the sheet raises the count.
 - `remove` / `sell` / `give --item` match the exact name first, then a unique part of it (`"pozione"`). An ambiguous or missing match changes nothing and lists the candidates — pick one and run it again.
+- A character is named by the whole name, or by a part only one character of the campaign has (`"Berta"` for Berta Tully); a part two characters share is refused.
 - `split` reports any copper left over; hand it to someone with `gain`.
 - `--campaign NAME` (before the subcommand) works on a campaign other than the active one.
 

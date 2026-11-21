@@ -249,6 +249,22 @@ class OperationTests(unittest.TestCase):
         with self.assertRaises(self.inv.InventoryError):
             self.inv.find_sheet("Nessuno")
 
+    def test_a_part_of_the_name_only_one_character_has_is_enough(self):
+        camp = pathlib.Path(tempfile.mkdtemp(prefix="dnd-test-camp-"))
+        (camp / "characters").mkdir()
+        for file, name in (("berta-tully.md", "Berta Tully"), ("bertoldo.md", "Bertoldo Ferri"),
+                           ("aerendyl-vaelthar.md", "Aerendyl Vaelthar")):
+            (camp / "characters" / file).write_text(SHEET.format(name=name), encoding="utf-8")
+        self.inv.active_campaign = lambda: "prova"
+        orig = self.inv.paths.find_campaign          # paths is shared with the other test files
+        self.addCleanup(setattr, self.inv.paths, "find_campaign", orig)
+        self.inv.paths.find_campaign = lambda c: camp
+        self.assertEqual(self.inv.find_sheet("Aerendyl").name, "aerendyl-vaelthar.md")
+        self.assertEqual(self.inv.find_sheet("tully").name, "berta-tully.md")
+        with self.assertRaises(self.inv.InventoryError) as ctx:
+            self.inv.find_sheet("Bert")          # two characters have it: refused, nothing guessed
+        self.assertIn("several characters", str(ctx.exception))
+
     def test_the_command_line_exits_non_zero_and_changes_nothing_on_a_bad_request(self):
         before = self._text("Aldric")
         self.assertEqual(self.inv.main(["pay", "Aldric", "999gp"]), 1)

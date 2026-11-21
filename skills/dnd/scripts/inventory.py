@@ -302,6 +302,19 @@ def find_sheet(character: str, campaign: str = "") -> pathlib.Path:
                 continue
             if first.startswith("# ") and _key(first[2:]) == want:
                 return f
+    if camp and folders and folders[0].name == "characters" and folders[0] != paths.characters_dir():
+        # A part of the name that only one character of the campaign has ("Berta" for
+        # "Berta Tully"), as spellbook.py, shapes.py and the other scripts accept.
+        try:
+            files = sorted(folders[0].glob("*.md"))
+        except OSError:
+            files = []
+        hits = [f for f in files if want in _key(display_name(f))]
+        if len(hits) == 1:
+            return hits[0]
+        if len(hits) > 1:
+            raise InventoryError(f"{character!r} matches several characters: "
+                                 + ", ".join(display_name(f) for f in hits) + ". Nothing was changed.")
     where = " or ".join(str(f) for f in folders)
     raise InventoryError(f"no character sheet for {character!r} in {where}")
 
